@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { loadStockData, getCompanyNameSync, isKnownStockSync, StockData } from '@/data/stockNames';
+import { CustomTag, TAG_COLORS } from '@/types/tags';
+import TagEditor from './TagEditor';
 
 interface StockCardProps {
   symbol: string;
@@ -12,7 +14,10 @@ export default function StockCard({ symbol, onRemove }: StockCardProps) {
   const [memo, setMemo] = useState('');
   const [stockData, setStockData] = useState<StockData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [customTags, setCustomTags] = useState<CustomTag[]>([]);
+  const [isTagEditorOpen, setIsTagEditorOpen] = useState(false);
   const memoKey = `kabunote-memo-${symbol}`;
+  const tagsKey = `kabunote-tags-${symbol}`;
 
   // 同期版を使って即座に表示（キャッシュがある場合）
   const companyName = stockData ? stockData.name : getCompanyNameSync(symbol);
@@ -29,6 +34,17 @@ export default function StockCard({ symbol, onRemove }: StockCardProps) {
         setMemo(savedMemo);
       }
 
+      // タグを読み込み
+      const savedTags = localStorage.getItem(tagsKey);
+      if (savedTags) {
+        try {
+          const parsedTags = JSON.parse(savedTags);
+          setCustomTags(parsedTags);
+        } catch (error) {
+          console.error('Failed to parse saved tags:', error);
+        }
+      }
+
       // 株式データを読み込み
       try {
         const stockMap = await loadStockData();
@@ -42,12 +58,18 @@ export default function StockCard({ symbol, onRemove }: StockCardProps) {
     };
 
     loadData();
-  }, [symbol, memoKey]);
+  }, [symbol, memoKey, tagsKey]);
 
   // メモをlocalStorageに保存（入力毎に即座に保存）
   const handleMemoChange = (value: string) => {
     setMemo(value);
     localStorage.setItem(memoKey, value);
+  };
+
+  // タグをlocalStorageに保存
+  const handleTagsChange = (tags: CustomTag[]) => {
+    setCustomTags(tags);
+    localStorage.setItem(tagsKey, JSON.stringify(tags));
   };
 
   const externalLinks = [
@@ -84,7 +106,7 @@ export default function StockCard({ symbol, onRemove }: StockCardProps) {
                 未登録
               </span>
             ) : (
-              <div className="flex gap-1">
+              <div className="flex flex-wrap gap-1">
                 {stockData?.sector && (
                   <span className="text-xs bg-blue-600 text-blue-100 px-2 py-0.5 rounded-full">
                     {stockData.sector}
@@ -95,6 +117,21 @@ export default function StockCard({ symbol, onRemove }: StockCardProps) {
                     {stockData.market}
                   </span>
                 )}
+                {customTags.map((tag) => (
+                  <span
+                    key={tag.id}
+                    className={`text-xs px-2 py-0.5 rounded-full ${TAG_COLORS[tag.color].bg} ${TAG_COLORS[tag.color].text}`}
+                  >
+                    {tag.label}
+                  </span>
+                ))}
+                <button
+                  onClick={() => setIsTagEditorOpen(true)}
+                  className="text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 px-2 py-0.5 rounded-full transition-colors"
+                  title="タグを編集"
+                >
+                  + タグ
+                </button>
               </div>
             )}
           </div>
@@ -142,6 +179,16 @@ export default function StockCard({ symbol, onRemove }: StockCardProps) {
         <p className="text-xs text-gray-400">
           {memo.length > 0 ? `${memo.length}文字` : '自動保存されます'}
         </p>
+
+        {/* タグエディター */}
+        {isTagEditorOpen && (
+          <TagEditor
+            symbol={symbol}
+            currentTags={customTags}
+            onTagsChange={handleTagsChange}
+            onClose={() => setIsTagEditorOpen(false)}
+          />
+        )}
       </div>
     </div>
   );
