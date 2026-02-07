@@ -105,3 +105,101 @@ export const isKnownStockSync = (code: string): boolean => {
   }
   return stockDataCache.has(code);
 };
+
+// 日本語をローマ字に変換するマッピング（簡易版）
+const toRomaji = (text: string): string => {
+  const romajiMap: { [key: string]: string } = {
+    'あ': 'a', 'い': 'i', 'う': 'u', 'え': 'e', 'お': 'o',
+    'か': 'ka', 'き': 'ki', 'く': 'ku', 'け': 'ke', 'こ': 'ko',
+    'が': 'ga', 'ぎ': 'gi', 'ぐ': 'gu', 'げ': 'ge', 'ご': 'go',
+    'さ': 'sa', 'し': 'shi', 'す': 'su', 'せ': 'se', 'そ': 'so',
+    'ざ': 'za', 'じ': 'zi', 'ず': 'zu', 'ぜ': 'ze', 'ぞ': 'zo',
+    'た': 'ta', 'ち': 'chi', 'つ': 'tsu', 'て': 'te', 'と': 'to',
+    'だ': 'da', 'ぢ': 'di', 'づ': 'du', 'で': 'de', 'ど': 'do',
+    'な': 'na', 'に': 'ni', 'ぬ': 'nu', 'ね': 'ne', 'の': 'no',
+    'は': 'ha', 'ひ': 'hi', 'ふ': 'fu', 'へ': 'he', 'ほ': 'ho',
+    'ば': 'ba', 'び': 'bi', 'ぶ': 'bu', 'べ': 'be', 'ぼ': 'bo',
+    'ぱ': 'pa', 'ぴ': 'pi', 'ぷ': 'pu', 'ぺ': 'pe', 'ぽ': 'po',
+    'ま': 'ma', 'み': 'mi', 'む': 'mu', 'め': 'me', 'も': 'mo',
+    'や': 'ya', 'ゆ': 'yu', 'よ': 'yo',
+    'ら': 'ra', 'り': 'ri', 'る': 'ru', 'れ': 're', 'ろ': 'ro',
+    'わ': 'wa', 'を': 'wo', 'ん': 'n',
+    'ー': '-'
+  };
+
+  return text.toLowerCase().split('').map(char => romajiMap[char] || char).join('');
+};
+
+// 全角・半角を正規化する関数
+const normalizeText = (text: string): string => {
+  return text
+    // 全角英数字を半角に変換
+    .replace(/[Ａ-Ｚａ-ｚ０-９]/g, (char) => {
+      return String.fromCharCode(char.charCodeAt(0) - 0xFEE0);
+    })
+    // カタカナをひらがなに変換
+    .replace(/[\u30A1-\u30F6]/g, (char) => {
+      return String.fromCharCode(char.charCodeAt(0) - 0x60);
+    })
+    .toLowerCase();
+};
+
+// 会社名で部分一致検索する関数（日本語・ローマ字・英語対応）
+export const searchCompanies = async (query: string, limit: number = 10): Promise<StockData[]> => {
+  const stockData = await loadStockData();
+
+  if (!query.trim()) {
+    return [];
+  }
+
+  const searchQuery = normalizeText(query);
+  const results: StockData[] = [];
+  const seen = new Set<string>();
+
+  for (const stock of stockData.values()) {
+    if (seen.has(stock.code)) continue;
+
+    const companyName = normalizeText(stock.name);
+    const companyRomaji = toRomaji(companyName);
+
+    // 正規化した名前での部分一致、または、ローマ字での部分一致
+    if (companyName.includes(searchQuery) || companyRomaji.includes(searchQuery)) {
+      results.push(stock);
+      seen.add(stock.code);
+      if (results.length >= limit) {
+        break;
+      }
+    }
+  }
+
+  return results;
+};
+
+// 同期版の会社名検索（キャッシュがある場合のみ）
+export const searchCompaniesSync = (query: string, limit: number = 10): StockData[] => {
+  if (!stockDataCache || !query.trim()) {
+    return [];
+  }
+
+  const searchQuery = normalizeText(query);
+  const results: StockData[] = [];
+  const seen = new Set<string>();
+
+  for (const stock of stockDataCache.values()) {
+    if (seen.has(stock.code)) continue;
+
+    const companyName = normalizeText(stock.name);
+    const companyRomaji = toRomaji(companyName);
+
+    // 正規化した名前での部分一致、または、ローマ字での部分一致
+    if (companyName.includes(searchQuery) || companyRomaji.includes(searchQuery)) {
+      results.push(stock);
+      seen.add(stock.code);
+      if (results.length >= limit) {
+        break;
+      }
+    }
+  }
+
+  return results;
+};
