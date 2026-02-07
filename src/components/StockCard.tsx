@@ -3,19 +3,24 @@
 import { useState, useEffect } from 'react';
 import { loadStockData, getCompanyNameSync, isKnownStockSync, StockData } from '@/data/stockNames';
 import { CustomTag, TAG_COLORS } from '@/types/tags';
+import { FavoriteGroup, GROUP_COLORS } from '@/types/favorites';
 import TagEditor from './TagEditor';
+import FavoriteGroupSelector from './FavoriteGroupSelector';
 
 interface StockCardProps {
   symbol: string;
   onRemove: () => void;
+  favoriteGroups: FavoriteGroup[];
+  onFavoriteGroupsChange: (groups: FavoriteGroup[]) => void;
 }
 
-export default function StockCard({ symbol, onRemove }: StockCardProps) {
+export default function StockCard({ symbol, onRemove, favoriteGroups, onFavoriteGroupsChange }: StockCardProps) {
   const [memo, setMemo] = useState('');
   const [stockData, setStockData] = useState<StockData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [customTags, setCustomTags] = useState<CustomTag[]>([]);
   const [isTagEditorOpen, setIsTagEditorOpen] = useState(false);
+  const [isFavoriteGroupSelectorOpen, setIsFavoriteGroupSelectorOpen] = useState(false);
   const memoKey = `kabunote-memo-${symbol}`;
   const tagsKey = `kabunote-tags-${symbol}`;
 
@@ -23,25 +28,31 @@ export default function StockCard({ symbol, onRemove }: StockCardProps) {
   const companyName = stockData ? stockData.name : getCompanyNameSync(symbol);
   const isKnown = stockData ? true : isKnownStockSync(symbol);
 
+  // この銘柄が含まれているお気に入りグループ
+  const belongingGroups = favoriteGroups.filter(group => group.stocks.includes(symbol));
+
   // CSVデータとメモを読み込み
   useEffect(() => {
     const loadData = async () => {
       setIsLoading(true);
 
-      // メモを読み込み
-      const savedMemo = localStorage.getItem(memoKey);
-      if (savedMemo) {
-        setMemo(savedMemo);
-      }
+      // クライアントサイドでのみlocalStorageにアクセス
+      if (typeof window !== 'undefined') {
+        // メモを読み込み
+        const savedMemo = localStorage.getItem(memoKey);
+        if (savedMemo) {
+          setMemo(savedMemo);
+        }
 
-      // タグを読み込み
-      const savedTags = localStorage.getItem(tagsKey);
-      if (savedTags) {
-        try {
-          const parsedTags = JSON.parse(savedTags);
-          setCustomTags(parsedTags);
-        } catch (error) {
-          console.error('Failed to parse saved tags:', error);
+        // タグを読み込み
+        const savedTags = localStorage.getItem(tagsKey);
+        if (savedTags) {
+          try {
+            const parsedTags = JSON.parse(savedTags);
+            setCustomTags(parsedTags);
+          } catch (error) {
+            console.error('Failed to parse saved tags:', error);
+          }
         }
       }
 
@@ -63,13 +74,36 @@ export default function StockCard({ symbol, onRemove }: StockCardProps) {
   // メモをlocalStorageに保存（入力毎に即座に保存）
   const handleMemoChange = (value: string) => {
     setMemo(value);
-    localStorage.setItem(memoKey, value);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(memoKey, value);
+    }
   };
 
   // タグをlocalStorageに保存
   const handleTagsChange = (tags: CustomTag[]) => {
     setCustomTags(tags);
-    localStorage.setItem(tagsKey, JSON.stringify(tags));
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(tagsKey, JSON.stringify(tags));
+    }
+  };
+
+  // お気に入りグループの変更を処理
+  const handleFavoriteGroupsChange = (groupIds: string[]) => {
+    const updatedGroups = favoriteGroups.map(group => {
+      const shouldIncludeStock = groupIds.includes(group.id);
+      const currentlyIncludes = group.stocks.includes(symbol);
+
+      if (shouldIncludeStock && !currentlyIncludes) {
+        // 銘柄を追加
+        return { ...group, stocks: [...group.stocks, symbol] };
+      } else if (!shouldIncludeStock && currentlyIncludes) {
+        // 銘柄を削除
+        return { ...group, stocks: group.stocks.filter(s => s !== symbol) };
+      }
+      return group;
+    });
+
+    onFavoriteGroupsChange(updatedGroups);
   };
 
   const externalLinks = [
@@ -125,12 +159,27 @@ export default function StockCard({ symbol, onRemove }: StockCardProps) {
                     {tag.label}
                   </span>
                 ))}
+                {belongingGroups.map((group) => (
+                  <span
+                    key={group.id}
+                    className={`text-xs px-2 py-0.5 rounded-full border ${GROUP_COLORS[group.color].border} ${GROUP_COLORS[group.color].text} bg-opacity-20 ${GROUP_COLORS[group.color].bg}`}
+                  >
+                    ★ {group.name}
+                  </span>
+                ))}
                 <button
                   onClick={() => setIsTagEditorOpen(true)}
                   className="text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 px-2 py-0.5 rounded-full transition-colors"
                   title="タグを編集"
                 >
                   + タグ
+                </button>
+                <button
+                  onClick={() => setIsFavoriteGroupSelectorOpen(true)}
+                  className="text-xs bg-yellow-700 hover:bg-yellow-600 text-yellow-200 px-2 py-0.5 rounded-full transition-colors"
+                  title="お気に入りグループに追加"
+                >
+                  ★
                 </button>
               </div>
             )}
@@ -187,6 +236,17 @@ export default function StockCard({ symbol, onRemove }: StockCardProps) {
             currentTags={customTags}
             onTagsChange={handleTagsChange}
             onClose={() => setIsTagEditorOpen(false)}
+          />
+        )}
+
+        {/* お気に入りグループセレクター */}
+        {isFavoriteGroupSelectorOpen && (
+          <FavoriteGroupSelector
+            symbol={symbol}
+            groups={favoriteGroups}
+            selectedGroupIds={belongingGroups.map(g => g.id)}
+            onGroupsChange={handleFavoriteGroupsChange}
+            onClose={() => setIsFavoriteGroupSelectorOpen(false)}
           />
         )}
       </div>

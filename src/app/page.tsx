@@ -3,14 +3,24 @@
 import { useState, useEffect } from 'react';
 import StockCard from '@/components/StockCard';
 import StockInput from '@/components/StockInput';
+import FavoriteGroupManager from '@/components/FavoriteGroupManager';
 import { loadStockData } from '@/data/stockNames';
+import { FavoriteGroup, GROUP_COLORS } from '@/types/favorites';
 
 const MAX_STOCKS = 5;
 const STORAGE_KEY = 'kabunote-stocks';
+const GROUPS_STORAGE_KEY = 'kabunote-favorite-groups';
 
 export default function Home() {
   const [stocks, setStocks] = useState<string[]>([]);
   const [error, setError] = useState('');
+  const [favoriteGroups, setFavoriteGroups] = useState<FavoriteGroup[]>([]);
+  const [selectedGroupFilter, setSelectedGroupFilter] = useState<string | null>(null);
+  const [isGroupManagerOpen, setIsGroupManagerOpen] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // デバッグ用
+  console.log('Current favoriteGroups state:', favoriteGroups);
 
   useEffect(() => {
     const initializeApp = async () => {
@@ -22,24 +32,61 @@ export default function Home() {
         console.error('Failed to preload stock data:', error);
       }
 
-      // 保存されている銘柄を読み込み
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        try {
-          const parsedStocks = JSON.parse(saved);
-          setStocks(parsedStocks);
-        } catch (e) {
-          console.error('Failed to load saved stocks:', e);
+      // クライアントサイドでのみlocalStorageにアクセス
+      if (typeof window !== 'undefined') {
+        // 保存されている銘柄を読み込み
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          try {
+            const parsedStocks = JSON.parse(saved);
+            setStocks(parsedStocks);
+            console.log('Loaded stocks:', parsedStocks);
+          } catch (e) {
+            console.error('Failed to load saved stocks:', e);
+          }
+        }
+
+        // 保存されているお気に入りグループを読み込み
+        const savedGroups = localStorage.getItem(GROUPS_STORAGE_KEY);
+        console.log('Raw saved groups from localStorage:', savedGroups);
+        if (savedGroups) {
+          try {
+            const parsedGroups = JSON.parse(savedGroups);
+            console.log('Parsed groups:', parsedGroups);
+            setFavoriteGroups(parsedGroups);
+          } catch (e) {
+            console.error('Failed to load saved groups:', e);
+          }
+        } else {
+          console.log('No saved groups found in localStorage');
         }
       }
+
+      setIsInitialized(true);
     };
 
     initializeApp();
   }, []);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(stocks));
-  }, [stocks]);
+    if (typeof window !== 'undefined' && isInitialized) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(stocks));
+      console.log('Saved stocks:', stocks);
+    }
+  }, [stocks, isInitialized]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && isInitialized) {
+      const groupsJson = JSON.stringify(favoriteGroups);
+      localStorage.setItem(GROUPS_STORAGE_KEY, groupsJson);
+      console.log('Saving groups to localStorage:', favoriteGroups);
+      console.log('JSON string saved:', groupsJson);
+
+      // 確認のため即座に読み戻し
+      const verification = localStorage.getItem(GROUPS_STORAGE_KEY);
+      console.log('Verification read:', verification);
+    }
+  }, [favoriteGroups, isInitialized]);
 
   const handleAddStock = (code: string) => {
     if (stocks.length >= MAX_STOCKS) {
@@ -59,9 +106,30 @@ export default function Home() {
   const handleRemoveStock = (code: string) => {
     setStocks(stocks.filter(stock => stock !== code));
     setError('');
-    // メモも削除
-    localStorage.removeItem(`kabunote-memo-${code}`);
+
+    // クライアントサイドでのみlocalStorageにアクセス
+    if (typeof window !== 'undefined') {
+      // メモも削除
+      localStorage.removeItem(`kabunote-memo-${code}`);
+      // タグも削除
+      localStorage.removeItem(`kabunote-tags-${code}`);
+    }
+
+    // お気に入りグループからも削除
+    const updatedGroups = favoriteGroups.map(group => ({
+      ...group,
+      stocks: group.stocks.filter(s => s !== code)
+    }));
+    setFavoriteGroups(updatedGroups);
   };
+
+  // フィルタリングされた株式リスト
+  const filteredStocks = selectedGroupFilter
+    ? stocks.filter(stock => {
+        const group = favoriteGroups.find(g => g.id === selectedGroupFilter);
+        return group?.stocks.includes(stock);
+      })
+    : stocks;
 
   return (
     <div className="min-h-screen bg-gray-900">
@@ -93,24 +161,98 @@ export default function Home() {
           </div>
         </div>
 
+
+        {/* お気に入りグループフィルター */}
+        {favoriteGroups.length > 0 && (
+          <div className="bg-gray-800 rounded-lg p-4 mb-6">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-lg font-semibold text-white">お気に入りグループ</h3>
+              <button
+                onClick={() => setIsGroupManagerOpen(true)}
+                className="text-sm bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded transition-colors"
+              >
+                グループ管理
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setSelectedGroupFilter(null)}
+                className={`text-sm px-3 py-2 rounded-full transition-colors ${
+                  selectedGroupFilter === null
+                    ? 'bg-white text-gray-900'
+                    : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                }`}
+              >
+                すべて ({stocks.length})
+              </button>
+              {favoriteGroups.map((group) => (
+                <button
+                  key={group.id}
+                  onClick={() => setSelectedGroupFilter(group.id)}
+                  className={`text-sm px-3 py-2 rounded-full transition-colors ${
+                    selectedGroupFilter === group.id
+                      ? `${GROUP_COLORS[group.color].bg} ${GROUP_COLORS[group.color].text}`
+                      : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                  }`}
+                >
+                  ★ {group.name} ({group.stocks.length})
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* グループ管理ボタン（グループがない場合） */}
+        {favoriteGroups.length === 0 && (
+          <div className="bg-gray-800 rounded-lg p-4 mb-6 text-center">
+            <p className="text-gray-400 text-sm mb-3">お気に入りグループを作成して銘柄を整理しましょう</p>
+            <button
+              onClick={() => setIsGroupManagerOpen(true)}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition-colors"
+            >
+              グループを作成
+            </button>
+          </div>
+        )}
+
         <div>
-          {stocks.length === 0 ? (
+          {filteredStocks.length === 0 ? (
             <div className="bg-gray-800 rounded-lg p-8 text-center">
-              <h3 className="text-xl font-medium text-white mb-2">銘柄カードを追加してください</h3>
-              <p className="text-gray-400">上記のフォームから銘柄コードを入力して、投資の思考整理を始めましょう。</p>
+              {stocks.length === 0 ? (
+                <>
+                  <h3 className="text-xl font-medium text-white mb-2">銘柄カードを追加してください</h3>
+                  <p className="text-gray-400">上記のフォームから銘柄コードを入力して、投資の思考整理を始めましょう。</p>
+                </>
+              ) : (
+                <>
+                  <h3 className="text-xl font-medium text-white mb-2">表示する銘柄がありません</h3>
+                  <p className="text-gray-400">選択したグループに銘柄が登録されていません。</p>
+                </>
+              )}
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {stocks.map((stock) => (
+              {filteredStocks.map((stock) => (
                 <StockCard
                   key={stock}
                   symbol={stock}
                   onRemove={() => handleRemoveStock(stock)}
+                  favoriteGroups={favoriteGroups}
+                  onFavoriteGroupsChange={setFavoriteGroups}
                 />
               ))}
             </div>
           )}
         </div>
+
+        {/* グループ管理モーダル */}
+        {isGroupManagerOpen && (
+          <FavoriteGroupManager
+            groups={favoriteGroups}
+            onGroupsChange={setFavoriteGroups}
+            onClose={() => setIsGroupManagerOpen(false)}
+          />
+        )}
       </main>
     </div>
   );
