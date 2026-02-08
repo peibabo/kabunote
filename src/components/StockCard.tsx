@@ -220,18 +220,32 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
       </div>
 
       {/* 外部リンクボタン */}
-      <div className="grid grid-cols-3 gap-2">
-        {externalLinks.map((link) => (
-          <a
-            key={link.name}
-            href={link.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={`${link.color} text-white text-sm font-medium py-2 px-3 rounded-lg transition-colors text-center`}
-          >
-            {link.name}
-          </a>
-        ))}
+      <div className="space-y-2">
+        {/* チャート確認ボタン */}
+        <button
+          onClick={() => {
+            const url = `https://jp.tradingview.com/symbols/TSE-${symbol}/`;
+            window.open(url, 'stockChart', 'width=800,height=800,scrollbars=yes,resizable=yes');
+          }}
+          className="w-full bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium py-2 px-3 rounded-lg transition-colors"
+        >
+          📈 最新チャートを確認
+        </button>
+
+        {/* 外部リンク */}
+        <div className="grid grid-cols-3 gap-2">
+          {externalLinks.map((link) => (
+            <a
+              key={link.name}
+              href={link.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`${link.color} text-white text-sm font-medium py-2 px-3 rounded-lg transition-colors text-center`}
+            >
+              {link.name}
+            </a>
+          ))}
+        </div>
       </div>
 
       {/* メモ欄 */}
@@ -271,6 +285,7 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
             onClose={() => setIsFavoriteGroupSelectorOpen(false)}
           />
         )}
+
       </div>
     </div>
   );
