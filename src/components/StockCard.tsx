@@ -140,47 +140,69 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
                 未登録
               </span>
             ) : (
-              <div className="flex flex-wrap gap-1">
-                {stockData?.sector && (
-                  <span className="text-xs bg-blue-600 text-blue-100 px-2 py-0.5 rounded-full">
-                    {stockData.sector}
-                  </span>
+              <div className="space-y-2">
+                {/* 業種・市場（上部） */}
+                {(stockData?.sector || stockData?.market) && (
+                  <div className="flex flex-wrap gap-1 items-center">
+                    <span className="text-xs text-gray-400 font-medium">📊</span>
+                    {stockData?.sector && (
+                      <span className="text-xs bg-blue-600 text-blue-100 px-2 py-0.5 rounded-full">
+                        {stockData.sector}
+                      </span>
+                    )}
+                    {stockData?.market && (
+                      <span className="text-xs bg-green-600 text-green-100 px-2 py-0.5 rounded-full">
+                        {stockData.market}
+                      </span>
+                    )}
+                  </div>
                 )}
-                {stockData?.market && (
-                  <span className="text-xs bg-green-600 text-green-100 px-2 py-0.5 rounded-full">
-                    {stockData.market}
-                  </span>
+
+                {/* 区切り線（タグがある場合のみ表示） */}
+                {(customTags.length > 0 || belongingGroups.length > 0) && (stockData?.sector || stockData?.market) && (
+                  <div className="border-t border-gray-700 my-2"></div>
                 )}
-                {customTags.map((tag) => (
-                  <span
-                    key={tag.id}
-                    className={`text-xs px-2 py-0.5 rounded-full ${TAG_COLORS[tag.color].bg} ${TAG_COLORS[tag.color].text}`}
+
+                {/* タグ・グループ（下部） */}
+                {(customTags.length > 0 || belongingGroups.length > 0) && (
+                  <div className="flex flex-wrap gap-1 items-center">
+                    <span className="text-xs text-gray-400 font-medium">🏷️</span>
+                    {customTags.map((tag) => (
+                      <span
+                        key={tag.id}
+                        className={`text-xs px-2 py-0.5 rounded-full ${TAG_COLORS[tag.color].bg} ${TAG_COLORS[tag.color].text}`}
+                      >
+                        {tag.label}
+                      </span>
+                    ))}
+                    {belongingGroups.map((group) => (
+                      <span
+                        key={group.id}
+                        className={`text-xs px-2 py-0.5 rounded-full border ${GROUP_COLORS[group.color].border} ${GROUP_COLORS[group.color].text} bg-opacity-20 ${GROUP_COLORS[group.color].bg}`}
+                      >
+                        ★ {group.name}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {/* ボタン行（常に表示） */}
+                <div className="flex flex-wrap gap-1">
+                  <button
+                    onClick={() => setIsTagEditorOpen(true)}
+                    className="text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 px-2 py-0.5 rounded-full transition-colors"
+                    title="タグを編集"
                   >
-                    {tag.label}
-                  </span>
-                ))}
-                {belongingGroups.map((group) => (
-                  <span
-                    key={group.id}
-                    className={`text-xs px-2 py-0.5 rounded-full border ${GROUP_COLORS[group.color].border} ${GROUP_COLORS[group.color].text} bg-opacity-20 ${GROUP_COLORS[group.color].bg}`}
+                    + タグ
+                  </button>
+                  <button
+                    onClick={() => setIsFavoriteGroupSelectorOpen(true)}
+                    className="text-xs bg-yellow-700 hover:bg-yellow-600 text-yellow-200 px-2 py-0.5 rounded-full transition-colors"
+                    title="お気に入りグループに追加"
                   >
-                    ★ {group.name}
-                  </span>
-                ))}
-                <button
-                  onClick={() => setIsTagEditorOpen(true)}
-                  className="text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 px-2 py-0.5 rounded-full transition-colors"
-                  title="タグを編集"
-                >
-                  + タグ
-                </button>
-                <button
-                  onClick={() => setIsFavoriteGroupSelectorOpen(true)}
-                  className="text-xs bg-yellow-700 hover:bg-yellow-600 text-yellow-200 px-2 py-0.5 rounded-full transition-colors"
-                  title="お気に入りグループに追加"
-                >
-                  ★
-                </button>
+                    ★
+                  </button>
+                </div>
               </div>
             )}
           </div>
