@@ -105,6 +105,20 @@ export default function Home() {
 
     setStocks([...stocks, code]);
     setError('');
+
+    // お気に入りグループフィルターが選択されている場合、自動的にそのグループに追加
+    if (selectedGroupFilter) {
+      const updatedGroups = favoriteGroups.map(group => {
+        if (group.id === selectedGroupFilter) {
+          // 既にグループに含まれていない場合のみ追加
+          if (!group.stocks.includes(code)) {
+            return { ...group, stocks: [...group.stocks, code] };
+          }
+        }
+        return group;
+      });
+      setFavoriteGroups(updatedGroups);
+    }
   };
 
   const handleRemoveStock = (code: string) => {
@@ -293,7 +307,23 @@ export default function Home() {
         </div>
 
         <div className="bg-gray-800 rounded-lg p-6 mb-8">
-          <h2 className="text-xl font-semibold text-white mb-4">銘柄を追加</h2>
+          <div className="flex items-center gap-3 mb-4">
+            <h2 className="text-xl font-semibold text-white">銘柄を追加</h2>
+            {selectedGroupFilter && (
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-400">→</span>
+                <span
+                  className={`text-xs px-2 py-1 rounded-full ${
+                    GROUP_COLORS[favoriteGroups.find(g => g.id === selectedGroupFilter)?.color || 'blue'].bg
+                  } ${
+                    GROUP_COLORS[favoriteGroups.find(g => g.id === selectedGroupFilter)?.color || 'blue'].text
+                  }`}
+                >
+                  ★ {favoriteGroups.find(g => g.id === selectedGroupFilter)?.name}に自動追加
+                </span>
+              </div>
+            )}
+          </div>
           <div className="flex flex-col md:flex-row gap-4 items-start">
             <div className="flex-1">
               <StockInput
