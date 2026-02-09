@@ -8,7 +8,7 @@ import SearchBar from '@/components/SearchBar';
 import { loadStockData, getStockData } from '@/data/stockNames';
 import { FavoriteGroup, GROUP_COLORS } from '@/types/favorites';
 
-const MAX_STOCKS = 5;
+const MAX_STOCKS = 30;
 const STORAGE_KEY = 'kabunote-stocks';
 const GROUPS_STORAGE_KEY = 'kabunote-favorite-groups';
 
