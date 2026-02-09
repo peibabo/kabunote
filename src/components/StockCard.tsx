@@ -21,8 +21,12 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
   const [customTags, setCustomTags] = useState<CustomTag[]>([]);
   const [isTagEditorOpen, setIsTagEditorOpen] = useState(false);
   const [isFavoriteGroupSelectorOpen, setIsFavoriteGroupSelectorOpen] = useState(false);
+  const [targetPrice, setTargetPrice] = useState('');
+  const [stopLoss, setStopLoss] = useState('');
   const memoKey = `kabunote-memo-${symbol}`;
   const tagsKey = `kabunote-tags-${symbol}`;
+  const targetPriceKey = `kabunote-target-price-${symbol}`;
+  const stopLossKey = `kabunote-stop-loss-${symbol}`;
 
   // 同期版を使って即座に表示（キャッシュがある場合）
   const companyName = stockData ? stockData.name : getCompanyNameSync(symbol);
@@ -54,6 +58,18 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
             console.error('Failed to parse saved tags:', error);
           }
         }
+
+        // 目標株価を読み込み
+        const savedTargetPrice = localStorage.getItem(targetPriceKey);
+        if (savedTargetPrice) {
+          setTargetPrice(savedTargetPrice);
+        }
+
+        // 損切りラインを読み込み
+        const savedStopLoss = localStorage.getItem(stopLossKey);
+        if (savedStopLoss) {
+          setStopLoss(savedStopLoss);
+        }
       }
 
       // 株式データを読み込み
@@ -69,7 +85,7 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
     };
 
     loadData();
-  }, [symbol, memoKey, tagsKey]);
+  }, [symbol, memoKey, tagsKey, targetPriceKey, stopLossKey]);
 
   // メモをlocalStorageに保存（入力毎に即座に保存）
   const handleMemoChange = (value: string) => {
@@ -84,6 +100,22 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
     setCustomTags(tags);
     if (typeof window !== 'undefined') {
       localStorage.setItem(tagsKey, JSON.stringify(tags));
+    }
+  };
+
+  // 目標株価をlocalStorageに保存
+  const handleTargetPriceChange = (value: string) => {
+    setTargetPrice(value);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(targetPriceKey, value);
+    }
+  };
+
+  // 損切りラインをlocalStorageに保存
+  const handleStopLossChange = (value: string) => {
+    setStopLoss(value);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(stopLossKey, value);
     }
   };
 
@@ -158,8 +190,8 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
                   </div>
                 )}
 
-                {/* 区切り線（タグがある場合のみ表示） */}
-                {(customTags.length > 0 || belongingGroups.length > 0) && (stockData?.sector || stockData?.market) && (
+                {/* 区切り線（業種・市場がある場合に表示） */}
+                {(stockData?.sector || stockData?.market) && (
                   <div className="border-t border-gray-700 my-2"></div>
                 )}
 
@@ -264,6 +296,48 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
         <p className="text-xs text-gray-400">
           {memo.length > 0 ? `${memo.length}文字` : '自動保存されます'}
         </p>
+      </div>
+
+      {/* 目標株価・損切りライン */}
+      <div className="space-y-3">
+        <h4 className="text-sm font-medium text-gray-300">投資規律設定</h4>
+        <div className="grid grid-cols-2 gap-3">
+          {/* 利確目標 */}
+          <div className="space-y-1">
+            <label htmlFor={`target-price-${symbol}`} className="text-xs font-medium text-green-300">
+              💰 利確目標
+            </label>
+            <div className="relative">
+              <input
+                id={`target-price-${symbol}`}
+                type="number"
+                value={targetPrice}
+                onChange={(e) => handleTargetPriceChange(e.target.value)}
+                placeholder="0"
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-green-500 focus:outline-none text-sm pr-8"
+              />
+              <span className="absolute right-3 top-2 text-xs text-gray-400">円</span>
+            </div>
+          </div>
+
+          {/* 損切ライン */}
+          <div className="space-y-1">
+            <label htmlFor={`stop-loss-${symbol}`} className="text-xs font-medium text-red-300">
+              🔻 損切ライン
+            </label>
+            <div className="relative">
+              <input
+                id={`stop-loss-${symbol}`}
+                type="number"
+                value={stopLoss}
+                onChange={(e) => handleStopLossChange(e.target.value)}
+                placeholder="0"
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-red-500 focus:outline-none text-sm pr-8"
+              />
+              <span className="absolute right-3 top-2 text-xs text-gray-400">円</span>
+            </div>
+          </div>
+        </div>
 
         {/* タグエディター */}
         {isTagEditorOpen && (
