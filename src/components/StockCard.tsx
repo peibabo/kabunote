@@ -23,10 +23,12 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
   const [isFavoriteGroupSelectorOpen, setIsFavoriteGroupSelectorOpen] = useState(false);
   const [targetPrice, setTargetPrice] = useState('');
   const [stopLoss, setStopLoss] = useState('');
+  const [earningsDate, setEarningsDate] = useState('');
   const memoKey = `kabunote-memo-${symbol}`;
   const tagsKey = `kabunote-tags-${symbol}`;
   const targetPriceKey = `kabunote-target-price-${symbol}`;
   const stopLossKey = `kabunote-stop-loss-${symbol}`;
+  const earningsDateKey = `kabunote-earnings-date-${symbol}`;
 
   // 同期版を使って即座に表示（キャッシュがある場合）
   const companyName = stockData ? stockData.name : getCompanyNameSync(symbol);
@@ -70,6 +72,12 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
         if (savedStopLoss) {
           setStopLoss(savedStopLoss);
         }
+
+        // 決算日を読み込み
+        const savedEarningsDate = localStorage.getItem(earningsDateKey);
+        if (savedEarningsDate) {
+          setEarningsDate(savedEarningsDate);
+        }
       }
 
       // 株式データを読み込み
@@ -85,7 +93,7 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
     };
 
     loadData();
-  }, [symbol, memoKey, tagsKey, targetPriceKey, stopLossKey]);
+  }, [symbol, memoKey, tagsKey, targetPriceKey, stopLossKey, earningsDateKey]);
 
   // メモをlocalStorageに保存（入力毎に即座に保存）
   const handleMemoChange = (value: string) => {
@@ -116,6 +124,46 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
     setStopLoss(value);
     if (typeof window !== 'undefined') {
       localStorage.setItem(stopLossKey, value);
+    }
+  };
+
+  // 決算日をlocalStorageに保存
+  const handleEarningsDateChange = (value: string) => {
+    setEarningsDate(value);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(earningsDateKey, value);
+    }
+  };
+
+  // カウントダウン計算ロジック
+  const getEarningsCountdown = () => {
+    if (!earningsDate) return null;
+
+    const today = new Date();
+    const earnings = new Date(earningsDate);
+    const timeDiff = earnings.getTime() - today.getTime();
+    const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+
+    // 決算日のフォーマット表示（M/D形式）
+    const month = earnings.getMonth() + 1;
+    const day = earnings.getDate();
+    const formattedDate = `${month}/${day}`;
+
+    if (daysDiff > 0) {
+      return {
+        text: `次回の決算日：${formattedDate}（あと${daysDiff}日）`,
+        status: daysDiff <= 7 ? 'urgent' : 'normal'
+      };
+    } else if (daysDiff === 0) {
+      return {
+        text: `決算発表日：${formattedDate}（本日）`,
+        status: 'today'
+      };
+    } else {
+      return {
+        text: `前回の決算日：${formattedDate}（${Math.abs(daysDiff)}日前）`,
+        status: 'past'
+      };
     }
   };
 
@@ -338,6 +386,52 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
             </div>
           </div>
         </div>
+      </div>
+
+      {/* 決算日カウントダウン */}
+      <div className="space-y-3">
+        <h4 className="text-sm font-medium text-gray-300">決算情報</h4>
+
+        {/* 決算日設定 */}
+        <div className="space-y-2">
+          <label htmlFor={`earnings-date-${symbol}`} className="text-xs font-medium text-blue-300">
+            📅 決算発表日
+          </label>
+          <input
+            id={`earnings-date-${symbol}`}
+            type="date"
+            value={earningsDate}
+            onChange={(e) => handleEarningsDateChange(e.target.value)}
+            className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none text-sm"
+          />
+        </div>
+
+        {/* 決算カウントダウン表示 */}
+        {(() => {
+          const countdown = getEarningsCountdown();
+          if (!countdown) return null;
+
+          const getStatusColor = (status: string) => {
+            switch (status) {
+              case 'urgent':
+                return 'bg-red-600 text-red-100 border-red-500';
+              case 'today':
+                return 'bg-yellow-600 text-yellow-100 border-yellow-500 animate-pulse';
+              case 'normal':
+                return 'bg-blue-600 text-blue-100 border-blue-500';
+              case 'past':
+                return 'bg-gray-600 text-gray-300 border-gray-500';
+              default:
+                return 'bg-gray-600 text-gray-300 border-gray-500';
+            }
+          };
+
+          return (
+            <div className={`px-3 py-2 rounded-lg border text-sm font-medium ${getStatusColor(countdown.status)}`}>
+              📈 {countdown.text}
+            </div>
+          );
+        })()}
 
         {/* タグエディター */}
         {isTagEditorOpen && (
