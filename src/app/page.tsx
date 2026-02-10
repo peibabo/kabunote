@@ -283,6 +283,40 @@ export default function Home() {
             </div>
           </div>
 
+          {/* 外部分析リンク */}
+          <div className="flex flex-wrap gap-3 mb-4">
+            <a
+              href="https://kabutan.jp/warning/record_w52_high_price&dispmode=normal"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white font-medium px-4 py-2 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
+            >
+              <span className="text-lg">📈</span>
+              <span>本日、52週高値を更新した銘柄</span>
+              <span className="text-xs opacity-80">（株探）</span>
+            </a>
+
+            <a
+              href="https://sekai-kabuka.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-medium px-4 py-2 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
+            >
+              <span className="text-lg">🌍</span>
+              <span>世界の株価</span>
+            </a>
+
+            <a
+              href="https://www.release.tdnet.info/inbs/I_main_00.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white font-medium px-4 py-2 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
+            >
+              <span className="text-lg">📋</span>
+              <span>適時開示情報</span>
+            </a>
+          </div>
+
           {/* 検索結果表示 */}
           {searchQuery.trim() && (
             <div className="bg-gray-800 rounded-lg p-3 mb-4">
