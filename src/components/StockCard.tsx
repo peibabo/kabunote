@@ -189,18 +189,33 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
   const externalLinks = [
     {
       name: '株探',
+      icon: '📊',
       url: `https://kabutan.jp/stock/chart?code=${symbol}`,
       color: 'bg-blue-600 hover:bg-blue-700'
     },
     {
       name: 'TradingView',
+      icon: '📈',
       url: `https://jp.tradingview.com/symbols/TSE-${symbol}/`,
       color: 'bg-green-600 hover:bg-green-700'
     },
     {
       name: 'Yahoo!',
+      icon: '🟣',
       url: `https://finance.yahoo.co.jp/quote/${symbol}.T`,
       color: 'bg-purple-600 hover:bg-purple-700'
+    },
+    {
+      name: 'バフェット・コード',
+      icon: '💰',
+      url: `https://www.buffett-code.com/company/${symbol}/`,
+      color: 'bg-yellow-600 hover:bg-yellow-700'
+    },
+    {
+      name: '適時開示',
+      icon: '📋',
+      url: `https://irbank.net/td/search?q=${symbol}`,
+      color: 'bg-gray-600 hover:bg-gray-700'
     }
   ];
 
@@ -286,7 +301,7 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
               </div>
             )}
           </div>
-          <p className="text-sm text-gray-300 truncate" title={companyName}>
+          <p className="text-sm text-gray-100 truncate font-bold" title={companyName}>
             {companyName}
           </p>
         </div>
@@ -313,16 +328,18 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
         </button>
 
         {/* 外部リンク */}
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-5 gap-1">
           {externalLinks.map((link) => (
             <a
               key={link.name}
               href={link.url}
               target="_blank"
               rel="noopener noreferrer"
-              className={`${link.color} text-white text-sm font-medium py-2 px-3 rounded-lg transition-colors text-center`}
+              className={`${link.color} text-white text-xs py-2 px-1 rounded-lg transition-colors text-center flex flex-col items-center gap-1 hover:scale-105 transform`}
+              title={link.name}
             >
-              {link.name}
+              <span className="text-sm">{link.icon}</span>
+              <span className="leading-tight">{link.name}</span>
             </a>
           ))}
         </div>
