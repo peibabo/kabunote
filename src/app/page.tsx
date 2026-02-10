@@ -11,6 +11,7 @@ import { FavoriteGroup, GROUP_COLORS } from '@/types/favorites';
 const MAX_STOCKS = 30;
 const STORAGE_KEY = 'kabunote-stocks';
 const GROUPS_STORAGE_KEY = 'kabunote-favorite-groups';
+const FILTER_STORAGE_KEY = 'kabunote-selected-group-filter';
 
 export default function Home() {
   const [stocks, setStocks] = useState<string[]>([]);
@@ -58,6 +59,13 @@ export default function Home() {
             const parsedGroups = JSON.parse(savedGroups);
             console.log('Parsed groups:', parsedGroups);
             setFavoriteGroups(parsedGroups);
+
+            // グループが読み込まれた後、保存されているフィルター状態を復元
+            const savedFilter = localStorage.getItem(FILTER_STORAGE_KEY);
+            if (savedFilter && parsedGroups.some((g: FavoriteGroup) => g.id === savedFilter)) {
+              // 保存されたグループが実際に存在する場合のみ復元
+              setSelectedGroupFilter(savedFilter);
+            }
           } catch (e) {
             console.error('Failed to load saved groups:', e);
           }
@@ -89,8 +97,13 @@ export default function Home() {
       // 確認のため即座に読み戻し
       const verification = localStorage.getItem(GROUPS_STORAGE_KEY);
       console.log('Verification read:', verification);
+
+      // 選択されているグループが削除された場合、フィルターをクリア
+      if (selectedGroupFilter && !favoriteGroups.some(g => g.id === selectedGroupFilter)) {
+        handleGroupFilterChange(null);
+      }
     }
-  }, [favoriteGroups, isInitialized]);
+  }, [favoriteGroups, isInitialized, selectedGroupFilter]);
 
   const handleAddStock = (code: string) => {
     if (stocks.length >= MAX_STOCKS) {
@@ -139,6 +152,18 @@ export default function Home() {
       stocks: group.stocks.filter(s => s !== code)
     }));
     setFavoriteGroups(updatedGroups);
+  };
+
+  // フィルター変更時に状態を保存
+  const handleGroupFilterChange = (groupId: string | null) => {
+    setSelectedGroupFilter(groupId);
+    if (typeof window !== 'undefined') {
+      if (groupId) {
+        localStorage.setItem(FILTER_STORAGE_KEY, groupId);
+      } else {
+        localStorage.removeItem(FILTER_STORAGE_KEY);
+      }
+    }
   };
 
   // 検索機能
@@ -393,7 +418,7 @@ export default function Home() {
             </div>
             <div className="flex flex-wrap gap-2">
               <button
-                onClick={() => setSelectedGroupFilter(null)}
+                onClick={() => handleGroupFilterChange(null)}
                 className={`text-sm px-3 py-2 rounded-full transition-colors ${
                   selectedGroupFilter === null
                     ? 'bg-white text-gray-900'
@@ -405,7 +430,7 @@ export default function Home() {
               {favoriteGroups.map((group) => (
                 <button
                   key={group.id}
-                  onClick={() => setSelectedGroupFilter(group.id)}
+                  onClick={() => handleGroupFilterChange(group.id)}
                   className={`text-sm px-3 py-2 rounded-full transition-colors ${
                     selectedGroupFilter === group.id
                       ? `${GROUP_COLORS[group.color].bg} ${GROUP_COLORS[group.color].text}`
