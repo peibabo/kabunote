@@ -337,13 +337,12 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
                 {/* タグ・グループ（下部） */}
                 {(customTags.length > 0 || belongingGroups.length > 0) && (
                   <div className="flex flex-wrap gap-1 items-center">
-                    <span className="text-xs text-gray-400 font-medium">🏷️</span>
                     {customTags.map((tag) => (
                       <span
                         key={tag.id}
                         className={`text-xs px-2 py-0.5 rounded-full ${TAG_COLORS[tag.color].bg} ${TAG_COLORS[tag.color].text}`}
                       >
-                        {tag.label}
+                        🏷️ {tag.label}
                       </span>
                     ))}
                     {belongingGroups.map((group) => (
@@ -377,7 +376,7 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
               </div>
             )}
           </div>
-          <p className="text-sm text-gray-100 truncate font-bold" title={companyName}>
+          <p className="text-base text-gray-100 truncate font-bold" title={companyName}>
             {companyName}
           </p>
         </div>
@@ -431,11 +430,20 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
           value={memo}
           onChange={(e) => handleMemoChange(e.target.value)}
           placeholder="この銘柄について思考を整理しましょう..."
-          className="w-full h-32 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none resize-none"
+          maxLength={2000}
+          className="w-full h-32 px-4 py-3 bg-slate-100 border border-slate-300 rounded-lg text-slate-800 placeholder-slate-500 focus:border-blue-500 focus:outline-none resize-none font-mono leading-6 shadow-inner"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3csvg width='100' height='24' xmlns='http://www.w3.org/2000/svg'%3e%3cline x1='0' y1='17' x2='100' y2='17' stroke='%23a1a1aa' stroke-width='1' stroke-dasharray='3,3' opacity='0.4'/%3e%3c/svg%3e")`,
+            backgroundSize: '100px 24px',
+            backgroundPosition: '0 3px'
+          }}
           rows={4}
         />
-        <p className="text-xs text-gray-400">
-          {memo.length > 0 ? `${memo.length}文字` : '自動保存されます'}
+        <p className="text-xs text-gray-400 flex justify-between">
+          <span>自動保存されます</span>
+          <span className={`${memo.length > 1800 ? 'text-orange-400' : memo.length > 1900 ? 'text-red-400' : 'text-gray-400'}`}>
+            {memo.length}/2000文字
+          </span>
         </p>
       </div>
 
