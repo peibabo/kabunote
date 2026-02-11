@@ -29,6 +29,7 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
   const [earningsDate, setEarningsDate] = useState('');
   const [positions, setPositions] = useState<Position[]>([]);
   const [isPositionManagerOpen, setIsPositionManagerOpen] = useState(false);
+  const [isMemoModalOpen, setIsMemoModalOpen] = useState(false);
   const memoKey = `kabunote-memo-${symbol}`;
   const tagsKey = `kabunote-tags-${symbol}`;
   const targetPriceKey = `kabunote-target-price-${symbol}`;
@@ -46,6 +47,7 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
 
   // ポジションサマリーを計算
   const positionSummary: PositionSummary = calculatePositionSummary(positions);
+
 
   // 含み益・含み損を計算
   const profitLossInfo: ProfitLossInfo | null = calculateProfitLoss(
@@ -79,6 +81,7 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
   };
 
   const progressData = calculateProgress();
+
 
   // CSVデータとメモを読み込み
   useEffect(() => {
@@ -423,7 +426,7 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
       {/* メモ欄 */}
       <div className="space-y-2">
         <label htmlFor={`memo-${symbol}`} className="text-sm font-medium text-gray-300">
-          投資メモ
+          株ノオト
         </label>
         <textarea
           id={`memo-${symbol}`}
@@ -439,12 +442,17 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
           }}
           rows={4}
         />
-        <p className="text-xs text-gray-400 flex justify-between">
-          <span>自動保存されます</span>
-          <span className={`${memo.length > 1800 ? 'text-orange-400' : memo.length > 1900 ? 'text-red-400' : 'text-gray-400'}`}>
+        <div className="flex items-center justify-between">
+          <button
+            onClick={() => setIsMemoModalOpen(true)}
+            className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
+          >
+            📝 株ノオトを大きく開く
+          </button>
+          <span className={`text-xs ${memo.length > 1800 ? 'text-orange-400' : memo.length > 1900 ? 'text-red-400' : 'text-gray-400'}`}>
             {memo.length}/2000文字
           </span>
-        </p>
+        </div>
       </div>
 
       {/* 決算情報 */}
@@ -704,6 +712,51 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
             onPositionsChange={handlePositionsChange}
             onClose={() => setIsPositionManagerOpen(false)}
           />
+        )}
+
+        {/* メモ拡大モーダル */}
+        {isMemoModalOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={() => setIsMemoModalOpen(false)}>
+            <div className="bg-gray-800 rounded-lg p-6 w-full max-w-4xl max-h-[95vh] m-4" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                  <span>📝</span>
+                  <span>{companyName || symbol} - 株ノオト</span>
+                </h3>
+                <button
+                  onClick={() => setIsMemoModalOpen(false)}
+                  className="text-gray-400 hover:text-white text-xl"
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                <textarea
+                  value={memo}
+                  onChange={(e) => handleMemoChange(e.target.value)}
+                  placeholder="この銘柄について詳しく思考を整理しましょう..."
+                  maxLength={2000}
+                  className="w-full h-[70vh] px-4 py-3 bg-slate-100 border border-slate-300 rounded-lg text-slate-800 placeholder-slate-500 focus:border-blue-500 focus:outline-none resize-none font-mono leading-6 shadow-inner"
+                  style={{
+                    backgroundImage: `url("data:image/svg+xml,%3csvg width='100' height='24' xmlns='http://www.w3.org/2000/svg'%3e%3cline x1='0' y1='17' x2='100' y2='17' stroke='%23a1a1aa' stroke-width='1' stroke-dasharray='3,3' opacity='0.4'/%3e%3c/svg%3e")`,
+                    backgroundSize: '100px 24px',
+                    backgroundPosition: '0 3px'
+                  }}
+                  autoFocus
+                />
+
+                <div className="flex items-center justify-between">
+                  <p className="text-xs text-gray-400">
+                    自動保存されます
+                  </p>
+                  <span className={`text-xs ${memo.length > 1800 ? 'text-orange-400' : memo.length > 1900 ? 'text-red-400' : 'text-gray-400'}`}>
+                    {memo.length}/2000文字
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* タグエディター */}
