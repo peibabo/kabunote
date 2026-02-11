@@ -105,14 +105,23 @@ export default function PositionManager({ positions, onPositionsChange, onClose 
 
           <div className="grid grid-cols-2 gap-3 mb-3">
             <div>
-              <label className="block text-xs font-medium text-gray-300 mb-1">保有株数</label>
-              <input
-                type="number"
-                value={formData.shares}
-                onChange={(e) => setFormData({ ...formData, shares: e.target.value })}
-                placeholder="100"
-                className="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded text-white text-sm focus:border-blue-500 focus:outline-none"
-              />
+              <label className="block text-xs font-medium text-gray-300 mb-1">保有株数（100株単位）</label>
+              <div className="relative">
+                <input
+                  type="number"
+                  value={formData.shares ? Math.floor(parseInt(formData.shares) / 100).toString() : ''}
+                  onChange={(e) => {
+                    const units = e.target.value;
+                    const shares = units ? (parseInt(units) * 100).toString() : '';
+                    setFormData({ ...formData, shares });
+                  }}
+                  placeholder="1"
+                  title="100株単位で入力してください（例：1 = 100株、5 = 500株）"
+                  min="1"
+                  className="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded text-white text-sm focus:border-blue-500 focus:outline-none pr-12"
+                />
+                <span className="absolute right-3 top-2 text-xs text-gray-400">×100株</span>
+              </div>
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-300 mb-1">取得価額（1株）</label>
