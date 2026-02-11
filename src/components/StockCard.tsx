@@ -6,6 +6,8 @@ import { CustomTag, TAG_COLORS } from '@/types/tags';
 import { FavoriteGroup, GROUP_COLORS } from '@/types/favorites';
 import TagEditor from './TagEditor';
 import FavoriteGroupSelector from './FavoriteGroupSelector';
+import PositionManager from './PositionManager';
+import { Position, PositionSummary, calculatePositionSummary, formatPrice, formatShares, ProfitLossInfo, calculateProfitLoss, formatProfitLoss } from '@/types/positions';
 
 interface StockCardProps {
   symbol: string;
@@ -24,11 +26,14 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
   const [targetPrice, setTargetPrice] = useState('');
   const [stopLoss, setStopLoss] = useState('');
   const [earningsDate, setEarningsDate] = useState('');
+  const [positions, setPositions] = useState<Position[]>([]);
+  const [isPositionManagerOpen, setIsPositionManagerOpen] = useState(false);
   const memoKey = `kabunote-memo-${symbol}`;
   const tagsKey = `kabunote-tags-${symbol}`;
   const targetPriceKey = `kabunote-target-price-${symbol}`;
   const stopLossKey = `kabunote-stop-loss-${symbol}`;
   const earningsDateKey = `kabunote-earnings-date-${symbol}`;
+  const positionsKey = `kabunote-positions-${symbol}`;
 
   // 同期版を使って即座に表示（キャッシュがある場合）
   const companyName = stockData ? stockData.name : getCompanyNameSync(symbol);
@@ -36,6 +41,16 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
 
   // この銘柄が含まれているお気に入りグループ
   const belongingGroups = favoriteGroups.filter(group => group.stocks.includes(symbol));
+
+  // ポジションサマリーを計算
+  const positionSummary: PositionSummary = calculatePositionSummary(positions);
+
+  // 含み益・含み損を計算
+  const profitLossInfo: ProfitLossInfo | null = calculateProfitLoss(
+    positionSummary,
+    targetPrice ? parseFloat(targetPrice) : undefined,
+    stopLoss ? parseFloat(stopLoss) : undefined
+  );
 
   // CSVデータとメモを読み込み
   useEffect(() => {
@@ -78,6 +93,17 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
         if (savedEarningsDate) {
           setEarningsDate(savedEarningsDate);
         }
+
+        // ポジション情報を読み込み
+        const savedPositions = localStorage.getItem(positionsKey);
+        if (savedPositions) {
+          try {
+            const parsedPositions = JSON.parse(savedPositions);
+            setPositions(parsedPositions);
+          } catch (error) {
+            console.error('Failed to parse saved positions:', error);
+          }
+        }
       }
 
       // 株式データを読み込み
@@ -93,7 +119,7 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
     };
 
     loadData();
-  }, [symbol, memoKey, tagsKey, targetPriceKey, stopLossKey, earningsDateKey]);
+  }, [symbol, memoKey, tagsKey, targetPriceKey, stopLossKey, earningsDateKey, positionsKey]);
 
   // メモをlocalStorageに保存（入力毎に即座に保存）
   const handleMemoChange = (value: string) => {
@@ -132,6 +158,14 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
     setEarningsDate(value);
     if (typeof window !== 'undefined') {
       localStorage.setItem(earningsDateKey, value);
+    }
+  };
+
+  // ポジション情報をlocalStorageに保存
+  const handlePositionsChange = (updatedPositions: Position[]) => {
+    setPositions(updatedPositions);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(positionsKey, JSON.stringify(updatedPositions));
     }
   };
 
@@ -403,6 +437,43 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
             </div>
           </div>
         </div>
+
+        {/* 含み益・含み損表示 */}
+        {profitLossInfo && positionSummary.totalShares > 0 && (
+          <div className="mt-4 p-3 bg-gray-600 rounded-lg">
+            <h5 className="text-xs font-medium text-gray-300 mb-2">📊 損益シミュレーション</h5>
+            <div className="grid grid-cols-2 gap-3">
+              {/* 目標価格での利益 */}
+              {targetPrice && (
+                <div className="text-center">
+                  <div className="text-xs text-gray-400 mb-1">利確目標達成時</div>
+                  <div className={`text-sm font-bold ${profitLossInfo.targetProfit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                    {formatProfitLoss(profitLossInfo.targetProfit)}円
+                  </div>
+                  <div className={`text-xs ${profitLossInfo.targetProfitPercent >= 0 ? 'text-green-300' : 'text-red-300'}`}>
+                    ({profitLossInfo.targetProfitPercent >= 0 ? '+' : ''}{profitLossInfo.targetProfitPercent.toFixed(1)}%)
+                  </div>
+                </div>
+              )}
+
+              {/* 損切ラインでの損失 */}
+              {stopLoss && (
+                <div className="text-center">
+                  <div className="text-xs text-gray-400 mb-1">損切ライン到達時</div>
+                  <div className={`text-sm font-bold ${profitLossInfo.stopLoss >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                    {formatProfitLoss(profitLossInfo.stopLoss)}円
+                  </div>
+                  <div className={`text-xs ${profitLossInfo.stopLossPercent >= 0 ? 'text-green-300' : 'text-red-300'}`}>
+                    ({profitLossInfo.stopLossPercent >= 0 ? '+' : ''}{profitLossInfo.stopLossPercent.toFixed(1)}%)
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="mt-2 text-xs text-gray-400 text-center">
+              平均取得価額: {formatPrice(positionSummary.averagePrice)}円 × {formatShares(positionSummary.totalShares)}株
+            </div>
+          </div>
+        )}
       </div>
 
       {/* 決算日カウントダウン */}
@@ -449,6 +520,66 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
             </div>
           );
         })()}
+      </div>
+
+      {/* ポジション管理 */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h4 className="text-sm font-medium text-gray-300">保有ポジション</h4>
+          <button
+            onClick={() => setIsPositionManagerOpen(true)}
+            className="text-xs bg-indigo-600 hover:bg-indigo-700 text-white px-2 py-1 rounded transition-colors"
+          >
+            ポジション管理
+          </button>
+        </div>
+
+        {positions.length > 0 ? (
+          <div className="bg-gray-700 rounded-lg p-3 space-y-2">
+            {/* ポジションサマリー */}
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div>
+                <span className="text-gray-400">保有株数：</span>
+                <span className="text-white font-medium">{formatShares(positionSummary.totalShares)}株</span>
+              </div>
+              <div>
+                <span className="text-gray-400">平均取得：</span>
+                <span className="text-green-300 font-medium">{formatPrice(positionSummary.averagePrice)}円</span>
+              </div>
+              <div>
+                <span className="text-gray-400">総投資額：</span>
+                <span className="text-blue-300 font-medium">{formatPrice(positionSummary.totalCost)}円</span>
+              </div>
+              <div>
+                <span className="text-gray-400">ポジション数：</span>
+                <span className="text-gray-200">{positionSummary.positionCount}件</span>
+              </div>
+            </div>
+
+            {/* ポジション一覧（簡易表示） */}
+            <div className="space-y-1 max-h-24 overflow-y-auto">
+              {positions.map((position) => (
+                <div key={position.id} className="flex justify-between items-center text-xs text-gray-300 bg-gray-800 px-2 py-1 rounded">
+                  <span>{formatShares(position.shares)}株 @ {formatPrice(position.purchasePrice)}円</span>
+                  <span>{position.purchaseDate}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="text-xs text-gray-400 text-center py-2">
+            保有ポジションが登録されていません
+          </div>
+        )}
+
+        {/* ポジション管理モーダル */}
+        {isPositionManagerOpen && (
+          <PositionManager
+            positions={positions}
+            onPositionsChange={handlePositionsChange}
+            onClose={() => setIsPositionManagerOpen(false)}
+          />
+        )}
 
         {/* タグエディター */}
         {isTagEditorOpen && (
