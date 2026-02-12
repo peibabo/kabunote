@@ -1,36 +1,168 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# カブノオト - 投資思考整理ダッシュボード
 
-## Getting Started
+![Kabunote Logo](public/kabunote-logo.png)
 
-First, run the development server:
+> 投資家の思考を整理する、直感的で美しいダッシュボード
+
+## 🎯 概要
+
+**カブノオト**は、投資家のための思考整理に特化したWebアプリケーションです。日本株投資において、銘柄の分析・メモ・ポジション管理を一元化し、より良い投資判断をサポートします。
+
+### ✨ 主な特徴
+
+- 📝 **株ノオト機能** - 銘柄別の詳細メモ管理
+- 🏷️ **カスタムタグ** - 視覚的な銘柄分類
+- ✋ **ドラッグ&ドロップ** - 直感的な並び替え
+- 💼 **ポジション管理** - 複数建玉の詳細追跡
+- 🎯 **投資規律設定** - 目標・損切りラインの管理
+- 🔍 **全銘柄検索** - 高速・高精度な検索機能
+
+## 🚀 クイックスタート
+
+### 必要環境
+
+- Node.js 18.0+
+- npm または yarn
+
+### インストール
+
+```bash
+# リポジトリをクローン
+git clone https://github.com/peibabo/kabunote.git
+cd kabunote
+
+# 依存関係をインストール
+npm install
+
+# 開発サーバーを起動
+npm run dev
+```
+
+### アクセス
+
+ブラウザで [http://localhost:3000](http://localhost:3000) を開く
+
+## 🎨 機能紹介
+
+### 1. 銘柄管理
+- **検索機能**: 会社名・銘柄コードでの高速検索
+- **オートコンプリート**: リアルタイム検索サジェスト
+- **CSV データベース**: 日本株全銘柄データを内蔵
+
+### 2. 株ノオト
+- **モーダル編集**: 大画面での編集モード
+- **自動保存**: リアルタイムでのデータ保存
+- **永続化**: ブラウザ再起動でも内容を保持
+
+### 3. ドラッグ&ドロップ
+- **直感的操作**: ドラッグハンドルでカード移動
+- **視覚的フィードバック**: 美しいアニメーション効果
+- **順序記憶**: 並び順を自動保存
+
+### 4. ポジション管理
+- **複数ポジション**: 同一銘柄の分割建玉管理
+- **自動計算**: 平均取得価額・総投資額の算出
+- **詳細記録**: 取得日・メモ等の詳細情報
+
+### 5. 投資規律
+- **目標設定**: 利益確定ラインの設定
+- **リスク管理**: 損切りラインの明確化
+- **進捗可視化**: ゲージによる進捗表示
+
+## 🛠️ 技術スタック
+
+- **Frontend**: Next.js 16.1.6 + TypeScript
+- **Styling**: Tailwind CSS
+- **ドラッグ&ドロップ**: @dnd-kit
+- **データ**: CSV + localStorage
+- **フォント**: M PLUS 1p, Google Fonts
+
+## 📂 プロジェクト構造
+
+```
+src/
+├── app/                    # Next.js App Router
+│   ├── layout.tsx         # レイアウト・フォント設定
+│   └── page.tsx           # メインページ・D&D実装
+├── components/            # Reactコンポーネント
+│   ├── StockCard.tsx      # 銘柄カード（D&D対応）
+│   ├── StockInput.tsx     # 銘柄検索・入力
+│   ├── SearchBar.tsx      # ヘッダー検索バー
+│   ├── TagManager.tsx     # タグ管理
+│   ├── PositionManager.tsx # ポジション管理
+│   └── FavoriteGroupManager.tsx # グループ管理
+├── data/
+│   └── stockNames.ts      # CSV解析・検索ロジック
+├── types/                 # TypeScript型定義
+│   ├── tags.ts           # タグシステム
+│   ├── favorites.ts      # グループ機能
+│   └── positions.ts      # ポジション管理
+└── public/
+    ├── data/stocks.csv   # 日本株全銘柄データ
+    └── kabunote-logo.png # ロゴファイル
+```
+
+## 🎯 使用方法
+
+### 1. 銘柄を追加
+1. 検索ボックスに銘柄コードまたは会社名を入力
+2. オートコンプリートから選択またはEnterキーで追加
+
+### 2. 株ノオトを編集
+1. カード内のテキストエリアで直接編集
+2. 「株ノオトを大きく開く」ボタンでモーダル編集
+
+### 3. カードを並び替え
+1. カード右上の「⋮⋮」ハンドルをドラッグ
+2. 好きな位置にドロップして並び替え
+
+### 4. ポジションを管理
+1. 「ポジション管理」ボタンをクリック
+2. 株数・取得価額・日付を入力して記録
+
+## 🔧 開発
+
+### 開発モード
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### ビルド
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run build
+npm start
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### リント
 
-## Learn More
+```bash
+npm run lint
+```
 
-To learn more about Next.js, take a look at the following resources:
+## 🤝 コントリビューション
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+プルリクエストや Issue の報告を歓迎します！
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 開発の流れ
 
-## Deploy on Vercel
+1. このリポジトリをフォーク
+2. フィーチャーブランチを作成 (`git checkout -b feature/new-feature`)
+3. 変更をコミット (`git commit -m 'Add some feature'`)
+4. ブランチをプッシュ (`git push origin feature/new-feature`)
+5. プルリクエストを作成
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 📄 ライセンス
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+このプロジェクトは MIT License の下で公開されています。
+
+## 🙏 謝辞
+
+- 日本株データ提供元
+- オープンソースライブラリの開発者の皆様
+- フィードバックをくださったユーザーの皆様
+
+---
+
+**📈 より良い投資判断のために - カブノオト**
