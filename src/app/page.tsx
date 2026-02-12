@@ -7,11 +7,27 @@ import FavoriteGroupManager from '@/components/FavoriteGroupManager';
 import SearchBar from '@/components/SearchBar';
 import { loadStockData, getStockData } from '@/data/stockNames';
 import { FavoriteGroup, GROUP_COLORS } from '@/types/favorites';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  rectSortingStrategy,
+} from '@dnd-kit/sortable';
 
 const MAX_STOCKS = 30;
 const STORAGE_KEY = 'kabunote-stocks';
 const GROUPS_STORAGE_KEY = 'kabunote-favorite-groups';
 const FILTER_STORAGE_KEY = 'kabunote-selected-group-filter';
+const ORDER_STORAGE_KEY = 'kabunote-stocks-order';
 
 export default function Home() {
   const [stocks, setStocks] = useState<string[]>([]);
@@ -23,6 +39,41 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<string[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+
+  // ドラッグ&ドロップセンサー
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  // ドラッグ終了ハンドラー
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = filteredStocks.indexOf(active.id as string);
+      const newIndex = filteredStocks.indexOf(over.id as string);
+
+      // ソートされた新しい順序を計算
+      const newOrder = arrayMove(filteredStocks, oldIndex, newIndex);
+
+      // stocks配列を新しい順序で再構成
+      const newStocks = [...stocks];
+      const otherStocks = stocks.filter(stock => !filteredStocks.includes(stock));
+
+      // フィルターされた株のみ並び替えて、他の株は元の位置に
+      const updatedStocks = [...otherStocks, ...newOrder];
+
+      setStocks(updatedStocks);
+
+      // localStorage に順序を保存
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(updatedStocks));
+      }
+    }
+  };
 
   // デバッグ用
   console.log('Current favoriteGroups state:', favoriteGroups);
@@ -39,13 +90,30 @@ export default function Home() {
 
       // クライアントサイドでのみlocalStorageにアクセス
       if (typeof window !== 'undefined') {
-        // 保存されている銘柄を読み込み
+        // 保存されている銘柄と順序を読み込み
         const saved = localStorage.getItem(STORAGE_KEY);
+        const savedOrder = localStorage.getItem(ORDER_STORAGE_KEY);
+
         if (saved) {
           try {
             const parsedStocks = JSON.parse(saved);
-            setStocks(parsedStocks);
-            console.log('Loaded stocks:', parsedStocks);
+
+            // 保存された順序がある場合は使用、ない場合はデフォルトの順序
+            let orderedStocks = parsedStocks;
+            if (savedOrder) {
+              try {
+                const parsedOrder = JSON.parse(savedOrder);
+                // 順序配列にあるもののみ使用し、存在しないものは末尾に追加
+                const existingStocks = parsedOrder.filter((stock: string) => parsedStocks.includes(stock));
+                const newStocks = parsedStocks.filter((stock: string) => !parsedOrder.includes(stock));
+                orderedStocks = [...existingStocks, ...newStocks];
+              } catch (e) {
+                console.error('Failed to load saved order:', e);
+              }
+            }
+
+            setStocks(orderedStocks);
+            console.log('Loaded stocks:', orderedStocks);
           } catch (e) {
             console.error('Failed to load saved stocks:', e);
           }
@@ -116,8 +184,14 @@ export default function Home() {
       return;
     }
 
-    setStocks([...stocks, code]);
+    const newStocks = [...stocks, code];
+    setStocks(newStocks);
     setError('');
+
+    // localStorage に順序を保存
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(newStocks));
+    }
 
     // お気に入りグループフィルターが選択されている場合、自動的にそのグループに追加
     if (selectedGroupFilter) {
@@ -135,8 +209,14 @@ export default function Home() {
   };
 
   const handleRemoveStock = (code: string) => {
-    setStocks(stocks.filter(stock => stock !== code));
+    const newStocks = stocks.filter(stock => stock !== code);
+    setStocks(newStocks);
     setError('');
+
+    // localStorage に順序を保存
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(newStocks));
+    }
 
     // クライアントサイドでのみlocalStorageにアクセス
     if (typeof window !== 'undefined') {
@@ -517,17 +597,25 @@ export default function Home() {
               )}
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredStocks.map((stock) => (
-                <StockCard
-                  key={stock}
-                  symbol={stock}
-                  onRemove={() => handleRemoveStock(stock)}
-                  favoriteGroups={favoriteGroups}
-                  onFavoriteGroupsChange={setFavoriteGroups}
-                />
-              ))}
-            </div>
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext items={filteredStocks} strategy={rectSortingStrategy}>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredStocks.map((stock) => (
+                    <StockCard
+                      key={stock}
+                      symbol={stock}
+                      onRemove={() => handleRemoveStock(stock)}
+                      favoriteGroups={favoriteGroups}
+                      onFavoriteGroupsChange={setFavoriteGroups}
+                    />
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
           )}
         </div>
 
