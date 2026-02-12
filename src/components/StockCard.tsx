@@ -8,6 +8,8 @@ import TagEditor from './TagEditor';
 import FavoriteGroupSelector from './FavoriteGroupSelector';
 import PositionManager from './PositionManager';
 import { Position, PositionSummary, calculatePositionSummary, formatPrice, formatShares, ProfitLossInfo, calculateProfitLoss, formatProfitLoss } from '@/types/positions';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 interface StockCardProps {
   symbol: string;
@@ -17,6 +19,22 @@ interface StockCardProps {
 }
 
 export default function StockCard({ symbol, onRemove, favoriteGroups, onFavoriteGroupsChange }: StockCardProps) {
+  // ドラッグ&ドロップ機能
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: symbol });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
   const [memo, setMemo] = useState('');
   const [stockData, setStockData] = useState<StockData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -299,7 +317,14 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
   ];
 
   return (
-    <div className="bg-gray-800 rounded-lg border border-gray-700 p-4 space-y-4">
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      className={`bg-gray-800 rounded-lg border border-gray-700 p-4 space-y-4 transition-all duration-200 ${
+        isDragging ? 'z-50 shadow-2xl ring-2 ring-blue-500 ring-opacity-50 bg-gray-750' : 'hover:shadow-lg'
+      }`}
+    >
       {/* ヘッダー */}
       <div className="flex items-start justify-between">
         <div className="flex-1 min-w-0">
@@ -383,13 +408,23 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
             {companyName}
           </p>
         </div>
-        <button
-          onClick={onRemove}
-          className="bg-red-600 hover:bg-red-700 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold transition-colors ml-2 flex-shrink-0"
-          aria-label="銘柄カードを削除"
-        >
-          ×
-        </button>
+        <div className="flex gap-2">
+          <button
+            {...listeners}
+            className="bg-gray-600 hover:bg-gray-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm transition-colors cursor-grab active:cursor-grabbing flex-shrink-0"
+            aria-label="カードを移動"
+            title="ドラッグして順序を変更"
+          >
+            ⋮⋮
+          </button>
+          <button
+            onClick={onRemove}
+            className="bg-red-600 hover:bg-red-700 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold transition-colors flex-shrink-0"
+            aria-label="銘柄カードを削除"
+          >
+            ×
+          </button>
+        </div>
       </div>
 
       {/* 外部リンクボタン */}
