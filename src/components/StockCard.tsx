@@ -49,6 +49,15 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
   const [positions, setPositions] = useState<Position[]>([]);
   const [isPositionManagerOpen, setIsPositionManagerOpen] = useState(false);
   const [isMemoModalOpen, setIsMemoModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<'basic' | 'analysis' | 'management'>('basic');
+
+  // タブの定義
+  const tabs = [
+    { id: 'basic' as const, label: '📝 基本', icon: '📝' },
+    { id: 'analysis' as const, label: '📊 分析', icon: '📊' },
+    { id: 'management' as const, label: '💼 管理', icon: '💼' }
+  ];
+
   const memoKey = `kabunote-memo-${symbol}`;
   const tagsKey = `kabunote-tags-${symbol}`;
   const targetPriceKey = `kabunote-target-price-${symbol}`;
@@ -56,6 +65,7 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
   const currentPriceKey = `kabunote-current-price-${symbol}`;
   const earningsDateKey = `kabunote-earnings-date-${symbol}`;
   const positionsKey = `kabunote-positions-${symbol}`;
+  const activeTabKey = `kabunote-active-tab-${symbol}`;
 
   // 同期版を使って即座に表示（キャッシュがある場合）
   const companyName = stockData ? stockData.name : getCompanyNameSync(symbol);
@@ -160,6 +170,12 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
             console.error('Failed to parse saved positions:', error);
           }
         }
+
+        // アクティブタブ状態を読み込み
+        const savedActiveTab = localStorage.getItem(activeTabKey);
+        if (savedActiveTab && (savedActiveTab === 'basic' || savedActiveTab === 'analysis' || savedActiveTab === 'management')) {
+          setActiveTab(savedActiveTab as 'basic' | 'analysis' | 'management');
+        }
       }
 
       // 株式データを読み込み
@@ -175,7 +191,7 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
     };
 
     loadData();
-  }, [symbol, memoKey, tagsKey, targetPriceKey, stopLossKey, currentPriceKey, earningsDateKey, positionsKey]);
+  }, [symbol, memoKey, tagsKey, targetPriceKey, stopLossKey, currentPriceKey, earningsDateKey, positionsKey, activeTabKey]);
 
   // デバウンスされたメモ保存関数（500ms後に保存）
   const debouncedSaveMemo = useDebouncedCallback((value: string) => {
@@ -263,10 +279,24 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
     }
   }, 200);
 
+  // デバウンスされたタブ状態保存関数（100ms後に保存）
+  const debouncedSaveActiveTab = useDebouncedCallback((tab: 'basic' | 'analysis' | 'management') => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(activeTabKey, tab);
+      console.log('🏷️ アクティブタブ保存:', symbol, tab);
+    }
+  }, 100);
+
   // ポジション変更ハンドラー（即座にUI更新、デバウンスで保存）
   const handlePositionsChange = (updatedPositions: Position[]) => {
     setPositions(updatedPositions);
     debouncedSavePositions(updatedPositions);
+  };
+
+  // タブ変更ハンドラー（即座にUI更新、デバウンスで保存）
+  const handleTabChange = (tab: 'basic' | 'analysis' | 'management') => {
+    setActiveTab(tab);
+    debouncedSaveActiveTab(tab);
   };
 
   // カウントダウン計算ロジック
@@ -325,31 +355,29 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
       name: '株探',
       icon: '📊',
       url: `https://kabutan.jp/stock/chart?code=${symbol}`,
-      color: 'bg-blue-600 hover:bg-blue-700'
-    },
-    {
-      name: 'TradingView',
-      icon: '📈',
-      url: `https://jp.tradingview.com/symbols/TSE-${symbol}/`,
-      color: 'bg-green-600 hover:bg-green-700'
+      bgColor: 'rgb(5,47,109)', // 株探の正式ブランドカラー
+      hoverBgColor: 'rgb(3,35,82)' // 少し暗めのホバー色
     },
     {
       name: 'Yahoo!',
       icon: '🟣',
       url: `https://finance.yahoo.co.jp/quote/${symbol}.T`,
-      color: 'bg-purple-600 hover:bg-purple-700'
+      bgColor: '#ff0033', // Yahoo!の正式ブランドカラー
+      hoverBgColor: '#cc0029' // 少し暗めのホバー色
     },
     {
       name: 'バフェット・コード',
       icon: '💰',
       url: `https://www.buffett-code.com/company/${symbol}/`,
-      color: 'bg-yellow-600 hover:bg-yellow-700'
+      bgColor: 'rgb(14,102,164)', // バフェット・コードの正式ブランドカラー
+      hoverBgColor: 'rgb(11,82,131)' // 少し暗めのホバー色
     },
     {
       name: '適時開示',
       icon: '📋',
       url: `https://irbank.net/td/search?q=${symbol}`,
-      color: 'bg-gray-600 hover:bg-gray-700'
+      bgColor: 'rgb(71,85,105)', // 適時開示のグレー系
+      hoverBgColor: 'rgb(51,65,85)' // 少し暗めのホバー色
     }
   ];
 
@@ -464,395 +492,440 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
         </div>
       </div>
 
-      {/* 外部リンクボタン */}
-      <div className="space-y-2">
-        {/* チャート確認ボタン */}
-        <button
-          onClick={() => {
-            const url = `https://jp.tradingview.com/symbols/TSE-${symbol}/`;
-            window.open(url, 'stockChart', 'width=800,height=800,scrollbars=yes,resizable=yes');
-          }}
-          className="w-full bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium py-2 px-3 rounded-lg transition-colors"
-        >
-          📈 最新チャートを確認
-        </button>
-
-        {/* 外部リンク */}
-        <div className="grid grid-cols-5 gap-1">
-          {externalLinks.map((link) => (
-            <a
-              key={link.name}
-              href={link.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`${link.color} text-white text-xs py-2 px-1 rounded-lg transition-colors text-center flex flex-col items-center gap-1 hover:scale-105 transform`}
-              title={link.name}
-            >
-              <span className="text-sm">{link.icon}</span>
-              <span className="leading-tight">{link.name}</span>
-            </a>
-          ))}
-        </div>
-      </div>
-
-      {/* メモ欄 */}
-      <div className="space-y-2">
-        <label htmlFor={`memo-${symbol}`} className="text-sm font-medium text-gray-300">
-          株ノオト
-        </label>
-        <textarea
-          id={`memo-${symbol}`}
-          value={memo}
-          onChange={(e) => handleMemoChange(e.target.value)}
-          placeholder="この銘柄について思考を整理しましょう..."
-          maxLength={2000}
-          className="w-full h-32 px-4 py-3 bg-slate-100 border border-slate-300 rounded-lg text-slate-800 placeholder-slate-500 focus:border-blue-500 focus:outline-none resize-none font-mono leading-6 shadow-inner"
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3csvg width='100' height='24' xmlns='http://www.w3.org/2000/svg'%3e%3cline x1='0' y1='17' x2='100' y2='17' stroke='%23a1a1aa' stroke-width='1' stroke-dasharray='3,3' opacity='0.4'/%3e%3c/svg%3e")`,
-            backgroundSize: '100px 24px',
-            backgroundPosition: '0 3px'
-          }}
-          rows={4}
-        />
-        <div className="flex items-center justify-between">
+      {/* タブナビゲーション */}
+      <div className="flex border-b border-gray-600 mb-4">
+        {tabs.map((tab) => (
           <button
-            onClick={() => setIsMemoModalOpen(true)}
-            className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
+            key={tab.id}
+            onClick={() => handleTabChange(tab.id)}
+            className={`flex-1 py-2 px-3 text-sm font-medium transition-colors border-b-2 ${
+              activeTab === tab.id
+                ? 'text-blue-400 border-blue-400'
+                : 'text-gray-400 border-transparent hover:text-gray-300 hover:border-gray-500'
+            }`}
           >
-            📝 株ノオトを大きく開く
+            <span className="mr-1">{tab.icon}</span>
+            {tab.label.split(' ')[1]} {/* アイコンの後の文字のみ表示 */}
           </button>
-          <span className={`text-xs ${memo.length > 1800 ? 'text-orange-400' : memo.length > 1900 ? 'text-red-400' : 'text-gray-400'}`}>
-            {memo.length}/2000文字
-          </span>
-        </div>
+        ))}
       </div>
 
-      {/* 決算情報 */}
-      <div className="space-y-3">
-        <h4 className="text-sm font-medium text-gray-300">決算情報</h4>
-
-        {/* 決算日設定 */}
-        <div className="space-y-2">
-          <label htmlFor={`earnings-date-${symbol}`} className="text-xs font-medium text-blue-300">
-            📅 決算発表日
-          </label>
-          <input
-            id={`earnings-date-${symbol}`}
-            type="date"
-            value={earningsDate}
-            onChange={(e) => handleEarningsDateChange(e.target.value)}
-            className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none text-sm"
-          />
-        </div>
-
-        {/* 決算カウントダウン表示 */}
-        {(() => {
-          const countdown = getEarningsCountdown();
-          if (!countdown) return null;
-
-          const getStatusColor = (status: string) => {
-            switch (status) {
-              case 'urgent':
-                return 'bg-red-600 text-red-100 border-red-500';
-              case 'today':
-                return 'bg-yellow-600 text-yellow-100 border-yellow-500 animate-pulse';
-              case 'normal':
-                return 'bg-blue-600 text-blue-100 border-blue-500';
-              case 'past':
-                return 'bg-gray-600 text-gray-300 border-gray-500';
-              default:
-                return 'bg-gray-600 text-gray-300 border-gray-500';
-            }
-          };
-
-          return (
-            <div className={`px-3 py-2 rounded-lg border text-sm font-medium ${getStatusColor(countdown.status)}`}>
-              📈 {countdown.text}
-            </div>
-          );
-        })()}
-      </div>
-
-      {/* 目標株価・損切りライン */}
-      <div className="space-y-3">
-        <h4 className="text-sm font-medium text-gray-300">投資規律設定</h4>
-        <div className="grid grid-cols-3 gap-3">
-          {/* 損切ライン */}
-          <div className="space-y-1">
-            <label htmlFor={`stop-loss-${symbol}`} className="text-xs font-medium text-red-300">
-              🔻 損切ライン
-            </label>
-            <div className="relative">
-              <input
-                id={`stop-loss-${symbol}`}
-                type="number"
-                value={stopLoss}
-                onChange={(e) => handleStopLossChange(e.target.value)}
-                placeholder="0"
-                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-red-500 focus:outline-none text-sm pr-8"
+      {/* タブコンテンツ */}
+      <div className="tab-content">
+        {activeTab === 'basic' && (
+          <div className="space-y-4">
+            {/* 基本タブ: メモ + チャート・外部リンク */}
+            {/* メモ欄 */}
+            <div className="space-y-2">
+              <label htmlFor={`memo-${symbol}`} className="text-sm font-medium text-gray-300">
+                株ノオト
+              </label>
+              <textarea
+                id={`memo-${symbol}`}
+                value={memo}
+                onChange={(e) => handleMemoChange(e.target.value)}
+                placeholder="この銘柄について思考を整理しましょう..."
+                maxLength={2000}
+                className="w-full h-32 px-4 py-3 bg-slate-100 border border-slate-300 rounded-lg text-slate-800 placeholder-slate-500 focus:border-blue-500 focus:outline-none resize-none font-mono leading-6 shadow-inner"
+                style={{
+                  backgroundImage: `url("data:image/svg+xml,%3csvg width='100' height='24' xmlns='http://www.w3.org/2000/svg'%3e%3cline x1='0' y1='17' x2='100' y2='17' stroke='%23a1a1aa' stroke-width='1' stroke-dasharray='3,3' opacity='0.4'/%3e%3c/svg%3e")`,
+                  backgroundSize: '100px 24px',
+                  backgroundPosition: '0 3px'
+                }}
+                rows={4}
               />
-              <span className="absolute right-3 top-2 text-xs text-gray-400">円</span>
+              <div className="flex items-center justify-between">
+                <button
+                  onClick={() => setIsMemoModalOpen(true)}
+                  className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
+                >
+                  📝 株ノオトを大きく開く
+                </button>
+                <span className={`text-xs ${memo.length > 1800 ? 'text-orange-400' : memo.length > 1900 ? 'text-red-400' : 'text-gray-400'}`}>
+                  {memo.length}/2000文字
+                </span>
+              </div>
+            </div>
+
+            {/* 外部リンクボタン */}
+            <div className="space-y-2">
+              {/* チャート確認ボタン */}
+              <button
+                onClick={() => {
+                  const url = `https://jp.tradingview.com/symbols/TSE-${symbol}/`;
+                  window.open(url, 'stockChart', 'width=800,height=800,scrollbars=yes,resizable=yes');
+                }}
+                className="w-full bg-green-600 hover:bg-green-700 text-white text-sm font-medium py-2 px-3 rounded-lg transition-colors"
+              >
+                📈 最新チャートを確認
+              </button>
+
+              {/* 外部リンク */}
+              <div className="grid grid-cols-4 gap-1">
+                {externalLinks.map((link) => (
+                  <a
+                    key={link.name}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-white text-xs py-2 px-1 rounded-lg transition-all text-center flex flex-col items-center gap-1 hover:scale-105 transform"
+                    style={{
+                      backgroundColor: link.bgColor,
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = link.hoverBgColor;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = link.bgColor;
+                    }}
+                    title={link.name}
+                  >
+                    <span className="text-sm">{link.icon}</span>
+                    <span className="leading-tight">{link.name}</span>
+                  </a>
+                ))}
+              </div>
             </div>
           </div>
+        )}
 
-          {/* 現在の目安株価 */}
-          <div className="space-y-1">
-            <label htmlFor={`current-price-${symbol}`} className="text-xs font-medium text-blue-300">
-              📈 現在の目安株価
-            </label>
-            <div className="relative">
-              <input
-                id={`current-price-${symbol}`}
-                type="number"
-                value={currentPrice}
-                onChange={(e) => handleCurrentPriceChange(e.target.value)}
-                placeholder="0"
-                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none text-sm pr-8"
-              />
-              <span className="absolute right-3 top-2 text-xs text-gray-400">円</span>
+        {activeTab === 'analysis' && (
+          <div className="space-y-4">
+            {/* 分析タブ: 投資規律・株価情報 */}
+            {/* 目標株価・損切りライン */}
+            <div className="space-y-3">
+              <h4 className="text-sm font-medium text-gray-300">投資規律設定</h4>
+              <div className="grid grid-cols-3 gap-3">
+                {/* 損切ライン */}
+                <div className="space-y-1">
+                  <label htmlFor={`stop-loss-${symbol}`} className="text-xs font-medium text-red-300">
+                    🔻 損切ライン
+                  </label>
+                  <div className="relative">
+                    <input
+                      id={`stop-loss-${symbol}`}
+                      type="number"
+                      value={stopLoss}
+                      onChange={(e) => handleStopLossChange(e.target.value)}
+                      placeholder="0"
+                      className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-red-500 focus:outline-none text-sm pr-8"
+                    />
+                    <span className="absolute right-3 top-2 text-xs text-gray-400">円</span>
+                  </div>
+                </div>
+
+                {/* 現在の目安株価 */}
+                <div className="space-y-1">
+                  <label htmlFor={`current-price-${symbol}`} className="text-xs font-medium text-blue-300">
+                    📈 現在の目安株価
+                  </label>
+                  <div className="relative">
+                    <input
+                      id={`current-price-${symbol}`}
+                      type="number"
+                      value={currentPrice}
+                      onChange={(e) => handleCurrentPriceChange(e.target.value)}
+                      placeholder="0"
+                      className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none text-sm pr-8"
+                    />
+                    <span className="absolute right-3 top-2 text-xs text-gray-400">円</span>
+                  </div>
+                </div>
+
+                {/* 利確目標 */}
+                <div className="space-y-1">
+                  <label htmlFor={`target-price-${symbol}`} className="text-xs font-medium text-green-300">
+                    💰 利確目標
+                  </label>
+                  <div className="relative">
+                    <input
+                      id={`target-price-${symbol}`}
+                      type="number"
+                      value={targetPrice}
+                      onChange={(e) => handleTargetPriceChange(e.target.value)}
+                      placeholder="0"
+                      className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-green-500 focus:outline-none text-sm pr-8"
+                    />
+                    <span className="absolute right-3 top-2 text-xs text-gray-400">円</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* 株価プログレスバーゲージ */}
+              {progressData && targetPrice && stopLoss && currentPrice && (
+                <div className="mt-4 p-3 bg-gray-600 rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <h5 className="text-xs font-medium text-gray-300">📊 株価ポジション</h5>
+                    <span className="text-xs text-gray-400">
+                      {progressData.isOverTarget
+                        ? '🎯 利確目標達成!'
+                        : progressData.isUnderStop
+                          ? '⚠️ 損切ライン下'
+                          : `利確目標まで${progressData.remainingToTarget.toFixed(1)}%`
+                      }
+                    </span>
+                  </div>
+
+                  {/* プログレスバー */}
+                  <div className="relative">
+                    <div className="w-full bg-gray-700 rounded-full h-3">
+                      <div
+                        className={`h-3 rounded-full transition-all duration-300 ${
+                          progressData.isOverTarget
+                            ? 'bg-green-500'
+                            : progressData.percentage < 30
+                              ? 'bg-red-500'
+                              : progressData.percentage < 70
+                                ? 'bg-yellow-500'
+                                : 'bg-green-500'
+                        }`}
+                        style={{ width: `${Math.min(100, progressData.percentage)}%` }}
+                      />
+                    </div>
+
+                    {/* 現在価格のドット */}
+                    <div
+                      className="absolute top-0 w-3 h-3 bg-blue-400 border-2 border-white rounded-full transform -translate-x-1.5"
+                      style={{
+                        left: `${Math.min(100, Math.max(0, progressData.percentage))}%`,
+                        transform: 'translateX(-50%) translateY(0)'
+                      }}
+                    />
+                  </div>
+
+                  {/* 価格ラベル */}
+                  <div className="flex justify-between items-center mt-2 text-xs">
+                    <div className="text-red-300">
+                      <span>🔻 {formatPrice(parseFloat(stopLoss))}円</span>
+                    </div>
+                    <div className="text-blue-300 font-medium">
+                      <span>📈 {formatPrice(parseFloat(currentPrice))}円</span>
+                    </div>
+                    <div className="text-green-300">
+                      <span>💰 {formatPrice(parseFloat(targetPrice))}円</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* 含み益・含み損表示 */}
+              {profitLossInfo && positionSummary.totalShares > 0 && (
+                <div className="mt-4 p-3 bg-gray-600 rounded-lg">
+                  <h5 className="text-xs font-medium text-gray-300 mb-2">📊 損益シミュレーション</h5>
+                  <div className="grid grid-cols-2 gap-3">
+                    {/* 損切ラインでの損失 */}
+                    {stopLoss && (
+                      <div className="text-center">
+                        <div className="text-xs text-gray-400 mb-1">損切ライン到達時</div>
+                        <div className={`text-sm font-bold ${profitLossInfo.stopLoss >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                          {formatProfitLoss(profitLossInfo.stopLoss)}円
+                        </div>
+                        <div className={`text-xs ${profitLossInfo.stopLossPercent >= 0 ? 'text-green-300' : 'text-red-300'}`}>
+                          ({profitLossInfo.stopLossPercent >= 0 ? '+' : ''}{profitLossInfo.stopLossPercent.toFixed(1)}%)
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 目標価格での利益 */}
+                    {targetPrice && (
+                      <div className="text-center">
+                        <div className="text-xs text-gray-400 mb-1">利確目標達成時</div>
+                        <div className={`text-sm font-bold ${profitLossInfo.targetProfit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                          {formatProfitLoss(profitLossInfo.targetProfit)}円
+                        </div>
+                        <div className={`text-xs ${profitLossInfo.targetProfitPercent >= 0 ? 'text-green-300' : 'text-red-300'}`}>
+                          ({profitLossInfo.targetProfitPercent >= 0 ? '+' : ''}{profitLossInfo.targetProfitPercent.toFixed(1)}%)
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <div className="mt-2 text-xs text-gray-400 text-center">
+                    平均取得価額: {formatPrice(positionSummary.averagePrice)}円 × {formatShares(positionSummary.totalShares)}株
+                  </div>
+                </div>
+              )}
             </div>
           </div>
+        )}
 
-          {/* 利確目標 */}
-          <div className="space-y-1">
-            <label htmlFor={`target-price-${symbol}`} className="text-xs font-medium text-green-300">
-              💰 利確目標
-            </label>
-            <div className="relative">
-              <input
-                id={`target-price-${symbol}`}
-                type="number"
-                value={targetPrice}
-                onChange={(e) => handleTargetPriceChange(e.target.value)}
-                placeholder="0"
-                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-green-500 focus:outline-none text-sm pr-8"
-              />
-              <span className="absolute right-3 top-2 text-xs text-gray-400">円</span>
-            </div>
-          </div>
-        </div>
+        {activeTab === 'management' && (
+          <div className="space-y-4">
+            {/* 管理タブ: ポジション・決算情報 */}
+            {/* 決算情報 */}
+            <div className="space-y-3">
+              <h4 className="text-sm font-medium text-gray-300">決算情報</h4>
 
-        {/* 株価プログレスバーゲージ */}
-        {progressData && targetPrice && stopLoss && currentPrice && (
-          <div className="mt-4 p-3 bg-gray-600 rounded-lg">
-            <div className="flex items-center justify-between mb-2">
-              <h5 className="text-xs font-medium text-gray-300">📊 株価ポジション</h5>
-              <span className="text-xs text-gray-400">
-                {progressData.isOverTarget
-                  ? '🎯 利確目標達成!'
-                  : progressData.isUnderStop
-                    ? '⚠️ 損切ライン下'
-                    : `利確目標まで${progressData.remainingToTarget.toFixed(1)}%`
-                }
-              </span>
-            </div>
-
-            {/* プログレスバー */}
-            <div className="relative">
-              <div className="w-full bg-gray-700 rounded-full h-3">
-                <div
-                  className={`h-3 rounded-full transition-all duration-300 ${
-                    progressData.isOverTarget
-                      ? 'bg-green-500'
-                      : progressData.percentage < 30
-                        ? 'bg-red-500'
-                        : progressData.percentage < 70
-                          ? 'bg-yellow-500'
-                          : 'bg-green-500'
-                  }`}
-                  style={{ width: `${Math.min(100, progressData.percentage)}%` }}
+              {/* 決算日設定 */}
+              <div className="space-y-2">
+                <label htmlFor={`earnings-date-${symbol}`} className="text-xs font-medium text-blue-300">
+                  📅 決算発表日
+                </label>
+                <input
+                  id={`earnings-date-${symbol}`}
+                  type="date"
+                  value={earningsDate}
+                  onChange={(e) => handleEarningsDateChange(e.target.value)}
+                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none text-sm"
                 />
               </div>
 
-              {/* 現在価格のドット */}
-              <div
-                className="absolute top-0 w-3 h-3 bg-blue-400 border-2 border-white rounded-full transform -translate-x-1.5"
-                style={{
-                  left: `${Math.min(100, Math.max(0, progressData.percentage))}%`,
-                  transform: 'translateX(-50%) translateY(0)'
-                }}
-              />
-            </div>
+              {/* 決算カウントダウン表示 */}
+              {(() => {
+                const countdown = getEarningsCountdown();
+                if (!countdown) return null;
 
-            {/* 価格ラベル */}
-            <div className="flex justify-between items-center mt-2 text-xs">
-              <div className="text-red-300">
-                <span>🔻 {formatPrice(parseFloat(stopLoss))}円</span>
-              </div>
-              <div className="text-blue-300 font-medium">
-                <span>📈 {formatPrice(parseFloat(currentPrice))}円</span>
-              </div>
-              <div className="text-green-300">
-                <span>💰 {formatPrice(parseFloat(targetPrice))}円</span>
-              </div>
-            </div>
-          </div>
-        )}
+                const getStatusColor = (status: string) => {
+                  switch (status) {
+                    case 'urgent':
+                      return 'bg-red-600 text-red-100 border-red-500';
+                    case 'today':
+                      return 'bg-yellow-600 text-yellow-100 border-yellow-500 animate-pulse';
+                    case 'normal':
+                      return 'bg-blue-600 text-blue-100 border-blue-500';
+                    case 'past':
+                      return 'bg-gray-600 text-gray-300 border-gray-500';
+                    default:
+                      return 'bg-gray-600 text-gray-300 border-gray-500';
+                  }
+                };
 
-        {/* 含み益・含み損表示 */}
-        {profitLossInfo && positionSummary.totalShares > 0 && (
-          <div className="mt-4 p-3 bg-gray-600 rounded-lg">
-            <h5 className="text-xs font-medium text-gray-300 mb-2">📊 損益シミュレーション</h5>
-            <div className="grid grid-cols-2 gap-3">
-              {/* 損切ラインでの損失 */}
-              {stopLoss && (
-                <div className="text-center">
-                  <div className="text-xs text-gray-400 mb-1">損切ライン到達時</div>
-                  <div className={`text-sm font-bold ${profitLossInfo.stopLoss >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                    {formatProfitLoss(profitLossInfo.stopLoss)}円
+                return (
+                  <div className={`px-3 py-2 rounded-lg border text-sm font-medium ${getStatusColor(countdown.status)}`}>
+                    📈 {countdown.text}
                   </div>
-                  <div className={`text-xs ${profitLossInfo.stopLossPercent >= 0 ? 'text-green-300' : 'text-red-300'}`}>
-                    ({profitLossInfo.stopLossPercent >= 0 ? '+' : ''}{profitLossInfo.stopLossPercent.toFixed(1)}%)
-                  </div>
-                </div>
-              )}
-
-              {/* 目標価格での利益 */}
-              {targetPrice && (
-                <div className="text-center">
-                  <div className="text-xs text-gray-400 mb-1">利確目標達成時</div>
-                  <div className={`text-sm font-bold ${profitLossInfo.targetProfit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                    {formatProfitLoss(profitLossInfo.targetProfit)}円
-                  </div>
-                  <div className={`text-xs ${profitLossInfo.targetProfitPercent >= 0 ? 'text-green-300' : 'text-red-300'}`}>
-                    ({profitLossInfo.targetProfitPercent >= 0 ? '+' : ''}{profitLossInfo.targetProfitPercent.toFixed(1)}%)
-                  </div>
-                </div>
-              )}
-            </div>
-            <div className="mt-2 text-xs text-gray-400 text-center">
-              平均取得価額: {formatPrice(positionSummary.averagePrice)}円 × {formatShares(positionSummary.totalShares)}株
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* ポジション管理 */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h4 className="text-sm font-medium text-gray-300">保有ポジション</h4>
-          <button
-            onClick={() => setIsPositionManagerOpen(true)}
-            className="text-xs bg-indigo-600 hover:bg-indigo-700 text-white px-2 py-1 rounded transition-colors"
-          >
-            ポジション管理
-          </button>
-        </div>
-
-        {positions.length > 0 ? (
-          <div className="bg-gray-700 rounded-lg p-3 space-y-2">
-            {/* ポジションサマリー */}
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              <div>
-                <span className="text-gray-400">保有株数：</span>
-                <span className="text-white font-medium">{formatShares(positionSummary.totalShares)}株</span>
-              </div>
-              <div>
-                <span className="text-gray-400">平均取得：</span>
-                <span className="text-green-300 font-medium">{formatPrice(positionSummary.averagePrice)}円</span>
-              </div>
-              <div>
-                <span className="text-gray-400">総投資額：</span>
-                <span className="text-blue-300 font-medium">{formatPrice(positionSummary.totalCost)}円</span>
-              </div>
-              <div>
-                <span className="text-gray-400">ポジション数：</span>
-                <span className="text-gray-200">{positionSummary.positionCount}件</span>
-              </div>
+                );
+              })()}
             </div>
 
-            {/* ポジション一覧（簡易表示） */}
-            <div className="space-y-1 max-h-24 overflow-y-auto">
-              {positions.map((position) => (
-                <div key={position.id} className="flex justify-between items-center text-xs text-gray-300 bg-gray-800 px-2 py-1 rounded">
-                  <span>{formatShares(position.shares)}株 @ {formatPrice(position.purchasePrice)}円</span>
-                  <span>{position.purchaseDate}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : (
-          <div className="text-xs text-gray-400 text-center py-2">
-            保有ポジションが登録されていません
-          </div>
-        )}
-
-        {/* ポジション管理モーダル */}
-        {isPositionManagerOpen && (
-          <PositionManager
-            positions={positions}
-            onPositionsChange={handlePositionsChange}
-            onClose={() => setIsPositionManagerOpen(false)}
-          />
-        )}
-
-        {/* メモ拡大モーダル */}
-        {isMemoModalOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={() => setIsMemoModalOpen(false)}>
-            <div className="bg-gray-800 rounded-lg p-6 w-full max-w-4xl max-h-[95vh] m-4" onClick={(e) => e.stopPropagation()}>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-                  <span>📝</span>
-                  <span>{companyName || symbol} - 株ノオト</span>
-                </h3>
+            {/* ポジション管理 */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-medium text-gray-300">保有ポジション</h4>
                 <button
-                  onClick={() => setIsMemoModalOpen(false)}
-                  className="text-gray-400 hover:text-white text-xl"
+                  onClick={() => setIsPositionManagerOpen(true)}
+                  className="text-xs bg-indigo-600 hover:bg-indigo-700 text-white px-2 py-1 rounded transition-colors"
                 >
-                  ×
+                  ポジション管理
                 </button>
               </div>
 
-              <div className="space-y-3">
-                <textarea
-                  value={memo}
-                  onChange={(e) => handleMemoChange(e.target.value)}
-                  placeholder="この銘柄について詳しく思考を整理しましょう..."
-                  maxLength={2000}
-                  className="w-full h-[70vh] px-4 py-3 bg-slate-100 border border-slate-300 rounded-lg text-slate-800 placeholder-slate-500 focus:border-blue-500 focus:outline-none resize-none font-mono leading-6 shadow-inner"
-                  style={{
-                    backgroundImage: `url("data:image/svg+xml,%3csvg width='100' height='24' xmlns='http://www.w3.org/2000/svg'%3e%3cline x1='0' y1='17' x2='100' y2='17' stroke='%23a1a1aa' stroke-width='1' stroke-dasharray='3,3' opacity='0.4'/%3e%3c/svg%3e")`,
-                    backgroundSize: '100px 24px',
-                    backgroundPosition: '0 3px'
-                  }}
-                  autoFocus
-                />
+              {positions.length > 0 ? (
+                <div className="bg-gray-700 rounded-lg p-3 space-y-2">
+                  {/* ポジションサマリー */}
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <span className="text-gray-400">保有株数：</span>
+                      <span className="text-white font-medium">{formatShares(positionSummary.totalShares)}株</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-400">平均取得：</span>
+                      <span className="text-green-300 font-medium">{formatPrice(positionSummary.averagePrice)}円</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-400">総投資額：</span>
+                      <span className="text-blue-300 font-medium">{formatPrice(positionSummary.totalCost)}円</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-400">ポジション数：</span>
+                      <span className="text-gray-200">{positionSummary.positionCount}件</span>
+                    </div>
+                  </div>
 
-                <div className="flex items-center justify-between">
-                  <p className="text-xs text-gray-400">
-                    自動保存されます
-                  </p>
-                  <span className={`text-xs ${memo.length > 1800 ? 'text-orange-400' : memo.length > 1900 ? 'text-red-400' : 'text-gray-400'}`}>
-                    {memo.length}/2000文字
-                  </span>
+                  {/* ポジション一覧（簡易表示） */}
+                  <div className="space-y-1 max-h-24 overflow-y-auto">
+                    {positions.map((position) => (
+                      <div key={position.id} className="flex justify-between items-center text-xs text-gray-300 bg-gray-800 px-2 py-1 rounded">
+                        <span>{formatShares(position.shares)}株 @ {formatPrice(position.purchasePrice)}円</span>
+                        <span>{position.purchaseDate}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="text-xs text-gray-400 text-center py-2">
+                  保有ポジションが登録されていません
+                </div>
+              )}
             </div>
           </div>
         )}
-
-        {/* タグエディター */}
-        {isTagEditorOpen && (
-          <TagEditor
-            symbol={symbol}
-            currentTags={customTags}
-            onTagsChange={handleTagsChange}
-            onClose={() => setIsTagEditorOpen(false)}
-          />
-        )}
-
-        {/* お気に入りグループセレクター */}
-        {isFavoriteGroupSelectorOpen && (
-          <FavoriteGroupSelector
-            symbol={symbol}
-            groups={favoriteGroups}
-            selectedGroupIds={belongingGroups.map(g => g.id)}
-            onGroupsChange={handleFavoriteGroupsChange}
-            onClose={() => setIsFavoriteGroupSelectorOpen(false)}
-          />
-        )}
-
       </div>
+
+      {/* ポジション管理モーダル */}
+      {isPositionManagerOpen && (
+        <PositionManager
+          positions={positions}
+          onPositionsChange={handlePositionsChange}
+          onClose={() => setIsPositionManagerOpen(false)}
+        />
+      )}
+
+      {/* メモ拡大モーダル */}
+      {isMemoModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={() => setIsMemoModalOpen(false)}>
+          <div className="bg-gray-800 rounded-lg p-6 w-full max-w-4xl max-h-[95vh] m-4" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                <span>📝</span>
+                <span>{companyName || symbol} - 株ノオト</span>
+              </h3>
+              <button
+                onClick={() => setIsMemoModalOpen(false)}
+                className="text-gray-400 hover:text-white text-xl"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <textarea
+                value={memo}
+                onChange={(e) => handleMemoChange(e.target.value)}
+                placeholder="この銘柄について詳しく思考を整理しましょう..."
+                maxLength={2000}
+                className="w-full h-[70vh] px-4 py-3 bg-slate-100 border border-slate-300 rounded-lg text-slate-800 placeholder-slate-500 focus:border-blue-500 focus:outline-none resize-none font-mono leading-6 shadow-inner"
+                style={{
+                  backgroundImage: `url("data:image/svg+xml,%3csvg width='100' height='24' xmlns='http://www.w3.org/2000/svg'%3e%3cline x1='0' y1='17' x2='100' y2='17' stroke='%23a1a1aa' stroke-width='1' stroke-dasharray='3,3' opacity='0.4'/%3e%3c/svg%3e")`,
+                  backgroundSize: '100px 24px',
+                  backgroundPosition: '0 3px'
+                }}
+                autoFocus
+              />
+
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-gray-400">
+                  自動保存されます
+                </p>
+                <span className={`text-xs ${memo.length > 1800 ? 'text-orange-400' : memo.length > 1900 ? 'text-red-400' : 'text-gray-400'}`}>
+                  {memo.length}/2000文字
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* タグエディター */}
+      {isTagEditorOpen && (
+        <TagEditor
+          symbol={symbol}
+          currentTags={customTags}
+          onTagsChange={handleTagsChange}
+          onClose={() => setIsTagEditorOpen(false)}
+        />
+      )}
+
+      {/* お気に入りグループセレクター */}
+      {isFavoriteGroupSelectorOpen && (
+        <FavoriteGroupSelector
+          symbol={symbol}
+          groups={favoriteGroups}
+          selectedGroupIds={belongingGroups.map(g => g.id)}
+          onGroupsChange={handleFavoriteGroupsChange}
+          onClose={() => setIsFavoriteGroupSelectorOpen(false)}
+        />
+      )}
+
     </div>
   );
 }
