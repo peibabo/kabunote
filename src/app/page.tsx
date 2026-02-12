@@ -293,11 +293,44 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gray-900">
+      {/* Header with Logo */}
+      <header className="bg-slate-900 border-b border-gray-700">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-center gap-4 group cursor-pointer">
+            <img
+              src="/kabunote-logo.png"
+              alt="Kabunote Logo"
+              className="h-16 w-auto transition-all duration-300"
+              style={{
+                filter: 'drop-shadow(0 0 8px rgba(255, 255, 255, 0.4))'
+              }}
+            />
+            <h1
+              className="text-3xl text-white tracking-wider transition-all duration-300"
+              style={{
+                fontFamily: '"M PLUS 1p", sans-serif',
+                fontWeight: 100,
+                filter: 'drop-shadow(0 0 8px rgba(255, 255, 255, 0.5))'
+              }}
+            >
+              カブノオト
+            </h1>
+            <style jsx>{`
+              .group:hover img {
+                filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.8)) drop-shadow(0 0 40px rgba(255, 255, 255, 0.4)) drop-shadow(0 0 60px rgba(255, 255, 255, 0.2)) !important;
+              }
+              .group:hover h1 {
+                filter: drop-shadow(0 0 25px rgba(255, 255, 255, 0.9)) drop-shadow(0 0 50px rgba(255, 255, 255, 0.6)) drop-shadow(0 0 75px rgba(255, 255, 255, 0.3)) drop-shadow(0 0 100px rgba(255, 255, 255, 0.1)) !important;
+              }
+            `}</style>
+          </div>
+        </div>
+      </header>
+
       <main className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
             <div>
-              <h1 className="text-3xl font-bold text-white mb-2">カブノオト</h1>
               <p className="text-gray-400">投資家の思考を整理するダッシュボード</p>
             </div>
             <div className="md:w-80">
