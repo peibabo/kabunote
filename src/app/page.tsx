@@ -7,6 +7,7 @@ import FavoriteGroupManager from '@/components/FavoriteGroupManager';
 import SearchBar from '@/components/SearchBar';
 import { loadStockData, getStockData } from '@/data/stockNames';
 import { FavoriteGroup, GROUP_COLORS } from '@/types/favorites';
+import { useDebouncedCallback } from '@/hooks/useDebounce';
 import {
   DndContext,
   closestCenter,
@@ -39,6 +40,15 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<string[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+
+  // デバウンスされたお気に入りグループ保存関数（250ms後に保存）
+  const debouncedSaveFavoriteGroups = useDebouncedCallback((groups: FavoriteGroup[]) => {
+    if (typeof window !== 'undefined') {
+      const groupsJson = JSON.stringify(groups);
+      localStorage.setItem(GROUPS_STORAGE_KEY, groupsJson);
+      console.log('🌟 お気に入りグループ保存:', `${groups.length}個のグループ:`, groups.map(g => g.name).join(', '));
+    }
+  }, 250);
 
   // ドラッグ&ドロップセンサー
   const sensors = useSensors(
@@ -157,21 +167,15 @@ export default function Home() {
 
   useEffect(() => {
     if (typeof window !== 'undefined' && isInitialized) {
-      const groupsJson = JSON.stringify(favoriteGroups);
-      localStorage.setItem(GROUPS_STORAGE_KEY, groupsJson);
-      console.log('Saving groups to localStorage:', favoriteGroups);
-      console.log('JSON string saved:', groupsJson);
-
-      // 確認のため即座に読み戻し
-      const verification = localStorage.getItem(GROUPS_STORAGE_KEY);
-      console.log('Verification read:', verification);
+      // デバウンスで保存
+      debouncedSaveFavoriteGroups(favoriteGroups);
 
       // 選択されているグループが削除された場合、フィルターをクリア
       if (selectedGroupFilter && !favoriteGroups.some(g => g.id === selectedGroupFilter)) {
         handleGroupFilterChange(null);
       }
     }
-  }, [favoriteGroups, isInitialized, selectedGroupFilter]);
+  }, [favoriteGroups, isInitialized, selectedGroupFilter, debouncedSaveFavoriteGroups]);
 
   const handleAddStock = (code: string) => {
     if (stocks.length >= MAX_STOCKS) {

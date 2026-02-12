@@ -10,6 +10,7 @@ import PositionManager from './PositionManager';
 import { Position, PositionSummary, calculatePositionSummary, formatPrice, formatShares, ProfitLossInfo, calculateProfitLoss, formatProfitLoss } from '@/types/positions';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { useDebounce, useDebouncedCallback } from '@/hooks/useDebounce';
 
 interface StockCardProps {
   symbol: string;
@@ -176,60 +177,96 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
     loadData();
   }, [symbol, memoKey, tagsKey, targetPriceKey, stopLossKey, currentPriceKey, earningsDateKey, positionsKey]);
 
-  // メモをlocalStorageに保存（入力毎に即座に保存）
-  const handleMemoChange = (value: string) => {
-    setMemo(value);
+  // デバウンスされたメモ保存関数（500ms後に保存）
+  const debouncedSaveMemo = useDebouncedCallback((value: string) => {
     if (typeof window !== 'undefined') {
       localStorage.setItem(memoKey, value);
+      console.log('📝 株ノオト保存:', symbol, value.substring(0, 20) + (value.length > 20 ? '...' : ''));
     }
+  }, 500);
+
+  // メモ変更ハンドラー（即座にUI更新、デバウンスで保存）
+  const handleMemoChange = (value: string) => {
+    setMemo(value); // UI は即座に更新
+    debouncedSaveMemo(value); // 500ms後に保存
   };
 
-  // タグをlocalStorageに保存
-  const handleTagsChange = (tags: CustomTag[]) => {
-    setCustomTags(tags);
+  // デバウンスされたタグ保存関数（250ms後に保存）
+  const debouncedSaveTags = useDebouncedCallback((tags: CustomTag[]) => {
     if (typeof window !== 'undefined') {
       localStorage.setItem(tagsKey, JSON.stringify(tags));
+      console.log('🏷️ タグ保存:', symbol, `${tags.length}個のタグ:`, tags.map(t => t.label).join(', '));
     }
+  }, 250);
+
+  // タグ変更ハンドラー（即座にUI更新、デバウンスで保存）
+  const handleTagsChange = (tags: CustomTag[]) => {
+    setCustomTags(tags); // UI は即座に更新
+    debouncedSaveTags(tags); // 250ms後に保存
   };
 
-  // 目標株価をlocalStorageに保存
-  const handleTargetPriceChange = (value: string) => {
-    setTargetPrice(value);
+  // デバウンスされた数値保存関数（300ms後に保存）
+  const debouncedSaveTargetPrice = useDebouncedCallback((value: string) => {
     if (typeof window !== 'undefined') {
       localStorage.setItem(targetPriceKey, value);
+      console.log('🎯 目標株価保存:', symbol, value);
     }
-  };
+  }, 300);
 
-  // 損切りラインをlocalStorageに保存
-  const handleStopLossChange = (value: string) => {
-    setStopLoss(value);
+  const debouncedSaveStopLoss = useDebouncedCallback((value: string) => {
     if (typeof window !== 'undefined') {
       localStorage.setItem(stopLossKey, value);
+      console.log('🛑 損切りライン保存:', symbol, value);
     }
-  };
+  }, 300);
 
-  // 現在の目安株価をlocalStorageに保存
-  const handleCurrentPriceChange = (value: string) => {
-    setCurrentPrice(value);
+  const debouncedSaveCurrentPrice = useDebouncedCallback((value: string) => {
     if (typeof window !== 'undefined') {
       localStorage.setItem(currentPriceKey, value);
+      console.log('💹 現在株価保存:', symbol, value);
     }
-  };
+  }, 300);
 
-  // 決算日をlocalStorageに保存
-  const handleEarningsDateChange = (value: string) => {
-    setEarningsDate(value);
+  const debouncedSaveEarningsDate = useDebouncedCallback((value: string) => {
     if (typeof window !== 'undefined') {
       localStorage.setItem(earningsDateKey, value);
+      console.log('📅 決算日保存:', symbol, value);
     }
+  }, 400); // 日付入力は少し長め
+
+  // 数値入力変更ハンドラー（即座にUI更新、デバウンスで保存）
+  const handleTargetPriceChange = (value: string) => {
+    setTargetPrice(value);
+    debouncedSaveTargetPrice(value);
   };
 
-  // ポジション情報をlocalStorageに保存
+  const handleStopLossChange = (value: string) => {
+    setStopLoss(value);
+    debouncedSaveStopLoss(value);
+  };
+
+  const handleCurrentPriceChange = (value: string) => {
+    setCurrentPrice(value);
+    debouncedSaveCurrentPrice(value);
+  };
+
+  const handleEarningsDateChange = (value: string) => {
+    setEarningsDate(value);
+    debouncedSaveEarningsDate(value);
+  };
+
+  // デバウンスされたポジション保存関数（200ms後に保存）
+  const debouncedSavePositions = useDebouncedCallback((positions: Position[]) => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(positionsKey, JSON.stringify(positions));
+      console.log('💼 ポジション保存:', symbol, `${positions.length}件のポジション`);
+    }
+  }, 200);
+
+  // ポジション変更ハンドラー（即座にUI更新、デバウンスで保存）
   const handlePositionsChange = (updatedPositions: Position[]) => {
     setPositions(updatedPositions);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(positionsKey, JSON.stringify(updatedPositions));
-    }
+    debouncedSavePositions(updatedPositions);
   };
 
   // カウントダウン計算ロジック
