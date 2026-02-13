@@ -81,6 +81,14 @@ npm run dev
 - **順序永続化**: localStorage で並び順を記憶
 - **スムーズアニメーション**: 自然な移動エフェクト
 
+### 11. 📑 タブ式UI（リファクタリング後新機能）
+- **3タブ構成**: 基本・分析・管理で情報を整理
+- **📝 基本タブ**: 株ノオト・チャート確認・外部リンク
+- **📊 分析タブ**: 投資規律設定・株価プログレスバー・損益シミュレーション
+- **💼 管理タブ**: ポジション管理・決算情報・カウントダウン
+- **タブ状態永続化**: 銘柄ごとに最後に選択したタブを記憶
+- **視覚的改善**: カード縦幅の問題を解決し、情報を整理
+
 ## プロジェクト構成
 
 ### データファイル
@@ -88,11 +96,15 @@ npm run dev
   - **フォーマット**: `code,name,market,sector`
   - **例**: `7203,トヨタ自動車,東証プライム,輸送用機器`
 
-### 主要コンポーネント
+### 主要コンポーネント（リファクタリング後）
 - `src/components/StockInput.tsx`: 会社名検索・オートコンプリート
-- `src/components/StockCard.tsx`: 銘柄カード・株ノオト・タグ管理・ドラッグ機能
+- `src/components/StockCard.tsx`: 銘柄カードメイン（273行→責務分離済み）
+- `src/components/StockCardHeader.tsx`: ヘッダー・タグ・グループ表示（138行）
+- `src/components/BasicTab.tsx`: 基本タブ・株ノオト・外部リンク（134行）
+- `src/components/AnalysisTab.tsx`: 分析タブ・投資規律・株価情報（222行）
+- `src/components/ManagementTab.tsx`: 管理タブ・ポジション・決算情報（157行）
 - `src/components/SearchBar.tsx`: ヘッダー検索バー
-- `src/components/TagManager.tsx`: カスタムタグ作成・管理
+- `src/components/TagEditor.tsx`: カスタムタグ作成・管理
 - `src/components/FavoriteGroupManager.tsx`: お気に入りグループ管理
 - `src/components/PositionManager.tsx`: 保有ポジション管理モーダル
 
@@ -102,7 +114,15 @@ npm run dev
 - `src/types/favorites.ts`: お気に入りグループ型定義
 - `src/types/positions.ts`: ポジション管理・計算機能型定義
 
-### 技術的特徴
+### カスタムフック（新規追加）
+- `src/hooks/useDebounce.ts`: デバウンス処理・コールバック管理
+- `src/hooks/useLocalStorage.ts`: 汎用localStorage管理（文字列・配列・オブジェクト対応）
+- `src/hooks/useTabState.ts`: タブ状態管理・永続化
+
+### 技術的特徴（アーキテクチャ改善）
+- **コンポーネント分離**: 930行の巨大コンポーネントを5つの責務別コンポーネントに分割
+- **カスタムフック**: useState + localStorage + デバウンス処理の抽象化
+- **タブ式UI**: 情報を基本・分析・管理の3カテゴリーに整理
 - **SSR対応**: `typeof window !== 'undefined'` チェック
 - **正規化**: 日本語テキストの全角半角・ひらがなカタカナ変換
 - **ローマ字変換**: 簡易ローマ字マップによるバイリンガル検索
@@ -119,11 +139,12 @@ npm run dev
 - `kabunote-tags-{code}`: 銘柄別カスタムタグ
 - `kabunote-favorite-groups`: お気に入りグループ設定
 - `kabunote-selected-group-filter`: 選択中グループフィルター
-- `kabunote-target-{code}`: 銘柄別目標株価
-- `kabunote-stoploss-{code}`: 銘柄別損切りライン
-- `kabunote-current-{code}`: 銘柄別現在株価
-- `kabunote-earnings-{code}`: 銘柄別決算発表日
+- `kabunote-target-price-{code}`: 銘柄別目標株価
+- `kabunote-stop-loss-{code}`: 銘柄別損切りライン
+- `kabunote-current-price-{code}`: 銘柄別現在株価
+- `kabunote-earnings-date-{code}`: 銘柄別決算発表日
 - `kabunote-positions-{code}`: 銘柄別保有ポジション情報
+- `kabunote-active-tab-{code}`: 銘柄別アクティブタブ状態
 
 ### SSR互換性
 - 初期化フラグ（`isInitialized`）による段階的データロード
@@ -131,6 +152,8 @@ npm run dev
 
 ## Git履歴
 ```
+1f8a3c7 機能追加: 株式カードのタブ式UI＋永続化機能を実装
+c624b72 機能追加: 全データ保存操作のデバウンス最適化
 abd0f0a 機能追加: ドラッグ&ドロップによる銘柄カード並び替え機能
 ff10dcd UI改善: ヘッダーロゴとネオンエフェクト実装
 4ca9b91 機能追加: モーダル式株ノオト拡大機能とブランド統一
