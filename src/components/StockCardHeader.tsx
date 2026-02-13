@@ -1,0 +1,139 @@
+'use client';
+
+import { StockData } from '@/data/stockNames';
+import { CustomTag, TAG_COLORS } from '@/types/tags';
+import { FavoriteGroup, GROUP_COLORS } from '@/types/favorites';
+
+interface StockCardHeaderProps {
+  symbol: string;
+  companyName: string;
+  stockData: StockData | null;
+  isLoading: boolean;
+  isKnown: boolean;
+  customTags: CustomTag[];
+  belongingGroups: FavoriteGroup[];
+  onTagEditorOpen: () => void;
+  onFavoriteGroupSelectorOpen: () => void;
+  onRemove: () => void;
+  // ドラッグ&ドロップ関連
+  listeners: any;
+  isDragging: boolean;
+}
+
+export default function StockCardHeader({
+  symbol,
+  companyName,
+  stockData,
+  isLoading,
+  isKnown,
+  customTags,
+  belongingGroups,
+  onTagEditorOpen,
+  onFavoriteGroupSelectorOpen,
+  onRemove,
+  listeners,
+  isDragging
+}: StockCardHeaderProps) {
+  return (
+    <div className="flex items-start justify-between">
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 mb-1">
+          <h3 className="text-lg font-bold text-white">{symbol}</h3>
+          {isLoading ? (
+            <span className="text-xs bg-gray-600 text-gray-300 px-2 py-0.5 rounded-full">
+              読込中
+            </span>
+          ) : !isKnown ? (
+            <span className="text-xs bg-yellow-600 text-yellow-100 px-2 py-0.5 rounded-full">
+              未登録
+            </span>
+          ) : (
+            <div className="space-y-2">
+              {/* 業種・市場（上部） */}
+              {(stockData?.sector || stockData?.market) && (
+                <div className="flex flex-wrap gap-1 items-center">
+                  <span className="text-xs text-gray-400 font-medium">📊</span>
+                  {stockData?.sector && (
+                    <span className="text-xs bg-blue-600 text-blue-100 px-2 py-0.5 rounded-full">
+                      {stockData.sector}
+                    </span>
+                  )}
+                  {stockData?.market && (
+                    <span className="text-xs bg-green-600 text-green-100 px-2 py-0.5 rounded-full">
+                      {stockData.market}
+                    </span>
+                  )}
+                </div>
+              )}
+
+              {/* 区切り線（業種・市場がある場合に表示） */}
+              {(stockData?.sector || stockData?.market) && (
+                <div className="border-t border-gray-700 my-2"></div>
+              )}
+
+              {/* タグ・グループ（下部） */}
+              {(customTags.length > 0 || belongingGroups.length > 0) && (
+                <div className="flex flex-wrap gap-1 items-center">
+                  {customTags.map((tag) => (
+                    <span
+                      key={tag.id}
+                      className={`text-xs px-2 py-0.5 rounded-full ${TAG_COLORS[tag.color].bg} ${TAG_COLORS[tag.color].text}`}
+                    >
+                      🏷️ {tag.label}
+                    </span>
+                  ))}
+                  {belongingGroups.map((group) => (
+                    <span
+                      key={group.id}
+                      className={`text-xs px-2 py-0.5 rounded-full border ${GROUP_COLORS[group.color].border} ${GROUP_COLORS[group.color].text} bg-opacity-20 ${GROUP_COLORS[group.color].bg}`}
+                    >
+                      ★ {group.name}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              {/* ボタン行（常に表示） */}
+              <div className="flex flex-wrap gap-1">
+                <button
+                  onClick={onTagEditorOpen}
+                  className="text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 px-2 py-0.5 rounded-full transition-colors"
+                  title="タグを編集"
+                >
+                  + タグ
+                </button>
+                <button
+                  onClick={onFavoriteGroupSelectorOpen}
+                  className="text-xs bg-yellow-700 hover:bg-yellow-600 text-yellow-200 px-2 py-0.5 rounded-full transition-colors"
+                  title="お気に入りグループに追加"
+                >
+                  ★
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+        <p className="text-base text-gray-100 truncate font-bold" title={companyName}>
+          {companyName}
+        </p>
+      </div>
+      <div className="flex gap-2">
+        <button
+          {...listeners}
+          className="bg-gray-600 hover:bg-gray-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm transition-colors cursor-grab active:cursor-grabbing flex-shrink-0"
+          aria-label="カードを移動"
+          title="ドラッグして順序を変更"
+        >
+          ⋮⋮
+        </button>
+        <button
+          onClick={onRemove}
+          className="bg-red-600 hover:bg-red-700 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold transition-colors flex-shrink-0"
+          aria-label="銘柄カードを削除"
+        >
+          ×
+        </button>
+      </div>
+    </div>
+  );
+}
