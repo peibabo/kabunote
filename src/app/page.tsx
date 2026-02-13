@@ -5,8 +5,10 @@ import StockCard from '@/components/StockCard';
 import StockInput from '@/components/StockInput';
 import FavoriteGroupManager from '@/components/FavoriteGroupManager';
 import SearchBar from '@/components/SearchBar';
+import InvestmentCalendar from '@/components/InvestmentCalendar';
 import { loadStockData, getStockData } from '@/data/stockNames';
 import { FavoriteGroup, GROUP_COLORS } from '@/types/favorites';
+import { RightsDateSettings } from '@/types/rightsDate';
 import { useDebouncedCallback } from '@/hooks/useDebounce';
 import {
   DndContext,
@@ -40,6 +42,7 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<string[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [stockCalendarData, setStockCalendarData] = useState<{ [symbol: string]: { name: string; earningsDate: string; rightsSettings: RightsDateSettings } }>({});
 
   // デバウンスされたお気に入りグループ保存関数（250ms後に保存）
   const debouncedSaveFavoriteGroups = useDebouncedCallback((groups: FavoriteGroup[]) => {
@@ -177,6 +180,51 @@ export default function Home() {
     }
   }, [favoriteGroups, isInitialized, selectedGroupFilter, debouncedSaveFavoriteGroups]);
 
+  // カレンダー用データの更新
+  useEffect(() => {
+    const updateCalendarData = async () => {
+      if (!isInitialized || stocks.length === 0) return;
+
+      const calendarData: { [symbol: string]: { name: string; earningsDate: string; rightsSettings: RightsDateSettings } } = {};
+
+      // 株式データを読み込み
+      await loadStockData();
+
+      for (const symbol of stocks) {
+        const stockInfo = await getStockData(symbol);
+
+        // 決算発表日を取得
+        const earningsDate = typeof window !== 'undefined'
+          ? localStorage.getItem(`kabunote-earnings-date-${symbol}`) || ''
+          : '';
+
+        // 権利確定日設定を取得
+        const rightsSettingsStr = typeof window !== 'undefined'
+          ? localStorage.getItem(`kabunote-rights-settings-${symbol}`)
+          : null;
+
+        let rightsSettings: RightsDateSettings;
+        try {
+          rightsSettings = rightsSettingsStr
+            ? JSON.parse(rightsSettingsStr)
+            : { month: null, day: null, isRecurring: true, isActive: false };
+        } catch {
+          rightsSettings = { month: null, day: null, isRecurring: true, isActive: false };
+        }
+
+        calendarData[symbol] = {
+          name: stockInfo?.name || symbol,
+          earningsDate,
+          rightsSettings
+        };
+      }
+
+      setStockCalendarData(calendarData);
+    };
+
+    updateCalendarData();
+  }, [stocks, isInitialized]);
+
   const handleAddStock = (code: string) => {
     if (stocks.length >= MAX_STOCKS) {
       setError(`最大${MAX_STOCKS}銘柄まで表示できます`);
@@ -247,6 +295,22 @@ export default function Home() {
       } else {
         localStorage.removeItem(FILTER_STORAGE_KEY);
       }
+    }
+  };
+
+  // 銘柄カードへのスムーススクロール
+  const handleStockClick = (symbol: string) => {
+    const element = document.getElementById(`stock-card-${symbol}`);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // スクロール後にカードを少し強調表示
+      element.style.transform = 'scale(1.02)';
+      element.style.boxShadow = '0 0 20px rgba(59, 130, 246, 0.5)';
+      setTimeout(() => {
+        element.style.transform = '';
+        element.style.boxShadow = '';
+        element.style.transition = 'all 0.3s ease';
+      }, 1000);
     }
   };
 
@@ -482,6 +546,15 @@ export default function Home() {
           )}
         </div>
 
+        {/* 投資カレンダー */}
+        {stocks.length > 0 && (
+          <InvestmentCalendar
+            stockSymbols={stocks}
+            stockData={stockCalendarData}
+            onStockClick={handleStockClick}
+          />
+        )}
+
         <div className="bg-gray-800 rounded-lg p-6 mb-8">
           <div className="flex items-center gap-3 mb-4">
             <h2 className="text-xl font-semibold text-white">銘柄を追加</h2>
@@ -519,7 +592,6 @@ export default function Home() {
             </div>
           </div>
         </div>
-
 
         {/* お気に入りグループフィルター */}
         {favoriteGroups.length > 0 && (
@@ -609,13 +681,14 @@ export default function Home() {
               <SortableContext items={filteredStocks} strategy={rectSortingStrategy}>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {filteredStocks.map((stock) => (
-                    <StockCard
-                      key={stock}
-                      symbol={stock}
-                      onRemove={() => handleRemoveStock(stock)}
-                      favoriteGroups={favoriteGroups}
-                      onFavoriteGroupsChange={setFavoriteGroups}
-                    />
+                    <div key={stock} id={`stock-card-${stock}`}>
+                      <StockCard
+                        symbol={stock}
+                        onRemove={() => handleRemoveStock(stock)}
+                        favoriteGroups={favoriteGroups}
+                        onFavoriteGroupsChange={setFavoriteGroups}
+                      />
+                    </div>
                   ))}
                 </div>
               </SortableContext>
