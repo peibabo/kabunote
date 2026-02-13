@@ -142,7 +142,7 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
       ref={setNodeRef}
       style={style}
       {...attributes}
-      className={`bg-gray-800 rounded-lg border border-gray-700 p-4 space-y-4 transition-all duration-200 ${
+      className={`bg-gray-800 rounded-lg border border-gray-700 p-4 space-y-4 transition-all duration-200 h-full flex flex-col ${
         isDragging ? 'z-50 shadow-2xl ring-2 ring-blue-500 ring-opacity-50 bg-gray-750' : 'hover:shadow-lg'
       }`}
     >
@@ -181,7 +181,7 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
       </div>
 
       {/* タブコンテンツ */}
-      <div className="tab-content">
+      <div className="tab-content flex-1">
         {activeTab === 'basic' && (
           <BasicTab
             symbol={symbol}
