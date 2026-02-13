@@ -49,18 +49,20 @@ export function useLocalStorage<T>(
       }
     }
     setIsLoading(false);
-  }, [key, initialValue, parser]);
+  }, [key]); // initialValue と parser を依存配列から除外
 
   // 値を設定する関数（即座にUI更新、デバウンスで保存）
   const setValue = useCallback((value: T | ((prev: T) => T)) => {
     try {
-      const valueToStore = value instanceof Function ? value(storedValue) : value;
-      setStoredValue(valueToStore);
-      debouncedSave(valueToStore);
+      setStoredValue(prev => {
+        const valueToStore = value instanceof Function ? value(prev) : value;
+        debouncedSave(valueToStore);
+        return valueToStore;
+      });
     } catch (error) {
       console.error(`Failed to set value for localStorage (${key}):`, error);
     }
-  }, [key, storedValue, debouncedSave]);
+  }, [key, debouncedSave]);
 
   return [storedValue, setValue, isLoading] as const;
 }
