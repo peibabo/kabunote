@@ -1,6 +1,7 @@
 'use client';
 
 import { Position, PositionSummary, formatPrice, formatShares } from '@/types/positions';
+import { RightsDateSettings } from '@/types/rightsDate';
 
 interface EarningsCountdown {
   text: string;
@@ -11,10 +12,43 @@ interface ManagementTabProps {
   symbol: string;
   earningsDate: string;
   onEarningsDateChange: (value: string) => void;
+  rightsDate: string;
+  rightsSettings: RightsDateSettings;
+  onRightsSettingsChange: (settings: RightsDateSettings) => void;
   positions: Position[];
   positionSummary: PositionSummary;
   onPositionManagerOpen: () => void;
 }
+
+// 土日を除いた営業日前を計算する関数
+const calculateBusinessDaysBefore = (date: Date, businessDays: number): Date => {
+  const result = new Date(date);
+  let remainingDays = businessDays;
+
+  while (remainingDays > 0) {
+    result.setDate(result.getDate() - 1);
+    const dayOfWeek = result.getDay();
+    // 土曜日(6)と日曜日(0)以外の場合にカウント
+    if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+      remainingDays--;
+    }
+  }
+
+  return result;
+};
+
+// 曜日を取得する関数
+const getDayOfWeek = (date: Date): string => {
+  const days = ['日', '月', '火', '水', '木', '金', '土'];
+  return days[date.getDay()];
+};
+
+// 権利付き最終日（権利確定日の2営業日前）を計算
+const calculateRightsLastDay = (rightsDate: string): Date | null => {
+  if (!rightsDate) return null;
+  const confirmationDate = new Date(rightsDate);
+  return calculateBusinessDaysBefore(confirmationDate, 2);
+};
 
 // 決算カウントダウン計算ロジック
 const getEarningsCountdown = (earningsDate: string): EarningsCountdown | null => {
@@ -48,6 +82,48 @@ const getEarningsCountdown = (earningsDate: string): EarningsCountdown | null =>
   }
 };
 
+// 権利付き最終日カウントダウン計算ロジック（権利確定日ベース）
+const getRightsCountdown = (rightsDate: string): EarningsCountdown | null => {
+  if (!rightsDate) return null;
+
+  const today = new Date();
+  const confirmationDate = new Date(rightsDate);
+  const lastDay = calculateRightsLastDay(rightsDate);
+
+  if (!lastDay) return null;
+
+  const timeDiff = lastDay.getTime() - today.getTime();
+  const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+
+  // 権利付き最終日のフォーマット表示（M/D(曜)形式）
+  const lastMonth = lastDay.getMonth() + 1;
+  const lastDate = lastDay.getDate();
+  const lastDayOfWeek = getDayOfWeek(lastDay);
+  const formattedLastDay = `${lastMonth}/${lastDate}(${lastDayOfWeek})`;
+
+  // 権利確定日のフォーマット表示（M/D形式）
+  const confMonth = confirmationDate.getMonth() + 1;
+  const confDate = confirmationDate.getDate();
+  const formattedConfDate = `${confMonth}/${confDate}`;
+
+  if (daysDiff > 0) {
+    return {
+      text: `最終日：${formattedLastDay}（あと${daysDiff}日） 確定日：${formattedConfDate}`,
+      status: daysDiff <= 7 ? 'urgent' : 'normal'
+    };
+  } else if (daysDiff === 0) {
+    return {
+      text: `最終日：${formattedLastDay}（本日） 確定日：${formattedConfDate}`,
+      status: 'today'
+    };
+  } else {
+    return {
+      text: `最終日終了：${formattedLastDay}（${Math.abs(daysDiff)}日前） 確定日：${formattedConfDate}`,
+      status: 'past'
+    };
+  }
+};
+
 // 決算ステータスに応じたCSSクラス
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -68,11 +144,41 @@ export default function ManagementTab({
   symbol,
   earningsDate,
   onEarningsDateChange,
+  rightsDate,
+  rightsSettings,
+  onRightsSettingsChange,
   positions,
   positionSummary,
   onPositionManagerOpen
 }: ManagementTabProps) {
   const countdown = getEarningsCountdown(earningsDate);
+  const rightsCountdown = getRightsCountdown(rightsDate);
+
+  // 月/日の変更ハンドラー
+  const handleMonthChange = (value: string) => {
+    const month = value ? parseInt(value) : null;
+    onRightsSettingsChange({
+      ...rightsSettings,
+      month,
+      isActive: month !== null && rightsSettings.day !== null
+    });
+  };
+
+  const handleDayChange = (value: string) => {
+    const day = value ? parseInt(value) : null;
+    onRightsSettingsChange({
+      ...rightsSettings,
+      day,
+      isActive: rightsSettings.month !== null && day !== null
+    });
+  };
+
+  const handleRecurringChange = (isRecurring: boolean) => {
+    onRightsSettingsChange({
+      ...rightsSettings,
+      isRecurring
+    });
+  };
 
   return (
     <div className="space-y-4">
@@ -99,6 +205,76 @@ export default function ManagementTab({
         {countdown && (
           <div className={`px-3 py-2 rounded-lg border text-sm font-medium ${getStatusColor(countdown.status)}`}>
             📈 {countdown.text}
+          </div>
+        )}
+
+        {/* 権利確定日設定（月/日形式） */}
+        <div className="space-y-3">
+          <label className="text-xs font-thin text-green-300">
+            💰 権利確定日
+          </label>
+
+          {/* 月/日入力 */}
+          <div className="flex items-center space-x-2">
+            <select
+              value={rightsSettings.month || ''}
+              onChange={(e) => handleMonthChange(e.target.value)}
+              className="flex-1 px-2 py-1.5 bg-gray-800 border border-gray-600 rounded text-white text-xs font-thin focus:border-green-400 focus:outline-none"
+            >
+              <option value="">月</option>
+              {Array.from({ length: 12 }, (_, i) => i + 1).map(month => (
+                <option key={month} value={month}>{month}月</option>
+              ))}
+            </select>
+            <span className="text-gray-400 text-xs font-thin">/</span>
+            <select
+              value={rightsSettings.day || ''}
+              onChange={(e) => handleDayChange(e.target.value)}
+              className="flex-1 px-2 py-1.5 bg-gray-800 border border-gray-600 rounded text-white text-xs font-thin focus:border-green-400 focus:outline-none"
+            >
+              <option value="">日</option>
+              {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
+                <option key={day} value={day}>{day}日</option>
+              ))}
+            </select>
+          </div>
+
+          {/* 繰り返し設定 */}
+          <div className="flex items-center space-x-2 pt-1">
+            <label className="flex items-center space-x-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={rightsSettings.isRecurring}
+                onChange={(e) => handleRecurringChange(e.target.checked)}
+                className="w-3 h-3 text-green-500 bg-gray-700 border-gray-600 rounded focus:ring-green-400 focus:ring-1"
+              />
+              <span className="text-xs font-thin text-gray-300 flex items-center space-x-1">
+                <span>毎年</span>
+                <span className="text-green-400">↻</span>
+              </span>
+            </label>
+            {!rightsSettings.isRecurring && (
+              <span className="text-xs font-thin text-orange-300">今回のみ</span>
+            )}
+          </div>
+        </div>
+
+        {/* 権利付き最終日カウントダウン表示 */}
+        {rightsCountdown && (
+          <div className={`px-3 py-2 rounded-lg border font-medium ${getStatusColor(rightsCountdown.status)}`}>
+            <div className="flex items-center gap-1">
+              <span className="text-lg">💰</span>
+              <div className="flex flex-col space-y-0.5">
+                <div className="text-sm leading-tight">
+                  {rightsCountdown.text.split(' 確定日：')[0]}
+                </div>
+                {rightsCountdown.text.includes('確定日：') && (
+                  <div className="text-xs opacity-75 leading-tight">
+                    確定日：{rightsCountdown.text.split(' 確定日：')[1]}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         )}
       </div>

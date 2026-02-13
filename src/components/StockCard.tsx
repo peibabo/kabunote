@@ -5,6 +5,7 @@ import { loadStockData, getCompanyNameSync, isKnownStockSync, StockData } from '
 import { CustomTag } from '@/types/tags';
 import { FavoriteGroup } from '@/types/favorites';
 import { Position, PositionSummary, calculatePositionSummary, ProfitLossInfo, calculateProfitLoss } from '@/types/positions';
+import { RightsDateSettings, createDefaultRightsSettings, calculateRightsDateFromSettings, shouldDeactivateRights } from '@/types/rightsDate';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useStringLocalStorage, useArrayLocalStorage } from '@/hooks/useLocalStorage';
@@ -61,7 +62,28 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
   const [stopLoss, setStopLoss] = useStringLocalStorage(`kabunote-stop-loss-${symbol}`, '', 300);
   const [currentPrice, setCurrentPrice] = useStringLocalStorage(`kabunote-current-price-${symbol}`, '', 300);
   const [earningsDate, setEarningsDate] = useStringLocalStorage(`kabunote-earnings-date-${symbol}`, '', 400);
+  const [rightsSettings, setRightsSettings] = useStringLocalStorage(`kabunote-rights-settings-${symbol}`, JSON.stringify(createDefaultRightsSettings()), 400);
   const [positions, setPositions] = useArrayLocalStorage<Position>(`kabunote-positions-${symbol}`, [], 200);
+
+  // 権利確定日設定をパース
+  const parsedRightsSettings: RightsDateSettings = (() => {
+    try {
+      return JSON.parse(rightsSettings);
+    } catch {
+      return createDefaultRightsSettings();
+    }
+  })();
+
+  // 権利確定日の自動無効化チェック（単発イベントが過去になった場合）
+  useEffect(() => {
+    if (shouldDeactivateRights(parsedRightsSettings)) {
+      const updatedSettings = { ...parsedRightsSettings, isActive: false };
+      setRightsSettings(JSON.stringify(updatedSettings));
+    }
+  }, [parsedRightsSettings, setRightsSettings]);
+
+  // 権利確定日文字列を計算
+  const rightsDate = calculateRightsDateFromSettings(parsedRightsSettings);
 
   // 同期版を使って即座に表示（キャッシュがある場合）
   const companyName = stockData ? stockData.name : getCompanyNameSync(symbol);
@@ -188,6 +210,9 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
             symbol={symbol}
             earningsDate={earningsDate}
             onEarningsDateChange={setEarningsDate}
+            rightsDate={rightsDate}
+            rightsSettings={parsedRightsSettings}
+            onRightsSettingsChange={(newSettings) => setRightsSettings(JSON.stringify(newSettings))}
             positions={positions}
             positionSummary={positionSummary}
             onPositionManagerOpen={() => setIsPositionManagerOpen(true)}
