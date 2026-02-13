@@ -679,9 +679,9 @@ export default function Home() {
               onDragEnd={handleDragEnd}
             >
               <SortableContext items={filteredStocks} strategy={rectSortingStrategy}>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" style={{gridAutoRows: '1fr'}}>
                   {filteredStocks.map((stock) => (
-                    <div key={stock} id={`stock-card-${stock}`}>
+                    <div key={stock} id={`stock-card-${stock}`} className="h-full">
                       <StockCard
                         symbol={stock}
                         onRemove={() => handleRemoveStock(stock)}
