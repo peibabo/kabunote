@@ -102,6 +102,18 @@ npm run dev
 - **視覚的警告**: 7日以内は赤色、当日は黄色点滅で注意喚起
 - **永続化**: localStorage対応
 
+### 13. 📅 投資イベント集約カレンダー機能
+- **横断的表示**: 全銘柄の決算発表日・権利確定日・権利付き最終日を一覧表示
+- **ミニマルデザイン**: 極細境界線・Noto Sans JP Weight 100採用
+- **イベントドット**: 決算(白)・権利付き最終日(黄)・権利確定日(緑)で色分け
+- **ツールチップ**: 日付ホバーで詳細情報表示([銘柄] 会社名：イベント種別)
+- **スムーススクロール**: イベントクリックで該当銘柄カードへ自動ジャンプ
+- **パフォーマンス最適化**: useMemoによる事前イベントマップ生成
+- **月間ナビゲーション**: 前月・翌月への移動機能
+- **自動年次更新**: 毎年繰り返し設定のイベントを自動計算
+- **営業日考慮**: 権利付き最終日の正確な営業日計算
+- **レスポンシブ対応**: モバイル表示最適化
+
 ## プロジェクト構成
 
 ### データファイル
@@ -120,12 +132,15 @@ npm run dev
 - `src/components/TagEditor.tsx`: カスタムタグ作成・管理
 - `src/components/FavoriteGroupManager.tsx`: お気に入りグループ管理
 - `src/components/PositionManager.tsx`: 保有ポジション管理モーダル
+- `src/components/InvestmentCalendar.tsx`: 投資イベント集約カレンダー
 
 ### データ管理層
 - `src/data/stockNames.ts`: CSV解析・検索・正規化機能
 - `src/types/tags.ts`: タグシステム型定義
 - `src/types/favorites.ts`: お気に入りグループ型定義
 - `src/types/positions.ts`: ポジション管理・計算機能型定義
+- `src/types/rightsDate.ts`: 権利確定日設定・自動計算機能型定義
+- `src/types/investmentCalendar.ts`: 投資カレンダー・イベント管理型定義
 
 ### カスタムフック（新規追加）
 - `src/hooks/useDebounce.ts`: デバウンス処理・コールバック管理
