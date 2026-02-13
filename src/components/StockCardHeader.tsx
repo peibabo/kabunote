@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { StockData } from '@/data/stockNames';
 import { CustomTag, TAG_COLORS } from '@/types/tags';
 import { FavoriteGroup, GROUP_COLORS } from '@/types/favorites';
@@ -34,9 +35,24 @@ export default function StockCardHeader({
   listeners,
   isDragging
 }: StockCardHeaderProps) {
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+
+  const handleDeleteClick = () => {
+    setIsDeleteConfirmOpen(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    setIsDeleteConfirmOpen(false);
+    onRemove();
+  };
+
+  const handleDeleteCancel = () => {
+    setIsDeleteConfirmOpen(false);
+  };
+
   return (
     <div className="flex items-start justify-between">
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 max-w-[calc(100%-80px)]">
         <div className="flex items-center gap-2 mb-1">
           <h3 className="text-lg font-bold text-white">{symbol}</h3>
           {isLoading ? (
@@ -113,27 +129,63 @@ export default function StockCardHeader({
             </div>
           )}
         </div>
-        <p className="text-base text-gray-100 truncate font-bold" title={companyName}>
+        <p className="text-base text-gray-100 font-bold leading-tight break-words pr-4" title={companyName}>
           {companyName}
         </p>
       </div>
-      <div className="flex gap-2">
+      <div className="flex gap-1 flex-shrink-0">
         <button
           {...listeners}
-          className="bg-gray-600 hover:bg-gray-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm transition-colors cursor-grab active:cursor-grabbing flex-shrink-0"
+          className="bg-gray-600 hover:bg-gray-500 text-white rounded-full w-7 h-7 flex items-center justify-center text-sm transition-colors cursor-grab active:cursor-grabbing"
           aria-label="カードを移動"
           title="ドラッグして順序を変更"
         >
           ⋮⋮
         </button>
         <button
-          onClick={onRemove}
-          className="bg-red-600 hover:bg-red-700 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold transition-colors flex-shrink-0"
+          onClick={handleDeleteClick}
+          className="bg-red-600 hover:bg-red-700 text-white rounded-full w-7 h-7 flex items-center justify-center text-sm font-bold transition-colors"
           aria-label="銘柄カードを削除"
         >
           ×
         </button>
       </div>
+
+      {/* 削除確認モーダル */}
+      {isDeleteConfirmOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={handleDeleteCancel}>
+          <div className="bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4 shadow-lg" onClick={(e) => e.stopPropagation()}>
+            <div className="text-center space-y-4">
+              <div className="text-red-400 text-4xl">⚠️</div>
+              <h3 className="text-lg font-bold text-white">銘柄カードを削除しますか？</h3>
+              <div className="space-y-2">
+                <p className="text-gray-300 text-sm">
+                  <span className="font-medium text-white">{symbol}</span>
+                  <br />
+                  <span className="text-gray-100">{companyName}</span>
+                </p>
+                <p className="text-gray-400 text-xs">
+                  この操作は取り消せません。株ノオト、タグ、投資情報なども全て削除されます。
+                </p>
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={handleDeleteCancel}
+                  className="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
+                >
+                  キャンセル
+                </button>
+                <button
+                  onClick={handleDeleteConfirm}
+                  className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium"
+                >
+                  削除する
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
