@@ -6,7 +6,9 @@ import StockInput from '@/components/StockInput';
 import FavoriteGroupManager from '@/components/FavoriteGroupManager';
 import SearchBar from '@/components/SearchBar';
 import InvestmentCalendar from '@/components/InvestmentCalendar';
+import PortfolioSummary from '@/components/PortfolioSummary';
 import { loadStockData, getStockData } from '@/data/stockNames';
+import { Position } from '@/types/positions';
 import { FavoriteGroup, GROUP_COLORS } from '@/types/favorites';
 import { RightsDateSettings } from '@/types/rightsDate';
 import { useDebouncedCallback } from '@/hooks/useDebounce';
@@ -43,6 +45,7 @@ export default function Home() {
   const [searchResults, setSearchResults] = useState<string[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [stockCalendarData, setStockCalendarData] = useState<{ [symbol: string]: { name: string; earningsDate: string; rightsSettings: RightsDateSettings } }>({});
+  const [portfolioData, setPortfolioData] = useState<{ symbol: string; name: string; positions: Position[]; currentPrice: string; }[]>([]);
 
   // デバウンスされたお気に入りグループ保存関数（250ms後に保存）
   const debouncedSaveFavoriteGroups = useDebouncedCallback((groups: FavoriteGroup[]) => {
@@ -223,6 +226,53 @@ export default function Home() {
     };
 
     updateCalendarData();
+  }, [stocks, isInitialized]);
+
+  // ポートフォリオ用データの更新
+  useEffect(() => {
+    const updatePortfolioData = async () => {
+      if (!isInitialized || stocks.length === 0) return;
+
+      const portfolio: { symbol: string; name: string; positions: Position[]; currentPrice: string; }[] = [];
+
+      // 株式データを読み込み
+      await loadStockData();
+
+      for (const symbol of stocks) {
+        const stockInfo = await getStockData(symbol);
+
+        // ポジション情報を取得
+        const positionsStr = typeof window !== 'undefined'
+          ? localStorage.getItem(`kabunote-positions-${symbol}`)
+          : null;
+
+        let positions: Position[] = [];
+        try {
+          positions = positionsStr ? JSON.parse(positionsStr) : [];
+        } catch {
+          positions = [];
+        }
+
+        // 現在株価を取得
+        const currentPrice = typeof window !== 'undefined'
+          ? localStorage.getItem(`kabunote-current-price-${symbol}`) || ''
+          : '';
+
+        // ポジションを持つ銘柄のみ追加
+        if (positions.length > 0) {
+          portfolio.push({
+            symbol,
+            name: stockInfo?.name || symbol,
+            positions,
+            currentPrice
+          });
+        }
+      }
+
+      setPortfolioData(portfolio);
+    };
+
+    updatePortfolioData();
   }, [stocks, isInitialized]);
 
   const handleAddStock = (code: string) => {
@@ -545,6 +595,9 @@ export default function Home() {
             </div>
           )}
         </div>
+
+        {/* ポートフォリオサマリー */}
+        <PortfolioSummary portfolioData={portfolioData} />
 
         {/* 投資カレンダー */}
         {stocks.length > 0 && (

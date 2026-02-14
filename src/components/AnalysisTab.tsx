@@ -185,7 +185,7 @@ export default function AnalysisTab({
         {profitLossInfo && positionSummary.totalShares > 0 && (
           <div className="mt-4 p-3 bg-gray-600 rounded-lg">
             <h5 className="text-xs font-medium text-gray-300 mb-2">📊 損益シミュレーション</h5>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               {/* 損切ラインでの損失 */}
               {stopLoss && (
                 <div className="text-center">
@@ -198,6 +198,30 @@ export default function AnalysisTab({
                   </div>
                 </div>
               )}
+
+              {/* 現在の目安株価での損益 */}
+              {currentPrice && (() => {
+                const current = parseFloat(currentPrice);
+                if (!current) return null;
+
+                const currentValue = positionSummary.totalShares * current;
+                const currentProfitLoss = currentValue - positionSummary.totalCost;
+                const currentProfitLossPercent = positionSummary.totalCost > 0
+                  ? (currentProfitLoss / positionSummary.totalCost) * 100
+                  : 0;
+
+                return (
+                  <div className="text-center bg-blue-900 bg-opacity-30 rounded-lg p-2">
+                    <div className="text-xs text-blue-300 mb-1">現在の目安株価</div>
+                    <div className={`text-sm font-bold ${currentProfitLoss >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                      {formatProfitLoss(currentProfitLoss)}円
+                    </div>
+                    <div className={`text-xs ${currentProfitLoss >= 0 ? 'text-green-300' : 'text-red-300'}`}>
+                      ({currentProfitLoss >= 0 ? '+' : ''}{currentProfitLossPercent.toFixed(1)}%)
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* 目標価格での利益 */}
               {targetPrice && (
