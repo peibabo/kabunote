@@ -54,11 +54,6 @@ export default function BasicTab({
 }: BasicTabProps) {
   const externalLinks = getExternalLinks(symbol);
 
-  const handleChartOpen = () => {
-    const url = `https://jp.tradingview.com/symbols/TSE-${symbol}/`;
-    window.open(url, 'stockChart', 'width=800,height=800,scrollbars=yes,resizable=yes');
-  };
-
   return (
     <div className="space-y-4">
       {/* 基本タブ: メモ + チャート・外部リンク */}
@@ -96,14 +91,6 @@ export default function BasicTab({
 
       {/* 外部リンクボタン */}
       <div className="space-y-2">
-        {/* チャート確認ボタン */}
-        <button
-          onClick={handleChartOpen}
-          className="w-full bg-green-600 hover:bg-green-700 text-white text-sm font-medium py-2 px-3 rounded-lg transition-colors"
-        >
-          📈 最新チャートを確認
-        </button>
-
         {/* 外部リンク */}
         <div className="grid grid-cols-4 gap-1">
           {externalLinks.map((link) => (
