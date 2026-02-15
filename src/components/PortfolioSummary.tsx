@@ -1,13 +1,17 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Position, calculatePositionSummary, formatPrice, formatShares } from '@/types/positions';
+import { CustomTag } from '@/types/tags';
+import InvestmentPieChart from '@/components/InvestmentPieChart';
 
 interface PortfolioData {
   symbol: string;
   name: string;
   positions: Position[];
   currentPrice: string;
+  sector: string;
+  customTags: CustomTag[];
 }
 
 interface PortfolioSummaryProps {
@@ -24,6 +28,8 @@ interface OverallSummary {
 }
 
 export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProps) {
+  const [isChartsExpanded, setIsChartsExpanded] = useState(false);
+
   // 全体のサマリーを計算
   const overallSummary = useMemo<OverallSummary>(() => {
     let totalInvestment = 0;
@@ -147,6 +153,52 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
           )}
         </div>
       </div>
+
+      {/* 円グラフセクション（アコーディオン） */}
+      {overallSummary.stocksWithPositions > 0 && (
+        <div className="mt-6">
+          {/* アコーディオンヘッダー */}
+          <button
+            onClick={() => setIsChartsExpanded(!isChartsExpanded)}
+            className="w-full flex items-center justify-between p-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors cursor-pointer"
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-lg">📊</span>
+              <h3 className="text-sm font-medium text-gray-200">
+                ポートフォリオ分析グラフ
+              </h3>
+              <span className="text-xs text-gray-400">
+                (投資額割合・業種別・タグ別)
+              </span>
+            </div>
+            <div className={`transform transition-transform duration-200 text-gray-400 ${
+              isChartsExpanded ? 'rotate-180' : 'rotate-0'
+            }`}>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                <path d="M4 6l4 4 4-4H4z"/>
+              </svg>
+            </div>
+          </button>
+
+          {/* アコーディオンコンテンツ */}
+          <div className={`overflow-hidden transition-all duration-300 ease-in-out ${
+            isChartsExpanded
+              ? 'max-h-[2000px] opacity-100 mt-4'
+              : 'max-h-0 opacity-0'
+          }`}>
+            <div className="grid grid-cols-1 xl:grid-cols-3 lg:grid-cols-2 gap-6">
+              {/* 投資額割合円グラフ */}
+              <InvestmentPieChart portfolioData={portfolioData} type="investment" />
+
+              {/* 業種別分散円グラフ */}
+              <InvestmentPieChart portfolioData={portfolioData} type="sector" />
+
+              {/* タグ別分散円グラフ */}
+              <InvestmentPieChart portfolioData={portfolioData} type="tags" />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 詳細情報 */}
       {overallSummary.totalCurrentValue === 0 && (
