@@ -10,6 +10,7 @@ import PortfolioSummary from '@/components/PortfolioSummary';
 import { loadStockData, getStockData } from '@/data/stockNames';
 import { Position } from '@/types/positions';
 import { FavoriteGroup, GROUP_COLORS } from '@/types/favorites';
+import { CustomTag } from '@/types/tags';
 import { RightsDateSettings } from '@/types/rightsDate';
 import { useDebouncedCallback } from '@/hooks/useDebounce';
 import {
@@ -45,7 +46,7 @@ export default function Home() {
   const [searchResults, setSearchResults] = useState<string[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [stockCalendarData, setStockCalendarData] = useState<{ [symbol: string]: { name: string; earningsDate: string; rightsSettings: RightsDateSettings } }>({});
-  const [portfolioData, setPortfolioData] = useState<{ symbol: string; name: string; positions: Position[]; currentPrice: string; }[]>([]);
+  const [portfolioData, setPortfolioData] = useState<{ symbol: string; name: string; positions: Position[]; currentPrice: string; sector: string; customTags: CustomTag[]; }[]>([]);
 
   // デバウンスされたお気に入りグループ保存関数（250ms後に保存）
   const debouncedSaveFavoriteGroups = useDebouncedCallback((groups: FavoriteGroup[]) => {
@@ -233,7 +234,7 @@ export default function Home() {
     const updatePortfolioData = async () => {
       if (!isInitialized || stocks.length === 0) return;
 
-      const portfolio: { symbol: string; name: string; positions: Position[]; currentPrice: string; }[] = [];
+      const portfolio: { symbol: string; name: string; positions: Position[]; currentPrice: string; sector: string; customTags: CustomTag[]; }[] = [];
 
       // 株式データを読み込み
       await loadStockData();
@@ -258,13 +259,27 @@ export default function Home() {
           ? localStorage.getItem(`kabunote-current-price-${symbol}`) || ''
           : '';
 
+        // カスタムタグを取得
+        const tagsStr = typeof window !== 'undefined'
+          ? localStorage.getItem(`kabunote-tags-${symbol}`)
+          : null;
+
+        let customTags: CustomTag[] = [];
+        try {
+          customTags = tagsStr ? JSON.parse(tagsStr) : [];
+        } catch {
+          customTags = [];
+        }
+
         // ポジションを持つ銘柄のみ追加
         if (positions.length > 0) {
           portfolio.push({
             symbol,
             name: stockInfo?.name || symbol,
             positions,
-            currentPrice
+            currentPrice,
+            sector: stockInfo?.sector || 'その他',
+            customTags
           });
         }
       }
