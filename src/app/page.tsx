@@ -7,6 +7,7 @@ import FavoriteGroupManager from '@/components/FavoriteGroupManager';
 import SearchBar from '@/components/SearchBar';
 import InvestmentCalendar from '@/components/InvestmentCalendar';
 import PortfolioSummary from '@/components/PortfolioSummary';
+import FloatingAddButton from '@/components/FloatingAddButton';
 import { loadStockData, getStockData } from '@/data/stockNames';
 import { Position } from '@/types/positions';
 import { FavoriteGroup, GROUP_COLORS } from '@/types/favorites';
@@ -623,43 +624,21 @@ export default function Home() {
           />
         )}
 
-        <div className="bg-gray-800 rounded-lg p-6 mb-8">
-          <div className="flex items-center gap-3 mb-4">
-            <h2 className="text-xl font-semibold text-white">銘柄を追加</h2>
-            {selectedGroupFilter && (
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-400">→</span>
-                <span
-                  className={`text-xs px-2 py-1 rounded-full ${
-                    GROUP_COLORS[favoriteGroups.find(g => g.id === selectedGroupFilter)?.color || 'blue'].bg
-                  } ${
-                    GROUP_COLORS[favoriteGroups.find(g => g.id === selectedGroupFilter)?.color || 'blue'].text
-                  }`}
-                >
-                  ★ {favoriteGroups.find(g => g.id === selectedGroupFilter)?.name}に自動追加
-                </span>
-              </div>
-            )}
-          </div>
-          <div className="flex flex-col md:flex-row gap-4 items-start">
-            <div className="flex-1">
-              <StockInput
-                onAddStock={handleAddStock}
-                isDisabled={stocks.length >= MAX_STOCKS}
-              />
-            </div>
-            <div className="flex flex-col gap-2 md:min-w-fit">
-              {error && (
-                <div className="p-3 bg-red-900 border border-red-700 rounded-lg">
-                  <p className="text-red-400 text-sm">{error}</p>
-                </div>
-              )}
-              <div className="text-gray-400 text-sm">
-                <p>{stocks.length}/{MAX_STOCKS} 銘柄を追加済み</p>
-              </div>
-            </div>
-          </div>
-        </div>
+      {/* フローティング銘柄追加ボタン */}
+      <FloatingAddButton
+        onAddStock={handleAddStock}
+        error={error}
+        setError={setError}
+        disabled={stocks.length >= MAX_STOCKS}
+        selectedGroupInfo={
+          selectedGroupFilter
+            ? {
+                name: favoriteGroups.find(g => g.id === selectedGroupFilter)?.name || '',
+                color: favoriteGroups.find(g => g.id === selectedGroupFilter)?.color || 'blue'
+              }
+            : null
+        }
+      />
 
         {/* お気に入りグループフィルター */}
         {favoriteGroups.length > 0 && (
