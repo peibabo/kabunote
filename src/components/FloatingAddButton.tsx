@@ -13,6 +13,7 @@ interface FloatingAddButtonProps {
     name: string;
     color: GroupColor;
   } | null;
+  isFirstTime?: boolean;
 }
 
 export default function FloatingAddButton({
@@ -20,7 +21,8 @@ export default function FloatingAddButton({
   error,
   setError,
   disabled = false,
-  selectedGroupInfo = null
+  selectedGroupInfo = null,
+  isFirstTime = false
 }: FloatingAddButtonProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -58,6 +60,7 @@ export default function FloatingAddButton({
             ? 'bg-gray-600 cursor-not-allowed'
             : 'bg-blue-600 hover:bg-blue-700 active:scale-95'
           }
+          ${isFirstTime ? 'animate-pulse ring-4 ring-blue-300 ring-opacity-50' : ''}
         `}
         title="銘柄を追加"
         aria-label="銘柄を追加"

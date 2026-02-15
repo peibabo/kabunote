@@ -380,6 +380,17 @@ export default function Home() {
     }
   };
 
+  // 投資カレンダーにデータがあるかどうかを判定
+  const hasCalendarData = Object.values(stockCalendarData).some(data => {
+    return data.earningsDate || (data.rightsSettings.isActive && data.rightsSettings.month && data.rightsSettings.day);
+  });
+
+  // ポートフォリオデータがあるかどうかを判定
+  const hasPortfolioData = portfolioData.length > 0;
+
+  // 次のステップのヒントが必要かどうかを判定
+  const shouldShowHints = stocks.length > 0 && (!hasPortfolioData || !hasCalendarData);
+
   // 検索機能
   const searchStocks = async (stocks: string[], query: string): Promise<string[]> => {
     if (!query || query.length < 2) return stocks;
@@ -616,12 +627,47 @@ export default function Home() {
         <PortfolioSummary portfolioData={portfolioData} />
 
         {/* 投資カレンダー */}
-        {stocks.length > 0 && (
+        {stocks.length > 0 && hasCalendarData && (
           <InvestmentCalendar
             stockSymbols={stocks}
             stockData={stockCalendarData}
             onStockClick={handleStockClick}
           />
+        )}
+
+        {/* 次のステップのヒント */}
+        {shouldShowHints && (
+          <div className="bg-gray-800 rounded-lg p-4 mb-6">
+            <div className="flex items-center gap-3 mb-4">
+              <span className="text-lg">💡</span>
+              <h3 className="text-lg font-semibold text-white">次のステップのヒント</h3>
+            </div>
+            <div className="space-y-3">
+              {!hasPortfolioData && (
+                <div className="bg-blue-900 bg-opacity-30 border border-blue-700 rounded-lg p-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-blue-300 text-sm font-medium">📊 ポートフォリオ分析を始めませんか？</span>
+                  </div>
+                  <p className="text-blue-200 text-sm">
+                    銘柄カードの「💼 管理」タブで保有ポジションや現在株価を入力すると、
+                    <span className="font-medium text-blue-100">ポートフォリオサマリーと分析グラフ</span>が表示されます
+                  </p>
+                </div>
+              )}
+
+              {!hasCalendarData && (
+                <div className="bg-green-900 bg-opacity-30 border border-green-700 rounded-lg p-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-green-300 text-sm font-medium">📅 投資スケジュール管理はいかがですか？</span>
+                  </div>
+                  <p className="text-green-200 text-sm">
+                    銘柄カードの「💼 管理」タブで決算発表日や権利確定日を設定すると、
+                    <span className="font-medium text-green-100">投資カレンダー</span>が表示されます
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
         )}
 
       {/* フローティング銘柄追加ボタン */}
@@ -638,10 +684,11 @@ export default function Home() {
               }
             : null
         }
+        isFirstTime={stocks.length === 0}
       />
 
         {/* お気に入りグループフィルター */}
-        {favoriteGroups.length > 0 && (
+        {favoriteGroups.length > 0 && stocks.length > 0 && (
           <div className="bg-gray-800 rounded-lg p-4 mb-6">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-lg font-semibold text-white">お気に入りグループ</h3>
@@ -681,7 +728,7 @@ export default function Home() {
         )}
 
         {/* グループ管理ボタン（グループがない場合） */}
-        {favoriteGroups.length === 0 && (
+        {favoriteGroups.length === 0 && stocks.length > 0 && (
           <div className="bg-gray-800 rounded-lg p-4 mb-6 text-center">
             <p className="text-gray-400 text-sm mb-3">お気に入りグループを作成して銘柄を整理しましょう</p>
             <button
@@ -698,8 +745,43 @@ export default function Home() {
             <div className="bg-gray-800 rounded-lg p-8 text-center">
               {stocks.length === 0 ? (
                 <>
-                  <h3 className="text-xl font-medium text-white mb-2">銘柄カードを追加してください</h3>
-                  <p className="text-gray-400">上記のフォームから銘柄コードを入力して、投資の思考整理を始めましょう。</p>
+                  <div className="mb-6">
+                    <h3 className="text-xl font-medium text-white mb-3">🎯 銘柄カードを追加してください</h3>
+                    <p className="text-gray-400 mb-4">投資の思考整理を始めましょう。まずは気になる銘柄を追加してみてください。</p>
+                  </div>
+
+                  {/* フローティングボタンへの誘導 */}
+                  <div className="bg-blue-900 bg-opacity-30 border border-blue-700 rounded-lg p-4 mb-4">
+                    <div className="flex items-center justify-center gap-3 mb-2">
+                      <span className="text-blue-300 text-sm">右下の</span>
+                      <div className="bg-blue-600 text-white w-8 h-8 rounded-full flex items-center justify-center text-lg font-bold">
+                        ＋
+                      </div>
+                      <span className="text-blue-300 text-sm">ボタンから銘柄を追加できます</span>
+                    </div>
+                    <div className="flex items-center justify-center">
+                      <div className="flex items-center gap-2 text-xs text-blue-400">
+                        <span>💡</span>
+                        <span>銘柄コード（例：7203）または会社名（例：トヨタ）で検索</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 使い方のヒント */}
+                  <div className="text-left max-w-md mx-auto space-y-2 text-sm text-gray-400">
+                    <div className="flex items-center gap-2">
+                      <span className="text-green-400">✨</span>
+                      <span>銘柄を追加すると投資メモやタグ付けができます</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-yellow-400">📊</span>
+                      <span>ポジション管理や損益シミュレーション機能も利用可能</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-purple-400">🏷️</span>
+                      <span>お気に入りグループで銘柄を整理できます</span>
+                    </div>
+                  </div>
                 </>
               ) : searchQuery.trim() ? (
                 <>

@@ -162,6 +162,19 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
         isDragging={isDragging}
       />
 
+      {/* チャート確認ボタン（常に表示） */}
+      <div className="mb-4">
+        <button
+          onClick={() => {
+            const url = `https://jp.tradingview.com/symbols/TSE-${symbol}/`;
+            window.open(url, 'stockChart', 'width=800,height=800,scrollbars=yes,resizable=yes');
+          }}
+          className="w-full bg-green-600 hover:bg-green-700 text-white text-sm font-medium py-2 px-3 rounded-lg transition-colors"
+        >
+          📈 最新チャートを確認
+        </button>
+      </div>
+
       {/* タブナビゲーション */}
       <div className="flex border-b border-gray-600 mb-4">
         {tabs.map((tab) => (
