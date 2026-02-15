@@ -267,49 +267,51 @@ export default function InvestmentCalendar({ stockSymbols, stockData, onStockCli
   }, [eventMap, currentMonth]);
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-lg p-4 mb-6 font-thin">
-      {/* ヘッダー（常に表示） */}
-      <div className="flex items-center justify-between mb-4">
-        <button
-          onClick={toggleExpanded}
-          className="flex items-center space-x-2 text-lg text-white font-thin hover:text-blue-300 transition-colors"
-        >
-          <span>📅 投資カレンダー</span>
+    <div className="bg-gray-800 rounded-lg p-4 mb-6 font-thin">
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-3">
+          <span className="text-lg">📅</span>
+          <h3 className="text-lg font-semibold text-white">投資カレンダー</h3>
           {currentMonthEvents > 0 && (
-            <span className="text-sm text-blue-300 bg-blue-900 bg-opacity-30 px-2 py-0.5 rounded">
-              {currentMonthEvents}件
+            <span className="text-xs text-gray-400">
+              ({currentMonthEvents}件)
             </span>
           )}
-          <span className="text-sm text-gray-400">
-            {isExpanded ? '▲' : '▼'}
-          </span>
+        </div>
+        <button
+          onClick={toggleExpanded}
+          className="text-sm bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded transition-colors"
+        >
+          {isExpanded ? '折りたたむ' : '表示する'}
         </button>
-
-        {isExpanded && (
-          <div className="flex items-center space-x-4">
-            <button
-              onClick={handlePreviousMonth}
-              className="text-gray-400 hover:text-white transition-colors"
-            >
-              ←
-            </button>
-            <span className="text-white text-sm font-thin min-w-[120px] text-center">
-              {currentMonthName}
-            </span>
-            <button
-              onClick={handleNextMonth}
-              className="text-gray-400 hover:text-white transition-colors"
-            >
-              →
-            </button>
-          </div>
-        )}
       </div>
 
-      {/* カレンダー本体（展開時のみ表示） */}
-      {isExpanded && (
-        <>
-          {/* 曜日ヘッダー */}
+      {/* アコーディオンコンテンツ */}
+      <div className={`overflow-hidden transition-all duration-300 ease-in-out ${
+        isExpanded
+          ? 'max-h-[1000px] opacity-100'
+          : 'max-h-0 opacity-0'
+      }`}>
+        {/* 月ナビゲーション */}
+        <div className="flex items-center justify-center space-x-4 mb-4">
+          <button
+            onClick={handlePreviousMonth}
+            className="text-gray-400 hover:text-white transition-colors"
+          >
+            ←
+          </button>
+          <span className="text-white text-sm font-thin min-w-[120px] text-center">
+            {currentMonthName}
+          </span>
+          <button
+            onClick={handleNextMonth}
+            className="text-gray-400 hover:text-white transition-colors"
+          >
+            →
+          </button>
+        </div>
+
+        {/* 曜日ヘッダー */}
           <div className="grid grid-cols-7 gap-1 mb-2">
             {['月', '火', '水', '木', '金', '土', '日'].map(day => (
               <div key={day} className="text-center text-xs text-gray-400 font-thin p-2">
@@ -373,8 +375,7 @@ export default function InvestmentCalendar({ stockSymbols, stockData, onStockCli
               <span>権利確定日</span>
             </div>
           </div>
-        </>
-      )}
+      </div>
 
       {/* ツールチップ（展開時のみ表示） */}
       {isExpanded && tooltip.show && (

@@ -87,17 +87,20 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
   };
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-lg p-4 mb-6 font-thin">
+    <div className="bg-gray-800 rounded-lg p-4 mb-6 font-thin">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg text-white font-thin">💼 ポートフォリオサマリー</h2>
-        <div className="text-xs text-gray-400">
-          {overallSummary.stocksWithPositions}銘柄でポジション保有中
+        <div className="flex items-center gap-3">
+          <span className="text-lg">💼</span>
+          <h2 className="text-lg font-semibold text-white">ポートフォリオサマリー</h2>
+          <span className="text-xs text-gray-400">
+            ({overallSummary.stocksWithPositions}銘柄でポジション保有中)
+          </span>
         </div>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {/* 総投資額 */}
-        <div className="bg-gray-800 rounded-lg p-3">
+        <div className="bg-gray-700 rounded-lg p-3">
           <div className="text-xs text-gray-400 mb-1">総投資額</div>
           <div className="text-lg font-medium text-blue-300">
             {formatPrice(overallSummary.totalInvestment)}円
@@ -108,7 +111,7 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
         </div>
 
         {/* 現在評価額 */}
-        <div className="bg-gray-800 rounded-lg p-3">
+        <div className="bg-gray-700 rounded-lg p-3">
           <div className="text-xs text-gray-400 mb-1">現在評価額</div>
           <div className="text-lg font-medium text-white">
             {overallSummary.totalCurrentValue > 0
@@ -124,7 +127,7 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
         </div>
 
         {/* 損益額 */}
-        <div className="bg-gray-800 rounded-lg p-3">
+        <div className="bg-gray-700 rounded-lg p-3">
           <div className="text-xs text-gray-400 mb-1">損益額</div>
           {overallSummary.totalCurrentValue > 0 ? (
             <div className={`text-lg font-medium ${getProfitLossColor(overallSummary.totalProfitLoss)}`}>
