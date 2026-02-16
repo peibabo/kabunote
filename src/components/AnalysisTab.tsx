@@ -187,22 +187,53 @@ export default function AnalysisTab({
             <h5 className="text-xs font-medium text-gray-300 mb-2">📊 損益シミュレーション</h5>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               {/* 損切ラインでの損失 */}
-              {stopLoss && (
-                <div className="text-center">
-                  <div className="text-xs text-gray-400 mb-1">損切ライン到達時</div>
-                  <div className={`text-sm font-bold ${profitLossInfo.stopLoss >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                    {formatProfitLoss(profitLossInfo.stopLoss)}円
+              {(() => {
+                const stopLossNum = parseFloat(stopLoss);
+                if (!stopLossNum) {
+                  // 損切ライン未設定時は誘導メッセージを表示
+                  return (
+                    <div className="text-center bg-red-900 bg-opacity-20 border border-red-700 rounded-lg px-2 py-2">
+                      <div className="text-xs text-red-300 mb-1 whitespace-nowrap">損切ライン到達時</div>
+                      <div className="text-sm font-medium text-gray-400 mb-1">
+                        ---
+                      </div>
+                      <div className="text-xs text-red-400">
+                        💡 損切ラインを入力してください
+                      </div>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="text-center">
+                    <div className="text-xs text-gray-400 mb-1 whitespace-nowrap">損切ライン到達時</div>
+                    <div className={`text-sm font-bold ${profitLossInfo.stopLoss >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                      {formatProfitLoss(profitLossInfo.stopLoss)}円
+                    </div>
+                    <div className={`text-xs ${profitLossInfo.stopLossPercent >= 0 ? 'text-green-300' : 'text-red-300'}`}>
+                      ({profitLossInfo.stopLossPercent >= 0 ? '+' : ''}{profitLossInfo.stopLossPercent.toFixed(1)}%)
+                    </div>
                   </div>
-                  <div className={`text-xs ${profitLossInfo.stopLossPercent >= 0 ? 'text-green-300' : 'text-red-300'}`}>
-                    ({profitLossInfo.stopLossPercent >= 0 ? '+' : ''}{profitLossInfo.stopLossPercent.toFixed(1)}%)
-                  </div>
-                </div>
-              )}
+                );
+              })()}
 
               {/* 現在の目安株価での損益 */}
-              {currentPrice && (() => {
+              {(() => {
                 const current = parseFloat(currentPrice);
-                if (!current) return null;
+                if (!current) {
+                  // 目安株価未設定時は誘導メッセージを表示
+                  return (
+                    <div className="text-center bg-blue-900 bg-opacity-20 border border-blue-700 rounded-lg px-2 py-2">
+                      <div className="text-xs text-blue-300 mb-1 whitespace-nowrap">現在の目安損益</div>
+                      <div className="text-sm font-medium text-gray-400 mb-1">
+                        ---
+                      </div>
+                      <div className="text-xs text-blue-400">
+                        💡 株価を入力してください
+                      </div>
+                    </div>
+                  );
+                }
 
                 const currentValue = positionSummary.totalShares * current;
                 const currentProfitLoss = currentValue - positionSummary.totalCost;
@@ -211,8 +242,8 @@ export default function AnalysisTab({
                   : 0;
 
                 return (
-                  <div className="text-center bg-blue-900 bg-opacity-30 rounded-lg p-2">
-                    <div className="text-xs text-blue-300 mb-1">現在の目安株価</div>
+                  <div className="text-center bg-blue-900 bg-opacity-30 rounded-lg px-1 py-2">
+                    <div className="text-xs text-blue-300 mb-1 whitespace-nowrap">現在の目安損益</div>
                     <div className={`text-sm font-bold ${currentProfitLoss >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                       {formatProfitLoss(currentProfitLoss)}円
                     </div>
@@ -224,17 +255,35 @@ export default function AnalysisTab({
               })()}
 
               {/* 目標価格での利益 */}
-              {targetPrice && (
-                <div className="text-center">
-                  <div className="text-xs text-gray-400 mb-1">利確目標達成時</div>
-                  <div className={`text-sm font-bold ${profitLossInfo.targetProfit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                    {formatProfitLoss(profitLossInfo.targetProfit)}円
+              {(() => {
+                const targetPriceNum = parseFloat(targetPrice);
+                if (!targetPriceNum) {
+                  // 利確目標未設定時は誘導メッセージを表示
+                  return (
+                    <div className="text-center bg-green-900 bg-opacity-20 border border-green-700 rounded-lg px-2 py-2">
+                      <div className="text-xs text-green-300 mb-1 whitespace-nowrap">利確目標達成時</div>
+                      <div className="text-sm font-medium text-gray-400 mb-1">
+                        ---
+                      </div>
+                      <div className="text-xs text-green-400">
+                        💡 利確目標を入力してください
+                      </div>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="text-center">
+                    <div className="text-xs text-gray-400 mb-1 whitespace-nowrap">利確目標達成時</div>
+                    <div className={`text-sm font-bold ${profitLossInfo.targetProfit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                      {formatProfitLoss(profitLossInfo.targetProfit)}円
+                    </div>
+                    <div className={`text-xs ${profitLossInfo.targetProfitPercent >= 0 ? 'text-green-300' : 'text-red-300'}`}>
+                      ({profitLossInfo.targetProfitPercent >= 0 ? '+' : ''}{profitLossInfo.targetProfitPercent.toFixed(1)}%)
+                    </div>
                   </div>
-                  <div className={`text-xs ${profitLossInfo.targetProfitPercent >= 0 ? 'text-green-300' : 'text-red-300'}`}>
-                    ({profitLossInfo.targetProfitPercent >= 0 ? '+' : ''}{profitLossInfo.targetProfitPercent.toFixed(1)}%)
-                  </div>
-                </div>
-              )}
+                );
+              })()}
             </div>
             <div className="mt-2 text-xs text-gray-400 text-center">
               平均取得価額: {formatPrice(positionSummary.averagePrice)}円 × {formatShares(positionSummary.totalShares)}株
