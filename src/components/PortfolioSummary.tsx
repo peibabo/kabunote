@@ -3,6 +3,7 @@
 import { useMemo, useState, useEffect } from 'react';
 import { Position, calculatePositionSummary, formatPrice, formatShares } from '@/types/positions';
 import { CustomTag } from '@/types/tags';
+import { PortfolioDividendSummary, formatDividendAmount, formatDividendYield, calculateDividendInfo } from '@/types/dividend';
 import InvestmentPieChart from '@/components/InvestmentPieChart';
 
 interface PortfolioData {
@@ -27,6 +28,7 @@ interface OverallSummary {
   stocksWithPositions: number;
   stocksWithPrices: number;
   stocksWithoutPrices: number;
+  dividendSummary: PortfolioDividendSummary;
 }
 
 export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProps) {
@@ -61,6 +63,11 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
     let stocksWithPrices = 0;
     let stocksWithoutPrices = 0;
 
+    // 配当サマリー用の変数
+    let totalAnnualDividend = 0;
+    let totalDividendInvestment = 0;
+    let stocksWithDividend = 0;
+
     portfolioData.forEach(stock => {
       if (stock.positions.length > 0) {
         stocksWithPositions++;
@@ -86,12 +93,48 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
         } else {
           stocksWithoutPrices++;
         }
+
+        // 配当情報を取得して計算
+        const dividendPerShare = typeof window !== 'undefined'
+          ? localStorage.getItem(`kabunote-dividend-per-share-${stock.symbol}`) || ''
+          : '';
+        const dividendFrequency = typeof window !== 'undefined'
+          ? localStorage.getItem(`kabunote-dividend-frequency-${stock.symbol}`) || '1'
+          : '1';
+
+        const perShare = parseFloat(dividendPerShare);
+        const frequency = parseInt(dividendFrequency) as 1 | 2 | 4;
+
+        if (perShare > 0 && summary.totalShares > 0) {
+          stocksWithDividend++;
+          const dividendCalculation = calculateDividendInfo(
+            perShare,
+            frequency,
+            summary.totalShares,
+            summary.averagePrice
+          );
+          totalAnnualDividend += dividendCalculation.annualDividend;
+          totalDividendInvestment += summary.totalCost;
+        }
       }
     });
 
     // 損益計算は目安株価が設定されている銘柄のみで計算
     const totalProfitLoss = totalCurrentValue - totalInvestmentWithPrice;
     const totalProfitLossRate = totalInvestmentWithPrice > 0 ? (totalProfitLoss / totalInvestmentWithPrice) * 100 : 0;
+
+    // 配当サマリーを作成
+    const averageDividendYield = totalDividendInvestment > 0
+      ? (totalAnnualDividend / totalDividendInvestment) * 100
+      : 0;
+
+    const dividendSummary: PortfolioDividendSummary = {
+      totalAnnualDividend,
+      averageDividendYield,
+      totalAfterTaxAmount: totalAnnualDividend * (1 - 0.20315),
+      stocksWithDividend,
+      totalStocksWithPositions: stocksWithPositions
+    };
 
     return {
       totalInvestment: totalInvestmentAll,
@@ -101,7 +144,8 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
       totalShares: totalSharesAll,
       stocksWithPositions,
       stocksWithPrices,
-      stocksWithoutPrices
+      stocksWithoutPrices,
+      dividendSummary
     };
   }, [portfolioData, refreshTrigger]);
 
@@ -149,14 +193,14 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
         </div>
       )}
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         {/* 総投資額 */}
         <div className="bg-gray-700 rounded-lg p-3">
           <div className="text-xs text-gray-400 mb-1">総投資額</div>
           <div className="text-lg font-medium text-blue-300">
             {formatPrice(overallSummary.totalInvestment)}円
           </div>
-          <div className="text-xs text-gray-500 mt-1">
+          <div className="text-xs text-gray-500 mt-1 font-medium">
             {formatShares(overallSummary.totalShares)}株
           </div>
         </div>
@@ -206,6 +250,36 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
             </div>
           )}
         </div>
+
+        {/* 配当サマリー */}
+        <div className="bg-gray-700 rounded-lg p-3">
+          <div className="text-xs text-gray-400 mb-1">年間配当金額</div>
+          {overallSummary.dividendSummary.stocksWithDividend > 0 ? (
+            <>
+              <div className="text-lg font-medium text-green-300">
+                {formatDividendAmount(overallSummary.dividendSummary.totalAnnualDividend)}円
+              </div>
+              <div className="text-xs text-gray-500 mt-1">
+                利回り <span className="font-medium">{formatDividendYield(overallSummary.dividendSummary.averageDividendYield)}%</span>
+              </div>
+              <div className="text-sm text-blue-300 mt-1 font-medium">
+                税引後 {formatDividendAmount(overallSummary.dividendSummary.totalAfterTaxAmount)}円
+              </div>
+              <div className="text-xs text-gray-400 mt-1 font-medium">
+                {overallSummary.dividendSummary.stocksWithDividend}/{overallSummary.dividendSummary.totalStocksWithPositions}銘柄設定済
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="text-lg font-medium text-gray-500">
+                未設定
+              </div>
+              <div className="text-xs text-gray-500 mt-1">
+                配当情報なし
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
       {/* 円グラフセクション（アコーディオン） */}
@@ -222,7 +296,7 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
                 ポートフォリオ分析グラフ
               </h3>
               <span className="text-xs text-gray-400">
-                (投資額割合・業種別・タグ別)
+                (投資額割合・業種別・タグ別・配当金額割合)
               </span>
             </div>
             <div className={`transform transition-transform duration-200 text-gray-400 ${
@@ -240,7 +314,7 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
               ? 'max-h-[2000px] opacity-100 mt-4'
               : 'max-h-0 opacity-0'
           }`}>
-            <div className="grid grid-cols-1 xl:grid-cols-3 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 xl:grid-cols-4 lg:grid-cols-2 gap-6">
               {/* 投資額割合円グラフ */}
               <InvestmentPieChart portfolioData={portfolioData} type="investment" />
 
@@ -249,6 +323,9 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
 
               {/* タグ別分散円グラフ */}
               <InvestmentPieChart portfolioData={portfolioData} type="tags" />
+
+              {/* 配当金額割合円グラフ */}
+              <InvestmentPieChart portfolioData={portfolioData} type="dividend" />
             </div>
           </div>
         </div>

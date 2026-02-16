@@ -1,6 +1,6 @@
 'use client';
 
-import { PositionSummary, ProfitLossInfo, formatPrice, formatShares, formatProfitLoss } from '@/types/positions';
+import { Position, PositionSummary, ProfitLossInfo, formatPrice, formatShares, formatProfitLoss } from '@/types/positions';
 
 interface ProgressData {
   percentage: number;
@@ -19,6 +19,8 @@ interface AnalysisTabProps {
   onCurrentPriceChange: (value: string) => void;
   positionSummary: PositionSummary;
   profitLossInfo: ProfitLossInfo | null;
+  positions: Position[];
+  onPositionManagerOpen: () => void;
 }
 
 // プログレスバー用の計算
@@ -58,7 +60,9 @@ export default function AnalysisTab({
   onStopLossChange,
   onCurrentPriceChange,
   positionSummary,
-  profitLossInfo
+  profitLossInfo,
+  positions,
+  onPositionManagerOpen
 }: AnalysisTabProps) {
   const progressData = calculateProgress(targetPrice, stopLoss, currentPrice);
 
@@ -288,6 +292,57 @@ export default function AnalysisTab({
             <div className="mt-2 text-xs text-gray-400 text-center">
               平均取得価額: {formatPrice(positionSummary.averagePrice)}円 × {formatShares(positionSummary.totalShares)}株
             </div>
+          </div>
+        )}
+      </div>
+
+      {/* ポジション管理 */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h4 className="text-sm font-medium text-gray-300">保有ポジション</h4>
+          <button
+            onClick={onPositionManagerOpen}
+            className="text-xs bg-indigo-600 hover:bg-indigo-700 text-white px-2 py-1 rounded transition-colors"
+          >
+            ポジション管理
+          </button>
+        </div>
+
+        {positions.length > 0 ? (
+          <div className="bg-gray-700 rounded-lg p-3 space-y-2">
+            {/* ポジションサマリー */}
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div>
+                <span className="text-gray-400">保有株数：</span>
+                <span className="text-white font-medium">{formatShares(positionSummary.totalShares)}株</span>
+              </div>
+              <div>
+                <span className="text-gray-400">平均取得：</span>
+                <span className="text-green-300 font-medium">{formatPrice(positionSummary.averagePrice)}円</span>
+              </div>
+              <div>
+                <span className="text-gray-400">総投資額：</span>
+                <span className="text-blue-300 font-medium">{formatPrice(positionSummary.totalCost)}円</span>
+              </div>
+              <div>
+                <span className="text-gray-400">ポジション数：</span>
+                <span className="text-gray-200">{positionSummary.positionCount}件</span>
+              </div>
+            </div>
+
+            {/* ポジション一覧（簡易表示） */}
+            <div className="space-y-1 max-h-24 overflow-y-auto">
+              {positions.map((position) => (
+                <div key={position.id} className="flex justify-between items-center text-xs text-gray-300 bg-gray-800 px-2 py-1 rounded">
+                  <span>{formatShares(position.shares)}株 @ {formatPrice(position.purchasePrice)}円</span>
+                  <span>{position.purchaseDate}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="text-xs text-gray-400 text-center py-2">
+            保有ポジションが登録されていません
           </div>
         )}
       </div>

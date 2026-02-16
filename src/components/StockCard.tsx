@@ -222,6 +222,8 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
             onCurrentPriceChange={setCurrentPrice}
             positionSummary={positionSummary}
             profitLossInfo={profitLossInfo}
+            positions={positions}
+            onPositionManagerOpen={() => setIsPositionManagerOpen(true)}
           />
         )}
 
@@ -233,9 +235,7 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
             rightsDate={rightsDate}
             rightsSettings={parsedRightsSettings}
             onRightsSettingsChange={(newSettings) => setRightsSettings(JSON.stringify(newSettings))}
-            positions={positions}
             positionSummary={positionSummary}
-            onPositionManagerOpen={() => setIsPositionManagerOpen(true)}
           />
         )}
       </div>

@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import { Position, calculatePositionSummary, formatPrice } from '@/types/positions';
 import { CustomTag, TAG_COLORS } from '@/types/tags';
+import { calculateDividendInfo, formatDividendAmount, formatDividendYield } from '@/types/dividend';
 
 interface PortfolioData {
   symbol: string;
@@ -15,7 +16,7 @@ interface PortfolioData {
 
 interface InvestmentPieChartProps {
   portfolioData: PortfolioData[];
-  type: 'investment' | 'sector' | 'tags';
+  type: 'investment' | 'sector' | 'tags' | 'dividend';
 }
 
 interface TooltipData {
@@ -25,6 +26,7 @@ interface TooltipData {
   color: string;
   x: number;
   y: number;
+  dividendYield?: number; // 配当グラフの場合のみ
 }
 
 // 円グラフ用の色パレット（視覚的に区別しやすい色）
@@ -166,8 +168,55 @@ export default function InvestmentPieChart({ portfolioData, type }: InvestmentPi
     return data.sort((a, b) => b.value - a.value);
   }, [portfolioData]);
 
-  const chartData = type === 'investment' ? investmentData : type === 'sector' ? sectorData : tagData;
-  const title = type === 'investment' ? '💼 投資額割合' : type === 'sector' ? '🏢 業種別分散' : '🏷️ タグ別分散';
+  // 配当金額割合用のデータ処理
+  const dividendData = useMemo(() => {
+    const data: { label: string; value: number; color: string; percentage: number; dividendYield: number }[] = [];
+    let totalDividend = 0;
+
+    portfolioData.forEach((stock, index) => {
+      if (stock.positions.length > 0) {
+        const summary = calculatePositionSummary(stock.positions);
+
+        // localStorage から配当情報を取得
+        const dividendPerShare = typeof window !== 'undefined'
+          ? localStorage.getItem(`kabunote-dividend-per-share-${stock.symbol}`) || ''
+          : '';
+        const dividendFrequency = typeof window !== 'undefined'
+          ? localStorage.getItem(`kabunote-dividend-frequency-${stock.symbol}`) || '1'
+          : '1';
+
+        const perShare = parseFloat(dividendPerShare);
+        const frequency = parseInt(dividendFrequency) as 1 | 2 | 4;
+
+        if (perShare > 0 && summary.totalShares > 0) {
+          const dividendCalculation = calculateDividendInfo(
+            perShare,
+            frequency,
+            summary.totalShares,
+            summary.averagePrice
+          );
+
+          data.push({
+            label: `${stock.symbol} ${stock.name}`,
+            value: dividendCalculation.annualDividend,
+            color: CHART_COLORS[index % CHART_COLORS.length],
+            percentage: 0, // 後で計算
+            dividendYield: dividendCalculation.dividendYield
+          });
+          totalDividend += dividendCalculation.annualDividend;
+        }
+      }
+    });
+
+    // パーセンテージを計算
+    return data.map(item => ({
+      ...item,
+      percentage: totalDividend > 0 ? (item.value / totalDividend) * 100 : 0
+    })).sort((a, b) => b.value - a.value);
+  }, [portfolioData]);
+
+  const chartData = type === 'investment' ? investmentData : type === 'sector' ? sectorData : type === 'tags' ? tagData : dividendData;
+  const title = type === 'investment' ? '💼 投資額割合' : type === 'sector' ? '🏢 業種別分散' : type === 'tags' ? '🏷️ タグ別分散' : '💰 配当金額割合';
 
   // SVG円グラフの描画
   const renderPieChart = () => {
@@ -220,7 +269,8 @@ export default function InvestmentPieChart({ portfolioData, type }: InvestmentPi
                     percentage: item.percentage,
                     color: item.color,
                     x: e.clientX - (containerRect?.left || 0),
-                    y: e.clientY - (containerRect?.top || 0)
+                    y: e.clientY - (containerRect?.top || 0),
+                    ...(type === 'dividend' && 'dividendYield' in item && { dividendYield: item.dividendYield })
                   });
                 }}
                 onMouseMove={(e) => {
@@ -254,7 +304,7 @@ export default function InvestmentPieChart({ portfolioData, type }: InvestmentPi
           textAnchor="middle"
           className="text-xs fill-gray-300 font-medium"
         >
-          総投資額
+          {type === 'dividend' ? '年間配当金' : '総投資額'}
         </text>
         <text
           x={centerX}
@@ -262,7 +312,10 @@ export default function InvestmentPieChart({ portfolioData, type }: InvestmentPi
           textAnchor="middle"
           className="text-xs fill-white font-bold"
         >
-          {formatPrice(chartData.reduce((sum, item) => sum + item.value, 0))}円
+          {type === 'dividend'
+            ? `${formatDividendAmount(chartData.reduce((sum, item) => sum + item.value, 0))}円`
+            : `${formatPrice(chartData.reduce((sum, item) => sum + item.value, 0))}円`
+          }
         </text>
       </svg>
     );
@@ -273,7 +326,9 @@ export default function InvestmentPieChart({ portfolioData, type }: InvestmentPi
       <div className="bg-gray-800 rounded-lg p-4">
         <h3 className="text-sm font-medium text-gray-300 mb-3">{title}</h3>
         <div className="flex items-center justify-center h-32">
-          <p className="text-gray-500 text-sm">投資データがありません</p>
+          <p className="text-gray-500 text-sm">
+            {type === 'dividend' ? '配当情報がありません' : '投資データがありません'}
+          </p>
         </div>
       </div>
     );
@@ -306,11 +361,19 @@ export default function InvestmentPieChart({ portfolioData, type }: InvestmentPi
             </div>
             <div className="text-gray-300">
               <div className="font-bold text-white">
-                {formatPrice(tooltip.value)}円
+                {type === 'dividend'
+                  ? `${formatDividendAmount(tooltip.value)}円`
+                  : `${formatPrice(tooltip.value)}円`
+                }
               </div>
               <div className="text-gray-400">
                 {tooltip.percentage.toFixed(1)}%
               </div>
+              {type === 'dividend' && 'dividendYield' in tooltip && (
+                <div className="text-green-300 text-xs">
+                  利回り {formatDividendYield(tooltip.dividendYield)}%
+                </div>
+              )}
             </div>
             {/* ツールチップの三角形 */}
             <div

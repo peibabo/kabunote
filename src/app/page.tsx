@@ -711,7 +711,7 @@ export default function Home() {
         {favoriteGroups.length > 0 && stocks.length > 0 && (
           <div className="bg-gray-800 rounded-lg p-4 mb-6">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-lg font-semibold text-white">お気に入りグループ</h3>
+              <h3 className="text-lg font-semibold text-white">⭐ お気に入りグループ</h3>
               <button
                 onClick={() => setIsGroupManagerOpen(true)}
                 className="text-sm bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded transition-colors"
