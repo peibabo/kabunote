@@ -137,6 +137,12 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
     onFavoriteGroupsChange(updatedGroups);
   };
 
+  // 個別タグ削除を処理
+  const handleTagRemove = (tagId: string) => {
+    const updatedTags = customTags.filter(tag => tag.id !== tagId);
+    setCustomTags(updatedTags);
+  };
+
   return (
     <div
       ref={setNodeRef}
@@ -157,6 +163,7 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
         belongingGroups={belongingGroups}
         onTagEditorOpen={() => setIsTagEditorOpen(true)}
         onFavoriteGroupSelectorOpen={() => setIsFavoriteGroupSelectorOpen(true)}
+        onTagRemove={handleTagRemove}
         onRemove={onRemove}
         listeners={listeners}
         isDragging={isDragging}

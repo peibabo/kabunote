@@ -106,6 +106,7 @@ export default function FavoriteGroupSelector({
                         type="checkbox"
                         checked={isSelected}
                         onChange={() => handleToggleGroup(group.id)}
+                        onClick={(e) => e.stopPropagation()}
                         className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500 focus:ring-2"
                       />
                       <span className={`px-3 py-1 rounded-full text-sm ${GROUP_COLORS[group.color].bg} ${GROUP_COLORS[group.color].text}`}>

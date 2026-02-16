@@ -15,6 +15,7 @@ interface StockCardHeaderProps {
   belongingGroups: FavoriteGroup[];
   onTagEditorOpen: () => void;
   onFavoriteGroupSelectorOpen: () => void;
+  onTagRemove: (tagId: string) => void;
   onRemove: () => void;
   // ドラッグ&ドロップ関連
   listeners: any;
@@ -31,6 +32,7 @@ export default function StockCardHeader({
   belongingGroups,
   onTagEditorOpen,
   onFavoriteGroupSelectorOpen,
+  onTagRemove,
   onRemove,
   listeners,
   isDragging
@@ -95,9 +97,20 @@ export default function StockCardHeader({
                     {customTags.map((tag) => (
                       <span
                         key={tag.id}
-                        className={`text-xs px-2 py-0.5 rounded-full ${TAG_COLORS[tag.color].bg} ${TAG_COLORS[tag.color].text}`}
+                        className={`text-xs px-2 py-0.5 rounded-full ${TAG_COLORS[tag.color].bg} ${TAG_COLORS[tag.color].text} flex items-center gap-1`}
                       >
-                        🏷️ {tag.label}
+                        <span>🏷️ {tag.label}</span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onTagRemove(tag.id);
+                          }}
+                          className="bg-black bg-opacity-30 hover:bg-opacity-50 rounded-full w-4 h-4 flex items-center justify-center text-xs leading-none transition-all hover:scale-110"
+                          title={`${tag.label}タグを削除`}
+                          style={{ lineHeight: '1', transform: 'translateY(1px)' }}
+                        >
+                          <span style={{ transform: 'translateY(-0.5px)' }}>×</span>
+                        </button>
                       </span>
                     ))}
                     {belongingGroups.map((group) => (
@@ -122,10 +135,10 @@ export default function StockCardHeader({
                   </button>
                   <button
                     onClick={onFavoriteGroupSelectorOpen}
-                    className="text-xs bg-yellow-700 hover:bg-yellow-600 text-yellow-200 px-2 py-0.5 rounded-full transition-colors"
-                    title="お気に入りグループに追加"
+                    className="text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 px-2 py-0.5 rounded-full transition-colors"
+                    title="お気に入りグループを編集"
                   >
-                    ★
+                    + お気に入り
                   </button>
                 </div>
               </div>
