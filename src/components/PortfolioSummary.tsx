@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Position, calculatePositionSummary, formatPrice, formatShares } from '@/types/positions';
 import { CustomTag } from '@/types/tags';
 import InvestmentPieChart from '@/components/InvestmentPieChart';
@@ -25,47 +25,85 @@ interface OverallSummary {
   totalProfitLossRate: number;
   totalShares: number;
   stocksWithPositions: number;
+  stocksWithPrices: number;
+  stocksWithoutPrices: number;
 }
 
 export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProps) {
   const [isChartsExpanded, setIsChartsExpanded] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  // localStorage の変更を監視してリフレッシュトリガーを更新
+  useEffect(() => {
+    const handleStorageChange = () => {
+      setRefreshTrigger(prev => prev + 1);
+    };
+
+    // localStorage の変更を監視
+    window.addEventListener('storage', handleStorageChange);
+
+    // カスタムイベントも監視（同一タブ内での変更用）
+    window.addEventListener('localStorageChange', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('localStorageChange', handleStorageChange);
+    };
+  }, []);
 
   // 全体のサマリーを計算
   const overallSummary = useMemo<OverallSummary>(() => {
-    let totalInvestment = 0;
+    let totalInvestmentAll = 0;
+    let totalInvestmentWithPrice = 0;
     let totalCurrentValue = 0;
-    let totalShares = 0;
+    let totalSharesAll = 0;
     let stocksWithPositions = 0;
+    let stocksWithPrices = 0;
+    let stocksWithoutPrices = 0;
 
     portfolioData.forEach(stock => {
       if (stock.positions.length > 0) {
         stocksWithPositions++;
         const summary = calculatePositionSummary(stock.positions);
-        totalInvestment += summary.totalCost;
-        totalShares += summary.totalShares;
+        totalInvestmentAll += summary.totalCost;
+        totalSharesAll += summary.totalShares;
 
-        // 現在価格が設定されている場合は評価額を計算
-        if (stock.currentPrice) {
-          const currentPriceNum = parseFloat(stock.currentPrice);
-          if (!isNaN(currentPriceNum)) {
+        // リアルタイムで現在価格を取得
+        const currentPrice = typeof window !== 'undefined'
+          ? localStorage.getItem(`kabunote-current-price-${stock.symbol}`) || ''
+          : '';
+
+        // 現在価格が設定されている場合は評価額計算に含める
+        if (currentPrice) {
+          const currentPriceNum = parseFloat(currentPrice);
+          if (!isNaN(currentPriceNum) && currentPriceNum > 0) {
+            stocksWithPrices++;
+            totalInvestmentWithPrice += summary.totalCost;
             totalCurrentValue += summary.totalShares * currentPriceNum;
+          } else {
+            stocksWithoutPrices++;
           }
+        } else {
+          stocksWithoutPrices++;
         }
       }
     });
 
-    const totalProfitLoss = totalCurrentValue - totalInvestment;
-    const totalProfitLossRate = totalInvestment > 0 ? (totalProfitLoss / totalInvestment) * 100 : 0;
+    // 損益計算は目安株価が設定されている銘柄のみで計算
+    const totalProfitLoss = totalCurrentValue - totalInvestmentWithPrice;
+    const totalProfitLossRate = totalInvestmentWithPrice > 0 ? (totalProfitLoss / totalInvestmentWithPrice) * 100 : 0;
 
     return {
-      totalInvestment,
+      totalInvestment: totalInvestmentAll,
       totalCurrentValue,
       totalProfitLoss,
       totalProfitLossRate,
-      totalShares,
-      stocksWithPositions
+      totalShares: totalSharesAll,
+      stocksWithPositions,
+      stocksWithPrices,
+      stocksWithoutPrices
     };
-  }, [portfolioData]);
+  }, [portfolioData, refreshTrigger]);
 
   // ポジションを持つ銘柄が1つもない場合は表示しない
   if (overallSummary.stocksWithPositions === 0) {
@@ -97,6 +135,19 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
           </span>
         </div>
       </div>
+
+      {/* 目安株価未設定の誘導メッセージ */}
+      {overallSummary.stocksWithoutPrices > 0 && (
+        <div className="mb-4 px-3 py-2 bg-blue-900 bg-opacity-30 border border-blue-700 rounded-lg text-sm text-blue-300">
+          <div className="flex items-center gap-2">
+            <span>💡</span>
+            <span>
+              {overallSummary.stocksWithoutPrices}銘柄で目安株価が未設定です。
+              「📊 分析」タブで目安株価を設定すると損益が表示されます
+            </span>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {/* 総投資額 */}
@@ -203,12 +254,6 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
         </div>
       )}
 
-      {/* 詳細情報 */}
-      {overallSummary.totalCurrentValue === 0 && (
-        <div className="mt-3 p-2 bg-yellow-900 bg-opacity-30 border border-yellow-700 rounded text-xs text-yellow-300">
-          💡 各銘柄の「現在の目安株価」を設定すると、評価額と損益が計算されます
-        </div>
-      )}
     </div>
   );
 }

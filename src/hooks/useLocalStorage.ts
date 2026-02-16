@@ -27,6 +27,11 @@ export function useLocalStorage<T>(
         const valueToStore = stringifier ? stringifier(value) : JSON.stringify(value);
         localStorage.setItem(key, valueToStore);
         console.log(`💾 localStorage保存: ${key}`, value);
+
+        // カスタムイベントを発火してlocalStorageの変更を他のコンポーネントに通知
+        window.dispatchEvent(new CustomEvent('localStorageChange', {
+          detail: { key, value }
+        }));
       } catch (error) {
         console.error(`Failed to save to localStorage (${key}):`, error);
       }
