@@ -5,7 +5,7 @@ export interface InvestmentEvent {
   symbol: string;
   companyName: string;
   date: string; // YYYY-MM-DD format
-  type: 'earnings' | 'rights-last' | 'rights-confirmation';
+  type: 'earnings' | 'dividend-rights-last' | 'dividend-rights-confirmation' | 'shareholder-rights-last' | 'shareholder-rights-confirmation';
   title: string;
   isRecurring?: boolean;
 }

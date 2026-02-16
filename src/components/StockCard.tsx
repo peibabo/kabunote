@@ -5,7 +5,7 @@ import { loadStockData, getCompanyNameSync, isKnownStockSync, StockData } from '
 import { CustomTag } from '@/types/tags';
 import { FavoriteGroup } from '@/types/favorites';
 import { Position, PositionSummary, calculatePositionSummary, ProfitLossInfo, calculateProfitLoss } from '@/types/positions';
-import { RightsDateSettings, createDefaultRightsSettings, calculateRightsDateFromSettings, shouldDeactivateRights } from '@/types/rightsDate';
+import { RightsDateSettings, createDefaultRightsSettings, calculateRightsDateFromSettings, shouldDeactivateRights, DividendRightsSettings, ShareholderRightsSettings, createDefaultDividendRightsSettings, createDefaultShareholderRightsSettings } from '@/types/rightsDate';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useStringLocalStorage, useArrayLocalStorage } from '@/hooks/useLocalStorage';
@@ -63,6 +63,8 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
   const [currentPrice, setCurrentPrice] = useStringLocalStorage(`kabunote-current-price-${symbol}`, '', 300);
   const [earningsDate, setEarningsDate] = useStringLocalStorage(`kabunote-earnings-date-${symbol}`, '', 400);
   const [rightsSettings, setRightsSettings] = useStringLocalStorage(`kabunote-rights-settings-${symbol}`, JSON.stringify(createDefaultRightsSettings()), 400);
+  const [dividendRightsSettings, setDividendRightsSettings] = useStringLocalStorage(`kabunote-dividend-rights-settings-${symbol}`, JSON.stringify(createDefaultDividendRightsSettings()), 400);
+  const [shareholderRightsSettings, setShareholderRightsSettings] = useStringLocalStorage(`kabunote-shareholder-rights-settings-${symbol}`, JSON.stringify(createDefaultShareholderRightsSettings()), 400);
   const [positions, setPositions] = useArrayLocalStorage<Position>(`kabunote-positions-${symbol}`, [], 200);
 
   // 権利確定日設定をパース
@@ -71,6 +73,24 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
       return JSON.parse(rightsSettings);
     } catch {
       return createDefaultRightsSettings();
+    }
+  })();
+
+  // 配当権利確定日設定をパース
+  const parsedDividendRightsSettings: DividendRightsSettings = (() => {
+    try {
+      return JSON.parse(dividendRightsSettings);
+    } catch {
+      return createDefaultDividendRightsSettings();
+    }
+  })();
+
+  // 株主優待権利確定日設定をパース
+  const parsedShareholderRightsSettings: ShareholderRightsSettings = (() => {
+    try {
+      return JSON.parse(shareholderRightsSettings);
+    } catch {
+      return createDefaultShareholderRightsSettings();
     }
   })();
 
@@ -236,6 +256,10 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
             rightsSettings={parsedRightsSettings}
             onRightsSettingsChange={(newSettings) => setRightsSettings(JSON.stringify(newSettings))}
             positionSummary={positionSummary}
+            dividendRightsSettings={parsedDividendRightsSettings}
+            onDividendRightsSettingsChange={(newSettings) => setDividendRightsSettings(JSON.stringify(newSettings))}
+            shareholderRightsSettings={parsedShareholderRightsSettings}
+            onShareholderRightsSettingsChange={(newSettings) => setShareholderRightsSettings(JSON.stringify(newSettings))}
           />
         )}
       </div>

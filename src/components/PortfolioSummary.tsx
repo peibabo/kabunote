@@ -4,6 +4,7 @@ import { useMemo, useState, useEffect } from 'react';
 import { Position, calculatePositionSummary, formatPrice, formatShares } from '@/types/positions';
 import { CustomTag } from '@/types/tags';
 import { PortfolioDividendSummary, formatDividendAmount, formatDividendYield, calculateDividendInfo } from '@/types/dividend';
+import { PortfolioShareholderSummary, calculateShareholderBenefit, formatBenefitValue, formatBenefitYield } from '@/types/shareholder';
 import InvestmentPieChart from '@/components/InvestmentPieChart';
 
 interface PortfolioData {
@@ -29,6 +30,7 @@ interface OverallSummary {
   stocksWithPrices: number;
   stocksWithoutPrices: number;
   dividendSummary: PortfolioDividendSummary;
+  shareholderSummary: PortfolioShareholderSummary;
 }
 
 export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProps) {
@@ -67,6 +69,12 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
     let totalAnnualDividend = 0;
     let totalDividendInvestment = 0;
     let stocksWithDividend = 0;
+
+    // 株主優待サマリー用の変数
+    let totalEligibleStocks = 0;
+    let totalEstimatedValue = 0;
+    let totalStocksWithBenefits = 0;
+    let totalBenefitInvestment = 0;
 
     portfolioData.forEach(stock => {
       if (stock.positions.length > 0) {
@@ -116,6 +124,32 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
           totalAnnualDividend += dividendCalculation.annualDividend;
           totalDividendInvestment += summary.totalCost;
         }
+
+        // 株主優待情報を取得して計算
+        const minimumShares = typeof window !== 'undefined'
+          ? localStorage.getItem(`kabunote-minimum-shares-${stock.symbol}`) || ''
+          : '';
+        const estimatedValue = typeof window !== 'undefined'
+          ? localStorage.getItem(`kabunote-estimated-value-${stock.symbol}`) || ''
+          : '';
+
+        const minShares = parseInt(minimumShares);
+        const estValue = parseFloat(estimatedValue);
+
+        if (minShares > 0 && estValue > 0 && summary.totalShares > 0) {
+          totalStocksWithBenefits++;
+          const benefitCalculation = calculateShareholderBenefit(
+            minShares,
+            summary.totalShares,
+            estValue,
+            summary.totalCost
+          );
+          if (benefitCalculation.isEligible) {
+            totalEligibleStocks++;
+            totalEstimatedValue += benefitCalculation.estimatedValue;
+          }
+          totalBenefitInvestment += summary.totalCost;
+        }
       }
     });
 
@@ -136,6 +170,19 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
       totalStocksWithPositions: stocksWithPositions
     };
 
+    // 株主優待サマリーを作成
+    const averageYield = totalBenefitInvestment > 0
+      ? (totalEstimatedValue / totalBenefitInvestment) * 100
+      : 0;
+
+    const shareholderSummary: PortfolioShareholderSummary = {
+      totalEligibleStocks,
+      totalEstimatedValue,
+      totalStocksWithBenefits,
+      totalStocksWithPositions: stocksWithPositions,
+      averageYield
+    };
+
     return {
       totalInvestment: totalInvestmentAll,
       totalCurrentValue,
@@ -145,7 +192,8 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
       stocksWithPositions,
       stocksWithPrices,
       stocksWithoutPrices,
-      dividendSummary
+      dividendSummary,
+      shareholderSummary
     };
   }, [portfolioData, refreshTrigger]);
 
@@ -193,7 +241,7 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
         </div>
       )}
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         {/* 総投資額 */}
         <div className="bg-gray-700 rounded-lg p-3">
           <div className="text-xs text-gray-400 mb-1">総投資額</div>
@@ -280,6 +328,36 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
             </>
           )}
         </div>
+
+        {/* 株主優待サマリー */}
+        <div className="bg-gray-700 rounded-lg p-3">
+          <div className="text-xs text-gray-400 mb-1">年間優待価値</div>
+          {overallSummary.shareholderSummary.totalStocksWithBenefits > 0 ? (
+            <>
+              <div className="text-lg font-medium text-purple-300">
+                {formatBenefitValue(overallSummary.shareholderSummary.totalEstimatedValue)}円
+              </div>
+              <div className="text-xs text-gray-500 mt-1">
+                優待利回り <span className="font-medium">{formatBenefitYield(overallSummary.shareholderSummary.averageYield)}%</span>
+              </div>
+              <div className="text-sm text-purple-300 mt-1 font-medium">
+                取得可能 {overallSummary.shareholderSummary.totalEligibleStocks}銘柄
+              </div>
+              <div className="text-xs text-gray-400 mt-1 font-medium">
+                {overallSummary.shareholderSummary.totalStocksWithBenefits}/{overallSummary.shareholderSummary.totalStocksWithPositions}銘柄設定済
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="text-lg font-medium text-gray-500">
+                未設定
+              </div>
+              <div className="text-xs text-gray-500 mt-1">
+                株主優待情報なし
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
       {/* 円グラフセクション（アコーディオン） */}
@@ -296,7 +374,7 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
                 ポートフォリオ分析グラフ
               </h3>
               <span className="text-xs text-gray-400">
-                (投資額割合・業種別・タグ別・配当金額割合)
+                (投資額割合・業種別・タグ別・配当金額割合・株主優待価値割合)
               </span>
             </div>
             <div className={`transform transition-transform duration-200 text-gray-400 ${
@@ -314,7 +392,7 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
               ? 'max-h-[2000px] opacity-100 mt-4'
               : 'max-h-0 opacity-0'
           }`}>
-            <div className="grid grid-cols-1 xl:grid-cols-4 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 xl:grid-cols-5 lg:grid-cols-2 gap-6">
               {/* 投資額割合円グラフ */}
               <InvestmentPieChart portfolioData={portfolioData} type="investment" />
 
@@ -326,6 +404,9 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
 
               {/* 配当金額割合円グラフ */}
               <InvestmentPieChart portfolioData={portfolioData} type="dividend" />
+
+              {/* 株主優待価値割合円グラフ */}
+              <InvestmentPieChart portfolioData={portfolioData} type="shareholder" />
             </div>
           </div>
         </div>

@@ -19,6 +19,12 @@ export interface KabunoteData {
   activeTabs: Record<string, string>;
   dividendPerShare: Record<string, string>;
   dividendFrequency: Record<string, string>;
+  benefitDescription: Record<string, string>;
+  minimumShares: Record<string, string>;
+  benefitMonth: Record<string, string>;
+  estimatedValue: Record<string, string>;
+  dividendRightsSettings: Record<string, string>;
+  shareholderRightsSettings: Record<string, string>;
 
   // グローバル設定
   favoriteGroups: any[];
@@ -45,6 +51,12 @@ export const exportKabunoteData = (): KabunoteData => {
     activeTabs: {},
     dividendPerShare: {},
     dividendFrequency: {},
+    benefitDescription: {},
+    minimumShares: {},
+    benefitMonth: {},
+    estimatedValue: {},
+    dividendRightsSettings: {},
+    shareholderRightsSettings: {},
     favoriteGroups: [],
     selectedGroupFilter: null,
   };
@@ -100,6 +112,24 @@ export const exportKabunoteData = (): KabunoteData => {
       } else if (key.startsWith('kabunote-dividend-frequency-')) {
         const symbol = key.replace('kabunote-dividend-frequency-', '');
         data.dividendFrequency[symbol] = value;
+      } else if (key.startsWith('kabunote-benefit-description-')) {
+        const symbol = key.replace('kabunote-benefit-description-', '');
+        data.benefitDescription[symbol] = value;
+      } else if (key.startsWith('kabunote-minimum-shares-')) {
+        const symbol = key.replace('kabunote-minimum-shares-', '');
+        data.minimumShares[symbol] = value;
+      } else if (key.startsWith('kabunote-benefit-month-')) {
+        const symbol = key.replace('kabunote-benefit-month-', '');
+        data.benefitMonth[symbol] = value;
+      } else if (key.startsWith('kabunote-estimated-value-')) {
+        const symbol = key.replace('kabunote-estimated-value-', '');
+        data.estimatedValue[symbol] = value;
+      } else if (key.startsWith('kabunote-dividend-rights-settings-')) {
+        const symbol = key.replace('kabunote-dividend-rights-settings-', '');
+        data.dividendRightsSettings[symbol] = value;
+      } else if (key.startsWith('kabunote-shareholder-rights-settings-')) {
+        const symbol = key.replace('kabunote-shareholder-rights-settings-', '');
+        data.shareholderRightsSettings[symbol] = value;
       }
     } catch (error) {
       console.warn(`Failed to parse localStorage key: ${key}`, error);
@@ -229,6 +259,48 @@ export const importKabunoteData = (data: KabunoteData): { success: boolean; mess
     if (data.dividendFrequency && typeof data.dividendFrequency === 'object') {
       Object.entries(data.dividendFrequency).forEach(([symbol, frequency]) => {
         localStorage.setItem(`kabunote-dividend-frequency-${symbol}`, frequency);
+        importedCount++;
+      });
+    }
+
+    if (data.benefitDescription && typeof data.benefitDescription === 'object') {
+      Object.entries(data.benefitDescription).forEach(([symbol, description]) => {
+        localStorage.setItem(`kabunote-benefit-description-${symbol}`, description);
+        importedCount++;
+      });
+    }
+
+    if (data.minimumShares && typeof data.minimumShares === 'object') {
+      Object.entries(data.minimumShares).forEach(([symbol, shares]) => {
+        localStorage.setItem(`kabunote-minimum-shares-${symbol}`, shares);
+        importedCount++;
+      });
+    }
+
+    if (data.benefitMonth && typeof data.benefitMonth === 'object') {
+      Object.entries(data.benefitMonth).forEach(([symbol, month]) => {
+        localStorage.setItem(`kabunote-benefit-month-${symbol}`, month);
+        importedCount++;
+      });
+    }
+
+    if (data.estimatedValue && typeof data.estimatedValue === 'object') {
+      Object.entries(data.estimatedValue).forEach(([symbol, value]) => {
+        localStorage.setItem(`kabunote-estimated-value-${symbol}`, value);
+        importedCount++;
+      });
+    }
+
+    if (data.dividendRightsSettings && typeof data.dividendRightsSettings === 'object') {
+      Object.entries(data.dividendRightsSettings).forEach(([symbol, settings]) => {
+        localStorage.setItem(`kabunote-dividend-rights-settings-${symbol}`, settings);
+        importedCount++;
+      });
+    }
+
+    if (data.shareholderRightsSettings && typeof data.shareholderRightsSettings === 'object') {
+      Object.entries(data.shareholderRightsSettings).forEach(([symbol, settings]) => {
+        localStorage.setItem(`kabunote-shareholder-rights-settings-${symbol}`, settings);
         importedCount++;
       });
     }

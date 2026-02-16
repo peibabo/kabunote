@@ -9,11 +9,35 @@ import {
   formatDateString,
   calculateFullDateFromMonthDay
 } from '@/types/investmentCalendar';
-import { RightsDateSettings } from '@/types/rightsDate';
+import { DividendRightsSettings, ShareholderRightsSettings, calculateDividendRightsDateFromSettings, calculateShareholderRightsDateFromSettings } from '@/types/rightsDate';
+
+// 土日を除いた営業日前を計算する関数
+const calculateBusinessDaysBefore = (date: Date, businessDays: number): Date => {
+  const result = new Date(date);
+  let remainingDays = businessDays;
+
+  while (remainingDays > 0) {
+    result.setDate(result.getDate() - 1);
+    const dayOfWeek = result.getDay();
+    // 土曜日(6)と日曜日(0)以外の場合にカウント
+    if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+      remainingDays--;
+    }
+  }
+
+  return result;
+};
 
 interface InvestmentCalendarProps {
   stockSymbols: string[];
-  stockData: { [symbol: string]: { name: string; earningsDate: string; rightsSettings: RightsDateSettings } };
+  stockData: {
+    [symbol: string]: {
+      name: string;
+      earningsDate: string;
+      dividendRightsSettings: DividendRightsSettings;
+      shareholderRightsSettings: ShareholderRightsSettings;
+    }
+  };
   onStockClick: (symbol: string) => void;
 }
 
@@ -109,39 +133,75 @@ export default function InvestmentCalendar({ stockSymbols, stockData, onStockCli
         });
       }
 
-      // 権利確定日と権利付き最終日
-      if (data.rightsSettings.isActive && data.rightsSettings.month && data.rightsSettings.day) {
-        const rightsDate = calculateFullDateFromMonthDay(
-          data.rightsSettings.month,
-          data.rightsSettings.day,
-          data.rightsSettings.isRecurring
+      // 配当権利確定日と権利付き最終日
+      if (data.dividendRightsSettings.isActive && data.dividendRightsSettings.month && data.dividendRightsSettings.day) {
+        const dividendRightsDate = calculateFullDateFromMonthDay(
+          data.dividendRightsSettings.month,
+          data.dividendRightsSettings.day,
+          data.dividendRightsSettings.isRecurring
         );
-        const rightsDateKey = formatDateString(rightsDate);
+        const dividendRightsDateKey = formatDateString(dividendRightsDate);
 
-        // 権利確定日
-        if (!events[rightsDateKey]) events[rightsDateKey] = [];
-        events[rightsDateKey].push({
-          id: `${symbol}-rights-confirmation`,
+        // 配当権利確定日
+        if (!events[dividendRightsDateKey]) events[dividendRightsDateKey] = [];
+        events[dividendRightsDateKey].push({
+          id: `${symbol}-dividend-rights-confirmation`,
           symbol,
           companyName: data.name,
-          date: rightsDateKey,
-          type: 'rights-confirmation',
-          title: '権利確定',
-          isRecurring: data.rightsSettings.isRecurring
+          date: dividendRightsDateKey,
+          type: 'dividend-rights-confirmation',
+          title: '配当権利確定',
+          isRecurring: data.dividendRightsSettings.isRecurring
         });
 
-        // 権利付き最終日
-        const lastDate = calculateRightsLastDate(rightsDate);
-        const lastDateKey = formatDateString(lastDate);
-        if (!events[lastDateKey]) events[lastDateKey] = [];
-        events[lastDateKey].push({
-          id: `${symbol}-rights-last`,
+        // 配当権利付き最終日
+        const dividendLastDate = calculateBusinessDaysBefore(dividendRightsDate, 2);
+        const dividendLastDateKey = formatDateString(dividendLastDate);
+        if (!events[dividendLastDateKey]) events[dividendLastDateKey] = [];
+        events[dividendLastDateKey].push({
+          id: `${symbol}-dividend-rights-last`,
           symbol,
           companyName: data.name,
-          date: lastDateKey,
-          type: 'rights-last',
-          title: '権利付き最終日',
-          isRecurring: data.rightsSettings.isRecurring
+          date: dividendLastDateKey,
+          type: 'dividend-rights-last',
+          title: '配当権利付き最終日',
+          isRecurring: data.dividendRightsSettings.isRecurring
+        });
+      }
+
+      // 株主優待権利確定日と権利付き最終日
+      if (data.shareholderRightsSettings.isActive && data.shareholderRightsSettings.month && data.shareholderRightsSettings.day) {
+        const shareholderRightsDate = calculateFullDateFromMonthDay(
+          data.shareholderRightsSettings.month,
+          data.shareholderRightsSettings.day,
+          data.shareholderRightsSettings.isRecurring
+        );
+        const shareholderRightsDateKey = formatDateString(shareholderRightsDate);
+
+        // 株主優待権利確定日
+        if (!events[shareholderRightsDateKey]) events[shareholderRightsDateKey] = [];
+        events[shareholderRightsDateKey].push({
+          id: `${symbol}-shareholder-rights-confirmation`,
+          symbol,
+          companyName: data.name,
+          date: shareholderRightsDateKey,
+          type: 'shareholder-rights-confirmation',
+          title: '優待権利確定',
+          isRecurring: data.shareholderRightsSettings.isRecurring
+        });
+
+        // 株主優待権利付き最終日
+        const shareholderLastDate = calculateBusinessDaysBefore(shareholderRightsDate, 2);
+        const shareholderLastDateKey = formatDateString(shareholderLastDate);
+        if (!events[shareholderLastDateKey]) events[shareholderLastDateKey] = [];
+        events[shareholderLastDateKey].push({
+          id: `${symbol}-shareholder-rights-last`,
+          symbol,
+          companyName: data.name,
+          date: shareholderLastDateKey,
+          type: 'shareholder-rights-last',
+          title: '優待権利付き最終日',
+          isRecurring: data.shareholderRightsSettings.isRecurring
         });
       }
     });
@@ -240,8 +300,10 @@ export default function InvestmentCalendar({ stockSymbols, stockData, onStockCli
   const getEventDotColor = (type: InvestmentEvent['type']) => {
     switch (type) {
       case 'earnings': return 'bg-white';
-      case 'rights-last': return 'bg-yellow-400';
-      case 'rights-confirmation': return 'bg-green-400';
+      case 'dividend-rights-last': return 'bg-green-400';
+      case 'dividend-rights-confirmation': return 'bg-green-600';
+      case 'shareholder-rights-last': return 'bg-purple-400';
+      case 'shareholder-rights-confirmation': return 'bg-purple-600';
       default: return 'bg-gray-400';
     }
   };
@@ -268,7 +330,10 @@ export default function InvestmentCalendar({ stockSymbols, stockData, onStockCli
 
   return (
     <div className="bg-gray-800 rounded-lg p-4 mb-6 font-thin">
-      <div className="flex items-center justify-between mb-3">
+      <button
+        onClick={toggleExpanded}
+        className="w-full flex items-center justify-between mb-0 hover:bg-gray-700 hover:bg-opacity-50 rounded-lg px-3 py-2 transition-colors cursor-pointer"
+      >
         <div className="flex items-center gap-3">
           <span className="text-lg">📅</span>
           <h3 className="text-lg font-semibold text-white">投資カレンダー</h3>
@@ -278,13 +343,14 @@ export default function InvestmentCalendar({ stockSymbols, stockData, onStockCli
             </span>
           )}
         </div>
-        <button
-          onClick={toggleExpanded}
-          className="text-sm bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded transition-colors"
-        >
-          {isExpanded ? '折りたたむ' : '表示する'}
-        </button>
-      </div>
+        <div className={`transform transition-transform duration-200 text-gray-400 ${
+          isExpanded ? 'rotate-180' : 'rotate-0'
+        }`}>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M4 6l4 4 4-4H4z"/>
+          </svg>
+        </div>
+      </button>
 
       {/* アコーディオンコンテンツ */}
       <div className={`overflow-hidden transition-all duration-300 ease-in-out ${
@@ -361,18 +427,26 @@ export default function InvestmentCalendar({ stockSymbols, stockData, onStockCli
           </div>
 
           {/* 凡例 */}
-          <div className="flex justify-center space-x-6 mt-4 text-xs text-gray-400">
+          <div className="flex flex-wrap justify-center gap-3 mt-4 text-xs text-gray-400">
             <div className="flex items-center space-x-1">
               <div className="w-2 h-2 rounded-full bg-white"></div>
               <span>決算発表</span>
             </div>
             <div className="flex items-center space-x-1">
-              <div className="w-2 h-2 rounded-full bg-yellow-400"></div>
-              <span>権利付き最終日</span>
+              <div className="w-2 h-2 rounded-full bg-green-400"></div>
+              <span>配当最終日</span>
             </div>
             <div className="flex items-center space-x-1">
-              <div className="w-2 h-2 rounded-full bg-green-400"></div>
-              <span>権利確定日</span>
+              <div className="w-2 h-2 rounded-full bg-green-600"></div>
+              <span>配当確定日</span>
+            </div>
+            <div className="flex items-center space-x-1">
+              <div className="w-2 h-2 rounded-full bg-purple-400"></div>
+              <span>優待最終日</span>
+            </div>
+            <div className="flex items-center space-x-1">
+              <div className="w-2 h-2 rounded-full bg-purple-600"></div>
+              <span>優待確定日</span>
             </div>
           </div>
       </div>

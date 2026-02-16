@@ -13,7 +13,7 @@ import { loadStockData, getStockData } from '@/data/stockNames';
 import { Position } from '@/types/positions';
 import { FavoriteGroup, GROUP_COLORS } from '@/types/favorites';
 import { CustomTag } from '@/types/tags';
-import { RightsDateSettings } from '@/types/rightsDate';
+import { DividendRightsSettings, ShareholderRightsSettings, createDefaultDividendRightsSettings, createDefaultShareholderRightsSettings } from '@/types/rightsDate';
 import { useDebouncedCallback } from '@/hooks/useDebounce';
 import {
   DndContext,
@@ -48,7 +48,7 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<string[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  const [stockCalendarData, setStockCalendarData] = useState<{ [symbol: string]: { name: string; earningsDate: string; rightsSettings: RightsDateSettings } }>({});
+  const [stockCalendarData, setStockCalendarData] = useState<{ [symbol: string]: { name: string; earningsDate: string; dividendRightsSettings: DividendRightsSettings; shareholderRightsSettings: ShareholderRightsSettings } }>({});
   const [portfolioData, setPortfolioData] = useState<{ symbol: string; name: string; positions: Position[]; currentPrice: string; sector: string; customTags: CustomTag[]; }[]>([]);
 
   // デバウンスされたお気に入りグループ保存関数（250ms後に保存）
@@ -192,7 +192,7 @@ export default function Home() {
     const updateCalendarData = async () => {
       if (!isInitialized || stocks.length === 0) return;
 
-      const calendarData: { [symbol: string]: { name: string; earningsDate: string; rightsSettings: RightsDateSettings } } = {};
+      const calendarData: { [symbol: string]: { name: string; earningsDate: string; dividendRightsSettings: DividendRightsSettings; shareholderRightsSettings: ShareholderRightsSettings } } = {};
 
       // 株式データを読み込み
       await loadStockData();
@@ -205,24 +205,39 @@ export default function Home() {
           ? localStorage.getItem(`kabunote-earnings-date-${symbol}`) || ''
           : '';
 
-        // 権利確定日設定を取得
-        const rightsSettingsStr = typeof window !== 'undefined'
-          ? localStorage.getItem(`kabunote-rights-settings-${symbol}`)
+        // 配当権利確定日設定を取得
+        const dividendRightsSettingsStr = typeof window !== 'undefined'
+          ? localStorage.getItem(`kabunote-dividend-rights-settings-${symbol}`)
           : null;
 
-        let rightsSettings: RightsDateSettings;
+        let dividendRightsSettings: DividendRightsSettings;
         try {
-          rightsSettings = rightsSettingsStr
-            ? JSON.parse(rightsSettingsStr)
-            : { month: null, day: null, isRecurring: true, isActive: false };
+          dividendRightsSettings = dividendRightsSettingsStr
+            ? JSON.parse(dividendRightsSettingsStr)
+            : createDefaultDividendRightsSettings();
         } catch {
-          rightsSettings = { month: null, day: null, isRecurring: true, isActive: false };
+          dividendRightsSettings = createDefaultDividendRightsSettings();
+        }
+
+        // 株主優待権利確定日設定を取得
+        const shareholderRightsSettingsStr = typeof window !== 'undefined'
+          ? localStorage.getItem(`kabunote-shareholder-rights-settings-${symbol}`)
+          : null;
+
+        let shareholderRightsSettings: ShareholderRightsSettings;
+        try {
+          shareholderRightsSettings = shareholderRightsSettingsStr
+            ? JSON.parse(shareholderRightsSettingsStr)
+            : createDefaultShareholderRightsSettings();
+        } catch {
+          shareholderRightsSettings = createDefaultShareholderRightsSettings();
         }
 
         calendarData[symbol] = {
           name: stockInfo?.name || symbol,
           earningsDate,
-          rightsSettings
+          dividendRightsSettings,
+          shareholderRightsSettings
         };
       }
 
@@ -389,7 +404,9 @@ export default function Home() {
 
   // 投資カレンダーにデータがあるかどうかを判定
   const hasCalendarData = Object.values(stockCalendarData).some(data => {
-    return data.earningsDate || (data.rightsSettings.isActive && data.rightsSettings.month && data.rightsSettings.day);
+    return data.earningsDate ||
+           (data.dividendRightsSettings.isActive && data.dividendRightsSettings.month && data.dividendRightsSettings.day) ||
+           (data.shareholderRightsSettings.isActive && data.shareholderRightsSettings.month && data.shareholderRightsSettings.day);
   });
 
   // ポートフォリオデータがあるかどうかを判定
