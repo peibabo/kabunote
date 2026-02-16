@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { Position, calculatePositionSummary, formatPrice } from '@/types/positions';
 import { CustomTag, TAG_COLORS } from '@/types/tags';
 import { calculateDividendInfo, formatDividendAmount, formatDividendYield } from '@/types/dividend';
+import { calculateShareholderBenefit, formatBenefitValue, formatBenefitYield } from '@/types/shareholder';
 
 interface PortfolioData {
   symbol: string;
@@ -16,7 +17,7 @@ interface PortfolioData {
 
 interface InvestmentPieChartProps {
   portfolioData: PortfolioData[];
-  type: 'investment' | 'sector' | 'tags' | 'dividend';
+  type: 'investment' | 'sector' | 'tags' | 'dividend' | 'shareholder';
 }
 
 interface TooltipData {
@@ -27,6 +28,7 @@ interface TooltipData {
   x: number;
   y: number;
   dividendYield?: number; // 配当グラフの場合のみ
+  benefitYield?: number; // 株主優待グラフの場合のみ
 }
 
 // 円グラフ用の色パレット（視覚的に区別しやすい色）
@@ -215,8 +217,57 @@ export default function InvestmentPieChart({ portfolioData, type }: InvestmentPi
     })).sort((a, b) => b.value - a.value);
   }, [portfolioData]);
 
-  const chartData = type === 'investment' ? investmentData : type === 'sector' ? sectorData : type === 'tags' ? tagData : dividendData;
-  const title = type === 'investment' ? '💼 投資額割合' : type === 'sector' ? '🏢 業種別分散' : type === 'tags' ? '🏷️ タグ別分散' : '💰 配当金額割合';
+  // 株主優待価値割合用のデータ処理
+  const shareholderData = useMemo(() => {
+    const data: { label: string; value: number; color: string; percentage: number; benefitYield: number }[] = [];
+    let totalBenefit = 0;
+
+    portfolioData.forEach((stock, index) => {
+      if (stock.positions.length > 0) {
+        const summary = calculatePositionSummary(stock.positions);
+
+        // localStorage から株主優待情報を取得
+        const minimumShares = typeof window !== 'undefined'
+          ? localStorage.getItem(`kabunote-minimum-shares-${stock.symbol}`) || ''
+          : '';
+        const estimatedValue = typeof window !== 'undefined'
+          ? localStorage.getItem(`kabunote-estimated-value-${stock.symbol}`) || ''
+          : '';
+
+        const minShares = parseInt(minimumShares);
+        const estValue = parseFloat(estimatedValue);
+
+        if (minShares > 0 && estValue > 0 && summary.totalShares > 0) {
+          const benefitCalculation = calculateShareholderBenefit(
+            minShares,
+            summary.totalShares,
+            estValue,
+            summary.totalCost
+          );
+
+          if (benefitCalculation.isEligible) {
+            data.push({
+              label: `${stock.symbol} ${stock.name}`,
+              value: benefitCalculation.estimatedValue,
+              color: CHART_COLORS[index % CHART_COLORS.length],
+              percentage: 0, // 後で計算
+              benefitYield: benefitCalculation.yieldOnInvestment
+            });
+            totalBenefit += benefitCalculation.estimatedValue;
+          }
+        }
+      }
+    });
+
+    // パーセンテージを計算
+    return data.map(item => ({
+      ...item,
+      percentage: totalBenefit > 0 ? (item.value / totalBenefit) * 100 : 0
+    })).sort((a, b) => b.value - a.value);
+  }, [portfolioData]);
+
+  const chartData = type === 'investment' ? investmentData : type === 'sector' ? sectorData : type === 'tags' ? tagData : type === 'dividend' ? dividendData : shareholderData;
+  const title = type === 'investment' ? '💼 投資額割合' : type === 'sector' ? '🏢 業種別分散' : type === 'tags' ? '🏷️ タグ別分散' : type === 'dividend' ? '💰 配当金額割合' : '🎁 株主優待価値割合';
 
   // SVG円グラフの描画
   const renderPieChart = () => {
@@ -270,7 +321,8 @@ export default function InvestmentPieChart({ portfolioData, type }: InvestmentPi
                     color: item.color,
                     x: e.clientX - (containerRect?.left || 0),
                     y: e.clientY - (containerRect?.top || 0),
-                    ...(type === 'dividend' && 'dividendYield' in item && { dividendYield: item.dividendYield })
+                    ...(type === 'dividend' && 'dividendYield' in item && { dividendYield: item.dividendYield }),
+                    ...(type === 'shareholder' && 'benefitYield' in item && { benefitYield: item.benefitYield })
                   });
                 }}
                 onMouseMove={(e) => {
@@ -304,7 +356,7 @@ export default function InvestmentPieChart({ portfolioData, type }: InvestmentPi
           textAnchor="middle"
           className="text-xs fill-gray-300 font-medium"
         >
-          {type === 'dividend' ? '年間配当金' : '総投資額'}
+          {type === 'dividend' ? '年間配当金' : type === 'shareholder' ? '年間優待価値' : '総投資額'}
         </text>
         <text
           x={centerX}
@@ -314,6 +366,8 @@ export default function InvestmentPieChart({ portfolioData, type }: InvestmentPi
         >
           {type === 'dividend'
             ? `${formatDividendAmount(chartData.reduce((sum, item) => sum + item.value, 0))}円`
+            : type === 'shareholder'
+            ? `${formatBenefitValue(chartData.reduce((sum, item) => sum + item.value, 0))}円`
             : `${formatPrice(chartData.reduce((sum, item) => sum + item.value, 0))}円`
           }
         </text>
@@ -327,7 +381,7 @@ export default function InvestmentPieChart({ portfolioData, type }: InvestmentPi
         <h3 className="text-sm font-medium text-gray-300 mb-3">{title}</h3>
         <div className="flex items-center justify-center h-32">
           <p className="text-gray-500 text-sm">
-            {type === 'dividend' ? '配当情報がありません' : '投資データがありません'}
+            {type === 'dividend' ? '配当情報がありません' : type === 'shareholder' ? '株主優待情報がありません' : '投資データがありません'}
           </p>
         </div>
       </div>
@@ -363,6 +417,8 @@ export default function InvestmentPieChart({ portfolioData, type }: InvestmentPi
               <div className="font-bold text-white">
                 {type === 'dividend'
                   ? `${formatDividendAmount(tooltip.value)}円`
+                  : type === 'shareholder'
+                  ? `${formatBenefitValue(tooltip.value)}円`
                   : `${formatPrice(tooltip.value)}円`
                 }
               </div>
@@ -372,6 +428,11 @@ export default function InvestmentPieChart({ portfolioData, type }: InvestmentPi
               {type === 'dividend' && 'dividendYield' in tooltip && (
                 <div className="text-green-300 text-xs">
                   利回り {formatDividendYield(tooltip.dividendYield)}%
+                </div>
+              )}
+              {type === 'shareholder' && 'benefitYield' in tooltip && (
+                <div className="text-purple-300 text-xs">
+                  優待利回り {formatBenefitYield(tooltip.benefitYield)}%
                 </div>
               )}
             </div>
