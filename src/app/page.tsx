@@ -8,6 +8,7 @@ import SearchBar from '@/components/SearchBar';
 import InvestmentCalendar from '@/components/InvestmentCalendar';
 import PortfolioSummary from '@/components/PortfolioSummary';
 import FloatingAddButton from '@/components/FloatingAddButton';
+import DataManager from '@/components/DataManager';
 import { loadStockData, getStockData } from '@/data/stockNames';
 import { Position } from '@/types/positions';
 import { FavoriteGroup, GROUP_COLORS } from '@/types/favorites';
@@ -42,6 +43,7 @@ export default function Home() {
   const [favoriteGroups, setFavoriteGroups] = useState<FavoriteGroup[]>([]);
   const [selectedGroupFilter, setSelectedGroupFilter] = useState<string | null>(null);
   const [isGroupManagerOpen, setIsGroupManagerOpen] = useState(false);
+  const [isDataManagerOpen, setIsDataManagerOpen] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<string[]>([]);
@@ -380,6 +382,11 @@ export default function Home() {
     }
   };
 
+  // データインポート後のページリロード
+  const handleDataImported = () => {
+    window.location.reload();
+  };
+
   // 投資カレンダーにデータがあるかどうかを判定
   const hasCalendarData = Object.values(stockCalendarData).some(data => {
     return data.earningsDate || (data.rightsSettings.isActive && data.rightsSettings.month && data.rightsSettings.day);
@@ -521,7 +528,8 @@ export default function Home() {
       {/* Header with Logo */}
       <header className="bg-slate-900 border-b border-gray-700">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-center gap-4 group cursor-pointer">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center justify-center gap-4 group cursor-pointer flex-1">
             <img
               src="/kabunote-logo.png"
               alt="Kabunote Logo"
@@ -548,6 +556,18 @@ export default function Home() {
                 filter: drop-shadow(0 0 25px rgba(255, 255, 255, 0.9)) drop-shadow(0 0 50px rgba(255, 255, 255, 0.6)) drop-shadow(0 0 75px rgba(255, 255, 255, 0.3)) drop-shadow(0 0 100px rgba(255, 255, 255, 0.1)) !important;
               }
             `}</style>
+            </div>
+
+            {/* データ管理ボタン */}
+            <div className="flex-shrink-0">
+              <button
+                onClick={() => setIsDataManagerOpen(true)}
+                className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
+                title="データ管理"
+              >
+                <span className="text-xl">⚙️</span>
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -831,6 +851,14 @@ export default function Home() {
             groups={favoriteGroups}
             onGroupsChange={setFavoriteGroups}
             onClose={() => setIsGroupManagerOpen(false)}
+          />
+        )}
+
+        {/* データ管理モーダル */}
+        {isDataManagerOpen && (
+          <DataManager
+            onClose={() => setIsDataManagerOpen(false)}
+            onDataImported={handleDataImported}
           />
         )}
       </main>
