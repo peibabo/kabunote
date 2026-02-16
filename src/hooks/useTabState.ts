@@ -10,7 +10,7 @@ export interface TabDefinition {
 
 export const DEFAULT_TABS: TabDefinition[] = [
   { id: 'basic' as const, label: '📝 基本', icon: '📝' },
-  { id: 'analysis' as const, label: '📊 分析', icon: '📊' },
+  { id: 'analysis' as const, label: '📊 投資状況', icon: '📊' },
   { id: 'management' as const, label: '💼 管理', icon: '💼' }
 ];
 

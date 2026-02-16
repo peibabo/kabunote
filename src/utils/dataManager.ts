@@ -17,6 +17,8 @@ export interface KabunoteData {
   rightsSettings: Record<string, string>;
   positions: Record<string, any[]>;
   activeTabs: Record<string, string>;
+  dividendPerShare: Record<string, string>;
+  dividendFrequency: Record<string, string>;
 
   // グローバル設定
   favoriteGroups: any[];
@@ -41,6 +43,8 @@ export const exportKabunoteData = (): KabunoteData => {
     rightsSettings: {},
     positions: {},
     activeTabs: {},
+    dividendPerShare: {},
+    dividendFrequency: {},
     favoriteGroups: [],
     selectedGroupFilter: null,
   };
@@ -90,6 +94,12 @@ export const exportKabunoteData = (): KabunoteData => {
       } else if (key.startsWith('kabunote-active-tab-')) {
         const symbol = key.replace('kabunote-active-tab-', '');
         data.activeTabs[symbol] = value;
+      } else if (key.startsWith('kabunote-dividend-per-share-')) {
+        const symbol = key.replace('kabunote-dividend-per-share-', '');
+        data.dividendPerShare[symbol] = value;
+      } else if (key.startsWith('kabunote-dividend-frequency-')) {
+        const symbol = key.replace('kabunote-dividend-frequency-', '');
+        data.dividendFrequency[symbol] = value;
       }
     } catch (error) {
       console.warn(`Failed to parse localStorage key: ${key}`, error);
@@ -205,6 +215,20 @@ export const importKabunoteData = (data: KabunoteData): { success: boolean; mess
     if (data.activeTabs && typeof data.activeTabs === 'object') {
       Object.entries(data.activeTabs).forEach(([symbol, tab]) => {
         localStorage.setItem(`kabunote-active-tab-${symbol}`, tab);
+        importedCount++;
+      });
+    }
+
+    if (data.dividendPerShare && typeof data.dividendPerShare === 'object') {
+      Object.entries(data.dividendPerShare).forEach(([symbol, dividend]) => {
+        localStorage.setItem(`kabunote-dividend-per-share-${symbol}`, dividend);
+        importedCount++;
+      });
+    }
+
+    if (data.dividendFrequency && typeof data.dividendFrequency === 'object') {
+      Object.entries(data.dividendFrequency).forEach(([symbol, frequency]) => {
+        localStorage.setItem(`kabunote-dividend-frequency-${symbol}`, frequency);
         importedCount++;
       });
     }
