@@ -10,6 +10,7 @@ import {
   calculateFullDateFromMonthDay
 } from '@/types/investmentCalendar';
 import { DividendRightsSettings, ShareholderRightsSettings, ShareholderMeetingSettings, calculateDividendRightsDateFromSettings, calculateShareholderRightsDateFromSettings, calculateShareholderMeetingDateFromSettings } from '@/types/rightsDate';
+import TodayTomorrowEvents from './TodayTomorrowEvents';
 
 // 土日を除いた営業日前を計算する関数
 const calculateBusinessDaysBefore = (date: Date, businessDays: number): Date => {
@@ -353,8 +354,13 @@ export default function InvestmentCalendar({ stockSymbols, stockData, onStockCli
   }, [eventMap, currentMonth]);
 
   return (
-    <div className="bg-gray-800 rounded-lg p-4 mb-6 font-thin">
-      <button
+    <div className="font-thin">
+      {/* 今日・明日の予定表示 */}
+      <TodayTomorrowEvents events={eventMap} onStockClick={onStockClick} />
+
+      {/* 投資カレンダー本体 */}
+      <div className="bg-gray-800 rounded-lg p-4 mb-6">
+        <button
         onClick={toggleExpanded}
         className="w-full flex items-center justify-between mb-0 hover:bg-gray-700 hover:bg-opacity-50 rounded-lg px-3 py-2 transition-colors cursor-pointer"
       >
@@ -518,6 +524,7 @@ export default function InvestmentCalendar({ stockSymbols, stockData, onStockCli
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }
