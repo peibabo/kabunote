@@ -17,18 +17,32 @@ interface BasicTabProps {
 
 const getExternalLinks = (symbol: string): ExternalLink[] => [
   {
-    name: '株探',
-    icon: '📊',
-    url: `https://kabutan.jp/stock/chart?code=${symbol}`,
-    bgColor: 'rgb(5,47,109)', // 株探の正式ブランドカラー
-    hoverBgColor: 'rgb(3,35,82)' // 少し暗めのホバー色
-  },
-  {
     name: 'Yahoo!',
     icon: '🟣',
     url: `https://finance.yahoo.co.jp/quote/${symbol}.T`,
     bgColor: '#ff0033', // Yahoo!の正式ブランドカラー
     hoverBgColor: '#cc0029' // 少し暗めのホバー色
+  },
+  {
+    name: '株探',
+    icon: '🔍',
+    url: `https://kabutan.jp/stock/chart?code=${symbol}`,
+    bgColor: 'rgb(5,47,109)', // 株探の正式ブランドカラー
+    hoverBgColor: 'rgb(3,35,82)' // 少し暗めのホバー色
+  },
+  {
+    name: 'TradingView',
+    icon: '📊',
+    url: `https://jp.tradingview.com/symbols/TSE-${symbol}/`,
+    bgColor: '#131722', // TradingViewの公式ダークカラー
+    hoverBgColor: '#0e1117' // 少し暗めのホバー色
+  },
+  {
+    name: 'みんかぶ',
+    icon: '🧑‍💼',
+    url: `https://minkabu.jp/stock/${symbol}`,
+    bgColor: 'rgb(255,111,97)', // みんかぶのオレンジ系ブランドカラー
+    hoverBgColor: 'rgb(255,87,69)' // 少し暗めのホバー色
   },
   {
     name: 'バフェット・コード',
@@ -92,7 +106,7 @@ export default function BasicTab({
       {/* 外部リンクボタン */}
       <div className="space-y-2">
         {/* 外部リンク */}
-        <div className="grid grid-cols-4 gap-1">
+        <div className="grid grid-cols-3 gap-2">
           {externalLinks.map((link) => (
             <a
               key={link.name}

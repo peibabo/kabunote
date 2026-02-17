@@ -193,7 +193,7 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
       <div className="mb-4">
         <button
           onClick={() => {
-            const url = `https://jp.tradingview.com/symbols/TSE-${symbol}/`;
+            const url = `https://finance.yahoo.co.jp/quote/${symbol}.T?term=1d`;
             window.open(url, 'stockChart', 'width=800,height=800,scrollbars=yes,resizable=yes');
           }}
           className="w-full bg-green-600 hover:bg-green-700 text-white text-sm font-medium py-2 px-3 rounded-lg transition-colors"

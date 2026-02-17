@@ -247,6 +247,76 @@ export default function Home() {
     updateCalendarData();
   }, [stocks, isInitialized]);
 
+  // カレンダーデータのリアルタイム更新
+  useEffect(() => {
+    if (!isInitialized) return;
+
+    const handleStorageChange = (event: CustomEvent) => {
+      const { key } = event.detail;
+
+      // カレンダー関連のキーかチェック
+      if (key.includes('earnings-date-') ||
+          key.includes('dividend-rights-settings-') ||
+          key.includes('shareholder-rights-settings-')) {
+
+        // カレンダーデータを再更新
+        const updateCalendarData = async () => {
+          if (stocks.length === 0) return;
+
+          const calendarData: { [symbol: string]: { name: string; earningsDate: string; dividendRightsSettings: DividendRightsSettings; shareholderRightsSettings: ShareholderRightsSettings } } = {};
+
+          await loadStockData();
+
+          for (const symbol of stocks) {
+            const stockInfo = await getStockData(symbol);
+
+            // 決算発表日を取得
+            const earningsDate = localStorage.getItem(`kabunote-earnings-date-${symbol}`) || '';
+
+            // 配当権利確定日設定を取得
+            const dividendRightsSettingsStr = localStorage.getItem(`kabunote-dividend-rights-settings-${symbol}`);
+            let dividendRightsSettings: DividendRightsSettings;
+            try {
+              dividendRightsSettings = dividendRightsSettingsStr
+                ? JSON.parse(dividendRightsSettingsStr)
+                : createDefaultDividendRightsSettings();
+            } catch {
+              dividendRightsSettings = createDefaultDividendRightsSettings();
+            }
+
+            // 株主優待権利確定日設定を取得
+            const shareholderRightsSettingsStr = localStorage.getItem(`kabunote-shareholder-rights-settings-${symbol}`);
+            let shareholderRightsSettings: ShareholderRightsSettings;
+            try {
+              shareholderRightsSettings = shareholderRightsSettingsStr
+                ? JSON.parse(shareholderRightsSettingsStr)
+                : createDefaultShareholderRightsSettings();
+            } catch {
+              shareholderRightsSettings = createDefaultShareholderRightsSettings();
+            }
+
+            calendarData[symbol] = {
+              name: stockInfo?.name || symbol,
+              earningsDate,
+              dividendRightsSettings,
+              shareholderRightsSettings
+            };
+          }
+
+          setStockCalendarData(calendarData);
+        };
+
+        updateCalendarData();
+      }
+    };
+
+    window.addEventListener('localStorageChange', handleStorageChange as EventListener);
+
+    return () => {
+      window.removeEventListener('localStorageChange', handleStorageChange as EventListener);
+    };
+  }, [isInitialized, stocks]);
+
   // ポートフォリオ用データの更新
   useEffect(() => {
     const updatePortfolioData = async () => {
@@ -307,6 +377,82 @@ export default function Home() {
 
     updatePortfolioData();
   }, [stocks, isInitialized]);
+
+  // ポートフォリオデータのリアルタイム更新
+  useEffect(() => {
+    if (!isInitialized) return;
+
+    const handleStorageChange = (event: CustomEvent) => {
+      const { key } = event.detail;
+
+      // ポートフォリオ関連のキーかチェック
+      if (key.includes('positions-') ||
+          key.includes('current-price-') ||
+          key.includes('tags-') ||
+          key.includes('dividend-per-share-') ||
+          key.includes('dividend-frequency-') ||
+          key.includes('estimated-value-') ||
+          key.includes('minimum-shares-') ||
+          key.includes('benefit-description-')) {
+
+        // ポートフォリオデータを再更新
+        const updatePortfolioData = async () => {
+          if (stocks.length === 0) return;
+
+          const portfolio: { symbol: string; name: string; positions: Position[]; currentPrice: string; sector: string; customTags: CustomTag[]; }[] = [];
+
+          await loadStockData();
+
+          for (const symbol of stocks) {
+            const stockInfo = await getStockData(symbol);
+
+            // ポジション情報を取得
+            const positionsStr = localStorage.getItem(`kabunote-positions-${symbol}`);
+            let positions: Position[] = [];
+            try {
+              positions = positionsStr ? JSON.parse(positionsStr) : [];
+            } catch {
+              positions = [];
+            }
+
+            // 現在株価を取得
+            const currentPrice = localStorage.getItem(`kabunote-current-price-${symbol}`) || '';
+
+            // カスタムタグを取得
+            const tagsStr = localStorage.getItem(`kabunote-tags-${symbol}`);
+            let customTags: CustomTag[] = [];
+            try {
+              customTags = tagsStr ? JSON.parse(tagsStr) : [];
+            } catch {
+              customTags = [];
+            }
+
+            // ポジションを持つ銘柄のみ追加
+            if (positions.length > 0) {
+              portfolio.push({
+                symbol,
+                name: stockInfo?.name || symbol,
+                positions,
+                currentPrice,
+                sector: stockInfo?.sector || 'その他',
+                customTags
+              });
+            }
+          }
+
+          setPortfolioData(portfolio);
+        };
+
+        updatePortfolioData();
+      }
+    };
+
+    window.addEventListener('localStorageChange', handleStorageChange as EventListener);
+
+    return () => {
+      window.removeEventListener('localStorageChange', handleStorageChange as EventListener);
+    };
+  }, [isInitialized, stocks]);
 
   const handleAddStock = (code: string) => {
     if (stocks.length >= MAX_STOCKS) {

@@ -392,7 +392,7 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
               ? 'max-h-[2000px] opacity-100 mt-4'
               : 'max-h-0 opacity-0'
           }`}>
-            <div className="grid grid-cols-1 xl:grid-cols-5 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 xl:grid-cols-3 lg:grid-cols-2 gap-6">
               {/* 投資額割合円グラフ */}
               <InvestmentPieChart portfolioData={portfolioData} type="investment" />
 
