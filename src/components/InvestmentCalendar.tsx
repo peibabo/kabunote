@@ -9,7 +9,7 @@ import {
   formatDateString,
   calculateFullDateFromMonthDay
 } from '@/types/investmentCalendar';
-import { DividendRightsSettings, ShareholderRightsSettings, calculateDividendRightsDateFromSettings, calculateShareholderRightsDateFromSettings } from '@/types/rightsDate';
+import { DividendRightsSettings, ShareholderRightsSettings, ShareholderMeetingSettings, calculateDividendRightsDateFromSettings, calculateShareholderRightsDateFromSettings, calculateShareholderMeetingDateFromSettings } from '@/types/rightsDate';
 
 // 土日を除いた営業日前を計算する関数
 const calculateBusinessDaysBefore = (date: Date, businessDays: number): Date => {
@@ -36,6 +36,7 @@ interface InvestmentCalendarProps {
       earningsDate: string;
       dividendRightsSettings: DividendRightsSettings;
       shareholderRightsSettings: ShareholderRightsSettings;
+      shareholderMeetingSettings: ShareholderMeetingSettings;
     }
   };
   onStockClick: (symbol: string) => void;
@@ -204,6 +205,28 @@ export default function InvestmentCalendar({ stockSymbols, stockData, onStockCli
           isRecurring: data.shareholderRightsSettings.isRecurring
         });
       }
+
+      // 株主総会日
+      if (data.shareholderMeetingSettings.isActive && data.shareholderMeetingSettings.month && data.shareholderMeetingSettings.day) {
+        const shareholderMeetingDate = calculateFullDateFromMonthDay(
+          data.shareholderMeetingSettings.month,
+          data.shareholderMeetingSettings.day,
+          data.shareholderMeetingSettings.isRecurring
+        );
+        const shareholderMeetingDateKey = formatDateString(shareholderMeetingDate);
+
+        // 株主総会日
+        if (!events[shareholderMeetingDateKey]) events[shareholderMeetingDateKey] = [];
+        events[shareholderMeetingDateKey].push({
+          id: `${symbol}-shareholder-meeting`,
+          symbol,
+          companyName: data.name,
+          date: shareholderMeetingDateKey,
+          type: 'shareholder-meeting',
+          title: '株主総会',
+          isRecurring: data.shareholderMeetingSettings.isRecurring
+        });
+      }
     });
 
     return events;
@@ -304,6 +327,7 @@ export default function InvestmentCalendar({ stockSymbols, stockData, onStockCli
       case 'dividend-rights-confirmation': return 'bg-green-600';
       case 'shareholder-rights-last': return 'bg-purple-400';
       case 'shareholder-rights-confirmation': return 'bg-purple-600';
+      case 'shareholder-meeting': return 'bg-blue-500';
       default: return 'bg-gray-400';
     }
   };
@@ -447,6 +471,10 @@ export default function InvestmentCalendar({ stockSymbols, stockData, onStockCli
             <div className="flex items-center space-x-1">
               <div className="w-2 h-2 rounded-full bg-purple-600"></div>
               <span>優待確定日</span>
+            </div>
+            <div className="flex items-center space-x-1">
+              <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+              <span>株主総会</span>
             </div>
           </div>
       </div>

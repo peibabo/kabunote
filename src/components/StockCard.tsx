@@ -5,7 +5,7 @@ import { loadStockData, getCompanyNameSync, isKnownStockSync, StockData } from '
 import { CustomTag } from '@/types/tags';
 import { FavoriteGroup } from '@/types/favorites';
 import { Position, PositionSummary, calculatePositionSummary, ProfitLossInfo, calculateProfitLoss } from '@/types/positions';
-import { RightsDateSettings, createDefaultRightsSettings, calculateRightsDateFromSettings, shouldDeactivateRights, DividendRightsSettings, ShareholderRightsSettings, createDefaultDividendRightsSettings, createDefaultShareholderRightsSettings } from '@/types/rightsDate';
+import { RightsDateSettings, createDefaultRightsSettings, calculateRightsDateFromSettings, shouldDeactivateRights, DividendRightsSettings, ShareholderRightsSettings, ShareholderMeetingSettings, createDefaultDividendRightsSettings, createDefaultShareholderRightsSettings, createDefaultShareholderMeetingSettings, shouldDeactivateShareholderMeeting } from '@/types/rightsDate';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useStringLocalStorage, useArrayLocalStorage } from '@/hooks/useLocalStorage';
@@ -65,6 +65,7 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
   const [rightsSettings, setRightsSettings] = useStringLocalStorage(`kabunote-rights-settings-${symbol}`, JSON.stringify(createDefaultRightsSettings()), 400);
   const [dividendRightsSettings, setDividendRightsSettings] = useStringLocalStorage(`kabunote-dividend-rights-settings-${symbol}`, JSON.stringify(createDefaultDividendRightsSettings()), 400);
   const [shareholderRightsSettings, setShareholderRightsSettings] = useStringLocalStorage(`kabunote-shareholder-rights-settings-${symbol}`, JSON.stringify(createDefaultShareholderRightsSettings()), 400);
+  const [shareholderMeetingSettings, setShareholderMeetingSettings] = useStringLocalStorage(`kabunote-shareholder-meeting-${symbol}`, JSON.stringify(createDefaultShareholderMeetingSettings()), 400);
   const [positions, setPositions] = useArrayLocalStorage<Position>(`kabunote-positions-${symbol}`, [], 200);
 
   // 権利確定日設定をパース
@@ -94,13 +95,54 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
     }
   })();
 
+  // 株主総会設定をパース
+  const parsedShareholderMeetingSettings: ShareholderMeetingSettings = (() => {
+    try {
+      const parsed = JSON.parse(shareholderMeetingSettings);
+      // 必要なプロパティが存在するかチェック
+      if (typeof parsed.isActive !== 'boolean' ||
+          (parsed.month !== null && typeof parsed.month !== 'number') ||
+          (parsed.day !== null && typeof parsed.day !== 'number') ||
+          typeof parsed.isRecurring !== 'boolean') {
+        console.warn(`Invalid shareholder meeting settings for ${symbol}, using defaults:`, parsed);
+        return createDefaultShareholderMeetingSettings();
+      }
+      return parsed;
+    } catch (error) {
+      console.warn(`Failed to parse shareholder meeting settings for ${symbol}, using defaults:`, error);
+      return createDefaultShareholderMeetingSettings();
+    }
+  })();
+
   // 権利確定日の自動無効化チェック（単発イベントが過去になった場合）
   useEffect(() => {
-    if (shouldDeactivateRights(parsedRightsSettings)) {
+    if (parsedRightsSettings.isActive && shouldDeactivateRights(parsedRightsSettings)) {
       const updatedSettings = { ...parsedRightsSettings, isActive: false };
       setRightsSettings(JSON.stringify(updatedSettings));
     }
-  }, [parsedRightsSettings, setRightsSettings]);
+  }, [
+    parsedRightsSettings.isActive,
+    parsedRightsSettings.isRecurring,
+    parsedRightsSettings.eventType ?? '',
+    parsedRightsSettings.month ?? 0,
+    parsedRightsSettings.day ?? 0,
+    parsedRightsSettings.singleDate ?? '',
+    setRightsSettings
+  ]);
+
+  // 株主総会設定の自動無効化チェック（一時的に無効化）
+  // useEffect(() => {
+  //   if (parsedShareholderMeetingSettings.isActive && shouldDeactivateShareholderMeeting(parsedShareholderMeetingSettings)) {
+  //     const updatedSettings = { ...parsedShareholderMeetingSettings, isActive: false };
+  //     setShareholderMeetingSettings(JSON.stringify(updatedSettings));
+  //   }
+  // }, [
+  //   parsedShareholderMeetingSettings.isActive,
+  //   parsedShareholderMeetingSettings.isRecurring,
+  //   parsedShareholderMeetingSettings.month ?? 0,
+  //   parsedShareholderMeetingSettings.day ?? 0,
+  //   setShareholderMeetingSettings
+  // ]);
 
   // 権利確定日文字列を計算
   const rightsDate = calculateRightsDateFromSettings(parsedRightsSettings);
@@ -260,6 +302,8 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
             onDividendRightsSettingsChange={(newSettings) => setDividendRightsSettings(JSON.stringify(newSettings))}
             shareholderRightsSettings={parsedShareholderRightsSettings}
             onShareholderRightsSettingsChange={(newSettings) => setShareholderRightsSettings(JSON.stringify(newSettings))}
+            shareholderMeetingSettings={parsedShareholderMeetingSettings}
+            onShareholderMeetingSettingsChange={(newSettings) => setShareholderMeetingSettings(JSON.stringify(newSettings))}
           />
         )}
       </div>

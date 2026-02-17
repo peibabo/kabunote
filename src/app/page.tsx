@@ -13,7 +13,7 @@ import { loadStockData, getStockData } from '@/data/stockNames';
 import { Position } from '@/types/positions';
 import { FavoriteGroup, GROUP_COLORS } from '@/types/favorites';
 import { CustomTag } from '@/types/tags';
-import { DividendRightsSettings, ShareholderRightsSettings, createDefaultDividendRightsSettings, createDefaultShareholderRightsSettings } from '@/types/rightsDate';
+import { DividendRightsSettings, ShareholderRightsSettings, ShareholderMeetingSettings, createDefaultDividendRightsSettings, createDefaultShareholderRightsSettings, createDefaultShareholderMeetingSettings } from '@/types/rightsDate';
 import { useDebouncedCallback } from '@/hooks/useDebounce';
 import {
   DndContext,
@@ -48,7 +48,7 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<string[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  const [stockCalendarData, setStockCalendarData] = useState<{ [symbol: string]: { name: string; earningsDate: string; dividendRightsSettings: DividendRightsSettings; shareholderRightsSettings: ShareholderRightsSettings } }>({});
+  const [stockCalendarData, setStockCalendarData] = useState<{ [symbol: string]: { name: string; earningsDate: string; dividendRightsSettings: DividendRightsSettings; shareholderRightsSettings: ShareholderRightsSettings; shareholderMeetingSettings: ShareholderMeetingSettings } }>({});
   const [portfolioData, setPortfolioData] = useState<{ symbol: string; name: string; positions: Position[]; currentPrice: string; sector: string; customTags: CustomTag[]; }[]>([]);
 
   // デバウンスされたお気に入りグループ保存関数（250ms後に保存）
@@ -192,7 +192,7 @@ export default function Home() {
     const updateCalendarData = async () => {
       if (!isInitialized || stocks.length === 0) return;
 
-      const calendarData: { [symbol: string]: { name: string; earningsDate: string; dividendRightsSettings: DividendRightsSettings; shareholderRightsSettings: ShareholderRightsSettings } } = {};
+      const calendarData: { [symbol: string]: { name: string; earningsDate: string; dividendRightsSettings: DividendRightsSettings; shareholderRightsSettings: ShareholderRightsSettings; shareholderMeetingSettings: ShareholderMeetingSettings } } = {};
 
       // 株式データを読み込み
       await loadStockData();
@@ -233,11 +233,26 @@ export default function Home() {
           shareholderRightsSettings = createDefaultShareholderRightsSettings();
         }
 
+        // 株主総会設定を取得
+        const shareholderMeetingSettingsStr = typeof window !== 'undefined'
+          ? localStorage.getItem(`kabunote-shareholder-meeting-${symbol}`)
+          : null;
+
+        let shareholderMeetingSettings: ShareholderMeetingSettings;
+        try {
+          shareholderMeetingSettings = shareholderMeetingSettingsStr
+            ? JSON.parse(shareholderMeetingSettingsStr)
+            : createDefaultShareholderMeetingSettings();
+        } catch {
+          shareholderMeetingSettings = createDefaultShareholderMeetingSettings();
+        }
+
         calendarData[symbol] = {
           name: stockInfo?.name || symbol,
           earningsDate,
           dividendRightsSettings,
-          shareholderRightsSettings
+          shareholderRightsSettings,
+          shareholderMeetingSettings
         };
       }
 
@@ -257,13 +272,14 @@ export default function Home() {
       // カレンダー関連のキーかチェック
       if (key.includes('earnings-date-') ||
           key.includes('dividend-rights-settings-') ||
-          key.includes('shareholder-rights-settings-')) {
+          key.includes('shareholder-rights-settings-') ||
+          key.includes('shareholder-meeting-')) {
 
         // カレンダーデータを再更新
         const updateCalendarData = async () => {
           if (stocks.length === 0) return;
 
-          const calendarData: { [symbol: string]: { name: string; earningsDate: string; dividendRightsSettings: DividendRightsSettings; shareholderRightsSettings: ShareholderRightsSettings } } = {};
+          const calendarData: { [symbol: string]: { name: string; earningsDate: string; dividendRightsSettings: DividendRightsSettings; shareholderRightsSettings: ShareholderRightsSettings; shareholderMeetingSettings: ShareholderMeetingSettings } } = {};
 
           await loadStockData();
 
@@ -295,11 +311,23 @@ export default function Home() {
               shareholderRightsSettings = createDefaultShareholderRightsSettings();
             }
 
+            // 株主総会設定を取得
+            const shareholderMeetingSettingsStr = localStorage.getItem(`kabunote-shareholder-meeting-${symbol}`);
+            let shareholderMeetingSettings: ShareholderMeetingSettings;
+            try {
+              shareholderMeetingSettings = shareholderMeetingSettingsStr
+                ? JSON.parse(shareholderMeetingSettingsStr)
+                : createDefaultShareholderMeetingSettings();
+            } catch {
+              shareholderMeetingSettings = createDefaultShareholderMeetingSettings();
+            }
+
             calendarData[symbol] = {
               name: stockInfo?.name || symbol,
               earningsDate,
               dividendRightsSettings,
-              shareholderRightsSettings
+              shareholderRightsSettings,
+              shareholderMeetingSettings
             };
           }
 
@@ -552,7 +580,8 @@ export default function Home() {
   const hasCalendarData = Object.values(stockCalendarData).some(data => {
     return data.earningsDate ||
            (data.dividendRightsSettings.isActive && data.dividendRightsSettings.month && data.dividendRightsSettings.day) ||
-           (data.shareholderRightsSettings.isActive && data.shareholderRightsSettings.month && data.shareholderRightsSettings.day);
+           (data.shareholderRightsSettings.isActive && data.shareholderRightsSettings.month && data.shareholderRightsSettings.day) ||
+           (data.shareholderMeetingSettings && data.shareholderMeetingSettings.isActive && data.shareholderMeetingSettings.month && data.shareholderMeetingSettings.day);
   });
 
   // ポートフォリオデータがあるかどうかを判定

@@ -25,6 +25,7 @@ export interface KabunoteData {
   estimatedValue: Record<string, string>;
   dividendRightsSettings: Record<string, string>;
   shareholderRightsSettings: Record<string, string>;
+  shareholderMeetingSettings: Record<string, string>;
 
   // グローバル設定
   favoriteGroups: any[];
@@ -57,6 +58,7 @@ export const exportKabunoteData = (): KabunoteData => {
     estimatedValue: {},
     dividendRightsSettings: {},
     shareholderRightsSettings: {},
+    shareholderMeetingSettings: {},
     favoriteGroups: [],
     selectedGroupFilter: null,
   };
@@ -130,6 +132,9 @@ export const exportKabunoteData = (): KabunoteData => {
       } else if (key.startsWith('kabunote-shareholder-rights-settings-')) {
         const symbol = key.replace('kabunote-shareholder-rights-settings-', '');
         data.shareholderRightsSettings[symbol] = value;
+      } else if (key.startsWith('kabunote-shareholder-meeting-')) {
+        const symbol = key.replace('kabunote-shareholder-meeting-', '');
+        data.shareholderMeetingSettings[symbol] = value;
       }
     } catch (error) {
       console.warn(`Failed to parse localStorage key: ${key}`, error);
@@ -301,6 +306,13 @@ export const importKabunoteData = (data: KabunoteData): { success: boolean; mess
     if (data.shareholderRightsSettings && typeof data.shareholderRightsSettings === 'object') {
       Object.entries(data.shareholderRightsSettings).forEach(([symbol, settings]) => {
         localStorage.setItem(`kabunote-shareholder-rights-settings-${symbol}`, settings);
+        importedCount++;
+      });
+    }
+
+    if (data.shareholderMeetingSettings && typeof data.shareholderMeetingSettings === 'object') {
+      Object.entries(data.shareholderMeetingSettings).forEach(([symbol, settings]) => {
+        localStorage.setItem(`kabunote-shareholder-meeting-${symbol}`, settings);
         importedCount++;
       });
     }

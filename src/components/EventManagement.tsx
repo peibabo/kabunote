@@ -1,6 +1,15 @@
 'use client';
 
+import { useStringLocalStorage } from '@/hooks/useLocalStorage';
+import { ShareholderMeetingSettings, createDefaultShareholderMeetingSettings, calculateShareholderMeetingDateFromSettings, shouldDeactivateShareholderMeeting } from '@/types/rightsDate';
+import { useEffect } from 'react';
+
 interface EarningsCountdown {
+  text: string;
+  status: 'urgent' | 'today' | 'normal' | 'past';
+}
+
+interface MeetingCountdown {
   text: string;
   status: 'urgent' | 'today' | 'normal' | 'past';
 }
@@ -9,6 +18,8 @@ interface EventManagementProps {
   symbol: string;
   earningsDate: string;
   onEarningsDateChange: (value: string) => void;
+  shareholderMeetingSettings: ShareholderMeetingSettings;
+  onShareholderMeetingSettingsChange: (settings: ShareholderMeetingSettings) => void;
 }
 
 // 決算カウントダウン計算ロジック
@@ -18,7 +29,7 @@ const getEarningsCountdown = (earningsDate: string): EarningsCountdown | null =>
   const today = new Date();
   const earnings = new Date(earningsDate);
   const timeDiff = earnings.getTime() - today.getTime();
-  const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+  const daysDiff = Math.round(timeDiff / (1000 * 3600 * 24));
 
   // 決算日のフォーマット表示（M/D形式）
   const month = earnings.getMonth() + 1;
@@ -43,6 +54,38 @@ const getEarningsCountdown = (earningsDate: string): EarningsCountdown | null =>
   }
 };
 
+// 株主総会カウントダウン計算ロジック（決算日と同じロジック）
+const getMeetingCountdown = (meetingDate: string): MeetingCountdown | null => {
+  if (!meetingDate) return null;
+
+  const today = new Date();
+  const meeting = new Date(meetingDate);
+  const timeDiff = meeting.getTime() - today.getTime();
+  const daysDiff = Math.round(timeDiff / (1000 * 3600 * 24));
+
+  // 株主総会日のフォーマット表示（M/D形式）
+  const month = meeting.getMonth() + 1;
+  const day = meeting.getDate();
+  const formattedDate = `${month}/${day}`;
+
+  if (daysDiff > 0) {
+    return {
+      text: `次回の株主総会：${formattedDate}（あと${daysDiff}日）`,
+      status: daysDiff <= 7 ? 'urgent' : 'normal'
+    };
+  } else if (daysDiff === 0) {
+    return {
+      text: `株主総会：${formattedDate}（本日）`,
+      status: 'today'
+    };
+  } else {
+    return {
+      text: `前回の株主総会：${formattedDate}（${Math.abs(daysDiff)}日前）`,
+      status: 'past'
+    };
+  }
+};
+
 // 決算ステータスに応じたCSSクラス
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -62,9 +105,43 @@ const getStatusColor = (status: string) => {
 export default function EventManagement({
   symbol,
   earningsDate,
-  onEarningsDateChange
+  onEarningsDateChange,
+  shareholderMeetingSettings,
+  onShareholderMeetingSettingsChange
 }: EventManagementProps) {
   const countdown = getEarningsCountdown(earningsDate);
+
+  // 株主総会日を計算
+  const shareholderMeetingDate = calculateShareholderMeetingDateFromSettings(shareholderMeetingSettings);
+  const meetingCountdown = getMeetingCountdown(shareholderMeetingDate);
+
+  // 株主総会日の自動無効化チェック（無効化 - ユーザーが手動で管理）
+  // useEffect(() => {
+  //   // 設定が有効で、単発イベントで、月日が設定されている場合のみチェック
+  //   if (!shareholderMeetingSettings.isActive ||
+  //       shareholderMeetingSettings.isRecurring ||
+  //       shareholderMeetingSettings.month === null ||
+  //       shareholderMeetingSettings.day === null) {
+  //     return; // 条件に合わない場合は何もしない
+  //   }
+
+  //   const today = new Date();
+  //   const currentYear = today.getFullYear();
+
+  //   // ISO形式で日付を作成してタイムゾーン問題を回避
+  //   const dateString = `${currentYear}-${shareholderMeetingSettings.month.toString().padStart(2, '0')}-${shareholderMeetingSettings.day.toString().padStart(2, '0')}`;
+  //   const eventDate = new Date(dateString);
+
+  //   today.setHours(0, 0, 0, 0);
+  //   eventDate.setHours(0, 0, 0, 0);
+
+  //   // イベント日が今日より過去の場合のみ無効化
+  //   if (eventDate < today) {
+  //     console.log('株主総会自動無効化:', { dateString, eventDate, today });
+  //     const updatedSettings = { ...shareholderMeetingSettings, isActive: false };
+  //     onShareholderMeetingSettingsChange(updatedSettings);
+  //   }
+  // }, [shareholderMeetingSettings.isActive, shareholderMeetingSettings.isRecurring, shareholderMeetingSettings.month, shareholderMeetingSettings.day, onShareholderMeetingSettingsChange]);
 
   return (
     <div className="space-y-4">
@@ -88,6 +165,89 @@ export default function EventManagement({
           📈 {countdown.text}
         </div>
       )}
+
+      {/* 株主総会日設定 */}
+      <div className="space-y-3">
+        <div className="flex items-center gap-2">
+          <label className="text-xs font-medium text-blue-300">
+            株主総会日
+          </label>
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={shareholderMeetingSettings.isActive}
+              onChange={(e) => onShareholderMeetingSettingsChange({
+                ...shareholderMeetingSettings,
+                isActive: e.target.checked
+              })}
+              className="rounded border-gray-600 text-blue-600 focus:ring-blue-500"
+            />
+            <span className="text-xs text-gray-400">設定を有効にする</span>
+          </div>
+        </div>
+
+        {shareholderMeetingSettings.isActive && (
+          <div className="space-y-3 pl-4 border-l-2 border-blue-500/20">
+            {/* 月/日選択 */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <label className="text-xs text-gray-400">月</label>
+                <select
+                  value={shareholderMeetingSettings.month || ''}
+                  onChange={(e) => onShareholderMeetingSettingsChange({
+                    ...shareholderMeetingSettings,
+                    month: e.target.value ? parseInt(e.target.value) : null
+                  })}
+                  className="w-full px-2 py-1.5 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:border-blue-500 focus:outline-none"
+                >
+                  <option value="">選択</option>
+                  {Array.from({ length: 12 }, (_, i) => i + 1).map(month => (
+                    <option key={month} value={month}>{month}月</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs text-gray-400">日</label>
+                <select
+                  value={shareholderMeetingSettings.day || ''}
+                  onChange={(e) => onShareholderMeetingSettingsChange({
+                    ...shareholderMeetingSettings,
+                    day: e.target.value ? parseInt(e.target.value) : null
+                  })}
+                  className="w-full px-2 py-1.5 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:border-blue-500 focus:outline-none"
+                >
+                  <option value="">選択</option>
+                  {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
+                    <option key={day} value={day}>{day}日</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* 毎年繰り返し設定 */}
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={shareholderMeetingSettings.isRecurring}
+                onChange={(e) => onShareholderMeetingSettingsChange({
+                  ...shareholderMeetingSettings,
+                  isRecurring: e.target.checked
+                })}
+                className="rounded border-gray-600 text-blue-600 focus:ring-blue-500"
+              />
+              <span className="text-xs text-gray-400">毎年繰り返し</span>
+            </div>
+          </div>
+        )}
+
+        {/* 株主総会カウントダウン表示 */}
+        {meetingCountdown && (
+          <div className={`px-3 py-2 rounded-lg border text-sm font-medium ${getStatusColor(meetingCountdown.status)}`}>
+            🏛️ {meetingCountdown.text}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
