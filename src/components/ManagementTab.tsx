@@ -1,7 +1,7 @@
 'use client';
 
 import { PositionSummary } from '@/types/positions';
-import { RightsDateSettings, DividendRightsSettings, ShareholderRightsSettings, createDefaultDividendRightsSettings, createDefaultShareholderRightsSettings } from '@/types/rightsDate';
+import { RightsDateSettings, DividendRightsSettings, ShareholderRightsSettings, ShareholderMeetingSettings, createDefaultDividendRightsSettings, createDefaultShareholderRightsSettings, createDefaultShareholderMeetingSettings } from '@/types/rightsDate';
 import { useManagementTabState } from '@/hooks/useManagementTabState';
 import EventManagement from '@/components/EventManagement';
 import DividendManagement from '@/components/DividendManagement';
@@ -19,6 +19,8 @@ interface ManagementTabProps {
   onDividendRightsSettingsChange: (settings: DividendRightsSettings) => void;
   shareholderRightsSettings: ShareholderRightsSettings;
   onShareholderRightsSettingsChange: (settings: ShareholderRightsSettings) => void;
+  shareholderMeetingSettings: ShareholderMeetingSettings;
+  onShareholderMeetingSettingsChange: (settings: ShareholderMeetingSettings) => void;
 }
 
 
@@ -33,7 +35,9 @@ export default function ManagementTab({
   dividendRightsSettings,
   onDividendRightsSettingsChange,
   shareholderRightsSettings,
-  onShareholderRightsSettingsChange
+  onShareholderRightsSettingsChange,
+  shareholderMeetingSettings,
+  onShareholderMeetingSettingsChange
 }: ManagementTabProps) {
   const { activeTab, setActiveTab, tabs, isLoading } = useManagementTabState(symbol, 'events');
 
@@ -68,6 +72,8 @@ export default function ManagementTab({
             symbol={symbol}
             earningsDate={earningsDate}
             onEarningsDateChange={onEarningsDateChange}
+            shareholderMeetingSettings={shareholderMeetingSettings}
+            onShareholderMeetingSettingsChange={onShareholderMeetingSettingsChange}
           />
         )}
 
