@@ -30,6 +30,8 @@ export interface KabunoteData {
   // グローバル設定
   favoriteGroups: any[];
   selectedGroupFilter: string | null;
+  cashAmount: string;
+  nextActionMemo: string;
 }
 
 /**
@@ -61,6 +63,8 @@ export const exportKabunoteData = (): KabunoteData => {
     shareholderMeetingSettings: {},
     favoriteGroups: [],
     selectedGroupFilter: null,
+    cashAmount: '0',
+    nextActionMemo: '',
   };
 
   // localStorage の全アイテムを走査
@@ -81,6 +85,10 @@ export const exportKabunoteData = (): KabunoteData => {
         data.favoriteGroups = JSON.parse(value);
       } else if (key === 'kabunote-selected-group-filter') {
         data.selectedGroupFilter = JSON.parse(value);
+      } else if (key === 'kabunote-cash-amount') {
+        data.cashAmount = value;
+      } else if (key === 'kabunote-next-action-memo') {
+        data.nextActionMemo = value;
       } else if (key.startsWith('kabunote-memo-')) {
         const symbol = key.replace('kabunote-memo-', '');
         data.memos[symbol] = value; // メモは文字列のまま保存
@@ -187,6 +195,16 @@ export const importKabunoteData = (data: KabunoteData): { success: boolean; mess
 
     if (data.selectedGroupFilter !== undefined) {
       localStorage.setItem('kabunote-selected-group-filter', JSON.stringify(data.selectedGroupFilter));
+      importedCount++;
+    }
+
+    if (data.cashAmount) {
+      localStorage.setItem('kabunote-cash-amount', data.cashAmount);
+      importedCount++;
+    }
+
+    if (data.nextActionMemo) {
+      localStorage.setItem('kabunote-next-action-memo', data.nextActionMemo);
       importedCount++;
     }
 
