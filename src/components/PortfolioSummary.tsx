@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
-import { Position, calculatePositionSummary, formatPrice, formatShares } from '@/types/positions';
+import { Position, calculatePositionSummary, formatPrice, formatShares, PortfolioTargetSummary, StockTargetInfo, calculatePortfolioTargetSummary, calculateProfitLoss, formatProfitLoss } from '@/types/positions';
 import { CustomTag } from '@/types/tags';
 import { PortfolioDividendSummary, formatDividendAmount, formatDividendYield, calculateDividendInfo } from '@/types/dividend';
 import { PortfolioShareholderSummary, calculateShareholderBenefit, formatBenefitValue, formatBenefitYield } from '@/types/shareholder';
@@ -31,6 +31,7 @@ interface OverallSummary {
   stocksWithoutPrices: number;
   dividendSummary: PortfolioDividendSummary;
   shareholderSummary: PortfolioShareholderSummary;
+  targetSummary: PortfolioTargetSummary;
 }
 
 export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProps) {
@@ -183,6 +184,34 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
       averageYield
     };
 
+    // 損益目標サマリーを作成
+    const stocksTargetData: StockTargetInfo[] = portfolioData.map(stock => {
+      const positionSummary = calculatePositionSummary(stock.positions);
+
+      // リアルタイムで目標価格・損切りラインを取得
+      const targetPriceStr = typeof window !== 'undefined'
+        ? localStorage.getItem(`kabunote-target-price-${stock.symbol}`) || ''
+        : '';
+      const stopLossPriceStr = typeof window !== 'undefined'
+        ? localStorage.getItem(`kabunote-stop-loss-${stock.symbol}`) || ''
+        : '';
+
+      const targetPrice = targetPriceStr ? parseFloat(targetPriceStr) : undefined;
+      const stopLossPrice = stopLossPriceStr ? parseFloat(stopLossPriceStr) : undefined;
+
+      const profitLossInfo = calculateProfitLoss(positionSummary, targetPrice, stopLossPrice);
+
+      return {
+        symbol: stock.symbol,
+        positionSummary,
+        targetPrice,
+        stopLossPrice,
+        profitLossInfo
+      };
+    });
+
+    const targetSummary = calculatePortfolioTargetSummary(stocksTargetData);
+
     return {
       totalInvestment: totalInvestmentAll,
       totalCurrentValue,
@@ -193,7 +222,8 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
       stocksWithPrices,
       stocksWithoutPrices,
       dividendSummary,
-      shareholderSummary
+      shareholderSummary,
+      targetSummary
     };
   }, [portfolioData, refreshTrigger]);
 
@@ -359,6 +389,177 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
           )}
         </div>
       </div>
+
+      {/* 損益目標サマリーセクション */}
+      {(overallSummary.targetSummary.targetSetCount > 0 || overallSummary.targetSummary.stopLossSetCount > 0) && (
+        <div className="mt-6">
+          <div className="flex items-center gap-3 mb-4">
+            <span className="text-lg">🎯</span>
+            <h3 className="text-lg font-semibold text-white">損益目標サマリー</h3>
+            <span className="text-xs text-gray-400">
+              ({overallSummary.targetSummary.targetSetCount + overallSummary.targetSummary.stopLossSetCount}/{overallSummary.targetSummary.totalStocksWithPosition}銘柄で設定済み)
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* 利確目標合計 */}
+            {overallSummary.targetSummary.targetSetCount > 0 && (
+              <div className="bg-green-900 bg-opacity-30 border border-green-700 rounded-lg p-4">
+                <div className="text-xs text-green-300 mb-2">利確目標達成時</div>
+                <div className="text-xl font-medium text-green-300">
+                  {formatProfitLoss(overallSummary.targetSummary.totalTargetProfit)}円
+                </div>
+                <div className="text-sm text-green-400 mt-1">
+                  {overallSummary.targetSummary.targetSetCount}銘柄で設定
+                </div>
+              </div>
+            )}
+
+            {/* 損切り合計 */}
+            {overallSummary.targetSummary.stopLossSetCount > 0 && (
+              <div className="bg-red-900 bg-opacity-30 border border-red-700 rounded-lg p-4">
+                <div className="text-xs text-red-300 mb-2">損切り実行時</div>
+                <div className="text-xl font-medium text-red-300">
+                  {formatProfitLoss(overallSummary.targetSummary.totalStopLoss)}円
+                </div>
+                <div className="text-sm text-red-400 mt-1">
+                  {overallSummary.targetSummary.stopLossSetCount}銘柄で設定
+                </div>
+              </div>
+            )}
+
+            {/* リスクリワード比 */}
+            {overallSummary.targetSummary.riskRewardRatio !== null && (
+              <div className="bg-blue-900 bg-opacity-30 border border-blue-700 rounded-lg p-4">
+                <div className="text-xs text-blue-300 mb-2">リスクリワード比</div>
+                <div className="text-xl font-medium text-blue-300">
+                  {overallSummary.targetSummary.riskRewardRatio.toFixed(2)}
+                </div>
+                <div className="text-sm text-blue-400 mt-1">
+                  {overallSummary.targetSummary.riskRewardRatio >= 2 ? '良好' :
+                   overallSummary.targetSummary.riskRewardRatio >= 1 ? '適正' : 'リスク高'}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* ネオンライトリスクリワードプログレスバー */}
+          {overallSummary.targetSummary.riskRewardRatio !== null && (
+            <div className="mt-6 p-4 bg-gray-900 border border-gray-700 rounded-lg">
+              <div className="flex items-center gap-3 mb-4">
+                <span className="text-lg">⚡</span>
+                <h4 className="text-lg font-semibold text-white">リスクリワード可視化</h4>
+                <span className="text-xs text-gray-400">
+                  ポートフォリオ全体の損益バランス
+                </span>
+              </div>
+
+              {/* プログレスバー */}
+              <div className="relative">
+                {/* バー背景 */}
+                <div className="w-full h-6 bg-gradient-to-r from-red-900 via-gray-800 to-green-900 rounded-full relative overflow-hidden">
+                  {/* グロー効果のためのオーバーレイ */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-red-500/20 via-transparent to-green-500/20 rounded-full"></div>
+
+                  {/* 中央の取得単価ライン */}
+                  <div className="absolute left-1/2 top-0 w-0.5 h-full bg-white transform -translate-x-0.5">
+                    <div className="absolute -top-1 left-1/2 w-2 h-2 bg-white rounded-full transform -translate-x-1/2 animate-pulse"
+                         style={{
+                           boxShadow: '0 0 10px rgba(255, 255, 255, 0.8), 0 0 20px rgba(255, 255, 255, 0.4)'
+                         }}></div>
+                  </div>
+
+                  {/* リスクリワード比に基づく現在位置 */}
+                  {(() => {
+                    // リスクリワード比を0-100%の位置に変換
+                    // 比率が1の時は中央（50%）、2の時は75%、0.5の時は25%
+                    const ratio = overallSummary.targetSummary.riskRewardRatio;
+                    const maxRatio = 3; // 表示上の最大比率
+                    const position = Math.min(100, Math.max(0,
+                      50 + ((ratio - 1) / (maxRatio - 1)) * 50
+                    ));
+
+                    return (
+                      <div
+                        className="absolute top-0 h-full w-1 transform -translate-x-0.5 transition-all duration-1000"
+                        style={{
+                          left: `${position}%`,
+                          background: ratio >= 2
+                            ? 'linear-gradient(to bottom, #10b981, #059669)'
+                            : ratio >= 1.5
+                            ? 'linear-gradient(to bottom, #f59e0b, #d97706)'
+                            : 'linear-gradient(to bottom, #ef4444, #dc2626)',
+                          boxShadow: ratio >= 2
+                            ? '0 0 20px rgba(16, 185, 129, 0.8), 0 0 40px rgba(16, 185, 129, 0.4)'
+                            : ratio >= 1.5
+                            ? '0 0 20px rgba(245, 158, 11, 0.8), 0 0 40px rgba(245, 158, 11, 0.4)'
+                            : '0 0 20px rgba(239, 68, 68, 0.8), 0 0 40px rgba(239, 68, 68, 0.4)'
+                        }}
+                      >
+                        {/* 現在位置のドット */}
+                        <div
+                          className="absolute -top-1 left-1/2 w-3 h-3 rounded-full transform -translate-x-1/2 animate-pulse"
+                          style={{
+                            background: ratio >= 2
+                              ? 'linear-gradient(to bottom, #10b981, #059669)'
+                              : ratio >= 1.5
+                              ? 'linear-gradient(to bottom, #f59e0b, #d97706)'
+                              : 'linear-gradient(to bottom, #ef4444, #dc2626)',
+                            boxShadow: ratio >= 2
+                              ? '0 0 15px rgba(16, 185, 129, 1), 0 0 30px rgba(16, 185, 129, 0.6)'
+                              : ratio >= 1.5
+                              ? '0 0 15px rgba(245, 158, 11, 1), 0 0 30px rgba(245, 158, 11, 0.6)'
+                              : '0 0 15px rgba(239, 68, 68, 1), 0 0 30px rgba(239, 68, 68, 0.6)'
+                          }}
+                        ></div>
+                      </div>
+                    );
+                  })()}
+                </div>
+
+                {/* ラベル */}
+                <div className="flex justify-between items-center mt-3 text-xs">
+                  <div className="text-red-300 font-medium flex flex-col items-center">
+                    <span>🔻 高リスク</span>
+                    <span className="text-red-400 mt-1">0:1</span>
+                  </div>
+                  <div className="text-white font-medium flex flex-col items-center">
+                    <span>⚖️ 取得価格</span>
+                    <span className="text-gray-300 mt-1">基準点</span>
+                  </div>
+                  <div className="text-green-300 font-medium flex flex-col items-center">
+                    <span>💰 安全ゾーン</span>
+                    <span className="text-green-400 mt-1">3:1+</span>
+                  </div>
+                </div>
+
+                {/* 現在の比率と評価 */}
+                <div className="mt-4 text-center">
+                  <div className="text-2xl font-bold text-white mb-2">
+                    {overallSummary.targetSummary.riskRewardRatio.toFixed(2)}
+                  </div>
+                  <div className={`text-sm font-medium ${
+                    overallSummary.targetSummary.riskRewardRatio >= 2
+                      ? 'text-green-400'
+                      : overallSummary.targetSummary.riskRewardRatio >= 1.5
+                      ? 'text-yellow-400'
+                      : 'text-red-400'
+                  }`}>
+                    {overallSummary.targetSummary.riskRewardRatio >= 2
+                      ? '🟢 優秀なリスクリワード比'
+                      : overallSummary.targetSummary.riskRewardRatio >= 1.5
+                      ? '🟡 適正なリスクリワード比'
+                      : '🔴 リスクが高い設定です'}
+                  </div>
+                  <div className="text-xs text-gray-400 mt-1">
+                    利益可能性 vs 損失リスクの比率
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* 円グラフセクション（アコーディオン） */}
       {overallSummary.stocksWithPositions > 0 && (
