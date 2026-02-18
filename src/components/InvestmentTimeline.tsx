@@ -523,11 +523,10 @@ export default function InvestmentTimeline({ events, onStockClick, stockSymbols,
         <div className="mt-4 border-t border-gray-700 pt-4">
           <button
             onClick={toggleCalendarExpanded}
-            className="w-full flex items-center justify-between mb-0 hover:bg-gray-700 hover:bg-opacity-50 rounded-lg px-3 py-2 transition-colors cursor-pointer"
+            className="w-full flex items-center justify-between p-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors cursor-pointer"
           >
-            <div className="flex items-center gap-3">
-              <span>📅</span>
-              <span className="font-semibold text-white">月間カレンダー（詳細）</span>
+            <div className="flex items-center gap-2">
+              <span className="text-lg">📊</span><h3 className="text-sm font-medium text-gray-200">月間カレンダー</h3>
               {currentMonthEvents > 0 && (
                 <span className="text-xs text-gray-400">
                   ({currentMonthEvents}件)
@@ -537,7 +536,7 @@ export default function InvestmentTimeline({ events, onStockClick, stockSymbols,
             <div className={`transform transition-transform duration-200 text-gray-400 ${
               isCalendarExpanded ? 'rotate-180' : 'rotate-0'
             }`}>
-              <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
                 <path d="M4 6l4 4 4-4H4z"/>
               </svg>
             </div>
@@ -546,7 +545,7 @@ export default function InvestmentTimeline({ events, onStockClick, stockSymbols,
           {/* アコーディオンコンテンツ */}
           <div className={`overflow-hidden transition-all duration-300 ease-in-out ${
             isCalendarExpanded
-              ? 'max-h-[800px] opacity-100'
+              ? 'max-h-[800px] opacity-100 mt-4'
               : 'max-h-0 opacity-0'
           }`}>
             {/* 月ナビゲーション */}
