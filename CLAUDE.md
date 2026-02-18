@@ -35,7 +35,7 @@ npm run dev  # localhost:3000
 ### 4. 📊 タブ式情報管理
 - **📝 基本タブ**: 株ノオト・外部リンク（株探・Yahoo!・TradingView等）
 - **📊 分析タブ**: 投資規律設定・ネオンライト株価ポジション・損益シミュレーション・リスクリワード比表示
-- **💼 管理タブ**: イベント・配当・株主優待の3サブタブ構成
+- **💼 管理タブ**: 保有状況・イベント・配当・優待の4サブタブ構成
 
 ### 5. 💰 配当管理
 - **配当権利確定日**: 月/日設定、毎年繰り返し対応
@@ -68,6 +68,7 @@ npm run dev  # localhost:3000
 ### 主要コンポーネント
 - `StockCard.tsx`: 銘柄カードメイン（タブ制御）
 - `ManagementTab.tsx`: 管理タブサブタブコンテナ
+- `PositionsManagement.tsx`: 保有状況管理
 - `EventManagement.tsx`: 決算発表日・株主総会日管理
 - `DividendManagement.tsx`: 配当管理
 - `ShareholderBenefitManagement.tsx`: 株主優待管理

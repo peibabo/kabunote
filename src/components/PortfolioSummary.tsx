@@ -36,6 +36,7 @@ interface OverallSummary {
 
 export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProps) {
   const [isChartsExpanded, setIsChartsExpanded] = useState(false);
+  const [isRiskRewardExpanded, setIsRiskRewardExpanded] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   // localStorage の変更を監視してリフレッシュトリガーを更新
@@ -275,7 +276,7 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
         {/* 総投資額 */}
         <div className="bg-gray-700 rounded-lg p-3">
           <div className="text-xs text-gray-400 mb-1">総投資額</div>
-          <div className="text-lg font-medium text-blue-300">
+          <div className="text-lg font-medium text-white">
             {formatPrice(overallSummary.totalInvestment)}円
           </div>
           <div className="text-xs text-gray-500 mt-1 font-medium">
@@ -286,7 +287,7 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
         {/* 現在評価額 */}
         <div className="bg-gray-700 rounded-lg p-3">
           <div className="text-xs text-gray-400 mb-1">現在評価額</div>
-          <div className="text-lg font-medium text-white">
+          <div className="text-lg font-medium text-blue-300">
             {overallSummary.totalCurrentValue > 0
               ? `${formatPrice(overallSummary.totalCurrentValue)}円`
               : '未設定'
@@ -428,34 +429,51 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
               </div>
             )}
 
-            {/* リスクリワード比 */}
+            {/* リスクリワード比（クリッカブル） */}
             {overallSummary.targetSummary.riskRewardRatio !== null && (
-              <div className="bg-blue-900 bg-opacity-30 border border-blue-700 rounded-lg p-4">
+              <button
+                onClick={() => setIsRiskRewardExpanded(!isRiskRewardExpanded)}
+                className="bg-blue-900 bg-opacity-30 border border-blue-700 hover:border-blue-600 rounded-lg p-4 w-full transition-all duration-200 hover:bg-blue-800 hover:bg-opacity-30"
+              >
                 <div className="text-xs text-blue-300 mb-2">リスクリワード比</div>
                 <div className="text-xl font-medium text-blue-300">
                   {overallSummary.targetSummary.riskRewardRatio.toFixed(2)}
                 </div>
-                <div className="text-sm text-blue-400 mt-1">
-                  {overallSummary.targetSummary.riskRewardRatio >= 2 ? '良好' :
-                   overallSummary.targetSummary.riskRewardRatio >= 1 ? '適正' : 'リスク高'}
+                <div className="text-sm text-blue-400 mt-1 flex items-center justify-center gap-2">
+                  <span>
+                    {overallSummary.targetSummary.riskRewardRatio >= 2 ? '良好' :
+                     overallSummary.targetSummary.riskRewardRatio >= 1 ? '適正' : 'リスク高'}
+                  </span>
+                  <div className={`transform transition-transform duration-200 ${
+                    isRiskRewardExpanded ? 'rotate-180' : 'rotate-0'
+                  }`}>
+                    <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
+                      <path d="M4 6l4 4 4-4H4z"/>
+                    </svg>
+                  </div>
                 </div>
-              </div>
+              </button>
             )}
           </div>
 
-          {/* ネオンライトリスクリワードプログレスバー */}
+          {/* ネオンライトリスクリワードプログレスバー（アコーディオン） */}
           {overallSummary.targetSummary.riskRewardRatio !== null && (
-            <div className="mt-6 p-4 bg-gray-900 border border-gray-700 rounded-lg">
-              <div className="flex items-center gap-3 mb-4">
-                <span className="text-lg">⚡</span>
-                <h4 className="text-lg font-semibold text-white">リスクリワード可視化</h4>
-                <span className="text-xs text-gray-400">
-                  ポートフォリオ全体の損益バランス
-                </span>
-              </div>
+            <div className={`overflow-hidden transition-all duration-300 ease-in-out ${
+              isRiskRewardExpanded
+                ? 'max-h-96 opacity-100 mt-4'
+                : 'max-h-0 opacity-0'
+            }`}>
+              <div className="p-4 bg-gray-900 border border-gray-700 rounded-lg">
+                <div className="flex items-center gap-3 mb-4">
+                  <span className="text-lg">⚡</span>
+                  <h4 className="text-lg font-semibold text-white">リスクリワード可視化</h4>
+                  <span className="text-xs text-gray-400">
+                    ポートフォリオ全体の損益バランス
+                  </span>
+                </div>
 
-              {/* プログレスバー */}
-              <div className="relative">
+                {/* プログレスバー */}
+                <div className="relative">
                 {/* バー背景 */}
                 <div className="w-full h-6 bg-gradient-to-r from-red-900 via-gray-800 to-green-900 rounded-full relative overflow-hidden">
                   {/* グロー効果のためのオーバーレイ */}
@@ -554,6 +572,7 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
                   <div className="text-xs text-gray-400 mt-1">
                     利益可能性 vs 損失リスクの比率
                   </div>
+                </div>
                 </div>
               </div>
             </div>

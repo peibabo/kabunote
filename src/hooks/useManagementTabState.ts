@@ -7,7 +7,7 @@ import { ManagementTabId, MANAGEMENT_TABS } from '@/types/managementTabs';
  * @param defaultTab - デフォルトタブ
  * @returns [activeTab, setActiveTab, tabs, isLoading]
  */
-export function useManagementTabState(symbol: string, defaultTab: ManagementTabId = 'events') {
+export function useManagementTabState(symbol: string, defaultTab: ManagementTabId = 'positions') {
   const tabKey = `kabunote-management-tab-${symbol}`;
 
   // localStorage管理（100ms デバウンス）
@@ -17,7 +17,7 @@ export function useManagementTabState(symbol: string, defaultTab: ManagementTabI
     100,
     // カスタムパーサー：有効なタブIDのみ許可
     (value: string): ManagementTabId => {
-      if (value === 'events' || value === 'dividend' || value === 'shareholder') {
+      if (value === 'positions' || value === 'events' || value === 'dividend' || value === 'shareholder') {
         return value;
       }
       return defaultTab; // 不正な値の場合はデフォルトを返す
