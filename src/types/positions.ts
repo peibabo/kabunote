@@ -84,3 +84,63 @@ export const formatProfitLoss = (amount: number): string => {
   const formatted = new Intl.NumberFormat('ja-JP').format(Math.abs(Math.round(amount)));
   return amount >= 0 ? `+${formatted}` : `-${formatted}`;
 };
+
+// ポートフォリオ損益目標サマリー
+export interface PortfolioTargetSummary {
+  totalTargetProfit: number;     // 利確目標合計金額
+  totalStopLoss: number;         // 損切り合計金額
+  riskRewardRatio: number | null; // リスクリワード比
+  targetSetCount: number;        // 目標価格設定済み銘柄数
+  stopLossSetCount: number;      // 損切りライン設定済み銘柄数
+  totalStocksWithPosition: number; // ポジションを持つ銘柄数
+}
+
+// 銘柄別の損益目標情報
+export interface StockTargetInfo {
+  symbol: string;
+  positionSummary: PositionSummary;
+  targetPrice?: number;
+  stopLossPrice?: number;
+  profitLossInfo: ProfitLossInfo | null;
+}
+
+// ポートフォリオ全体の損益目標を計算
+export const calculatePortfolioTargetSummary = (stocksData: StockTargetInfo[]): PortfolioTargetSummary => {
+  let totalTargetProfit = 0;
+  let totalStopLoss = 0;
+  let targetSetCount = 0;
+  let stopLossSetCount = 0;
+  let totalStocksWithPosition = 0;
+
+  stocksData.forEach(stock => {
+    // ポジションがある銘柄のみを対象
+    if (stock.positionSummary.totalShares > 0 && stock.profitLossInfo) {
+      totalStocksWithPosition++;
+
+      // 目標価格が設定されている場合
+      if (stock.targetPrice && stock.targetPrice > 0) {
+        totalTargetProfit += stock.profitLossInfo.targetProfit;
+        targetSetCount++;
+      }
+
+      // 損切りラインが設定されている場合
+      if (stock.stopLossPrice && stock.stopLossPrice > 0) {
+        totalStopLoss += stock.profitLossInfo.stopLoss;
+        stopLossSetCount++;
+      }
+    }
+  });
+
+  // リスクリワード比を計算（損失額が0でない場合のみ）
+  const riskRewardRatio = totalStopLoss < 0 ?
+    Math.abs(totalTargetProfit / totalStopLoss) : null;
+
+  return {
+    totalTargetProfit,
+    totalStopLoss,
+    riskRewardRatio,
+    targetSetCount,
+    stopLossSetCount,
+    totalStocksWithPosition
+  };
+};

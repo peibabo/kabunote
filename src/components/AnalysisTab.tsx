@@ -23,6 +23,21 @@ interface AnalysisTabProps {
   onPositionManagerOpen: () => void;
 }
 
+// 個別銘柄のリスクリワード比を計算
+const calculateRiskRewardRatio = (
+  profitLossInfo: ProfitLossInfo | null
+): number | null => {
+  if (!profitLossInfo) return null;
+
+  const { targetProfit, stopLoss: stopLossAmount } = profitLossInfo;
+
+  // 損失額が0以下でない場合（実際に損失がある場合）のみ計算
+  if (stopLossAmount >= 0) return null;
+
+  // 利益額 ÷ 損失額の絶対値
+  return Math.abs(targetProfit / stopLossAmount);
+};
+
 // プログレスバー用の計算
 const calculateProgress = (
   targetPrice: string,
@@ -65,6 +80,7 @@ export default function AnalysisTab({
   onPositionManagerOpen
 }: AnalysisTabProps) {
   const progressData = calculateProgress(targetPrice, stopLoss, currentPrice);
+  const riskRewardRatio = calculateRiskRewardRatio(profitLossInfo);
 
   return (
     <div className="space-y-4">
@@ -128,11 +144,11 @@ export default function AnalysisTab({
           </div>
         </div>
 
-        {/* 株価プログレスバーゲージ */}
+        {/* ネオンライト株価プログレスバーゲージ */}
         {progressData && targetPrice && stopLoss && currentPrice && (
-          <div className="mt-4 p-3 bg-gray-600 rounded-lg">
-            <div className="flex items-center justify-between mb-2">
-              <h5 className="text-xs font-medium text-gray-300">📊 株価ポジション</h5>
+          <div className="mt-4 p-4 bg-gray-900 border border-gray-700 rounded-lg">
+            <div className="flex items-center justify-between mb-4">
+              <h5 className="text-sm font-medium text-gray-200">⚡ 株価ポジション</h5>
               <span className="text-xs text-gray-400">
                 {progressData.isOverTarget
                   ? '🎯 利確目標達成!'
@@ -143,44 +159,122 @@ export default function AnalysisTab({
               </span>
             </div>
 
-            {/* プログレスバー */}
+            {/* ネオンライトプログレスバー */}
             <div className="relative">
-              <div className="w-full bg-gray-700 rounded-full h-3">
+              {/* バー背景 */}
+              <div className="w-full h-6 bg-gradient-to-r from-red-900 via-gray-800 to-green-900 rounded-full relative overflow-hidden">
+                {/* グロー効果のオーバーレイ */}
+                <div className="absolute inset-0 bg-gradient-to-r from-red-500/20 via-transparent to-green-500/20 rounded-full"></div>
+
+                {/* 中央の取得単価ライン */}
+                {positionSummary.averagePrice > 0 && (
+                  (() => {
+                    // 取得単価の位置を計算
+                    const stopPrice = parseFloat(stopLoss);
+                    const targetPriceNum = parseFloat(targetPrice);
+                    const avgPrice = positionSummary.averagePrice;
+
+                    const range = targetPriceNum - stopPrice;
+                    const avgPosition = range > 0 ? ((avgPrice - stopPrice) / range) * 100 : 50;
+                    const avgPosClamp = Math.max(5, Math.min(95, avgPosition));
+
+                    return (
+                      <div
+                        className="absolute top-0 w-0.5 h-full bg-white transform -translate-x-0.5"
+                        style={{ left: `${avgPosClamp}%` }}
+                      >
+                        <div
+                          className="absolute -top-1 left-1/2 w-2 h-2 bg-white rounded-full transform -translate-x-1/2 animate-pulse"
+                          style={{
+                            boxShadow: '0 0 10px rgba(255, 255, 255, 0.8), 0 0 20px rgba(255, 255, 255, 0.4)'
+                          }}
+                        ></div>
+                        <div className="absolute -bottom-5 left-1/2 transform -translate-x-1/2 text-xs text-white font-medium whitespace-nowrap">
+                          平均取得価額
+                        </div>
+                      </div>
+                    );
+                  })()
+                )}
+
+                {/* 現在株価の位置インジケーター（青色統一） */}
                 <div
-                  className={`h-3 rounded-full transition-all duration-300 ${
+                  className="absolute top-0 h-full w-1 transform -translate-x-0.5 transition-all duration-1000"
+                  style={{
+                    left: `${Math.min(95, Math.max(5, progressData.percentage))}%`,
+                    background: 'linear-gradient(to bottom, #3b82f6, #1d4ed8)',
+                    boxShadow: '0 0 20px rgba(59, 130, 246, 0.8), 0 0 40px rgba(59, 130, 246, 0.4)'
+                  }}
+                >
+                  {/* 現在価格のネオンドット（青色統一） */}
+                  <div
+                    className="absolute -top-1 left-1/2 w-3 h-3 rounded-full transform -translate-x-1/2 animate-pulse"
+                    style={{
+                      background: 'linear-gradient(to bottom, #3b82f6, #1d4ed8)',
+                      boxShadow: '0 0 15px rgba(59, 130, 246, 1), 0 0 30px rgba(59, 130, 246, 0.6)'
+                    }}
+                  ></div>
+                </div>
+              </div>
+
+              {/* 価格ラベル */}
+              <div className="flex justify-between items-center mt-4 text-xs">
+                <div className="text-red-300 font-medium flex flex-col items-center">
+                  <span>🔻 損切ライン</span>
+                  <span className="text-red-400 mt-1 font-bold">{formatPrice(parseFloat(stopLoss))}円</span>
+                </div>
+
+                <div className="text-blue-300 font-medium flex flex-col items-center">
+                  <span>📈 現在株価</span>
+                  <span className="text-blue-400 mt-1 font-bold text-lg">{formatPrice(parseFloat(currentPrice))}円</span>
+                  <div className={`text-xs mt-1 ${
                     progressData.isOverTarget
-                      ? 'bg-green-500'
+                      ? 'text-green-400'
                       : progressData.percentage < 30
-                        ? 'bg-red-500'
-                        : progressData.percentage < 70
-                          ? 'bg-yellow-500'
-                          : 'bg-green-500'
-                  }`}
-                  style={{ width: `${Math.min(100, progressData.percentage)}%` }}
-                />
+                      ? 'text-red-400'
+                      : progressData.percentage < 70
+                      ? 'text-yellow-400'
+                      : 'text-green-400'
+                  }`}>
+                    {progressData.isOverTarget
+                      ? '🎯 目標達成'
+                      : progressData.percentage < 30
+                      ? '⚠️ 危険ゾーン'
+                      : progressData.percentage < 70
+                      ? '📊 中間ゾーン'
+                      : '🚀 好調ゾーン'}
+                  </div>
+                </div>
+
+                <div className="text-green-300 font-medium flex flex-col items-center">
+                  <span>💰 利確目標</span>
+                  <span className="text-green-400 mt-1 font-bold">{formatPrice(parseFloat(targetPrice))}円</span>
+                </div>
               </div>
 
-              {/* 現在価格のドット */}
-              <div
-                className="absolute top-0 w-3 h-3 bg-blue-400 border-2 border-white rounded-full transform -translate-x-1.5"
-                style={{
-                  left: `${Math.min(100, Math.max(0, progressData.percentage))}%`,
-                  transform: 'translateX(-50%) translateY(0)'
-                }}
-              />
-            </div>
+              {/* 取得単価の詳細表示 */}
+              {positionSummary.averagePrice > 0 && (
+                <div className="mt-3 text-center">
+                  <div className="text-sm text-white font-medium">
+                    <span className="text-xs mr-2">取得単価基準</span>
+                    {formatPrice(positionSummary.averagePrice)}円
+                    <span className="text-gray-400 ml-2">({formatShares(positionSummary.totalShares)}株)</span>
+                  </div>
+                  {(() => {
+                    const currentPriceNum = parseFloat(currentPrice);
+                    const avgPrice = positionSummary.averagePrice;
+                    const diff = currentPriceNum - avgPrice;
+                    const diffPercent = avgPrice > 0 ? (diff / avgPrice) * 100 : 0;
 
-            {/* 価格ラベル */}
-            <div className="flex justify-between items-center mt-2 text-xs">
-              <div className="text-red-300">
-                <span>🔻 {formatPrice(parseFloat(stopLoss))}円</span>
-              </div>
-              <div className="text-blue-300 font-medium">
-                <span>📈 {formatPrice(parseFloat(currentPrice))}円</span>
-              </div>
-              <div className="text-green-300">
-                <span>💰 {formatPrice(parseFloat(targetPrice))}円</span>
-              </div>
+                    return (
+                      <div className={`text-xs mt-1 ${diff >= 0 ? 'text-green-300' : 'text-red-300'}`}>
+                        取得単価より {diff >= 0 ? '+' : ''}{formatPrice(diff)}円
+                        ({diff >= 0 ? '+' : ''}{diffPercent.toFixed(1)}%)
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -289,8 +383,41 @@ export default function AnalysisTab({
                 );
               })()}
             </div>
-            <div className="mt-2 text-xs text-gray-400 text-center">
-              平均取得価額: {formatPrice(positionSummary.averagePrice)}円 × {formatShares(positionSummary.totalShares)}株
+            <div className="mt-3 space-y-2">
+              <div className="text-xs text-gray-400 text-center">
+                平均取得価額: {formatPrice(positionSummary.averagePrice)}円 × {formatShares(positionSummary.totalShares)}株
+              </div>
+
+              {/* リスクリワード比の表示 */}
+              {riskRewardRatio !== null && (
+                <div className="text-center">
+                  <div className="flex items-center justify-center gap-2">
+                    <span className="text-xs text-gray-400">リスクリワード比</span>
+                    <div className={`text-lg font-bold ${
+                      riskRewardRatio >= 2
+                        ? 'text-green-400'
+                        : riskRewardRatio >= 1.5
+                        ? 'text-yellow-400'
+                        : 'text-red-400'
+                    }`}>
+                      {riskRewardRatio.toFixed(2)}
+                    </div>
+                    <div className={`text-xs font-medium ${
+                      riskRewardRatio >= 2
+                        ? 'text-green-300'
+                        : riskRewardRatio >= 1.5
+                        ? 'text-yellow-300'
+                        : 'text-red-300'
+                    }`}>
+                      {riskRewardRatio >= 2
+                        ? '🟢 優秀'
+                        : riskRewardRatio >= 1.5
+                        ? '🟡 適正'
+                        : '🔴 リスク高'}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
