@@ -22,6 +22,25 @@ export interface EventSummary {
   [dateKey: string]: InvestmentEvent[];
 }
 
+// タイムライン用の型定義
+export interface TimelineEvent {
+  date: string; // YYYY-MM-DD format
+  dateObj: Date;
+  events: InvestmentEvent[];
+  daysFromToday: number;
+  isToday: boolean;
+  isPast: boolean;
+}
+
+export interface TimelineEventStyle {
+  color: string;
+  size: string;
+  glow: string;
+  priority: number;
+  opacity: string;
+  animation: string;
+}
+
 // 営業日計算のユーティリティ（既存のものを流用）
 export const calculateBusinessDaysBefore = (date: Date, businessDays: number): Date => {
   const result = new Date(date);

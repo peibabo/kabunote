@@ -116,7 +116,7 @@ export default function FloatingAddButton({
 
             {/* 銘柄入力コンポーネント */}
             <div className="mb-4">
-              <StockInput onAddStock={handleAddStock} />
+              <StockInput onAddStock={handleAddStock} isDisabled={false} />
             </div>
 
             {/* 説明テキスト */}
