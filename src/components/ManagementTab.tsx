@@ -1,11 +1,12 @@
 'use client';
 
-import { PositionSummary } from '@/types/positions';
+import { Position, PositionSummary } from '@/types/positions';
 import { RightsDateSettings, DividendRightsSettings, ShareholderRightsSettings, ShareholderMeetingSettings, createDefaultDividendRightsSettings, createDefaultShareholderRightsSettings, createDefaultShareholderMeetingSettings } from '@/types/rightsDate';
 import { useManagementTabState } from '@/hooks/useManagementTabState';
 import EventManagement from '@/components/EventManagement';
 import DividendManagement from '@/components/DividendManagement';
 import ShareholderBenefitManagement from '@/components/ShareholderBenefitManagement';
+import PositionsManagement from '@/components/PositionsManagement';
 
 interface ManagementTabProps {
   symbol: string;
@@ -14,7 +15,9 @@ interface ManagementTabProps {
   rightsDate: string;
   rightsSettings: RightsDateSettings;
   onRightsSettingsChange: (settings: RightsDateSettings) => void;
+  positions: Position[];
   positionSummary: PositionSummary;
+  onPositionManagerOpen: () => void;
   dividendRightsSettings: DividendRightsSettings;
   onDividendRightsSettingsChange: (settings: DividendRightsSettings) => void;
   shareholderRightsSettings: ShareholderRightsSettings;
@@ -31,7 +34,9 @@ export default function ManagementTab({
   rightsDate,
   rightsSettings,
   onRightsSettingsChange,
+  positions,
   positionSummary,
+  onPositionManagerOpen,
   dividendRightsSettings,
   onDividendRightsSettingsChange,
   shareholderRightsSettings,
@@ -39,7 +44,7 @@ export default function ManagementTab({
   shareholderMeetingSettings,
   onShareholderMeetingSettingsChange
 }: ManagementTabProps) {
-  const { activeTab, setActiveTab, tabs, isLoading } = useManagementTabState(symbol, 'events');
+  const { activeTab, setActiveTab, tabs, isLoading } = useManagementTabState(symbol, 'positions');
 
   if (isLoading) {
     return <div className="text-center text-gray-400">読み込み中...</div>;
@@ -67,6 +72,15 @@ export default function ManagementTab({
 
       {/* サブタブコンテンツ */}
       <div className="min-h-[400px]">
+        {activeTab === 'positions' && (
+          <PositionsManagement
+            symbol={symbol}
+            positions={positions}
+            positionSummary={positionSummary}
+            onPositionManagerOpen={onPositionManagerOpen}
+          />
+        )}
+
         {activeTab === 'events' && (
           <EventManagement
             symbol={symbol}

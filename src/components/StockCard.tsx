@@ -238,7 +238,7 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
             const url = `https://finance.yahoo.co.jp/quote/${symbol}.T?term=1d`;
             window.open(url, 'stockChart', 'width=800,height=800,scrollbars=yes,resizable=yes');
           }}
-          className="w-full bg-green-600 hover:bg-green-700 text-white text-sm font-medium py-2 px-3 rounded-lg transition-colors"
+          className="w-full bg-green-600 hover:bg-green-700 text-white text-sm font-medium py-2 px-3 rounded-lg transition-colors cursor-pointer"
         >
           📈 最新チャートを確認
         </button>
@@ -250,7 +250,7 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex-1 py-2 px-3 text-sm font-medium transition-colors border-b-2 ${
+            className={`cursor-pointer flex-1 py-2 px-3 text-sm font-medium transition-colors border-b-2 ${
               activeTab === tab.id
                 ? 'text-blue-400 border-blue-400'
                 : 'text-gray-400 border-transparent hover:text-gray-300 hover:border-gray-500'
@@ -297,7 +297,9 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
             rightsDate={rightsDate}
             rightsSettings={parsedRightsSettings}
             onRightsSettingsChange={(newSettings) => setRightsSettings(JSON.stringify(newSettings))}
+            positions={positions}
             positionSummary={positionSummary}
+            onPositionManagerOpen={() => setIsPositionManagerOpen(true)}
             dividendRightsSettings={parsedDividendRightsSettings}
             onDividendRightsSettingsChange={(newSettings) => setDividendRightsSettings(JSON.stringify(newSettings))}
             shareholderRightsSettings={parsedShareholderRightsSettings}

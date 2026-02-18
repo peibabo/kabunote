@@ -19,8 +19,6 @@ interface AnalysisTabProps {
   onCurrentPriceChange: (value: string) => void;
   positionSummary: PositionSummary;
   profitLossInfo: ProfitLossInfo | null;
-  positions: Position[];
-  onPositionManagerOpen: () => void;
 }
 
 // 個別銘柄のリスクリワード比を計算
@@ -75,9 +73,7 @@ export default function AnalysisTab({
   onStopLossChange,
   onCurrentPriceChange,
   positionSummary,
-  profitLossInfo,
-  positions,
-  onPositionManagerOpen
+  profitLossInfo
 }: AnalysisTabProps) {
   const progressData = calculateProgress(targetPrice, stopLoss, currentPrice);
   const riskRewardRatio = calculateRiskRewardRatio(profitLossInfo);
@@ -201,7 +197,7 @@ export default function AnalysisTab({
                 <div
                   className="absolute top-0 h-full w-1 transform -translate-x-0.5 transition-all duration-1000"
                   style={{
-                    left: `${Math.min(95, Math.max(5, progressData.percentage))}%`,
+                    left: `${Math.min(95, Math.max(1, progressData.percentage))}%`,
                     background: 'linear-gradient(to bottom, #3b82f6, #1d4ed8)',
                     boxShadow: '0 0 20px rgba(59, 130, 246, 0.8), 0 0 40px rgba(59, 130, 246, 0.4)'
                   }}
@@ -238,6 +234,8 @@ export default function AnalysisTab({
                   }`}>
                     {progressData.isOverTarget
                       ? '🎯 目標達成'
+                      : progressData.isUnderStop
+                      ? '💥 損切りラインを超えてます！'
                       : progressData.percentage < 30
                       ? '⚠️ 危険ゾーン'
                       : progressData.percentage < 70
@@ -423,56 +421,6 @@ export default function AnalysisTab({
         )}
       </div>
 
-      {/* ポジション管理 */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h4 className="text-sm font-medium text-gray-300">保有ポジション</h4>
-          <button
-            onClick={onPositionManagerOpen}
-            className="text-xs bg-indigo-600 hover:bg-indigo-700 text-white px-2 py-1 rounded transition-colors"
-          >
-            ポジション管理
-          </button>
-        </div>
-
-        {positions.length > 0 ? (
-          <div className="bg-gray-700 rounded-lg p-3 space-y-2">
-            {/* ポジションサマリー */}
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              <div>
-                <span className="text-gray-400">保有株数：</span>
-                <span className="text-white font-medium">{formatShares(positionSummary.totalShares)}株</span>
-              </div>
-              <div>
-                <span className="text-gray-400">平均取得：</span>
-                <span className="text-green-300 font-medium">{formatPrice(positionSummary.averagePrice)}円</span>
-              </div>
-              <div>
-                <span className="text-gray-400">総投資額：</span>
-                <span className="text-blue-300 font-medium">{formatPrice(positionSummary.totalCost)}円</span>
-              </div>
-              <div>
-                <span className="text-gray-400">ポジション数：</span>
-                <span className="text-gray-200">{positionSummary.positionCount}件</span>
-              </div>
-            </div>
-
-            {/* ポジション一覧（簡易表示） */}
-            <div className="space-y-1 max-h-24 overflow-y-auto">
-              {positions.map((position) => (
-                <div key={position.id} className="flex justify-between items-center text-xs text-gray-300 bg-gray-800 px-2 py-1 rounded">
-                  <span>{formatShares(position.shares)}株 @ {formatPrice(position.purchasePrice)}円</span>
-                  <span>{position.purchaseDate}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : (
-          <div className="text-xs text-gray-400 text-center py-2">
-            保有ポジションが登録されていません
-          </div>
-        )}
-      </div>
     </div>
   );
 }
