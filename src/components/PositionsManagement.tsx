@@ -78,7 +78,7 @@ export default function PositionsManagement({
                 📊 保有ポジションが登録されていません
               </div>
               <p className="text-xs text-gray-500 mb-3">
-                ポジション管理ボタンから株式の保有状況を登録できます
+                株社を保有している場合、ポジションの登録すると<br></br>様々な機能が利用できます
               </p>
               <button
                 onClick={onPositionManagerOpen}
