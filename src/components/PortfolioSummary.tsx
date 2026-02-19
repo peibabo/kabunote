@@ -531,14 +531,14 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
               <span className="text-blue-300">
                 株式: {overallSummary.stockRatio.toFixed(1)}%
               </span>
-              <span className="text-gray-300">
+              <span className="text-green-400">
                 現金: {overallSummary.cashRatio.toFixed(1)}%
               </span>
             </div>
 
             {/* 極細プログレスバー */}
             <div className="relative mb-2">
-              <div className="w-full h-1 bg-gray-600 rounded-full overflow-hidden">
+              <div className="w-full h-1 bg-green-400 rounded-full overflow-hidden">
                 <div
                   className="h-full transition-all duration-500 rounded-full"
                   style={{
