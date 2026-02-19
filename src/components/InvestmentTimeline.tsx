@@ -412,7 +412,7 @@ export default function InvestmentTimeline({ events, onStockClick, stockSymbols,
 
   return (
     <div className="bg-gray-800 rounded-lg p-4">
-      <div className="flex items-center gap-3 mb-4">
+      <div className="flex items-center gap-3">
         <span className="text-lg">⏱️</span>
         <h3 className="text-lg font-semibold text-white">投資タイムライン</h3>
         <span className="text-xs text-gray-400">
@@ -423,7 +423,7 @@ export default function InvestmentTimeline({ events, onStockClick, stockSymbols,
       {/* タイムライン本体 */}
       <div className="relative">
           {/* 水平タイムライン */}
-          <div className="overflow-x-auto pb-4">
+          <div className="overflow-x-auto pb-1">
             <div className="relative min-w-[800px] h-16">
               {/* ベースライン */}
               <div className="absolute top-8 left-0 right-0 h-px bg-gray-600"></div>

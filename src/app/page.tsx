@@ -914,7 +914,7 @@ export default function Home() {
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => handleGroupFilterChange(null)}
-                className={`text-sm px-3 py-2 rounded-full transition-colors ${
+                className={`cursor-pointer text-sm px-3 py-2 rounded-full transition-colors ${
                   selectedGroupFilter === null
                     ? 'bg-white text-gray-900'
                     : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
@@ -926,7 +926,7 @@ export default function Home() {
                 <button
                   key={group.id}
                   onClick={() => handleGroupFilterChange(group.id)}
-                  className={`text-sm px-3 py-2 rounded-full transition-colors ${
+                  className={`cursor-pointer text-sm px-3 py-2 rounded-full transition-colors ${
                     selectedGroupFilter === group.id
                       ? `${GROUP_COLORS[group.color].bg} ${GROUP_COLORS[group.color].text}`
                       : 'bg-gray-700 hover:bg-gray-600 text-gray-300'

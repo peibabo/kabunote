@@ -164,6 +164,9 @@ export default function DividendManagement({
 
   return (
     <div className="space-y-4">
+      {positionSummary.totalShares === 0 && (
+      <div className="text-xs text-gray-400 text-center mt-1">配当権利確定日を入力すると投資タイムラインで<br></br>日程を確認できるようになります</div>
+      )}
       {/* 配当権利確定日設定 */}
       <div className="space-y-3">
         <label className="text-xs font-medium text-green-300">
@@ -244,7 +247,7 @@ export default function DividendManagement({
               ---
             </div>
             <div className="text-xs text-yellow-400">
-              💡 先にポジションを設定してください
+              💡 株式を保有している場合は、先に保有状況タブから<br></br>ポジションを設定してください
             </div>
           </div>
         ) : (
