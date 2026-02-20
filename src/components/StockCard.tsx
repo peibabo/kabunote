@@ -254,7 +254,22 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
       {/* 統合アラート表示（NextActionPlan + 投資規律設定） */}
       <AlertDisplay
         alert={targetPriceAlert}
-        onClick={() => setActiveTab('analysis')}
+        onClick={() => {
+          setActiveTab('analysis');
+          // アラート種類に応じて適切なサブタブに移動
+          const targetSubTab = (targetPriceAlert.type === 'nextaction-approaching' ||
+                               targetPriceAlert.type === 'nextaction-warning' ||
+                               targetPriceAlert.type === 'insufficient-funds')
+                               ? 'nextaction' : 'analysis';
+
+          // サブタブの状態を更新
+          localStorage.setItem(`kabunote-investment-tab-${symbol}`, targetSubTab);
+
+          // カスタムイベントを発火してサブタブコンポーネントに変更を通知
+          window.dispatchEvent(new CustomEvent('localStorageChange', {
+            detail: { key: `kabunote-investment-tab-${symbol}` }
+          }));
+        }}
       />
 
       {/* チャート確認ボタン（常に表示） */}
@@ -269,6 +284,7 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
           📈 最新チャートを確認
         </button>
       </div>
+
 
       {/* タブナビゲーション */}
       <div className="flex border-b border-gray-600 mb-4">
