@@ -24,6 +24,12 @@ export interface NextActionPlanAnalysis {
   predictedAveragePrice?: number; // 予想平均取得単価（追加購入の場合）
   isApproaching: boolean;        // 目標価格に接近中か（乖離率2%以内）
   isWarning: boolean;           // 目標価格に注意段階か（乖離率2-5%以内）
+
+  // 投資余力関連の分析情報
+  cashAvailable: number;         // 利用可能現金
+  canExecute: boolean;          // 実行可能か
+  cashAfterInvestment: number;  // 投資後現金残高
+  cashRatioImpact: number;      // 現金比率への影響(%)
 }
 
 /**
@@ -46,7 +52,8 @@ export const analyzeNextActionPlan = (
   currentHoldings: {
     totalShares: number;
     totalCost: number;
-  } | null = null
+  } | null = null,
+  availableCash?: number
 ): NextActionPlanAnalysis => {
   const priceGap = plan.targetPrice - currentPrice;
   const gapPercentage = currentPrice > 0 ? (priceGap / currentPrice) * 100 : 0;
@@ -64,6 +71,22 @@ export const analyzeNextActionPlan = (
     predictedAveragePrice = totalNewShares > 0 ? totalNewCost / totalNewShares : 0;
   }
 
+  // 投資余力現金の分析（buyアクションの場合のみ）
+  const cashAvailable = availableCash || 0;
+  const canExecute = plan.actionType === 'buy' ? cashAvailable >= requiredInvestment : true;
+  const cashAfterInvestment = plan.actionType === 'buy' ? Math.max(0, cashAvailable - requiredInvestment) : cashAvailable;
+
+  // 現金比率への影響計算（売却時は逆に現金増加）
+  let cashRatioImpact = 0;
+  if (availableCash && currentHoldings) {
+    const currentTotalAssets = currentHoldings.totalCost + cashAvailable;
+    if (currentTotalAssets > 0) {
+      const currentCashRatio = (cashAvailable / currentTotalAssets) * 100;
+      const newCashRatio = (cashAfterInvestment / currentTotalAssets) * 100;
+      cashRatioImpact = newCashRatio - currentCashRatio;
+    }
+  }
+
   return {
     currentPrice,
     priceGap,
@@ -71,6 +94,10 @@ export const analyzeNextActionPlan = (
     requiredInvestment,
     predictedAveragePrice,
     isApproaching,
-    isWarning
+    isWarning,
+    cashAvailable,
+    canExecute,
+    cashAfterInvestment,
+    cashRatioImpact
   };
 };

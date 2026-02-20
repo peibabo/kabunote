@@ -18,7 +18,9 @@ export type AlertType =
   | 'nextaction-approaching'
   | 'nextaction-warning'
   | 'stop-loss'
+  | 'stop-loss-exceeded'
   | 'target-profit'
+  | 'insufficient-funds'
   | 'none';
 
 /**
@@ -46,7 +48,8 @@ export const calculateGapPercentage = (currentPrice: number, targetPrice: number
 export const checkNextActionAlert = (
   nextActionPlan: NextActionPlan,
   currentPrice: number,
-  positionSummary?: PositionSummary
+  positionSummary?: PositionSummary,
+  availableCash?: number
 ): AlertInfo | null => {
   if (!nextActionPlan.targetPrice || nextActionPlan.targetPrice <= 0) {
     return null;
@@ -55,8 +58,18 @@ export const checkNextActionAlert = (
   const analysis = analyzeNextActionPlan(
     nextActionPlan,
     currentPrice,
-    positionSummary && positionSummary.totalShares > 0 ? positionSummary : null
+    positionSummary && positionSummary.totalShares > 0 ? positionSummary : null,
+    availableCash
   );
+
+  // 資金不足チェック（最優先）
+  if (nextActionPlan.actionType === 'buy' && !analysis.canExecute) {
+    return {
+      type: 'insufficient-funds',
+      analysis,
+      gapPercentage: 0
+    };
+  }
 
   if (analysis.isApproaching) {
     return { type: 'nextaction-approaching', analysis };
@@ -76,8 +89,18 @@ export const checkStopLossAlert = (
 ): AlertInfo | null => {
   if (stopLossPrice <= 0) return null;
 
-  const gapPercentage = calculateGapPercentage(currentPrice, stopLossPrice);
+  // 既に損切りラインを下回っている場合
+  if (currentPrice < stopLossPrice) {
+    const exceedPercentage = Math.abs((stopLossPrice - currentPrice) / stopLossPrice) * 100;
+    return {
+      type: 'stop-loss-exceeded',
+      gapPercentage: exceedPercentage,
+      stopLossPrice
+    };
+  }
 
+  // 損切りラインに接近している場合（5%以内）
+  const gapPercentage = calculateGapPercentage(currentPrice, stopLossPrice);
   if (gapPercentage <= ALERT_THRESHOLDS.STOP_LOSS_APPROACHING) {
     return {
       type: 'stop-loss',
@@ -120,7 +143,8 @@ export const getIntegratedAlert = (
   currentPrice: number,
   targetPrice: number,
   stopLoss: string,
-  positionSummary?: PositionSummary
+  positionSummary?: PositionSummary,
+  availableCash?: number
 ): AlertInfo => {
   const currentPriceNum = parseFloat(currentPrice.toString());
   const targetPriceNum = parseFloat(targetPrice.toString());
@@ -131,15 +155,19 @@ export const getIntegratedAlert = (
     return { type: 'none' };
   }
 
-  // 各アラートをチェック
-  const nextActionAlert = checkNextActionAlert(nextActionPlan, currentPriceNum, positionSummary);
+  // 各アラートをチェック（投資余力現金も考慮）
+  const nextActionAlert = checkNextActionAlert(nextActionPlan, currentPriceNum, positionSummary, availableCash);
   const stopLossAlert = checkStopLossAlert(currentPriceNum, stopLossNum);
   const targetProfitAlert = checkTargetProfitAlert(currentPriceNum, targetPriceNum);
 
   // 優先順位に従って返す（最も重要なもの1つのみ）
-  if (nextActionAlert?.type === 'nextaction-approaching') {
+  if (nextActionAlert?.type === 'insufficient-funds') {
     return nextActionAlert;
-  } else if (stopLossAlert) {
+  } else if (stopLossAlert?.type === 'stop-loss-exceeded') {
+    return stopLossAlert;
+  } else if (nextActionAlert?.type === 'nextaction-approaching') {
+    return nextActionAlert;
+  } else if (stopLossAlert?.type === 'stop-loss') {
     return stopLossAlert;
   } else if (targetProfitAlert) {
     return targetProfitAlert;
