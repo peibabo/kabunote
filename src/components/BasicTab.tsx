@@ -82,18 +82,18 @@ export default function BasicTab({
           onChange={(e) => onMemoChange(e.target.value)}
           placeholder="この銘柄について思考を整理しましょう..."
           maxLength={2000}
-          className="w-full h-32 px-4 py-3 bg-slate-100 border border-slate-300 rounded-lg text-slate-800 placeholder-slate-500 focus:border-blue-500 focus:outline-none resize-none font-mono leading-6 shadow-inner"
+          className="w-full h-50 px-4 py-3 bg-slate-100 border border-slate-300 rounded-lg text-slate-800 placeholder-slate-500 focus:border-blue-500 focus:outline-none resize-none font-mono leading-6 shadow-inner"
           style={{
             backgroundImage: `url("data:image/svg+xml,%3csvg width='100' height='24' xmlns='http://www.w3.org/2000/svg'%3e%3cline x1='0' y1='17' x2='100' y2='17' stroke='%23a1a1aa' stroke-width='1' stroke-dasharray='3,3' opacity='0.4'/%3e%3c/svg%3e")`,
             backgroundSize: '100px 24px',
-            backgroundPosition: '0 3px'
+            backgroundPosition: '0 19px'
           }}
           rows={4}
         />
         <div className="flex items-center justify-between">
           <button
             onClick={onMemoModalOpen}
-            className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
+            className="text-xs cursor-pointer text-blue-400 hover:text-blue-300 transition-colors"
           >
             📝 株ノオトを大きく開く
           </button>

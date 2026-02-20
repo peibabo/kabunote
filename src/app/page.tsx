@@ -9,6 +9,7 @@ import InvestmentCalendar from '@/components/InvestmentCalendar';
 import PortfolioSummary from '@/components/PortfolioSummary';
 import FloatingAddButton from '@/components/FloatingAddButton';
 import DataManager from '@/components/DataManager';
+import StrategySummaryPage from '@/components/StrategySummaryPage';
 import { loadStockData, getStockData } from '@/data/stockNames';
 import { Position } from '@/types/positions';
 import { FavoriteGroup, GROUP_COLORS } from '@/types/favorites';
@@ -44,6 +45,7 @@ export default function Home() {
   const [selectedGroupFilter, setSelectedGroupFilter] = useState<string | null>(null);
   const [isGroupManagerOpen, setIsGroupManagerOpen] = useState(false);
   const [isDataManagerOpen, setIsDataManagerOpen] = useState(false);
+  const [isStrategySummaryOpen, setIsStrategySummaryOpen] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<string[]>([]);
@@ -721,7 +723,7 @@ export default function Home() {
       <header className="bg-slate-900 border-b border-gray-700">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center justify-center gap-4 group cursor-pointer flex-1">
+            <div className="flex items-center justify-center gap-4 group cursor-default flex-1">
             <img
               src="/kabunote-logo.png"
               alt="Kabunote Logo"
@@ -750,11 +752,21 @@ export default function Home() {
             `}</style>
             </div>
 
-            {/* データ管理ボタン */}
-            <div className="flex-shrink-0">
+            {/* ナビゲーションボタン */}
+            <div className="flex-shrink-0 flex gap-2">
+              {/* 戦略一覧ボタン */}
+              <button
+                onClick={() => setIsStrategySummaryOpen(true)}
+                className="p-2 cursor-pointer text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
+                title="戦略一覧"
+              >
+                <span className="text-xl">🎯</span>
+              </button>
+
+              {/* データ管理ボタン */}
               <button
                 onClick={() => setIsDataManagerOpen(true)}
-                className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
+                className="p-2 cursor-pointer text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
                 title="データ管理"
               >
                 <span className="text-xl">⚙️</span>
@@ -1052,6 +1064,26 @@ export default function Home() {
             onClose={() => setIsDataManagerOpen(false)}
             onDataImported={handleDataImported}
           />
+        )}
+
+        {/* 戦略一覧ダッシュボードモーダル */}
+        {isStrategySummaryOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-gray-900 rounded-lg p-4 max-w-7xl w-full mx-4 max-h-[90vh] overflow-hidden">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-white">🎯 戦略一覧ダッシュボード</h2>
+                <button
+                  onClick={() => setIsStrategySummaryOpen(false)}
+                  className="text-gray-400 hover:text-white transition-colors"
+                >
+                  ✕
+                </button>
+              </div>
+              <div className="overflow-auto max-h-[calc(90vh-8rem)]">
+                <StrategySummaryPage />
+              </div>
+            </div>
+          </div>
         )}
       </main>
     </div>
