@@ -518,7 +518,7 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
               onChange={(e) => setNextActionMemo(e.target.value)}
               placeholder="この余力現金は○○株が◯円になったときに買い増しする"
               maxLength={100}
-              className="flex-1 max-w-xl text-xs bg-gray-600 border border-gray-500 rounded px-2 py-1.5 text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
+              className="flex-1 max-w-2xl text-sm bg-gray-600 border border-gray-500 rounded px-2 py-1.5 text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
             />
           </div>
         </div>

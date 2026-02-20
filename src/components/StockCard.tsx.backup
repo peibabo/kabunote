@@ -148,7 +148,7 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
           setStopLoss(savedStopLoss);
         }
 
-        // 現在の目安株価を読み込み
+        // 現在の株価を読み込み
         const savedCurrentPrice = localStorage.getItem(currentPriceKey);
         if (savedCurrentPrice) {
           setCurrentPrice(savedCurrentPrice);
@@ -614,10 +614,10 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
                   </div>
                 </div>
 
-                {/* 現在の目安株価 */}
+                {/* 現在の株価 */}
                 <div className="space-y-1">
                   <label htmlFor={`current-price-${symbol}`} className="text-xs font-medium text-blue-300">
-                    📈 現在の目安株価
+                    📈 現在の株価
                   </label>
                   <div className="relative">
                     <input

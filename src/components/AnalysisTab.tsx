@@ -1,6 +1,7 @@
 'use client';
 
 import { Position, PositionSummary, ProfitLossInfo, formatPrice, formatShares, formatProfitLoss } from '@/types/positions';
+import NextActionPlan from './NextActionPlan';
 
 interface ProgressData {
   percentage: number;
@@ -103,10 +104,10 @@ export default function AnalysisTab({
             </div>
           </div>
 
-          {/* 現在の目安株価 */}
+          {/* 現在の株価 */}
           <div className="space-y-1">
             <label htmlFor={`current-price-${symbol}`} className="text-xs font-medium text-blue-300">
-              📈 現在の目安株価
+              📈 現在の株価
             </label>
             <div className="relative">
               <input
@@ -399,6 +400,14 @@ export default function AnalysisTab({
         )}
       </div>
 
+      {/* Next Action Plan セクション */}
+      <div className="border-t border-gray-700 pt-4">
+        <NextActionPlan
+          symbol={symbol}
+          currentPrice={parseFloat(currentPrice) || undefined}
+          positionSummary={positionSummary.totalShares > 0 ? positionSummary : undefined}
+        />
+      </div>
     </div>
   );
 }
