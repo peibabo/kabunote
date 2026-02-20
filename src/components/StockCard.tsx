@@ -16,7 +16,7 @@ import { getIntegratedAlert } from '@/utils/alertSystem';
 // Components
 import StockCardHeader from './StockCardHeader';
 import BasicTab from './BasicTab';
-import AnalysisTab from './AnalysisTab';
+import InvestmentStrategyTab from './InvestmentStrategyTab';
 import ManagementTab from './ManagementTab';
 import AlertDisplay from './AlertDisplay';
 import TagEditor from './TagEditor';
@@ -211,13 +211,18 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
     setCustomTags(updatedTags);
   };
 
+  // 投資余力現金を取得
+  const [cashAmount] = useStringLocalStorage('kabunote-cash-amount', '0');
+  const availableCash = parseFloat(cashAmount) || 0;
+
   // 統合アラート判定（NextActionPlan + 投資規律設定）
   const targetPriceAlert = getIntegratedAlert(
     nextActionPlan,
     currentPrice,
     targetPrice,
     stopLoss,
-    positionSummary.totalShares > 0 ? positionSummary : undefined
+    positionSummary.totalShares > 0 ? positionSummary : undefined,
+    availableCash
   );
 
   return (
@@ -295,7 +300,7 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
         )}
 
         {activeTab === 'analysis' && (
-          <AnalysisTab
+          <InvestmentStrategyTab
             symbol={symbol}
             targetPrice={targetPrice}
             stopLoss={stopLoss}
@@ -305,8 +310,6 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
             onCurrentPriceChange={setCurrentPrice}
             positionSummary={positionSummary}
             profitLossInfo={profitLossInfo}
-            positions={positions}
-            onPositionManagerOpen={() => setIsPositionManagerOpen(true)}
           />
         )}
 

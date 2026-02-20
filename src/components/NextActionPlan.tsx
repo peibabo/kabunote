@@ -8,6 +8,7 @@ import {
 } from '../types/nextActionPlan';
 import { PositionSummary } from '../types/positions';
 import { useNextActionPlan, hasNextActionPlan, isCompleteNextActionPlan } from '../hooks/useNextActionPlan';
+import { useStringLocalStorage } from '../hooks/useLocalStorage';
 
 interface NextActionPlanProps {
   symbol: string;
@@ -36,13 +37,17 @@ const PRIORITY_COLORS: Record<Priority, string> = {
 export default function NextActionPlan({ symbol, currentPrice = 0, positionSummary }: NextActionPlanProps) {
   const { nextActionPlan, updateNextActionPlan, resetNextActionPlan, isLoading } = useNextActionPlan(symbol);
 
+  // 投資余力現金を取得
+  const [cashAmount] = useStringLocalStorage('kabunote-cash-amount', '0');
+  const availableCash = parseFloat(cashAmount) || 0;
+
   if (isLoading) {
     return <div className="text-gray-400">読み込み中...</div>;
   }
 
-  // 分析情報を計算
+  // 分析情報を計算（投資余力現金も含める）
   const analysis: NextActionPlanAnalysis | null = currentPrice > 0 ?
-    analyzeNextActionPlan(nextActionPlan, currentPrice, positionSummary || null) : null;
+    analyzeNextActionPlan(nextActionPlan, currentPrice, positionSummary || null, availableCash) : null;
 
   const hasPlan = hasNextActionPlan(nextActionPlan);
   const isComplete = isCompleteNextActionPlan(nextActionPlan);
@@ -206,6 +211,60 @@ export default function NextActionPlan({ symbol, currentPrice = 0, positionSumma
               </div>
             )}
           </div>
+
+          {/* 投資余力現金分析 */}
+          {nextActionPlan.actionType === 'buy' && nextActionPlan.targetPrice > 0 && nextActionPlan.targetQuantity > 0 && (
+            <div className="pt-3 border-t border-gray-700">
+              <h5 className="text-sm font-medium text-gray-300 mb-3 flex items-center gap-2">
+                💰 投資余力状況
+                {!analysis.canExecute && (
+                  <span className="text-xs px-2 py-1 bg-red-900/30 text-red-400 border border-red-500/30 rounded-md">
+                    ❌ 資金不足
+                  </span>
+                )}
+              </h5>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="space-y-1">
+                  <div className="text-gray-400">利用可能現金：</div>
+                  <div className="text-white pl-2">
+                    {formatPrice(analysis.cashAvailable)}円
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <div className="text-gray-400">投資後残高：</div>
+                  <div className={`pl-2 ${analysis.canExecute ? 'text-white' : 'text-red-400'}`}>
+                    {formatPrice(analysis.cashAfterInvestment)}円
+                  </div>
+                </div>
+
+                <div className="col-span-2">
+                  <span className="text-gray-400">現金比率影響：</span>
+                  <span className={`ml-2 ${
+                    analysis.cashRatioImpact >= 0
+                      ? 'text-green-400'
+                      : Math.abs(analysis.cashRatioImpact) > 10
+                      ? 'text-red-400'
+                      : 'text-yellow-400'
+                  }`}>
+                    {analysis.cashRatioImpact > 0 ? '+' : ''}{analysis.cashRatioImpact.toFixed(1)}%
+                    {Math.abs(analysis.cashRatioImpact) > 10 && (
+                      <span className="text-xs ml-1 text-red-300">（大幅変動）</span>
+                    )}
+                  </span>
+                </div>
+
+                {!analysis.canExecute && (
+                  <div className="col-span-2 p-2 bg-red-900/20 border border-red-500/30 rounded-md">
+                    <div className="text-xs text-red-300 flex items-center gap-2">
+                      <span>⚠️</span>
+                      <span>不足額：{formatPrice(analysis.requiredInvestment - analysis.cashAvailable)}円</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* 進捗ゲージ */}
           {(

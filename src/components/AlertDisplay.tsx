@@ -20,6 +20,8 @@ export default function AlertDisplay({ alert, onClick }: AlertDisplayProps) {
     switch (alert.type) {
       case 'nextaction-approaching':
       case 'stop-loss':
+      case 'stop-loss-exceeded':
+      case 'insufficient-funds':
         return {
           containerClass: 'bg-red-900/30 border border-red-500/50 hover:bg-red-900/40',
           glowClass: 'bg-red-400/5',
@@ -58,8 +60,10 @@ export default function AlertDisplay({ alert, onClick }: AlertDisplayProps) {
     switch (alert.type) {
       case 'nextaction-approaching': return '🚨 次の一手目標に接近中';
       case 'stop-loss': return '🔻 損切りラインに接近';
+      case 'stop-loss-exceeded': return '💥 損切りライン超過';
       case 'target-profit': return '💰 利確目標に接近';
       case 'nextaction-warning': return '⚠️ 注意：次の一手目標に接近';
+      case 'insufficient-funds': return '💸 資金不足：投資実行不可';
       default: return '';
     }
   };
@@ -70,8 +74,15 @@ export default function AlertDisplay({ alert, onClick }: AlertDisplayProps) {
       case 'nextaction-approaching': return '（乖離率2%以内）';
       case 'nextaction-warning': return '（乖離率2-5%以内）';
       case 'stop-loss':
+      case 'stop-loss-exceeded':
       case 'target-profit':
         return alert.gapPercentage ? `（乖離率${alert.gapPercentage.toFixed(1)}%）` : '';
+      case 'insufficient-funds':
+        if (alert.analysis && alert.analysis.requiredInvestment && alert.analysis.cashAvailable) {
+          const shortfall = alert.analysis.requiredInvestment - alert.analysis.cashAvailable;
+          return `（不足額：${new Intl.NumberFormat('ja-JP').format(Math.round(shortfall))}円）`;
+        }
+        return '（資金確認が必要）';
       default: return '';
     }
   };
