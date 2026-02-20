@@ -31,7 +31,7 @@ export interface NextActionPlanAnalysis {
  */
 export const createDefaultNextActionPlan = (): NextActionPlan => ({
   targetPrice: 0,
-  targetQuantity: 100,
+  targetQuantity: 0,
   memo: '',
   actionType: 'buy',
   priority: 'medium'

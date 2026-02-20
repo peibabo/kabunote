@@ -11,13 +11,14 @@ import { CSS } from '@dnd-kit/utilities';
 import { useStringLocalStorage, useArrayLocalStorage } from '@/hooks/useLocalStorage';
 import { useTabState } from '@/hooks/useTabState';
 import { useNextActionPlan } from '@/hooks/useNextActionPlan';
-import { analyzeNextActionPlan } from '@/types/nextActionPlan';
+import { getIntegratedAlert } from '@/utils/alertSystem';
 
 // Components
 import StockCardHeader from './StockCardHeader';
 import BasicTab from './BasicTab';
 import AnalysisTab from './AnalysisTab';
 import ManagementTab from './ManagementTab';
+import AlertDisplay from './AlertDisplay';
 import TagEditor from './TagEditor';
 import FavoriteGroupSelector from './FavoriteGroupSelector';
 import PositionManager from './PositionManager';
@@ -210,30 +211,14 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
     setCustomTags(updatedTags);
   };
 
-  // 目標価格接近・警告判定（NextActionPlanベース）
-  const targetPriceAlert = (() => {
-    const currentPriceNum = parseFloat(currentPrice);
-
-    // NextActionPlanの目標価格と現在価格が設定されているかチェック
-    if (!nextActionPlan.targetPrice || !currentPriceNum || nextActionPlan.targetPrice <= 0 || currentPriceNum <= 0) {
-      return { type: 'none' };
-    }
-
-    // NextActionPlanの分析を実行
-    const analysis = analyzeNextActionPlan(
-      nextActionPlan,
-      currentPriceNum,
-      positionSummary.totalShares > 0 ? positionSummary : undefined
-    );
-
-    if (analysis.isApproaching) {
-      return { type: 'approaching', analysis };
-    } else if (analysis.isWarning) {
-      return { type: 'warning', analysis };
-    }
-
-    return { type: 'none' };
-  })();
+  // 統合アラート判定（NextActionPlan + 投資規律設定）
+  const targetPriceAlert = getIntegratedAlert(
+    nextActionPlan,
+    currentPrice,
+    targetPrice,
+    stopLoss,
+    positionSummary.totalShares > 0 ? positionSummary : undefined
+  );
 
   return (
     <div
@@ -261,56 +246,11 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
         isDragging={isDragging}
       />
 
-      {/* 目標価格段階的アラート */}
-      {targetPriceAlert.type !== 'none' && (
-        <div
-          onClick={() => setActiveTab('analysis')}
-          className={`mb-4 relative p-3 rounded-lg overflow-hidden cursor-pointer transition-colors ${
-            targetPriceAlert.type === 'approaching'
-              ? 'bg-red-900/30 border border-red-500/50 hover:bg-red-900/40'
-              : 'bg-yellow-900/30 border border-yellow-500/50 hover:bg-yellow-900/40'
-          }`}
-        >
-          {/* ネオングロー背景 */}
-          <div className={`absolute inset-0 animate-pulse ${
-            targetPriceAlert.type === 'approaching' ? 'bg-red-400/5' : 'bg-yellow-400/5'
-          }`}></div>
-
-          <div className="relative flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2">
-                <div
-                  className={`w-3 h-3 rounded-full animate-pulse ${
-                    targetPriceAlert.type === 'approaching' ? 'bg-red-400' : 'bg-yellow-400'
-                  }`}
-                  style={{
-                    boxShadow: targetPriceAlert.type === 'approaching'
-                      ? '0 0 10px rgba(248, 113, 113, 0.8), 0 0 20px rgba(248, 113, 113, 0.4)'
-                      : '0 0 10px rgba(251, 191, 36, 0.8), 0 0 20px rgba(251, 191, 36, 0.4)'
-                  }}
-                ></div>
-                <span className={`text-sm font-medium ${
-                  targetPriceAlert.type === 'approaching' ? 'text-red-400' : 'text-yellow-400'
-                }`}>
-                  {targetPriceAlert.type === 'approaching' ? '🚨 目標価格に接近中' : '⚠️ 注意：目標価格に接近'}
-                </span>
-              </div>
-              <div className={`text-xs ${
-                targetPriceAlert.type === 'approaching' ? 'text-red-300' : 'text-yellow-300'
-              }`}>
-                （乖離率{targetPriceAlert.type === 'approaching' ? '2%以内' : '2-5%以内'}）
-              </div>
-            </div>
-          </div>
-
-          {/* スキャンライン効果 */}
-          <div className="absolute top-0 left-0 w-full h-full">
-            <div className={`absolute inset-0 bg-gradient-to-r from-transparent to-transparent animate-pulse ${
-              targetPriceAlert.type === 'approaching' ? 'via-red-400/10' : 'via-yellow-400/10'
-            }`}></div>
-          </div>
-        </div>
-      )}
+      {/* 統合アラート表示（NextActionPlan + 投資規律設定） */}
+      <AlertDisplay
+        alert={targetPriceAlert}
+        onClick={() => setActiveTab('analysis')}
+      />
 
       {/* チャート確認ボタン（常に表示） */}
       <div className="mb-4">

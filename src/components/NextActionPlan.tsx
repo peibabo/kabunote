@@ -127,17 +127,28 @@ export default function NextActionPlan({ symbol, currentPrice = 0, positionSumma
 
         <div>
           <label className="block text-sm text-gray-300 mb-2">
-            {nextActionPlan.actionType === 'buy' ? '追加株数' : nextActionPlan.actionType === 'sell' ? '売却株数' : '対象株数'}
+            {nextActionPlan.actionType === 'buy' ? '追加株数（単位：100株）' : nextActionPlan.actionType === 'sell' ? '売却株数（単位：100株）' : '対象株数（単位：100株）'}
           </label>
-          <input
-            type="number"
-            value={nextActionPlan.targetQuantity || ''}
-            onChange={(e) => updateNextActionPlan({ targetQuantity: parseInt(e.target.value) || 0 })}
-            placeholder="100"
-            min="0"
-            step="100"
-            className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          />
+          <div className="relative">
+            <input
+              type="number"
+              value={Math.floor((nextActionPlan.targetQuantity || 0) / 100) || ''}
+              onChange={(e) => {
+                const units = parseInt(e.target.value) || 0;
+                updateNextActionPlan({ targetQuantity: units * 100 });
+              }}
+              placeholder="20"
+              min="0"
+              step="1"
+              className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 pr-16"
+            />
+            <span className="absolute right-3 top-2 text-sm text-gray-400">×100株</span>
+          </div>
+          {nextActionPlan.targetQuantity > 0 && (
+            <div className="text-xs text-gray-400 mt-1">
+              = {nextActionPlan.targetQuantity.toLocaleString()}株
+            </div>
+          )}
         </div>
       </div>
 
