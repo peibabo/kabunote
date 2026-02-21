@@ -244,6 +244,35 @@ export default function AlertSummaryPage() {
     return alerts.sort((a, b) => a.priority - b.priority);
   }, [stocks, availableCash, isLoaded, snoozeLoaded, showSnoozed, isAlertSnoozed]);
 
+  // localStorage変更監視でアラートデータをリアルタイム更新
+  useEffect(() => {
+    if (!isLoaded) return;
+
+    const handleStorageChange = (event: CustomEvent) => {
+      const { key } = event.detail;
+
+      // アラートに影響するキーの変更を検知
+      if (key.includes('current-price-') ||
+          key.includes('target-price-') ||
+          key.includes('stop-loss-') ||
+          key.includes('next-action-plan-') ||
+          key.includes('positions-') ||
+          key === 'kabunote-cash-amount' ||
+          key === 'kabunote-snoozed-alerts') {
+
+        // アラートデータの再計算をトリガー
+        console.log('AlertSummaryPage - localStorage変更検知:', key);
+        // 依存配列の値を強制更新するためのダミー更新
+        setShowSnoozed(prev => prev);
+      }
+    };
+
+    window.addEventListener('localStorageChange', handleStorageChange as EventListener);
+
+    return () => {
+      window.removeEventListener('localStorageChange', handleStorageChange as EventListener);
+    };
+  }, [isLoaded]);
 
   // アラート種別に応じたスタイル取得
   const getAlertStyles = (alertType: AlertType) => {
