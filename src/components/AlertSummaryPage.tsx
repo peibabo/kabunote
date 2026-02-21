@@ -6,6 +6,8 @@ import { NextActionPlan } from '@/types/nextActionPlan';
 import { getIntegratedAlert, AlertType } from '@/utils/alertSystem';
 import { getCompanyNameSync } from '@/data/stockNames';
 import { calculatePositionSummary } from '@/types/positions';
+import { useSnooze } from '@/hooks/useSnooze';
+import { SNOOZE_DURATIONS, SnoozeDuration, getTimeUntilUnsnooze, generateAlertKey } from '@/types/snooze';
 
 interface AlertRowData {
   symbol: string;
@@ -74,6 +76,16 @@ export default function AlertSummaryPage() {
   const [stocks, setStocks] = useState<string[]>([]);
   const [availableCash, setAvailableCash] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [showSnoozed, setShowSnoozed] = useState(false);
+
+  // スヌーズ機能フック
+  const {
+    snoozedAlerts,
+    isLoaded: snoozeLoaded,
+    snoozeAlert,
+    unsnoozeAlert,
+    isAlertSnoozed
+  } = useSnooze();
 
   // ブラウザサイドでlocalStorageから直接データを読み込み
   useEffect(() => {
@@ -95,11 +107,11 @@ export default function AlertSummaryPage() {
     }
   }, []);
 
-  // アラートデータを収集
+  // アラートデータを収集（スヌーズ済みを除外）
   const alertsData = useMemo(() => {
     console.log('AlertSummaryPage - アラートデータ収集開始:', { isLoaded, stocksLength: stocks.length, availableCash });
 
-    if (!isLoaded || stocks.length === 0) {
+    if (!isLoaded || stocks.length === 0 || !snoozeLoaded) {
       console.log('AlertSummaryPage - データ未ロードまたは銘柄なし');
       return [];
     }
@@ -182,24 +194,43 @@ export default function AlertSummaryPage() {
 
         console.log(`AlertSummaryPage - ${symbol}: アラート判定結果`, alert);
 
-        // アラートがある場合のみ追加
+        // アラートがある場合のみ追加（スヌーズ済みを除外）
         if (alert.type !== 'none') {
           const { message, detail, priority } = getAlertDisplayInfo(alert);
 
-          console.log(`AlertSummaryPage - ${symbol}: アラート追加`, { message, detail, priority });
+          // スヌーズ中でない場合のみ表示
+          if (!showSnoozed && !isAlertSnoozed(symbol, alert.type)) {
+            console.log(`AlertSummaryPage - ${symbol}: アラート追加`, { message, detail, priority });
 
-          alerts.push({
-            symbol,
-            companyName,
-            alertType: alert.type,
-            alertMessage: message,
-            alertDetail: detail,
-            priority,
-            gapPercentage: alert.gapPercentage,
-            currentPrice,
-            targetPrice: alert.targetPrice,
-            stopLossPrice: alert.stopLossPrice
-          });
+            alerts.push({
+              symbol,
+              companyName,
+              alertType: alert.type,
+              alertMessage: message,
+              alertDetail: detail,
+              priority,
+              gapPercentage: alert.gapPercentage,
+              currentPrice,
+              targetPrice: alert.targetPrice,
+              stopLossPrice: alert.stopLossPrice
+            });
+          } else if (showSnoozed && isAlertSnoozed(symbol, alert.type)) {
+            // スヌーズ済みアラートを表示する場合
+            alerts.push({
+              symbol,
+              companyName,
+              alertType: alert.type,
+              alertMessage: message,
+              alertDetail: detail,
+              priority,
+              gapPercentage: alert.gapPercentage,
+              currentPrice,
+              targetPrice: alert.targetPrice,
+              stopLossPrice: alert.stopLossPrice
+            });
+          } else {
+            console.log(`AlertSummaryPage - ${symbol}: アラートはスヌーズ中`);
+          }
         } else {
           console.log(`AlertSummaryPage - ${symbol}: アラートなし`);
         }
@@ -211,7 +242,7 @@ export default function AlertSummaryPage() {
     // 優先度順にソート（優先度が低い数字ほど上位）
     console.log('AlertSummaryPage - 最終アラートデータ:', alerts);
     return alerts.sort((a, b) => a.priority - b.priority);
-  }, [stocks, availableCash, isLoaded]);
+  }, [stocks, availableCash, isLoaded, snoozeLoaded, showSnoozed, isAlertSnoozed]);
 
 
   // アラート種別に応じたスタイル取得
@@ -283,8 +314,23 @@ export default function AlertSummaryPage() {
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold">🚨 アラート一覧</h1>
-          <div className="text-sm text-gray-400">
-            {stats.total}件のアラート（緊急: {stats.urgent}件）
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setShowSnoozed(!showSnoozed)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                showSnoozed
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+              }`}
+            >
+              {showSnoozed ? '💤 スヌーズ履歴表示中' : '🔔 アクティブのみ'}
+            </button>
+            <div className="text-sm text-gray-400">
+              {showSnoozed
+                ? `${stats.total}件のスヌーズ履歴`
+                : `${stats.total}件のアラート（緊急: ${stats.urgent}件）`
+              }
+            </div>
           </div>
         </div>
 
@@ -322,6 +368,8 @@ export default function AlertSummaryPage() {
                 <th className="px-4 py-3 text-center text-xs font-medium text-gray-300">詳細</th>
                 <th className="px-4 py-3 text-center text-xs font-medium text-gray-300">現在価格</th>
                 <th className="px-4 py-3 text-center text-xs font-medium text-gray-300">対象価格</th>
+                {!showSnoozed && <th className="px-4 py-3 text-center text-xs font-medium text-gray-300">スヌーズ</th>}
+                {showSnoozed && <th className="px-4 py-3 text-center text-xs font-medium text-gray-300">スヌーズ状況</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-700">
@@ -348,6 +396,66 @@ export default function AlertSummaryPage() {
                     {alert.targetPrice ? `${formatPrice(alert.targetPrice)}円` :
                      alert.stopLossPrice ? `${formatPrice(alert.stopLossPrice)}円` : '-'}
                   </td>
+                  {!showSnoozed && (
+                    <td className="px-4 py-3 text-center">
+                      <div className="relative">
+                        <select
+                          onChange={(e) => {
+                            if (e.target.value) {
+                              const duration = parseInt(e.target.value) as SnoozeDuration;
+                              snoozeAlert(
+                                alert.symbol,
+                                alert.alertType,
+                                duration,
+                                {
+                                  companyName: alert.companyName,
+                                  alertMessage: alert.alertMessage,
+                                  alertDetail: alert.alertDetail,
+                                  currentPrice: alert.currentPrice,
+                                  targetPrice: alert.targetPrice,
+                                  stopLossPrice: alert.stopLossPrice
+                                }
+                              );
+                              e.target.value = '';
+                            }
+                          }}
+                          className="bg-gray-700 text-gray-300 text-xs px-2 py-1 rounded border border-gray-600 hover:bg-gray-600 focus:outline-none focus:border-blue-500"
+                          defaultValue=""
+                        >
+                          <option value="" disabled>💤 スヌーズ</option>
+                          {SNOOZE_DURATIONS.map(({ value, label, icon }) => (
+                            <option key={value} value={value}>
+                              {icon} {label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </td>
+                  )}
+                  {showSnoozed && (
+                    <td className="px-4 py-3 text-center">
+                      {(() => {
+                        const snoozedAlert = snoozedAlerts.find(
+                          s => s.symbol === alert.symbol && s.alertType === alert.alertType
+                        );
+                        if (!snoozedAlert) return '-';
+
+                        return (
+                          <div className="flex flex-col items-center gap-1">
+                            <div className="text-xs text-blue-400">
+                              {getTimeUntilUnsnooze(snoozedAlert.snoozeUntil)}
+                            </div>
+                            <button
+                              onClick={() => unsnoozeAlert(generateAlertKey(alert.symbol, alert.alertType))}
+                              className="text-xs text-red-400 hover:text-red-300 underline"
+                            >
+                              解除
+                            </button>
+                          </div>
+                        );
+                      })()}
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>

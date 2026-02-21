@@ -786,12 +786,32 @@ export default function Home() {
         );
 
         if (alert.type !== 'none') {
-          totalAlerts++;
-          // 緊急アラート判定（資金不足・損切り超過・次の一手緊急）
-          if (alert.type === 'insufficient-funds' ||
-              alert.type === 'stop-loss-exceeded' ||
-              alert.type === 'nextaction-approaching') {
-            urgentAlerts++;
+          // スヌーズ判定（useSnoozeフックが使えないので直接localStorage確認）
+          const snoozedAlertsStr = typeof window !== 'undefined' ? localStorage.getItem('kabunote-snoozed-alerts') : null;
+          let isAlertSnoozed = false;
+
+          if (snoozedAlertsStr) {
+            try {
+              const snoozedAlerts = JSON.parse(snoozedAlertsStr);
+              const alertKey = `${symbol}-${alert.type}`;
+              const snoozedAlert = snoozedAlerts.find((s: any) =>
+                s.alertKey === alertKey && s.snoozeUntil > Date.now()
+              );
+              isAlertSnoozed = !!snoozedAlert;
+            } catch (e) {
+              // スヌーズデータの解析に失敗した場合は無視
+            }
+          }
+
+          // スヌーズされていないアラートのみカウント
+          if (!isAlertSnoozed) {
+            totalAlerts++;
+            // 緊急アラート判定（資金不足・損切り超過・次の一手緊急）
+            if (alert.type === 'insufficient-funds' ||
+                alert.type === 'stop-loss-exceeded' ||
+                alert.type === 'nextaction-approaching') {
+              urgentAlerts++;
+            }
           }
         }
       } catch (e) {
@@ -821,7 +841,8 @@ export default function Home() {
           key.includes('stop-loss-') ||
           key.includes('next-action-plan-') ||
           key.includes('positions-') ||
-          key === 'kabunote-cash-amount') {
+          key === 'kabunote-cash-amount' ||
+          key === 'kabunote-snoozed-alerts') {
 
         // アラート件数を再計算
         setTimeout(() => {
