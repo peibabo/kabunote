@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import StockCard from '@/components/StockCard';
 import StockInput from '@/components/StockInput';
 import FavoriteGroupManager from '@/components/FavoriteGroupManager';
@@ -10,11 +10,16 @@ import PortfolioSummary from '@/components/PortfolioSummary';
 import FloatingAddButton from '@/components/FloatingAddButton';
 import DataManager from '@/components/DataManager';
 import StrategySummaryPage from '@/components/StrategySummaryPage';
+import AlertSummaryPage from '@/components/AlertSummaryPage';
 import { loadStockData, getStockData } from '@/data/stockNames';
 import { Position } from '@/types/positions';
 import { FavoriteGroup, GROUP_COLORS } from '@/types/favorites';
 import { CustomTag } from '@/types/tags';
 import { DividendRightsSettings, ShareholderRightsSettings, ShareholderMeetingSettings, createDefaultDividendRightsSettings, createDefaultShareholderRightsSettings, createDefaultShareholderMeetingSettings } from '@/types/rightsDate';
+import { NextActionPlan } from '@/types/nextActionPlan';
+import { hasNextActionPlan } from '@/hooks/useNextActionPlan';
+import { getIntegratedAlert } from '@/utils/alertSystem';
+import { calculatePositionSummary } from '@/types/positions';
 import { useDebouncedCallback } from '@/hooks/useDebounce';
 import {
   DndContext,
@@ -46,6 +51,7 @@ export default function Home() {
   const [isGroupManagerOpen, setIsGroupManagerOpen] = useState(false);
   const [isDataManagerOpen, setIsDataManagerOpen] = useState(false);
   const [isStrategySummaryOpen, setIsStrategySummaryOpen] = useState(false);
+  const [isAlertSummaryOpen, setIsAlertSummaryOpen] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<string[]>([]);
@@ -717,6 +723,121 @@ export default function Home() {
       })
     : stocks;
 
+  // アラート件数を計算（リアルタイム更新対応）
+  const [alertCounts, setAlertCounts] = useState({ total: 0, urgent: 0 });
+
+  const calculateAlertCounts = useCallback(() => {
+    if (!isInitialized || stocks.length === 0) {
+      return { total: 0, urgent: 0 };
+    }
+
+    const cashAmount = typeof window !== 'undefined' ? localStorage.getItem('kabunote-cash-amount') || '0' : '0';
+    const availableCash = parseFloat(cashAmount) || 0;
+
+    let totalAlerts = 0;
+    let urgentAlerts = 0;
+
+    stocks.forEach(symbol => {
+      // 現在価格チェック（NextActionPlanの有無に関係なく）
+      const currentPriceStr = typeof window !== 'undefined' ? localStorage.getItem(`kabunote-current-price-${symbol}`) || '0' : '0';
+      const targetPriceStr = typeof window !== 'undefined' ? localStorage.getItem(`kabunote-target-price-${symbol}`) || '0' : '0';
+      const stopLossStr = typeof window !== 'undefined' ? localStorage.getItem(`kabunote-stop-loss-${symbol}`) || '0' : '0';
+      const currentPrice = parseFloat(currentPriceStr);
+
+      if (currentPrice <= 0) return; // 現在価格未設定はスキップ
+
+      try {
+        // NextActionPlanを取得（なくても投資規律アラートはチェック）
+        const planData = typeof window !== 'undefined' ? localStorage.getItem(`kabunote-next-action-plan-${symbol}`) : null;
+        let plan: NextActionPlan;
+
+        if (planData) {
+          plan = JSON.parse(planData);
+        } else {
+          // NextActionPlanがない場合はデフォルトプラン作成
+          plan = {
+            targetPrice: 0,
+            targetQuantity: 0,
+            memo: '',
+            actionType: 'buy',
+            priority: 'medium'
+          };
+        }
+
+        // ポジション情報取得
+        const positionsData = typeof window !== 'undefined' ? localStorage.getItem(`kabunote-positions-${symbol}`) : null;
+        let positionSummary = null;
+        if (positionsData) {
+          try {
+            const positions = JSON.parse(positionsData);
+            positionSummary = calculatePositionSummary(positions);
+          } catch (e) {
+            // Ignore parsing errors
+          }
+        }
+
+        const alert = getIntegratedAlert(
+          plan,
+          currentPrice,
+          targetPriceStr,
+          stopLossStr,
+          positionSummary && positionSummary.totalShares > 0 ? positionSummary : undefined,
+          availableCash
+        );
+
+        if (alert.type !== 'none') {
+          totalAlerts++;
+          // 緊急アラート判定（資金不足・損切り超過・次の一手緊急）
+          if (alert.type === 'insufficient-funds' ||
+              alert.type === 'stop-loss-exceeded' ||
+              alert.type === 'nextaction-approaching') {
+            urgentAlerts++;
+          }
+        }
+      } catch (e) {
+        // Ignore parsing errors
+      }
+    });
+
+    return { total: totalAlerts, urgent: urgentAlerts };
+  }, [stocks, isInitialized]);
+
+  // 初期アラート件数計算 & stocks/isInitialized変更時の再計算
+  useEffect(() => {
+    const counts = calculateAlertCounts();
+    setAlertCounts(counts);
+  }, [calculateAlertCounts]);
+
+  // localStorage変更監視でアラート件数をリアルタイム更新
+  useEffect(() => {
+    if (!isInitialized) return;
+
+    const handleStorageChange = (event: CustomEvent) => {
+      const { key } = event.detail;
+
+      // アラートに影響するキーの変更を検知
+      if (key.includes('current-price-') ||
+          key.includes('target-price-') ||
+          key.includes('stop-loss-') ||
+          key.includes('next-action-plan-') ||
+          key.includes('positions-') ||
+          key === 'kabunote-cash-amount') {
+
+        // アラート件数を再計算
+        setTimeout(() => {
+          const counts = calculateAlertCounts();
+          setAlertCounts(counts);
+        }, 100); // 少し遅延させて確実にデータが更新された後に計算
+      }
+    };
+
+    window.addEventListener('localStorageChange', handleStorageChange as EventListener);
+
+    return () => {
+      window.removeEventListener('localStorageChange', handleStorageChange as EventListener);
+    };
+  }, [isInitialized, calculateAlertCounts]);
+
   return (
     <div className="min-h-screen bg-gray-900">
       {/* Header with Logo */}
@@ -754,6 +875,31 @@ export default function Home() {
 
             {/* ナビゲーションボタン */}
             <div className="flex-shrink-0 flex gap-2">
+              {/* アラート一覧ボタン */}
+              <button
+                onClick={() => setIsAlertSummaryOpen(true)}
+                className={`p-2 cursor-pointer rounded-lg transition-all duration-200 relative ${
+                  alertCounts.total === 0
+                    ? 'text-gray-600 hover:text-gray-400 hover:bg-gray-700'
+                    : alertCounts.urgent > 0
+                    ? 'text-red-400 hover:bg-red-900/20 animate-pulse'
+                    : alertCounts.total >= 4
+                    ? 'text-red-400 hover:bg-red-900/20 animate-bounce'
+                    : 'text-yellow-400 hover:bg-yellow-900/20 animate-pulse'
+                }`}
+                title="アラート一覧"
+                style={{
+                  animationDuration: alertCounts.urgent > 0 ? '0.5s' : alertCounts.total >= 4 ? '1s' : '2s'
+                }}
+              >
+                <span className="text-xl">🚨</span>
+                {alertCounts.total > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                    {alertCounts.total > 9 ? '9+' : alertCounts.total}
+                  </span>
+                )}
+              </button>
+
               {/* 戦略一覧ボタン */}
               <button
                 onClick={() => setIsStrategySummaryOpen(true)}
@@ -1064,6 +1210,26 @@ export default function Home() {
             onClose={() => setIsDataManagerOpen(false)}
             onDataImported={handleDataImported}
           />
+        )}
+
+        {/* アラート一覧モーダル */}
+        {isAlertSummaryOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-gray-900 rounded-lg p-4 max-w-6xl w-full mx-4 max-h-[90vh] overflow-hidden">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-white">🚨 アラート一覧</h2>
+                <button
+                  onClick={() => setIsAlertSummaryOpen(false)}
+                  className="text-gray-400 hover:text-white transition-colors"
+                >
+                  ✕
+                </button>
+              </div>
+              <div className="overflow-auto max-h-[calc(90vh-8rem)]">
+                <AlertSummaryPage />
+              </div>
+            </div>
+          </div>
         )}
 
         {/* 戦略一覧ダッシュボードモーダル */}
