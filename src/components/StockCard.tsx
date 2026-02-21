@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { loadStockData, getCompanyNameSync, isKnownStockSync, StockData } from '@/data/stockNames';
 import { CustomTag } from '@/types/tags';
 import { FavoriteGroup } from '@/types/favorites';
@@ -129,10 +129,8 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
   }, [
     parsedRightsSettings.isActive,
     parsedRightsSettings.isRecurring,
-    parsedRightsSettings.eventType ?? '',
     parsedRightsSettings.month ?? 0,
     parsedRightsSettings.day ?? 0,
-    parsedRightsSettings.singleDate ?? '',
     setRightsSettings
   ]);
 
@@ -215,15 +213,91 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
   const [cashAmount] = useStringLocalStorage('kabunote-cash-amount', '0');
   const availableCash = parseFloat(cashAmount) || 0;
 
+  // アラート再計算用の状態
+  const [alertTrigger, setAlertTrigger] = useState(0);
+
+  // localStorage変更監視でアラート表示をリアルタイム更新
+  useEffect(() => {
+    const handleStorageChange = (event: CustomEvent) => {
+      const { key } = event.detail;
+
+      // このカードに関連するキーの変更を検知
+      if (key === `kabunote-next-action-plan-${symbol}` ||
+          key === `kabunote-current-price-${symbol}` ||
+          key === `kabunote-target-price-${symbol}` ||
+          key === `kabunote-stop-loss-${symbol}` ||
+          key === `kabunote-positions-${symbol}` ||
+          key === 'kabunote-cash-amount') {
+
+        console.log(`StockCard ${symbol} - localStorage change detected:`, key);
+        // アラート再計算をトリガー（少し遅延させて状態更新を待つ）
+        setTimeout(() => {
+          setAlertTrigger(prev => {
+            const newValue = prev + 1;
+            console.log(`StockCard ${symbol} - alertTrigger updated:`, newValue);
+            return newValue;
+          });
+        }, 50); // 50ms遅延
+      }
+    };
+
+    window.addEventListener('localStorageChange', handleStorageChange as EventListener);
+
+    return () => {
+      window.removeEventListener('localStorageChange', handleStorageChange as EventListener);
+    };
+  }, [symbol]);
+
   // 統合アラート判定（NextActionPlan + 投資規律設定）
-  const targetPriceAlert = getIntegratedAlert(
-    nextActionPlan,
+  const targetPriceAlert = useMemo(() => {
+    console.log(`StockCard ${symbol} - Alert recalculation triggered, alertTrigger:`, alertTrigger);
+
+    // 直接localStorageから最新のNextActionPlanを取得
+    let latestNextActionPlan = nextActionPlan;
+    if (typeof window !== 'undefined') {
+      try {
+        const storedPlan = localStorage.getItem(`kabunote-next-action-plan-${symbol}`);
+        if (storedPlan) {
+          const parsedPlan = JSON.parse(storedPlan);
+          latestNextActionPlan = parsedPlan;
+          console.log(`StockCard ${symbol} - Direct from localStorage:`, parsedPlan);
+        }
+      } catch (e) {
+        console.error('Failed to parse Next Action Plan from localStorage:', e);
+      }
+    }
+
+    // Next Action Planの目標価格と投資規律の利確目標を統合
+    const effectiveTargetPrice = latestNextActionPlan.targetPrice > 0
+      ? latestNextActionPlan.targetPrice
+      : parseFloat(targetPrice) || 0;
+
+    console.log(`StockCard ${symbol} - Effective target price:`, effectiveTargetPrice);
+
+    const alert = getIntegratedAlert(
+      latestNextActionPlan,
+      parseFloat(currentPrice) || 0,
+      effectiveTargetPrice,
+      stopLoss,
+      positionSummary.totalShares > 0 ? positionSummary : undefined,
+      availableCash
+    );
+
+    console.log(`StockCard ${symbol} - Alert result:`, alert);
+    return alert;
+  }, [
+    nextActionPlan.targetPrice,
+    nextActionPlan.targetQuantity,
+    nextActionPlan.actionType,
+    nextActionPlan.priority,
+    nextActionPlan.memo,
     currentPrice,
     targetPrice,
     stopLoss,
-    positionSummary.totalShares > 0 ? positionSummary : undefined,
-    availableCash
-  );
+    positionSummary,
+    availableCash,
+    alertTrigger // 強制再計算トリガー
+  ]);
 
   return (
     <div

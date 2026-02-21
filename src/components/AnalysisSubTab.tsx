@@ -156,6 +156,20 @@ export default function AnalysisSubTab({
 
             {/* ネオンライトプログレスバー */}
             <div className="relative">
+              {/* 価格ラベル */}
+              <div className="flex justify-between items-center mt-4 text-xs">
+                <div className="text-red-300 font-medium flex flex-col items-center">
+                  <span className="text-red-400 mt-1 font-bold font-light">{formatPrice(parseFloat(stopLoss))}円</span>
+                </div>
+
+                <div className="text-blue-300 font-medium flex flex-col items-center">
+                  <span className="text-blue-400 mb-2 font-bold text-2xl">{formatPrice(parseFloat(currentPrice))}円</span>
+                </div>
+
+                <div className="text-green-300 font-medium flex flex-col items-center">
+                  <span className="text-green-400 mt-1 font-bold font-light">{formatPrice(parseFloat(targetPrice))}円</span>
+                </div>
+              </div>
               {/* バー背景 */}
               <div className="w-full h-6 bg-gradient-to-r from-red-900 via-gray-800 to-green-900 rounded-full relative overflow-hidden">
                 {/* グロー効果のオーバーレイ */}
@@ -211,51 +225,28 @@ export default function AnalysisSubTab({
                   ></div>
                 </div>
               </div>
-
-              {/* 価格ラベル */}
-              <div className="flex justify-between items-center mt-4 text-xs">
-                <div className="text-red-300 font-medium flex flex-col items-center">
-                  <span>🔻 損切ライン</span>
-                  <span className="text-red-400 mt-1 font-bold">{formatPrice(parseFloat(stopLoss))}円</span>
-                </div>
-
-                <div className="text-blue-300 font-medium flex flex-col items-center">
-                  <span>📈 現在株価</span>
-                  <span className="text-blue-400 mt-1 font-bold text-lg">{formatPrice(parseFloat(currentPrice))}円</span>
-                  <div className={`text-xs mt-1 ${
-                    progressData.isOverTarget
-                      ? 'text-green-400'
-                      : progressData.percentage < 30
-                      ? 'text-red-400'
-                      : progressData.percentage < 70
-                      ? 'text-yellow-400'
-                      : 'text-green-400'
-                  }`}>
-                    {progressData.isOverTarget
-                      ? '🎯 目標達成'
-                      : progressData.isUnderStop
-                      ? '💥 損切りラインを超えてます！'
-                      : progressData.percentage < 30
-                      ? '⚠️ 危険ゾーン'
-                      : progressData.percentage < 70
-                      ? '📊 中間ゾーン'
-                      : '🚀 好調ゾーン'}
-                  </div>
-                </div>
-
-                <div className="text-green-300 font-medium flex flex-col items-center">
-                  <span>💰 利確目標</span>
-                  <span className="text-green-400 mt-1 font-bold">{formatPrice(parseFloat(targetPrice))}円</span>
-                </div>
+              <div className={`text-xs text-center mt-1 ${
+                progressData.isOverTarget
+                  ? 'text-green-400'
+                  : progressData.percentage < 30
+                  ? 'text-red-400'
+                  : progressData.percentage < 70
+                  ? 'text-yellow-400'
+                  : 'text-green-400'
+              }`}>
+                {progressData.isOverTarget
+                  ? '🎯 目標達成'
+                  : progressData.isUnderStop
+                  ? '💥 損切りライン超過'
+                  : progressData.percentage < 30
+                  ? '⚠️ 危険ゾーン'
+                  : progressData.percentage < 70
+                  ? '📊 中間ゾーン'
+                  : '🚀 好調ゾーン'}
               </div>
-
               {/* 取得単価の詳細表示と現在の損益 */}
               {positionSummary.averagePrice > 0 && (
                 <div className="mt-3 text-center">
-                  <div className="text-sm text-white font-medium">
-                    取得単価基準{formatPrice(positionSummary.averagePrice)}円({formatShares(positionSummary.totalShares)}株)
-                  </div>
-
                   {/* 現在の損益表示 */}
                   {(() => {
                     const current = parseFloat(currentPrice);
@@ -265,12 +256,16 @@ export default function AnalysisSubTab({
 
                       return (
                         <div className={`text-2xl mt-1 ${currentProfitLoss >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                          <span className='text-xs'>現在の損益</span> <span className='font-bold'>{formatProfitLoss(currentProfitLoss)}</span><span className='text-xs'> 円</span>
+                          <span className='font-bold'>{formatProfitLoss(currentProfitLoss)}</span><span className='text-xs'> 円</span>
                         </div>
                       );
                     }
                     return null;
                   })()}
+
+                  <div className="text-sm mt-1 text-white font-medium">
+                    取得単価基準 : {formatPrice(positionSummary.averagePrice)} 円 ({formatShares(positionSummary.totalShares)}株)
+                  </div>
 
                   {(() => {
                     const currentPriceNum = parseFloat(currentPrice);
@@ -280,7 +275,7 @@ export default function AnalysisSubTab({
 
                     return (
                       <div className={`text-xs mt-1 ${diff >= 0 ? 'text-green-200' : 'text-red-300'}`}>
-                        取得単価より {diff >= 0 ? '+' : ''}{formatPrice(diff)}円
+                        {diff >= 0 ? '+' : ''}{formatPrice(diff)}円
                         ({diff >= 0 ? '+' : ''}{diffPercent.toFixed(1)}%)
                       </div>
                     );
@@ -357,10 +352,6 @@ export default function AnalysisSubTab({
                   })()}
                 </div>
                 <div className="mt-3 space-y-2">
-                  <div className="text-xs text-gray-400 text-center">
-                    平均取得価額: {formatPrice(positionSummary.averagePrice)}円 × {formatShares(positionSummary.totalShares)}株
-                  </div>
-
                   {/* リスクリワード比の表示 */}
                   {riskRewardRatio !== null && (
                     <div className="text-center">

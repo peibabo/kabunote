@@ -779,7 +779,7 @@ export default function Home() {
         const alert = getIntegratedAlert(
           plan,
           currentPrice,
-          targetPriceStr,
+          parseFloat(targetPriceStr) || 0,
           stopLossStr,
           positionSummary && positionSummary.totalShares > 0 ? positionSummary : undefined,
           availableCash
