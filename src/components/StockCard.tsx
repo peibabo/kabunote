@@ -11,7 +11,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { useStringLocalStorage, useArrayLocalStorage } from '@/hooks/useLocalStorage';
 import { useTabState } from '@/hooks/useTabState';
 import { useNextActionPlan } from '@/hooks/useNextActionPlan';
-import { getIntegratedAlert } from '@/utils/alertSystem';
+import { getIntegratedAlert, getAllActiveAlerts } from '@/utils/alertSystem';
 
 // Components
 import StockCardHeader from './StockCardHeader';
@@ -229,14 +229,9 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
           key === `kabunote-positions-${symbol}` ||
           key === 'kabunote-cash-amount') {
 
-        console.log(`StockCard ${symbol} - localStorage change detected:`, key);
         // アラート再計算をトリガー（少し遅延させて状態更新を待つ）
         setTimeout(() => {
-          setAlertTrigger(prev => {
-            const newValue = prev + 1;
-            console.log(`StockCard ${symbol} - alertTrigger updated:`, newValue);
-            return newValue;
-          });
+          setAlertTrigger(prev => prev + 1);
         }, 50); // 50ms遅延
       }
     };
@@ -250,8 +245,6 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
 
   // 統合アラート判定（NextActionPlan + 投資規律設定）
   const targetPriceAlert = useMemo(() => {
-    console.log(`StockCard ${symbol} - Alert recalculation triggered, alertTrigger:`, alertTrigger);
-
     // 直接localStorageから最新のNextActionPlanを取得
     let latestNextActionPlan = nextActionPlan;
     if (typeof window !== 'undefined') {
@@ -260,31 +253,25 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
         if (storedPlan) {
           const parsedPlan = JSON.parse(storedPlan);
           latestNextActionPlan = parsedPlan;
-          console.log(`StockCard ${symbol} - Direct from localStorage:`, parsedPlan);
         }
       } catch (e) {
         console.error('Failed to parse Next Action Plan from localStorage:', e);
       }
     }
 
-    // Next Action Planの目標価格と投資規律の利確目標を統合
-    const effectiveTargetPrice = latestNextActionPlan.targetPrice > 0
-      ? latestNextActionPlan.targetPrice
-      : parseFloat(targetPrice) || 0;
+    // 投資規律の利確目標価格を使用（Next Action Planの目標価格と分離）
+    const investmentTargetPrice = parseFloat(targetPrice) || 0;
 
-    console.log(`StockCard ${symbol} - Effective target price:`, effectiveTargetPrice);
-
-    const alert = getIntegratedAlert(
+    const alerts = getAllActiveAlerts(
       latestNextActionPlan,
       parseFloat(currentPrice) || 0,
-      effectiveTargetPrice,
+      investmentTargetPrice, // 投資規律の利確目標のみ使用
       stopLoss,
       positionSummary.totalShares > 0 ? positionSummary : undefined,
       availableCash
     );
 
-    console.log(`StockCard ${symbol} - Alert result:`, alert);
-    return alert;
+    return alerts;
   }, [
     nextActionPlan.targetPrice,
     nextActionPlan.targetQuantity,
@@ -299,14 +286,88 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
     alertTrigger // 強制再計算トリガー
   ]);
 
+  // アラートに応じたカードスタイルを取得
+  const getCardAlertStyles = () => {
+    if (!targetPriceAlert || targetPriceAlert.length === 0) {
+      return {
+        bgClass: 'bg-gray-800',
+        borderClass: 'border-gray-700',
+        bgAnimationStyle: {}
+      };
+    }
+
+    // メインアラート（最優先）に基づいてスタイル決定
+    const primaryAlert = targetPriceAlert[0];
+
+    switch (primaryAlert.type) {
+      case 'insufficient-funds':
+      case 'stop-loss-exceeded':
+      case 'nextaction-approaching':
+        return {
+          bgClass: '',
+          borderClass: 'border-red-500/40',
+          bgAnimationStyle: {
+            background: 'linear-gradient(45deg, rgb(31 41 55), rgb(55 31 31))',
+            animation: 'bgPulse 2s ease-in-out infinite',
+            backgroundSize: '400% 400%'
+          }
+        };
+      case 'stop-loss':
+        return {
+          bgClass: '',
+          borderClass: 'border-red-500/30',
+          bgAnimationStyle: {
+            background: 'linear-gradient(45deg, rgb(31 41 55), rgb(51 35 35))',
+            animation: 'bgPulse 2.5s ease-in-out infinite',
+            backgroundSize: '400% 400%'
+          }
+        };
+      case 'target-profit':
+        return {
+          bgClass: '',
+          borderClass: 'border-green-500/30',
+          bgAnimationStyle: {
+            background: 'linear-gradient(45deg, rgb(31 41 55), rgb(31 51 35))',
+            animation: 'bgPulse 2.5s ease-in-out infinite',
+            backgroundSize: '400% 400%'
+          }
+        };
+      case 'nextaction-warning':
+      default:
+        return {
+          bgClass: '',
+          borderClass: 'border-yellow-500/30',
+          bgAnimationStyle: {
+            background: 'linear-gradient(45deg, rgb(31 41 55), rgb(51 47 31))',
+            animation: 'bgPulse 3s ease-in-out infinite',
+            backgroundSize: '400% 400%'
+          }
+        };
+    }
+  };
+
+  const cardStyles = getCardAlertStyles();
+
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      {...attributes}
-      className={`bg-gray-800 rounded-lg border border-gray-700 p-4 space-y-4 transition-all duration-200 h-full flex flex-col ${
-        isDragging ? 'z-50 shadow-2xl ring-2 ring-blue-500 ring-opacity-50 bg-gray-750' : 'hover:shadow-lg'
-      }`}
+    <>
+      {/* カスタムCSS（背景アニメーション） */}
+      <style jsx>{`
+        @keyframes bgPulse {
+          0%, 100% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+        }
+      `}</style>
+
+      <div
+        ref={setNodeRef}
+        style={{
+          ...style,
+          ...cardStyles.bgAnimationStyle
+        }}
+        {...attributes}
+        className={`relative ${cardStyles.bgClass} rounded-lg border ${cardStyles.borderClass} shadow-lg p-4 space-y-4 transition-all duration-200 h-full flex flex-col ${
+          isDragging ? 'z-50 shadow-2xl ring-2 ring-blue-500 ring-opacity-50 bg-gray-750' : 'hover:shadow-lg'
+        }`}
     >
       {/* ヘッダー */}
       <StockCardHeader
@@ -327,13 +388,14 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
 
       {/* 統合アラート表示（NextActionPlan + 投資規律設定） */}
       <AlertDisplay
-        alert={targetPriceAlert}
+        alerts={targetPriceAlert}
         onClick={() => {
           setActiveTab('analysis');
-          // アラート種類に応じて適切なサブタブに移動
-          const targetSubTab = (targetPriceAlert.type === 'nextaction-approaching' ||
-                               targetPriceAlert.type === 'nextaction-warning' ||
-                               targetPriceAlert.type === 'insufficient-funds')
+          // アラート種類に応じて適切なサブタブに移動（メインアラート基準）
+          const primaryAlert = targetPriceAlert.length > 0 ? targetPriceAlert[0] : null;
+          const targetSubTab = (primaryAlert?.type === 'nextaction-approaching' ||
+                               primaryAlert?.type === 'nextaction-warning' ||
+                               primaryAlert?.type === 'insufficient-funds')
                                ? 'nextaction' : 'analysis';
 
           // サブタブの状態を更新
@@ -499,5 +561,6 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
         />
       )}
     </div>
+    </>
   );
 }

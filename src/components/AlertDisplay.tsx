@@ -1,62 +1,59 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { AlertInfo } from '@/utils/alertSystem';
 
 interface AlertDisplayProps {
-  alert: AlertInfo;
+  alerts: AlertInfo[];
   onClick: () => void;
 }
 
 /**
- * アラート表示コンポーネント
- * 統合アラートシステムで判定されたアラートを視覚的に表示
+ * アラート表示コンポーネント（左上アイコン + ホバーツールチップ）
+ * 統合アラートシステムで判定された複数アラートを左上にコンパクトに表示
  */
-export default function AlertDisplay({ alert, onClick }: AlertDisplayProps) {
-  if (alert.type === 'none') {
+export default function AlertDisplay({ alerts, onClick }: AlertDisplayProps) {
+  const [isHovered, setIsHovered] = useState(false);
+
+  // アラートが無い場合は非表示
+  if (!alerts || alerts.length === 0) {
     return null;
   }
 
-  // アラート種別に応じたスタイリング
+  // メインアラート（最優先）を取得
+  const primaryAlert = alerts[0];
+
+  // アラート種別に応じたスタイリング（メインアラートベース）
   const getAlertStyles = () => {
-    switch (alert.type) {
+    switch (primaryAlert.type) {
       case 'nextaction-approaching':
       case 'stop-loss':
       case 'stop-loss-exceeded':
       case 'insufficient-funds':
         return {
-          containerClass: 'bg-red-900/30 border border-red-500/50 hover:bg-red-900/40',
-          glowClass: 'bg-red-400/5',
-          dotClass: 'bg-red-400',
-          textClass: 'text-red-400',
-          detailClass: 'text-red-300',
-          scanlineClass: 'via-red-400/10',
-          boxShadow: '0 0 10px rgba(248, 113, 113, 0.8), 0 0 20px rgba(248, 113, 113, 0.4)'
+          dotColor: 'bg-red-500',
+          glowColor: 'shadow-red-500/50',
+          animationSpeed: 'animate-pulse', // 高速点滅
+          tooltipBg: 'bg-red-900/95 border-red-500/50'
         };
       case 'target-profit':
         return {
-          containerClass: 'bg-green-900/30 border border-green-500/50 hover:bg-green-900/40',
-          glowClass: 'bg-green-400/5',
-          dotClass: 'bg-green-400',
-          textClass: 'text-green-400',
-          detailClass: 'text-green-300',
-          scanlineClass: 'via-green-400/10',
-          boxShadow: '0 0 10px rgba(34, 197, 94, 0.8), 0 0 20px rgba(34, 197, 94, 0.4)'
+          dotColor: 'bg-green-500',
+          glowColor: 'shadow-green-500/50',
+          animationSpeed: 'animate-pulse', // 中速点滅
+          tooltipBg: 'bg-green-900/95 border-green-500/50'
         };
       case 'nextaction-warning':
       default:
         return {
-          containerClass: 'bg-yellow-900/30 border border-yellow-500/50 hover:bg-yellow-900/40',
-          glowClass: 'bg-yellow-400/5',
-          dotClass: 'bg-yellow-400',
-          textClass: 'text-yellow-400',
-          detailClass: 'text-yellow-300',
-          scanlineClass: 'via-yellow-400/10',
-          boxShadow: '0 0 10px rgba(251, 191, 36, 0.8), 0 0 20px rgba(251, 191, 36, 0.4)'
+          dotColor: 'bg-yellow-500',
+          glowColor: 'shadow-yellow-500/50',
+          animationSpeed: 'animate-pulse', // ゆっくり点滅
+          tooltipBg: 'bg-yellow-900/95 border-yellow-500/50'
         };
     }
   };
 
-  // アラート種別に応じたメッセージ
-  const getAlertMessage = () => {
+  // 個別アラートメッセージ取得
+  const getAlertMessage = (alert: AlertInfo) => {
     switch (alert.type) {
       case 'nextaction-approaching': return '🚨 次の一手目標に接近中';
       case 'stop-loss': return '🔻 損切りラインに接近';
@@ -68,21 +65,21 @@ export default function AlertDisplay({ alert, onClick }: AlertDisplayProps) {
     }
   };
 
-  // 詳細情報の表示
-  const getDetailMessage = () => {
+  // 個別アラート詳細情報取得
+  const getDetailMessage = (alert: AlertInfo) => {
     switch (alert.type) {
-      case 'nextaction-approaching': return '（乖離率2%以内）';
-      case 'nextaction-warning': return '（乖離率2-5%以内）';
+      case 'nextaction-approaching': return '乖離率2%以内';
+      case 'nextaction-warning': return '乖離率2-5%以内';
       case 'stop-loss':
       case 'stop-loss-exceeded':
       case 'target-profit':
-        return alert.gapPercentage ? `（乖離率${alert.gapPercentage.toFixed(1)}%）` : '';
+        return alert.gapPercentage ? `乖離率${alert.gapPercentage.toFixed(1)}%` : '';
       case 'insufficient-funds':
         if (alert.analysis && alert.analysis.requiredInvestment && alert.analysis.cashAvailable) {
           const shortfall = alert.analysis.requiredInvestment - alert.analysis.cashAvailable;
-          return `（不足額：${new Intl.NumberFormat('ja-JP').format(Math.round(shortfall))}円）`;
+          return `不足額：${new Intl.NumberFormat('ja-JP').format(Math.round(shortfall))}円`;
         }
-        return '（資金確認が必要）';
+        return '資金確認が必要';
       default: return '';
     }
   };
@@ -91,33 +88,61 @@ export default function AlertDisplay({ alert, onClick }: AlertDisplayProps) {
 
   return (
     <div
-      onClick={onClick}
-      className={`mb-4 relative p-3 rounded-lg overflow-hidden cursor-pointer transition-colors ${styles.containerClass}`}
+      className="absolute top-2 left-2 z-10"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
-      {/* ネオングロー背景 */}
-      <div className={`absolute inset-0 animate-pulse ${styles.glowClass}`}></div>
+      {/* 点滅するアラートドット */}
+      <div
+        onClick={onClick}
+        className={`
+          w-3 h-3 rounded-full cursor-pointer transition-all duration-200
+          ${styles.dotColor} ${styles.animationSpeed} ${styles.glowColor}
+          shadow-lg hover:scale-110
+        `}
+        style={{
+          boxShadow: '0 0 10px currentColor, 0 0 20px currentColor'
+        }}
+      />
 
-      <div className="relative flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <div
-              className={`w-3 h-3 rounded-full animate-pulse ${styles.dotClass}`}
-              style={{ boxShadow: styles.boxShadow }}
-            ></div>
-            <span className={`text-sm font-medium ${styles.textClass}`}>
-              {getAlertMessage()}
-            </span>
-          </div>
-          <div className={`text-xs ${styles.detailClass}`}>
-            {getDetailMessage()}
-          </div>
+      {/* ホバーツールチップ */}
+      {isHovered && (
+        <div
+          className={`
+            absolute top-5 left-0 min-w-[200px] p-3 rounded-lg border
+            text-white text-sm font-medium z-50 pointer-events-none
+            ${styles.tooltipBg}
+          `}
+          style={{
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.4)'
+          }}
+        >
+          {/* アラート一覧表示 */}
+          {alerts.map((alert, index) => (
+            <div key={`alert-${index}`} className={`${index > 0 ? 'mt-3 pt-3 border-t border-gray-600' : ''}`}>
+              <div className="font-semibold mb-1">
+                {getAlertMessage(alert)}
+              </div>
+              <div className="text-xs opacity-90">
+                {getDetailMessage(alert)}
+              </div>
+            </div>
+          ))}
+
+          {/* 複数アラート表示時の統計情報 */}
+          {alerts.length > 1 && (
+            <div className="mt-3 pt-3 border-t border-gray-600 text-xs opacity-70">
+              合計 {alerts.length} 件のアラート
+            </div>
+          )}
+
+          {/* ツールチップの矢印 */}
+          <div className={`
+            absolute -top-1 left-2 w-2 h-2 rotate-45
+            ${styles.dotColor}
+          `} />
         </div>
-      </div>
-
-      {/* スキャンライン効果 */}
-      <div className="absolute top-0 left-0 w-full h-full">
-        <div className={`absolute inset-0 bg-gradient-to-r from-transparent to-transparent animate-pulse ${styles.scanlineClass}`}></div>
-      </div>
+      )}
     </div>
   );
 }
