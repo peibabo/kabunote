@@ -49,6 +49,7 @@ interface OverallSummary {
 
 export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProps) {
   const [isChartsExpanded, setIsChartsExpanded] = useState(false);
+  const [isTargetSummaryExpanded, setIsTargetSummaryExpanded] = useState(false);
   const [isRiskRewardExpanded, setIsRiskRewardExpanded] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
@@ -568,16 +569,37 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
 
       {/* 損益目標サマリーセクション */}
       {(overallSummary.targetSummary.targetSetCount > 0 || overallSummary.targetSummary.stopLossSetCount > 0) && (
-        <div className="mt-6">
-          <div className="flex items-center gap-3 mb-4">
-            <span className="text-lg">🎯</span>
-            <h3 className="text-lg font-semibold text-white">損益目標サマリー</h3>
-            <span className="text-xs text-gray-400">
-              ({overallSummary.targetSummary.targetSetCount + overallSummary.targetSummary.stopLossSetCount}/{overallSummary.targetSummary.totalStocksWithPosition}銘柄で設定済み)
-            </span>
-          </div>
+        <div className="mt-4">
+          {/* アコーディオンヘッダー */}
+          <button
+            onClick={() => setIsTargetSummaryExpanded(!isTargetSummaryExpanded)}
+            className="w-full flex items-center justify-between p-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors cursor-pointer mb-2"
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-lg">🎯</span>
+              <h3 className="text-sm font-medium text-gray-200">
+                損益目標サマリー
+              </h3>
+              <span className="text-xs text-gray-400">
+                ({overallSummary.targetSummary.targetSetCount + overallSummary.targetSummary.stopLossSetCount}/{overallSummary.targetSummary.totalStocksWithPosition}銘柄で設定済み)
+              </span>
+            </div>
+            <div className={`transform transition-transform duration-200 text-gray-400 ${
+              isTargetSummaryExpanded ? 'rotate-180' : 'rotate-0'
+            }`}>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                <path d="M4 6l4 4 4-4H4z"/>
+              </svg>
+            </div>
+          </button>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* アコーディオンコンテンツ */}
+          <div className={`pb-2 overflow-hidden transition-all duration-300 ease-in-out ${
+            isTargetSummaryExpanded
+              ? 'max-h-[2000px] opacity-100'
+              : 'max-h-0 opacity-0'
+          }`}>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* 利確目標合計 */}
             {overallSummary.targetSummary.targetSetCount > 0 && (
               <div className="bg-green-900 bg-opacity-30 border border-green-700 rounded-lg p-4">
@@ -752,12 +774,13 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
               </div>
             </div>
           )}
+          </div>
         </div>
       )}
 
       {/* 円グラフセクション（アコーディオン） */}
       {overallSummary.stocksWithPositions > 0 && (
-        <div className="mt-6">
+        <div>
           {/* アコーディオンヘッダー */}
           <button
             onClick={() => setIsChartsExpanded(!isChartsExpanded)}
