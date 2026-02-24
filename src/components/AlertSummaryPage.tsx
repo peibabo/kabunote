@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNextActionPlan, hasNextActionPlan } from '@/hooks/useNextActionPlan';
 import { NextActionPlan } from '@/types/nextActionPlan';
-import { getIntegratedAlert, AlertType } from '@/utils/alertSystem';
+import { getIntegratedAlert, getAllActiveAlerts, AlertType } from '@/utils/alertSystem';
 import { getCompanyNameSync } from '@/data/stockNames';
 import { calculatePositionSummary } from '@/types/positions';
 import { useSnooze } from '@/hooks/useSnooze';
@@ -182,8 +182,8 @@ export default function AlertSummaryPage() {
           }
         }
 
-        // アラート判定
-        const alert = getIntegratedAlert(
+        // アラート判定（複数アラート対応）
+        const alertList = getAllActiveAlerts(
           plan,
           currentPrice,
           targetPriceStr,
@@ -192,10 +192,10 @@ export default function AlertSummaryPage() {
           availableCash
         );
 
-        console.log(`AlertSummaryPage - ${symbol}: アラート判定結果`, alert);
+        console.log(`AlertSummaryPage - ${symbol}: アラート判定結果`, alertList);
 
-        // アラートがある場合のみ追加（スヌーズ済みを除外）
-        if (alert.type !== 'none') {
+        // 各アラートを処理（複数アラート対応）
+        alertList.forEach(alert => {
           const { message, detail, priority } = getAlertDisplayInfo(alert);
 
           // スヌーズ中でない場合のみ表示
@@ -229,9 +229,11 @@ export default function AlertSummaryPage() {
               stopLossPrice: alert.stopLossPrice
             });
           } else {
-            console.log(`AlertSummaryPage - ${symbol}: アラートはスヌーズ中`);
+            console.log(`AlertSummaryPage - ${symbol}: アラート ${alert.type} はスヌーズ中`);
           }
-        } else {
+        });
+
+        if (alertList.length === 0) {
           console.log(`AlertSummaryPage - ${symbol}: アラートなし`);
         }
       } catch (e) {
@@ -261,7 +263,6 @@ export default function AlertSummaryPage() {
           key === 'kabunote-snoozed-alerts') {
 
         // アラートデータの再計算をトリガー
-        console.log('AlertSummaryPage - localStorage変更検知:', key);
         // 依存配列の値を強制更新するためのダミー更新
         setShowSnoozed(prev => prev);
       }

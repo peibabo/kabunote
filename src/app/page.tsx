@@ -18,7 +18,7 @@ import { CustomTag } from '@/types/tags';
 import { DividendRightsSettings, ShareholderRightsSettings, ShareholderMeetingSettings, createDefaultDividendRightsSettings, createDefaultShareholderRightsSettings, createDefaultShareholderMeetingSettings } from '@/types/rightsDate';
 import { NextActionPlan } from '@/types/nextActionPlan';
 import { hasNextActionPlan } from '@/hooks/useNextActionPlan';
-import { getIntegratedAlert } from '@/utils/alertSystem';
+import { getIntegratedAlert, getAllActiveAlerts } from '@/utils/alertSystem';
 import { calculatePositionSummary } from '@/types/positions';
 import { useDebouncedCallback } from '@/hooks/useDebounce';
 import {
@@ -776,7 +776,7 @@ export default function Home() {
           }
         }
 
-        const alert = getIntegratedAlert(
+        const alerts = getAllActiveAlerts(
           plan,
           currentPrice,
           parseFloat(targetPriceStr) || 0,
@@ -785,7 +785,8 @@ export default function Home() {
           availableCash
         );
 
-        if (alert.type !== 'none') {
+        // 各アラートをカウント（スヌーズ除外）
+        alerts.forEach(alert => {
           // スヌーズ判定（useSnoozeフックが使えないので直接localStorage確認）
           const snoozedAlertsStr = typeof window !== 'undefined' ? localStorage.getItem('kabunote-snoozed-alerts') : null;
           let isAlertSnoozed = false;
@@ -813,7 +814,7 @@ export default function Home() {
               urgentAlerts++;
             }
           }
-        }
+        });
       } catch (e) {
         // Ignore parsing errors
       }

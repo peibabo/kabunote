@@ -72,9 +72,17 @@ export const checkNextActionAlert = (
   }
 
   if (analysis.isApproaching) {
-    return { type: 'nextaction-approaching', analysis };
+    return {
+      type: 'nextaction-approaching',
+      analysis,
+      targetPrice: nextActionPlan.targetPrice
+    };
   } else if (analysis.isWarning) {
-    return { type: 'nextaction-warning', analysis };
+    return {
+      type: 'nextaction-warning',
+      analysis,
+      targetPrice: nextActionPlan.targetPrice
+    };
   }
 
   return null;
@@ -135,7 +143,7 @@ export const checkTargetProfitAlert = (
 };
 
 /**
- * 統合アラートシステムのメイン関数
+ * 統合アラートシステムのメイン関数（単一アラート版・後方互換性のため残存）
  * 優先順位に従って最も重要なアラート1つを返す
  */
 export const getIntegratedAlert = (
@@ -146,34 +154,57 @@ export const getIntegratedAlert = (
   positionSummary?: PositionSummary,
   availableCash?: number
 ): AlertInfo => {
+  const alerts = getAllActiveAlerts(nextActionPlan, currentPrice, targetPrice, stopLoss, positionSummary, availableCash);
+  return alerts.length > 0 ? alerts[0] : { type: 'none' };
+};
+
+/**
+ * 全てのアクティブなアラートを取得する関数
+ * 複数のアラートが同時に発生している場合、全てを配列で返す
+ */
+export const getAllActiveAlerts = (
+  nextActionPlan: NextActionPlan,
+  currentPrice: number,
+  targetPrice: number,
+  stopLoss: string,
+  positionSummary?: PositionSummary,
+  availableCash?: number
+): AlertInfo[] => {
   const currentPriceNum = parseFloat(currentPrice.toString());
   const targetPriceNum = parseFloat(targetPrice.toString());
   const stopLossNum = parseFloat(stopLoss);
 
   // 現在価格が無効な場合はアラートなし
   if (!currentPriceNum || currentPriceNum <= 0) {
-    return { type: 'none' };
+    return [];
   }
+
+  const alerts: AlertInfo[] = [];
 
   // 各アラートをチェック（投資余力現金も考慮）
   const nextActionAlert = checkNextActionAlert(nextActionPlan, currentPriceNum, positionSummary, availableCash);
   const stopLossAlert = checkStopLossAlert(currentPriceNum, stopLossNum);
   const targetProfitAlert = checkTargetProfitAlert(currentPriceNum, targetPriceNum);
 
-  // 優先順位に従って返す（最も重要なもの1つのみ）
+  // 全てのアラートを優先度順で配列に追加
   if (nextActionAlert?.type === 'insufficient-funds') {
-    return nextActionAlert;
-  } else if (stopLossAlert?.type === 'stop-loss-exceeded') {
-    return stopLossAlert;
-  } else if (nextActionAlert?.type === 'nextaction-approaching') {
-    return nextActionAlert;
-  } else if (stopLossAlert?.type === 'stop-loss') {
-    return stopLossAlert;
-  } else if (targetProfitAlert) {
-    return targetProfitAlert;
-  } else if (nextActionAlert?.type === 'nextaction-warning') {
-    return nextActionAlert;
+    alerts.push(nextActionAlert);
+  }
+  if (stopLossAlert?.type === 'stop-loss-exceeded') {
+    alerts.push(stopLossAlert);
+  }
+  if (nextActionAlert?.type === 'nextaction-approaching') {
+    alerts.push(nextActionAlert);
+  }
+  if (stopLossAlert?.type === 'stop-loss') {
+    alerts.push(stopLossAlert);
+  }
+  if (targetProfitAlert) {
+    alerts.push(targetProfitAlert);
+  }
+  if (nextActionAlert?.type === 'nextaction-warning') {
+    alerts.push(nextActionAlert);
   }
 
-  return { type: 'none' };
+  return alerts;
 };
