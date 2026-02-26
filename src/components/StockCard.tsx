@@ -186,6 +186,34 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
     loadData();
   }, [symbol]);
 
+  // 外部からのタブ切り替え指示を処理
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const tabInstruction = localStorage.getItem(`kabunote-open-tab-${symbol}`);
+    if (tabInstruction) {
+      // 指示を読み取った後は削除
+      localStorage.removeItem(`kabunote-open-tab-${symbol}`);
+
+      // 配当・優待関連は管理タブに移動
+      if (tabInstruction === 'dividend' || tabInstruction === 'management') {
+        setActiveTab('management');
+
+        // 配当タブの場合は、管理タブ内の配当サブタブも設定
+        if (tabInstruction === 'dividend') {
+          // 少し遅延させて管理タブがマウントされた後に設定
+          setTimeout(() => {
+            localStorage.setItem(`kabunote-management-tab-${symbol}`, 'dividend');
+            // カスタムイベントを発火して管理タブに通知
+            window.dispatchEvent(new CustomEvent('localStorageChange', {
+              detail: { key: `kabunote-management-tab-${symbol}` }
+            }));
+          }, 100);
+        }
+      }
+    }
+  }, [symbol, setActiveTab]);
+
   // お気に入りグループの変更を処理
   const handleFavoriteGroupsChange = (groupIds: string[]) => {
     const updatedGroups = favoriteGroups.map(group => {

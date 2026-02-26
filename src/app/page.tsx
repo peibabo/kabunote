@@ -15,6 +15,7 @@ import AlertSummaryPage from '@/components/AlertSummaryPage';
 import HamburgerMenuButton from '@/components/HamburgerMenuButton';
 import SlideOutMenu from '@/components/SlideOutMenu';
 import EventCalendarPage from '@/components/EventCalendarPage';
+import DividendBenefitListPage from '@/components/DividendBenefitListPage';
 import { loadStockData, getStockData } from '@/data/stockNames';
 import { Position } from '@/types/positions';
 import { FavoriteGroup, GROUP_COLORS } from '@/types/favorites';
@@ -58,6 +59,7 @@ export default function Home() {
   const [isPortfolioPositionsOpen, setIsPortfolioPositionsOpen] = useState(false);
   const [isAlertSummaryOpen, setIsAlertSummaryOpen] = useState(false);
   const [isEventCalendarOpen, setIsEventCalendarOpen] = useState(false);
+  const [isDividendBenefitListOpen, setIsDividendBenefitListOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -610,6 +612,9 @@ export default function Home() {
       case 'events':
         setIsEventCalendarOpen(true);
         break;
+      case 'dividends':
+        setIsDividendBenefitListOpen(true);
+        break;
       case 'data':
         setIsDataManagerOpen(true);
         break;
@@ -638,6 +643,153 @@ export default function Home() {
 
   // 次のステップのヒントが必要かどうかを判定
   const shouldShowHints = stocks.length > 0 && (!hasPortfolioData || !hasCalendarData);
+
+  // 配当情報を取得する関数
+  const getDividendInfo = (symbol: string) => {
+    if (typeof window === 'undefined') return null;
+
+    const dividendPerShare = localStorage.getItem(`kabunote-dividend-per-share-${symbol}`) || '';
+    const dividendFrequency = localStorage.getItem(`kabunote-dividend-frequency-${symbol}`) || '1';
+
+    if (!dividendPerShare) return null;
+
+    return {
+      dividendPerShare,
+      dividendFrequency: parseInt(dividendFrequency) as 1 | 2 | 4,
+      lastUpdated: new Date().toISOString()
+    };
+  };
+
+  // 株主優待情報を取得する関数
+  const getShareholderBenefitInfo = (symbol: string) => {
+    if (typeof window === 'undefined') return null;
+
+    const benefitDescription = localStorage.getItem(`kabunote-benefit-description-${symbol}`) || '';
+    const minimumShares = localStorage.getItem(`kabunote-minimum-shares-${symbol}`) || '';
+    const estimatedValue = localStorage.getItem(`kabunote-estimated-value-${symbol}`) || '';
+
+    if (!benefitDescription) return null;
+
+    return {
+      benefitDescription,
+      minimumShares,
+      benefitMonth: '12', // デフォルト値、実際の実装では権利確定日設定から取得
+      estimatedValue,
+      lastUpdated: new Date().toISOString()
+    };
+  };
+
+  // 配当権利確定日設定を取得する関数
+  const getDividendRightsSettings = (symbol: string): DividendRightsSettings => {
+    if (typeof window === 'undefined') return createDefaultDividendRightsSettings();
+
+    const settingsStr = localStorage.getItem(`kabunote-dividend-rights-settings-${symbol}`);
+    if (settingsStr) {
+      try {
+        return JSON.parse(settingsStr);
+      } catch {
+        return createDefaultDividendRightsSettings();
+      }
+    }
+    return createDefaultDividendRightsSettings();
+  };
+
+  // 株主優待権利確定日設定を取得する関数
+  const getShareholderRightsSettings = (symbol: string): ShareholderRightsSettings => {
+    if (typeof window === 'undefined') return createDefaultShareholderRightsSettings();
+
+    const settingsStr = localStorage.getItem(`kabunote-shareholder-rights-settings-${symbol}`);
+    if (settingsStr) {
+      try {
+        return JSON.parse(settingsStr);
+      } catch {
+        return createDefaultShareholderRightsSettings();
+      }
+    }
+    return createDefaultShareholderRightsSettings();
+  };
+
+  // 配当・優待データを準備する関数
+  const getDividendBenefitData = () => {
+    const result: any = {};
+    stocks.forEach(symbol => {
+      const stockInfo = getStockData(symbol);
+      const dividendInfo = getDividendInfo(symbol);
+      const shareholderBenefitInfo = getShareholderBenefitInfo(symbol);
+      const dividendRightsSettings = getDividendRightsSettings(symbol);
+      const shareholderRightsSettings = getShareholderRightsSettings(symbol);
+
+      // portfolioDataから該当銘柄のポジション情報を取得し統合
+      const portfolioItem = portfolioData.find(p => p.symbol === symbol);
+      let position = null;
+
+      if (portfolioItem && portfolioItem.positions.length > 0) {
+        // 複数ポジションがある場合は統合
+        if (portfolioItem.positions.length > 1) {
+          const totalShares = portfolioItem.positions.reduce((sum, pos) => sum + pos.shares, 0);
+          const totalCost = portfolioItem.positions.reduce((sum, pos) => sum + (pos.shares * pos.purchasePrice), 0);
+          const averagePrice = totalShares > 0 ? totalCost / totalShares : 0;
+
+          position = {
+            totalShares,
+            averagePrice,
+            purchaseDate: portfolioItem.positions[0].purchaseDate,
+            notes: portfolioItem.positions.map(p => p.memo).filter(Boolean).join(', ')
+          };
+        } else {
+          // 単一ポジションの場合は統合形式に変換
+          const pos = portfolioItem.positions[0];
+          position = {
+            totalShares: pos.shares,
+            averagePrice: pos.purchasePrice,
+            purchaseDate: pos.purchaseDate,
+            notes: pos.memo || ''
+          };
+        }
+      }
+
+      // デバッグログを追加
+      if (symbol === '5527') {
+        console.log(`🔍 ${symbol} 詳細:`, {
+          'dividendPerShare': dividendInfo?.dividendPerShare,
+          'dividendFrequency': dividendInfo?.dividendFrequency,
+          'parsedDividendPerShare': parseFloat(dividendInfo?.dividendPerShare || '0'),
+          'benefitDescription': shareholderBenefitInfo?.benefitDescription,
+          'minimumShares': shareholderBenefitInfo?.minimumShares,
+          'estimatedValue': shareholderBenefitInfo?.estimatedValue,
+          'parsedEstimatedValue': parseFloat(shareholderBenefitInfo?.estimatedValue || '0'),
+          'position_totalShares': position?.totalShares,
+          'position_averagePrice': position?.averagePrice,
+          'hasPosition': !!position,
+          'hasDividend': !!dividendInfo?.dividendPerShare && parseFloat(dividendInfo.dividendPerShare) > 0,
+          'hasBenefit': !!shareholderBenefitInfo?.benefitDescription
+        });
+
+        // ポジション取得の詳細デバッグ
+        console.log(`🏦 ${symbol} ポジション詳細:`, {
+          'portfolioItem': portfolioItem,
+          'positionsArray': portfolioItem?.positions,
+          'positionsLength': portfolioItem?.positions?.length,
+          'firstPosition': portfolioItem?.positions?.[0],
+          'firstPosition_shares': portfolioItem?.positions?.[0]?.shares,
+          'firstPosition_purchasePrice': portfolioItem?.positions?.[0]?.purchasePrice,
+          'position': position,
+          'position_totalShares': position?.totalShares,
+          'position_averagePrice': position?.averagePrice
+        });
+      }
+
+      result[symbol] = {
+        name: stockInfo?.name || symbol,
+        dividendInfo,
+        shareholderBenefitInfo,
+        dividendRightsSettings,
+        shareholderRightsSettings,
+        position
+      };
+    });
+    return result;
+  };
 
   // 検索機能
   const searchStocks = async (stocks: string[], query: string): Promise<string[]> => {
@@ -1316,6 +1468,37 @@ export default function Home() {
                 <EventCalendarPage
                   stockSymbols={stocks}
                   stockData={stockCalendarData}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 配当・優待一覧モーダル */}
+        {isDividendBenefitListOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-gray-900 rounded-lg p-4 max-w-7xl w-full mx-4 max-h-[90vh] overflow-hidden">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-white">💰 配当・優待一覧</h2>
+                <button
+                  onClick={() => setIsDividendBenefitListOpen(false)}
+                  className="cursor-pointer text-gray-400 hover:text-white transition-colors p-2 rounded"
+                >
+                  ✕
+                </button>
+              </div>
+              <div className="overflow-auto max-h-[calc(90vh-8rem)]">
+                <DividendBenefitListPage
+                  stockSymbols={stocks}
+                  stockData={getDividendBenefitData()}
+                  onStockClick={(symbol) => {
+                    setIsDividendBenefitListOpen(false);
+                    // 配当・優待タブを開くための指示をlocalStorageに保存
+                    if (typeof window !== 'undefined') {
+                      localStorage.setItem(`kabunote-open-tab-${symbol}`, 'dividend');
+                    }
+                    handleStockClick(symbol);
+                  }}
                 />
               </div>
             </div>
