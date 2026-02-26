@@ -214,6 +214,7 @@ export default function StrategySummaryPage() {
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-300">銘柄</th>
                 <th className="px-4 py-3 text-center text-xs font-medium text-gray-300">アクション</th>
                 <th className="px-4 py-3 text-center text-xs font-medium text-gray-300">目標価格</th>
+                <th className="px-4 py-3 text-center text-xs font-medium text-gray-300">現在株価</th>
                 <th className="px-4 py-3 text-center text-xs font-medium text-gray-300">株数</th>
                 <th className="px-4 py-3 text-center text-xs font-medium text-gray-300">優先度</th>
                 <th className="px-4 py-3 text-center text-xs font-medium text-gray-300">ステータス</th>
@@ -243,6 +244,11 @@ export default function StrategySummaryPage() {
                     </td>
                     <td className="px-4 py-3 text-center text-white">
                       {row.plan.targetPrice > 0 ? `${formatPrice(row.plan.targetPrice)}円` : '-'}
+                    </td>
+                    <td className="px-4 py-3 text-center text-white">
+                      {row.currentPrice > 0 ? `${formatPrice(row.currentPrice)}円` : (
+                        <span className="text-gray-500 text-xs">未設定</span>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-center text-white">
                       {row.plan.targetQuantity > 0 ? `${Math.floor(row.plan.targetQuantity / 100)}単位` : '-'}

@@ -30,9 +30,9 @@ export const TAG_COLORS: Record<TagColor, { bg: string; text: string }> = {
 
 export const PRESET_TAGS: Omit<CustomTag, 'id' | 'createdAt'>[] = [
   { label: '高配当', color: 'red' },
-  { label: 'グロース', color: 'green' },
-  { label: '優待', color: 'purple' },
-  { label: '監視中', color: 'yellow' },
-  { label: '注目', color: 'pink' },
-  { label: 'リスク', color: 'orange' }
+  { label: '優待', color: 'green' },
+  { label: '割安', color: 'purple' },
+  { label: '成長', color: 'yellow' },
+  { label: '要警戒', color: 'pink' },
+  { label: '決算直前', color: 'orange' }
 ];

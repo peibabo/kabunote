@@ -50,7 +50,7 @@ export default function FloatingAddButton({
         onClick={handleOpenModal}
         disabled={disabled}
         className={`
-          fixed bottom-6 right-6 z-40
+          cursor-pointer fixed bottom-6 right-6 z-40
           w-14 h-14 rounded-full shadow-lg
           flex items-center justify-center
           text-white text-2xl font-bold
@@ -86,7 +86,7 @@ export default function FloatingAddButton({
               </h2>
               <button
                 onClick={handleCloseModal}
-                className="text-gray-400 hover:text-white transition-colors rounded-full w-8 h-8 flex items-center justify-center hover:bg-gray-700"
+                className="text-gray-400 hover:text-white transition-colors cursor-pointer rounded-full w-8 h-8 flex items-center justify-center hover:bg-gray-700"
                 aria-label="モーダルを閉じる"
               >
                 ×

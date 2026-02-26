@@ -105,7 +105,7 @@ export default function StockCardHeader({
                             e.stopPropagation();
                             onTagRemove(tag.id);
                           }}
-                          className="bg-black bg-opacity-30 hover:bg-opacity-50 rounded-full w-4 h-4 flex items-center justify-center text-xs leading-none transition-all hover:scale-110"
+                          className="cursor-pointer bg-black bg-opacity-30 hover:bg-opacity-50 rounded-full w-4 h-4 flex items-center justify-center text-xs leading-none transition-all hover:scale-110"
                           title={`${tag.label}タグを削除`}
                           style={{ lineHeight: '1', transform: 'translateY(1px)' }}
                         >
@@ -128,14 +128,14 @@ export default function StockCardHeader({
                 <div className="flex flex-wrap gap-1">
                   <button
                     onClick={onTagEditorOpen}
-                    className="text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 px-2 py-0.5 rounded-full transition-colors"
+                    className="cursor-pointer text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 px-2 py-0.5 rounded-full transition-colors"
                     title="タグを編集"
                   >
                     + タグ
                   </button>
                   <button
                     onClick={onFavoriteGroupSelectorOpen}
-                    className="text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 px-2 py-0.5 rounded-full transition-colors"
+                    className="cursor-pointer text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 px-2 py-0.5 rounded-full transition-colors"
                     title="お気に入りグループを編集"
                   >
                     + お気に入り
@@ -156,7 +156,7 @@ export default function StockCardHeader({
           </button>
           <button
             onClick={handleDeleteClick}
-            className="bg-red-600 hover:bg-red-700 text-white rounded-full w-7 h-7 flex items-center justify-center text-sm font-bold transition-colors"
+            className="cursor-pointer bg-red-600 hover:bg-red-700 text-white rounded-full w-7 h-7 flex items-center justify-center text-sm font-bold transition-colors"
             aria-label="銘柄カードを削除"
           >
             ×

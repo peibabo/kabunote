@@ -156,8 +156,11 @@ export default function AnalysisSubTab({
 
             {/* ネオンライトプログレスバー */}
             <div className="relative">
+              <div className="text-center text-sm mt-1 text-white font-medium">
+                取得単価 : {formatPrice(positionSummary.averagePrice)} 円 ({formatShares(positionSummary.totalShares)}株)
+              </div>
               {/* 価格ラベル */}
-              <div className="flex justify-between items-center mt-4 text-xs">
+              <div className="flex justify-between items-center mt-2 text-xs">
                 <div className="text-red-300 font-medium flex flex-col items-center">
                   <span className="text-red-400 mt-1 font-bold font-light">{formatPrice(parseFloat(stopLoss))}円</span>
                 </div>
@@ -263,10 +266,6 @@ export default function AnalysisSubTab({
                     return null;
                   })()}
 
-                  <div className="text-sm mt-1 text-white font-medium">
-                    取得単価基準 : {formatPrice(positionSummary.averagePrice)} 円 ({formatShares(positionSummary.totalShares)}株)
-                  </div>
-
                   {(() => {
                     const currentPriceNum = parseFloat(currentPrice);
                     const avgPrice = positionSummary.averagePrice;
@@ -287,7 +286,7 @@ export default function AnalysisSubTab({
             {/* 損益シミュレーション - 統合部分 */}
             {profitLossInfo && positionSummary.totalShares > 0 && (
               <div className="mt-6 pt-4 border-t border-gray-700">
-                <h6 className="text-xs font-medium text-gray-300 mb-3 text-center">📊 損益シミュレーション</h6>
+                <h6 className="text-sm font-bold text-gray-300 mb-3 text-center">📊 損益シミュレーション</h6>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* 損切ラインでの損失 */}
                   {(() => {

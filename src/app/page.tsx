@@ -10,6 +10,7 @@ import PortfolioSummary from '@/components/PortfolioSummary';
 import FloatingAddButton from '@/components/FloatingAddButton';
 import DataManager from '@/components/DataManager';
 import StrategySummaryPage from '@/components/StrategySummaryPage';
+import PortfolioPositionsPage from '@/components/PortfolioPositionsPage';
 import AlertSummaryPage from '@/components/AlertSummaryPage';
 import { loadStockData, getStockData } from '@/data/stockNames';
 import { Position } from '@/types/positions';
@@ -51,6 +52,7 @@ export default function Home() {
   const [isGroupManagerOpen, setIsGroupManagerOpen] = useState(false);
   const [isDataManagerOpen, setIsDataManagerOpen] = useState(false);
   const [isStrategySummaryOpen, setIsStrategySummaryOpen] = useState(false);
+  const [isPortfolioPositionsOpen, setIsPortfolioPositionsOpen] = useState(false);
   const [isAlertSummaryOpen, setIsAlertSummaryOpen] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -931,6 +933,15 @@ export default function Home() {
                 <span className="text-xl">🎯</span>
               </button>
 
+              {/* 保有ポジション一覧ボタン */}
+              <button
+                onClick={() => setIsPortfolioPositionsOpen(true)}
+                className="relative p-2 cursor-pointer text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
+                title="保有ポジション一覧"
+              >
+                <span className="text-xl">💼</span>
+              </button>
+
               {/* データ管理ボタン */}
               <button
                 onClick={() => setIsDataManagerOpen(true)}
@@ -1086,7 +1097,7 @@ export default function Home() {
               <h3 className="text-lg font-semibold text-white">⭐ お気に入りグループ</h3>
               <button
                 onClick={() => setIsGroupManagerOpen(true)}
-                className="text-sm bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded transition-colors"
+                className="cursor-pointer text-sm bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded transition-colors"
               >
                 グループ管理
               </button>
@@ -1242,7 +1253,7 @@ export default function Home() {
                 <h2 className="text-xl font-bold text-white">🚨 アラート一覧</h2>
                 <button
                   onClick={() => setIsAlertSummaryOpen(false)}
-                  className="text-gray-400 hover:text-white transition-colors"
+                  className="cursor-pointer text-gray-400 hover:text-white transition-colors"
                 >
                   ✕
                 </button>
@@ -1262,13 +1273,33 @@ export default function Home() {
                 <h2 className="text-xl font-bold text-white">🎯 戦略一覧ダッシュボード</h2>
                 <button
                   onClick={() => setIsStrategySummaryOpen(false)}
-                  className="text-gray-400 hover:text-white transition-colors"
+                  className="text-gray-400 hover:text-white transition-colors cursor-pointer"
                 >
                   ✕
                 </button>
               </div>
               <div className="overflow-auto max-h-[calc(90vh-8rem)]">
                 <StrategySummaryPage />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 保有ポジション一覧ダッシュボードモーダル */}
+        {isPortfolioPositionsOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-gray-900 rounded-lg p-4 max-w-7xl w-full mx-4 max-h-[90vh] overflow-hidden">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-white">💼 保有ポジション一覧</h2>
+                <button
+                  onClick={() => setIsPortfolioPositionsOpen(false)}
+                  className="text-gray-400 hover:text-white transition-colors cursor-pointer"
+                >
+                  ✕
+                </button>
+              </div>
+              <div className="overflow-auto max-h-[calc(90vh-8rem)]">
+                <PortfolioPositionsPage />
               </div>
             </div>
           </div>
