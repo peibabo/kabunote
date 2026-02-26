@@ -552,7 +552,7 @@ export default function InvestmentTimeline({ events, onStockClick, stockSymbols,
             <div className="flex items-center justify-center space-x-4 mb-4 mt-2">
               <button
                 onClick={handlePreviousMonth}
-                className="text-gray-400 hover:text-white transition-colors"
+                className="cursor-pointer text-gray-400 hover:text-white transition-colors"
               >
                 ←
               </button>
@@ -561,7 +561,7 @@ export default function InvestmentTimeline({ events, onStockClick, stockSymbols,
               </span>
               <button
                 onClick={handleNextMonth}
-                className="text-gray-400 hover:text-white transition-colors"
+                className="cursor-pointer text-gray-400 hover:text-white transition-colors"
               >
                 →
               </button>

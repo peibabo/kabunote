@@ -104,11 +104,11 @@ export default function SlideOutMenu({ isOpen, onClose, alertCounts, onMenuItemC
                   <span className="text-gray-300">ポジション一覧</span>
                 </button>
                 <button
-                  onClick={() => handleMenuClick('portfolio')}
+                  onClick={() => handleMenuClick('events')}
                   className="w-full flex items-center space-x-3 p-2 text-left hover:bg-gray-700 rounded-lg transition-colors cursor-pointer"
                 >
-                  <span className="text-lg">📈</span>
-                  <span className="text-gray-300">ポートフォリオサマリー</span>
+                  <span className="text-lg">📅</span>
+                  <span className="text-gray-300">イベント一覧</span>
                 </button>
               </div>
             )}

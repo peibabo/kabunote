@@ -14,6 +14,7 @@ import PortfolioPositionsPage from '@/components/PortfolioPositionsPage';
 import AlertSummaryPage from '@/components/AlertSummaryPage';
 import HamburgerMenuButton from '@/components/HamburgerMenuButton';
 import SlideOutMenu from '@/components/SlideOutMenu';
+import EventCalendarPage from '@/components/EventCalendarPage';
 import { loadStockData, getStockData } from '@/data/stockNames';
 import { Position } from '@/types/positions';
 import { FavoriteGroup, GROUP_COLORS } from '@/types/favorites';
@@ -56,6 +57,7 @@ export default function Home() {
   const [isStrategySummaryOpen, setIsStrategySummaryOpen] = useState(false);
   const [isPortfolioPositionsOpen, setIsPortfolioPositionsOpen] = useState(false);
   const [isAlertSummaryOpen, setIsAlertSummaryOpen] = useState(false);
+  const [isEventCalendarOpen, setIsEventCalendarOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -604,6 +606,9 @@ export default function Home() {
       case 'portfolio':
         // ポートフォリオサマリーは既に表示されているのでスクロール
         document.querySelector('.portfolio-summary')?.scrollIntoView({ behavior: 'smooth' });
+        break;
+      case 'events':
+        setIsEventCalendarOpen(true);
         break;
       case 'data':
         setIsDataManagerOpen(true);
@@ -1289,6 +1294,29 @@ export default function Home() {
               </div>
               <div className="overflow-auto max-h-[calc(90vh-8rem)]">
                 <PortfolioPositionsPage />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* イベント一覧モーダル */}
+        {isEventCalendarOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-gray-900 rounded-lg p-4 max-w-6xl w-full mx-4 max-h-[90vh] overflow-hidden">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-white">📅 イベント一覧</h2>
+                <button
+                  onClick={() => setIsEventCalendarOpen(false)}
+                  className="text-gray-400 hover:text-white transition-colors p-2 rounded"
+                >
+                  ✕
+                </button>
+              </div>
+              <div className="overflow-auto max-h-[calc(90vh-8rem)]">
+                <EventCalendarPage
+                  stockSymbols={stocks}
+                  stockData={stockCalendarData}
+                />
               </div>
             </div>
           </div>
