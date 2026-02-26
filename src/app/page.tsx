@@ -12,6 +12,8 @@ import DataManager from '@/components/DataManager';
 import StrategySummaryPage from '@/components/StrategySummaryPage';
 import PortfolioPositionsPage from '@/components/PortfolioPositionsPage';
 import AlertSummaryPage from '@/components/AlertSummaryPage';
+import HamburgerMenuButton from '@/components/HamburgerMenuButton';
+import SlideOutMenu from '@/components/SlideOutMenu';
 import { loadStockData, getStockData } from '@/data/stockNames';
 import { Position } from '@/types/positions';
 import { FavoriteGroup, GROUP_COLORS } from '@/types/favorites';
@@ -54,6 +56,7 @@ export default function Home() {
   const [isStrategySummaryOpen, setIsStrategySummaryOpen] = useState(false);
   const [isPortfolioPositionsOpen, setIsPortfolioPositionsOpen] = useState(false);
   const [isAlertSummaryOpen, setIsAlertSummaryOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<string[]>([]);
@@ -586,6 +589,37 @@ export default function Home() {
     window.location.reload();
   };
 
+  // メニュー項目クリックハンドラー
+  const handleMenuItemClick = (action: string) => {
+    switch (action) {
+      case 'alerts':
+        setIsAlertSummaryOpen(true);
+        break;
+      case 'strategy':
+        setIsStrategySummaryOpen(true);
+        break;
+      case 'positions':
+        setIsPortfolioPositionsOpen(true);
+        break;
+      case 'portfolio':
+        // ポートフォリオサマリーは既に表示されているのでスクロール
+        document.querySelector('.portfolio-summary')?.scrollIntoView({ behavior: 'smooth' });
+        break;
+      case 'data':
+        setIsDataManagerOpen(true);
+        break;
+      case 'groups':
+        setIsGroupManagerOpen(true);
+        break;
+      case 'help':
+        // TODO: ヘルプページの実装
+        alert('ヘルプ機能は今後実装予定です');
+        break;
+      default:
+        break;
+    }
+  };
+
   // 投資カレンダーにデータがあるかどうかを判定
   const hasCalendarData = Object.values(stockCalendarData).some(data => {
     return data.earningsDate ||
@@ -897,59 +931,12 @@ export default function Home() {
             `}</style>
             </div>
 
-            {/* ナビゲーションボタン */}
-            <div className="flex-shrink-0 flex gap-2">
-              {/* アラート一覧ボタン */}
-              <button
-                onClick={() => setIsAlertSummaryOpen(true)}
-                className={`p-2 cursor-pointer rounded-lg transition-all duration-200 relative ${
-                  alertCounts.total === 0
-                    ? 'text-gray-600 hover:text-gray-400 hover:bg-gray-700'
-                    : alertCounts.urgent > 0
-                    ? 'text-red-400 hover:bg-red-900/20 animate-pulse'
-                    : alertCounts.total >= 4
-                    ? 'text-red-400 hover:bg-red-900/20 animate-bounce'
-                    : 'text-yellow-400 hover:bg-yellow-900/20 animate-pulse'
-                }`}
-                title="アラート一覧"
-                style={{
-                  animationDuration: alertCounts.urgent > 0 ? '0.5s' : alertCounts.total >= 4 ? '1s' : '2s'
-                }}
-              >
-                <span className="text-xl">🚨</span>
-                {alertCounts.total > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
-                    {alertCounts.total > 9 ? '9+' : alertCounts.total}
-                  </span>
-                )}
-              </button>
-
-              {/* 戦略一覧ボタン */}
-              <button
-                onClick={() => setIsStrategySummaryOpen(true)}
-                className="p-2 cursor-pointer text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
-                title="戦略一覧"
-              >
-                <span className="text-xl">🎯</span>
-              </button>
-
-              {/* 保有ポジション一覧ボタン */}
-              <button
-                onClick={() => setIsPortfolioPositionsOpen(true)}
-                className="relative p-2 cursor-pointer text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
-                title="保有ポジション一覧"
-              >
-                <span className="text-xl">💼</span>
-              </button>
-
-              {/* データ管理ボタン */}
-              <button
-                onClick={() => setIsDataManagerOpen(true)}
-                className="p-2 cursor-pointer text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
-                title="データ管理"
-              >
-                <span className="text-xl">⚙️</span>
-              </button>
+            {/* ナビゲーション */}
+            <div className="flex-shrink-0">
+              <HamburgerMenuButton
+                onClick={() => setIsMenuOpen(true)}
+                alertCounts={alertCounts}
+              />
             </div>
           </div>
         </div>
@@ -1027,7 +1014,9 @@ export default function Home() {
         </div>
 
         {/* ポートフォリオサマリー */}
-        <PortfolioSummary portfolioData={portfolioData} />
+        <div className="portfolio-summary">
+          <PortfolioSummary portfolioData={portfolioData} />
+        </div>
 
         {/* 投資カレンダー */}
         {stocks.length > 0 && hasCalendarData && (
@@ -1305,6 +1294,14 @@ export default function Home() {
           </div>
         )}
       </main>
+
+      {/* スライドアウトメニュー */}
+      <SlideOutMenu
+        isOpen={isMenuOpen}
+        onClose={() => setIsMenuOpen(false)}
+        alertCounts={alertCounts}
+        onMenuItemClick={handleMenuItemClick}
+      />
     </div>
   );
 }
