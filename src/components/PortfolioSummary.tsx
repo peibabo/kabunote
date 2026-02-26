@@ -398,9 +398,18 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
         <div className="bg-gray-700 rounded-lg p-3">
           <div className="text-xs text-gray-400 mb-1">損益額</div>
           {overallSummary.totalCurrentValue > 0 ? (
-            <div className={`text-lg font-medium ${getProfitLossColor(overallSummary.totalProfitLoss)}`}>
-              {overallSummary.totalProfitLoss >= 0 ? '+' : ''}
-              {formatPrice(overallSummary.totalProfitLoss)}円
+            <div>
+              <div className={`text-lg font-medium ${getProfitLossColor(overallSummary.totalProfitLoss)}`}>
+                {overallSummary.totalProfitLoss >= 0 ? '+' : ''}
+                {formatPrice(overallSummary.totalProfitLoss)}円
+              </div>
+              {/* 税引後損益額 */}
+              {overallSummary.totalProfitLoss > 0 && (
+                <div className="text-sm text-green-200 mt-1 font-medium">
+                  税引後 {overallSummary.totalProfitLoss >= 0 ? '+' : ''}
+                  {formatPrice(Math.round(overallSummary.totalProfitLoss * 0.79685))}円
+                </div>
+              )}
             </div>
           ) : (
             <div className="text-lg font-medium text-gray-500">
@@ -432,11 +441,11 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
               <div className="text-lg font-medium text-green-300">
                 {formatDividendAmount(overallSummary.dividendSummary.totalAnnualDividend)}円
               </div>
+              <div className="text-sm text-green-200 mt-1 font-medium">
+                税引後 {formatDividendAmount(overallSummary.dividendSummary.totalAfterTaxAmount)}円
+              </div>
               <div className="text-xs text-gray-500 mt-1">
                 利回り <span className="font-medium">{formatDividendYield(overallSummary.dividendSummary.averageDividendYield)}%</span>
-              </div>
-              <div className="text-sm text-blue-300 mt-1 font-medium">
-                税引後 {formatDividendAmount(overallSummary.dividendSummary.totalAfterTaxAmount)}円
               </div>
               <div className="text-xs text-gray-400 mt-1 font-medium">
                 {overallSummary.dividendSummary.stocksWithDividend}/{overallSummary.dividendSummary.totalStocksWithPositions}銘柄設定済

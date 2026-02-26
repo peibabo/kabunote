@@ -9,16 +9,18 @@ export interface FavoriteGroup {
 }
 
 export type GroupColor =
-  | 'blue'     // デフォルト
-  | 'green'    // 成長株
-  | 'red'      // 配当株
-  | 'purple'   // 長期保有
-  | 'yellow'   // 注目株
-  | 'orange'   // 売却検討
-  | 'pink'     // 新規発見
-  | 'indigo'   // テクニカル
-  | 'teal'     // バリュー
-  | 'gray';    // その他
+  | 'blue'
+  | 'green'
+  | 'red'
+  | 'purple'
+  | 'yellow'
+  | 'orange'
+  | 'pink'
+  | 'indigo'
+  | 'teal'
+  | 'cyan'
+  | 'lime'
+  | 'gray';
 
 export const GROUP_COLORS: Record<GroupColor, { bg: string; text: string; border: string }> = {
   blue: { bg: 'bg-blue-600', text: 'text-blue-100', border: 'border-blue-600' },
@@ -30,15 +32,18 @@ export const GROUP_COLORS: Record<GroupColor, { bg: string; text: string; border
   pink: { bg: 'bg-pink-600', text: 'text-pink-100', border: 'border-pink-600' },
   indigo: { bg: 'bg-indigo-600', text: 'text-indigo-100', border: 'border-indigo-600' },
   teal: { bg: 'bg-teal-600', text: 'text-teal-100', border: 'border-teal-600' },
-  gray: { bg: 'bg-gray-600', text: 'text-gray-100', border: 'border-gray-600' }
+  gray: { bg: 'bg-gray-600', text: 'text-gray-100', border: 'border-gray-600' },
+  lime: { bg: 'bg-lime-600', text: 'text-lime-100', border: 'border-lime-600' },
+  cyan: { bg: 'bg-cyan-600', text: 'text-cyan-100', border: 'border-cyan-600' }
 };
 
 export const DEFAULT_GROUPS: Omit<FavoriteGroup, 'id' | 'createdAt' | 'stocks'>[] = [
-  { name: '注目株', color: 'yellow' },
-  { name: '高配当候補', color: 'red' },
-  { name: '成長株', color: 'green' },
-  { name: '長期保有', color: 'purple' },
-  { name: '売却検討', color: 'orange' }
+  { name: '主力保有株', color: 'blue' },
+  { name: '短期決戦', color: 'orange' },
+  { name: '配当・優待枠', color: 'green' },
+  { name: 'ウォッチリスト', color: 'red' },
+  { name: '出口戦略実行', color: 'cyan' },
+  { name: '過去保有株', color: 'purple' },
 ];
 
 export const MAX_GROUPS = 10;

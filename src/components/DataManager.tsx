@@ -114,7 +114,7 @@ export default function DataManager({ onClose, onDataImported }: DataManagerProp
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-white transition-colors rounded-full w-8 h-8 flex items-center justify-center hover:bg-gray-700"
+            className="text-gray-400 hover:text-white transition-colors rounded-full w-8 h-8 flex items-center cursor-pointer justify-center hover:bg-gray-700"
             aria-label="モーダルを閉じる"
           >
             ×
