@@ -147,7 +147,7 @@ export default function AlertSummaryPage() {
       if (planData) {
         try {
           plan = JSON.parse(planData);
-          hasValidPlan = hasNextActionPlan(plan);
+          hasValidPlan = plan ? hasNextActionPlan(plan) : false;
           console.log(`AlertSummaryPage - ${symbol}: NextActionPlan取得`, { plan, hasValidPlan });
         } catch (e) {
           console.log(`AlertSummaryPage - ${symbol}: NextActionPlan解析エラー`, e);
@@ -186,7 +186,7 @@ export default function AlertSummaryPage() {
         const alertList = getAllActiveAlerts(
           plan,
           currentPrice,
-          targetPriceStr,
+          parseFloat(targetPriceStr) || 0,
           stopLossStr,
           positionSummary && positionSummary.totalShares > 0 ? positionSummary : undefined,
           availableCash

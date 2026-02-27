@@ -67,6 +67,7 @@ export default function Home() {
   const [isSearching, setIsSearching] = useState(false);
   const [stockCalendarData, setStockCalendarData] = useState<{ [symbol: string]: { name: string; earningsDate: string; dividendRightsSettings: DividendRightsSettings; shareholderRightsSettings: ShareholderRightsSettings; shareholderMeetingSettings: ShareholderMeetingSettings } }>({});
   const [portfolioData, setPortfolioData] = useState<{ symbol: string; name: string; positions: Position[]; currentPrice: string; sector: string; customTags: CustomTag[]; }[]>([]);
+  const [dividendBenefitData, setDividendBenefitData] = useState<any>({});
 
   // デバウンスされたお気に入りグループ保存関数（250ms後に保存）
   const debouncedSaveFavoriteGroups = useDebouncedCallback((groups: FavoriteGroup[]) => {
@@ -499,6 +500,18 @@ export default function Home() {
     };
   }, [isInitialized, stocks]);
 
+  // 配当・優待データの準備（isDividendBenefitListOpen時に実行）
+  useEffect(() => {
+    if (!isDividendBenefitListOpen || !isInitialized) return;
+
+    const loadDividendBenefitData = async () => {
+      const data = await getDividendBenefitData();
+      setDividendBenefitData(data);
+    };
+
+    loadDividendBenefitData();
+  }, [isDividendBenefitListOpen, isInitialized, stocks]);
+
   const handleAddStock = (code: string) => {
     if (stocks.length >= MAX_STOCKS) {
       setError(`最大${MAX_STOCKS}銘柄まで表示できます`);
@@ -710,10 +723,11 @@ export default function Home() {
   };
 
   // 配当・優待データを準備する関数
-  const getDividendBenefitData = () => {
+  const getDividendBenefitData = async () => {
     const result: any = {};
-    stocks.forEach(symbol => {
-      const stockInfo = getStockData(symbol);
+
+    for (const symbol of stocks) {
+      const stockInfo = await getStockData(symbol);
       const dividendInfo = getDividendInfo(symbol);
       const shareholderBenefitInfo = getShareholderBenefitInfo(symbol);
       const dividendRightsSettings = getDividendRightsSettings(symbol);
@@ -787,7 +801,7 @@ export default function Home() {
         shareholderRightsSettings,
         position
       };
-    });
+    }
     return result;
   };
 
@@ -1459,7 +1473,7 @@ export default function Home() {
                 <h2 className="text-xl font-bold text-white">📅 イベント一覧</h2>
                 <button
                   onClick={() => setIsEventCalendarOpen(false)}
-                  className="text-gray-400 hover:text-white transition-colors p-2 rounded"
+                  className="cursor-pointer text-gray-400 hover:text-white transition-colors p-2 rounded"
                 >
                   ✕
                 </button>
@@ -1489,17 +1503,17 @@ export default function Home() {
               </div>
               <div className="overflow-auto max-h-[calc(90vh-8rem)]">
                 <DividendBenefitListPage
-                  stockSymbols={stocks}
-                  stockData={getDividendBenefitData()}
-                  onStockClick={(symbol) => {
-                    setIsDividendBenefitListOpen(false);
-                    // 配当・優待タブを開くための指示をlocalStorageに保存
-                    if (typeof window !== 'undefined') {
-                      localStorage.setItem(`kabunote-open-tab-${symbol}`, 'dividend');
-                    }
-                    handleStockClick(symbol);
-                  }}
-                />
+                    stockSymbols={stocks}
+                    stockData={dividendBenefitData}
+                    onStockClick={(symbol) => {
+                      setIsDividendBenefitListOpen(false);
+                      // 配当・優待タブを開くための指示をlocalStorageに保存
+                      if (typeof window !== 'undefined') {
+                        localStorage.setItem(`kabunote-open-tab-${symbol}`, 'dividend');
+                      }
+                      handleStockClick(symbol);
+                    }}
+                  />
               </div>
             </div>
           </div>
