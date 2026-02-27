@@ -4,8 +4,16 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { DividendInfo, calculateDividendInfo, formatDividendAmount, formatDividendYield } from '@/types/dividend';
 import { ShareholderBenefitInfo, calculateShareholderBenefit, formatBenefitValue, formatBenefitYield } from '@/types/shareholder';
 import { DividendRightsSettings, ShareholderRightsSettings, formatDividendMonthDay, formatShareholderMonthDay } from '@/types/rightsDate';
-import { Position } from '@/types/positions';
+import { Position, PositionSummary } from '@/types/positions';
 import { getStockData } from '@/data/stockNames';
+
+// 統合されたポジション情報の型
+interface IntegratedPosition {
+  totalShares: number;
+  averagePrice: number;
+  purchaseDate: string;
+  notes: string;
+}
 
 interface DividendBenefitData {
   symbol: string;
@@ -28,7 +36,7 @@ interface DividendBenefitData {
   shortfall?: number;
 
   // ポジション情報
-  position?: Position;
+  position?: IntegratedPosition;
   hasPosition: boolean;
 }
 
@@ -44,7 +52,7 @@ interface DividendBenefitListPageProps {
       shareholderBenefitInfo?: ShareholderBenefitInfo;
       dividendRightsSettings: DividendRightsSettings;
       shareholderRightsSettings: ShareholderRightsSettings;
-      position?: Position;
+      position?: IntegratedPosition;
     }
   };
   onStockClick?: (symbol: string) => void;

@@ -114,7 +114,7 @@ export default function EventCalendarPage({ stockSymbols, stockData }: EventCale
       // 配当権利確定日関連
       const dividendRights = symbolData.dividendRightsSettings;
       if (dividendRights && dividendRights.isActive && dividendRights.month && dividendRights.day) {
-        const rightsDate = new Date(selectedYear, parseInt(dividendRights.month) - 1, parseInt(dividendRights.day));
+        const rightsDate = new Date(selectedYear, parseInt(dividendRights.month.toString()) - 1, parseInt(dividendRights.day.toString()));
         if (rightsDate.getMonth() === selectedMonth && rightsDate.getFullYear() === selectedYear) {
           // 権利確定日
           events.push({
@@ -148,7 +148,7 @@ export default function EventCalendarPage({ stockSymbols, stockData }: EventCale
       // 優待権利確定日関連
       const shareholderRights = symbolData.shareholderRightsSettings;
       if (shareholderRights && shareholderRights.isActive && shareholderRights.month && shareholderRights.day) {
-        const rightsDate = new Date(selectedYear, parseInt(shareholderRights.month) - 1, parseInt(shareholderRights.day));
+        const rightsDate = new Date(selectedYear, parseInt(shareholderRights.month.toString()) - 1, parseInt(shareholderRights.day.toString()));
         if (rightsDate.getMonth() === selectedMonth && rightsDate.getFullYear() === selectedYear) {
           // 権利確定日
           events.push({
@@ -182,7 +182,7 @@ export default function EventCalendarPage({ stockSymbols, stockData }: EventCale
       // 株主総会
       const meeting = symbolData.shareholderMeetingSettings;
       if (meeting && meeting.isActive && meeting.month && meeting.day) {
-        const meetingDate = new Date(selectedYear, parseInt(meeting.month) - 1, parseInt(meeting.day));
+        const meetingDate = new Date(selectedYear, parseInt(meeting.month.toString()) - 1, parseInt(meeting.day.toString()));
         if (meetingDate.getMonth() === selectedMonth && meetingDate.getFullYear() === selectedYear) {
           events.push({
             symbol,
