@@ -13,6 +13,10 @@ interface BasicTabProps {
   memo: string;
   onMemoChange: (value: string) => void;
   onMemoModalOpen: () => void;
+  isMemoLoading?: boolean;
+  isMemoSaving?: boolean;
+  memoError?: string | null;
+  memoLastSaved?: Date | null;
 }
 
 const getExternalLinks = (symbol: string): ExternalLink[] => [
@@ -64,7 +68,11 @@ export default function BasicTab({
   symbol,
   memo,
   onMemoChange,
-  onMemoModalOpen
+  onMemoModalOpen,
+  isMemoLoading = false,
+  isMemoSaving = false,
+  memoError = null,
+  memoLastSaved = null
 }: BasicTabProps) {
   const externalLinks = getExternalLinks(symbol);
 
@@ -73,9 +81,38 @@ export default function BasicTab({
       {/* 基本タブ: メモ + チャート・外部リンク */}
       {/* メモ欄 */}
       <div className="space-y-2">
-        <label htmlFor={`memo-${symbol}`} className="text-sm font-medium text-gray-300">
-          株ノオト
-        </label>
+        <div className="flex items-center justify-between">
+          <label htmlFor={`memo-${symbol}`} className="text-sm font-medium text-gray-300">
+            株ノオト
+          </label>
+          <div className="flex items-center space-x-2">
+            {isMemoLoading && (
+              <div className="flex items-center space-x-1">
+                <div className="animate-spin h-3 w-3 border border-blue-400 border-t-transparent rounded-full"></div>
+                <span className="text-xs text-blue-400">読込中...</span>
+              </div>
+            )}
+            {isMemoSaving && (
+              <div className="flex items-center space-x-1">
+                <div className="animate-pulse h-2 w-2 bg-green-400 rounded-full"></div>
+                <span className="text-xs text-green-400">保存中...</span>
+              </div>
+            )}
+            {memoLastSaved && !isMemoSaving && (
+              <span className="text-xs text-gray-500">
+                {memoLastSaved.toLocaleTimeString('ja-JP', {
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}に保存
+              </span>
+            )}
+          </div>
+        </div>
+        {memoError && (
+          <div className="text-xs text-red-400 bg-red-900/20 px-2 py-1 rounded">
+            エラー: {memoError}
+          </div>
+        )}
         <textarea
           id={`memo-${symbol}`}
           value={memo}

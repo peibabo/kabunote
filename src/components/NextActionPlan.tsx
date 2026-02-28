@@ -35,7 +35,7 @@ const PRIORITY_COLORS: Record<Priority, string> = {
 };
 
 export default function NextActionPlan({ symbol, currentPrice = 0, positionSummary }: NextActionPlanProps) {
-  const { nextActionPlan, updateNextActionPlan, resetNextActionPlan, isLoading } = useNextActionPlan(symbol);
+  const { nextActionPlan, updateNextActionPlan, resetNextActionPlan, isLoading } = useNextActionPlan(`stock-${symbol}`);
 
   // 投資余力現金を取得
   const [cashAmount] = useStringLocalStorage('kabunote-cash-amount', '0');

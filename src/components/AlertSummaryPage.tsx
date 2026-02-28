@@ -1,12 +1,13 @@
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { useNextActionPlan, hasNextActionPlan } from '@/hooks/useNextActionPlan';
-import { NextActionPlan } from '@/types/nextActionPlan';
+import { useNextActionPlan } from '@/hooks/useNextActionPlan';
+import { NextActionPlan, hasNextActionPlan } from '@/types/nextActionPlan';
 import { getIntegratedAlert, getAllActiveAlerts, AlertType } from '@/utils/alertSystem';
 import { getCompanyNameSync } from '@/data/stockNames';
 import { calculatePositionSummary } from '@/types/positions';
 import { useSnooze } from '@/hooks/useSnooze';
+import { useCash } from '@/hooks/useCash';
 import { SNOOZE_DURATIONS, SnoozeDuration, getTimeUntilUnsnooze, generateAlertKey } from '@/types/snooze';
 
 interface AlertRowData {
@@ -74,7 +75,8 @@ const getAlertDisplayInfo = (alert: { type: AlertType; gapPercentage?: number; a
 
 export default function AlertSummaryPage() {
   const [stocks, setStocks] = useState<string[]>([]);
-  const [availableCash, setAvailableCash] = useState(0);
+  const { cashAmount } = useCash();
+  const availableCash = parseFloat(cashAmount) || 0;
   const [isLoaded, setIsLoaded] = useState(false);
   const [showSnoozed, setShowSnoozed] = useState(false);
 
@@ -91,7 +93,6 @@ export default function AlertSummaryPage() {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const savedStocks = localStorage.getItem('kabunote-stocks');
-      const savedCash = localStorage.getItem('kabunote-cash-amount') || '0';
 
       if (savedStocks) {
         try {
@@ -102,7 +103,6 @@ export default function AlertSummaryPage() {
         }
       }
 
-      setAvailableCash(parseFloat(savedCash) || 0);
       setIsLoaded(true);
     }
   }, []);

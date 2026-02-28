@@ -4,11 +4,13 @@ import {
   NextActionPlanAnalysis,
   ActionType,
   Priority,
-  analyzeNextActionPlan
+  analyzeNextActionPlan,
+  hasNextActionPlan,
+  isCompleteNextActionPlan
 } from '@/types/nextActionPlan';
 import { PositionSummary } from '@/types/positions';
-import { useNextActionPlan, hasNextActionPlan, isCompleteNextActionPlan } from '@/hooks/useNextActionPlan';
-import { useStringLocalStorage } from '@/hooks/useLocalStorage';
+import { useNextActionPlan } from '@/hooks/useNextActionPlan';
+import { useCash } from '@/hooks/useCash';
 
 interface NextActionSubTabProps {
   symbol: string;
@@ -35,10 +37,16 @@ const PRIORITY_COLORS: Record<Priority, string> = {
 };
 
 export default function NextActionSubTab({ symbol, currentPrice = 0, positionSummary }: NextActionSubTabProps) {
-  const { nextActionPlan, updateNextActionPlan, resetNextActionPlan, isLoading } = useNextActionPlan(symbol);
+  const {
+    nextActionPlan,
+    updateNextActionPlan,
+    deleteNextActionPlan: resetNextActionPlan,
+    isLoading,
+    isSaving
+  } = useNextActionPlan(`stock-${symbol}`);
 
   // 投資余力現金を取得
-  const [cashAmount] = useStringLocalStorage('kabunote-cash-amount', '0');
+  const { cashAmount } = useCash();
   const availableCash = parseFloat(cashAmount) || 0;
 
   if (isLoading) {
