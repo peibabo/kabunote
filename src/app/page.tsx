@@ -28,6 +28,7 @@ import { hasNextActionPlan } from '@/hooks/useNextActionPlan';
 import { getIntegratedAlert, getAllActiveAlerts } from '@/utils/alertSystem';
 import { calculatePositionSummary } from '@/types/positions';
 import { useDebouncedCallback } from '@/hooks/useDebounce';
+import { useStockData } from '@/hooks/useStockData';
 import { createClient } from '@/lib/supabase-client';
 import {
   DndContext,
@@ -52,8 +53,17 @@ const FILTER_STORAGE_KEY = 'kabunote-selected-group-filter';
 const ORDER_STORAGE_KEY = 'kabunote-stocks-order';
 
 export default function Home() {
-  const [stocks, setStocks] = useState<string[]>([]);
-  const [error, setError] = useState('');
+  // 新しいカスタムフックを使用してデータを取得
+  const { stockData, stockSymbols, isLoading: isStockDataLoading, error: stockDataError, isLoggedIn, refreshData } = useStockData();
+  const stocks = stockSymbols; // 後方互換性のため
+  const setStocks = (newStocks: string[]) => {
+    // TODO: API呼び出しで更新
+    console.log('setStocks called with:', newStocks);
+  };
+  // エラーは stockDataError から取得、独自エラーと統合
+  const [additionalError, setAdditionalError] = useState('');
+  const error = stockDataError || additionalError;
+  const setError = setAdditionalError; // 後方互換性のため
   const [favoriteGroups, setFavoriteGroups] = useState<FavoriteGroup[]>([]);
   const [selectedGroupFilter, setSelectedGroupFilter] = useState<string | null>(null);
   const [isGroupManagerOpen, setIsGroupManagerOpen] = useState(false);
@@ -65,7 +75,6 @@ export default function Home() {
   const [isDividendBenefitListOpen, setIsDividendBenefitListOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<string[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -122,7 +131,7 @@ export default function Home() {
 
   useEffect(() => {
     const initializeApp = async () => {
-      // CSVデータを事前読み込み
+      // CSVデータを事前読み込み（stockData検索等で使用）
       try {
         await loadStockData();
         console.log('Stock data preloaded successfully');
@@ -130,37 +139,8 @@ export default function Home() {
         console.error('Failed to preload stock data:', error);
       }
 
-      // クライアントサイドでのみlocalStorageにアクセス
+      // クライアントサイドでのみlocalStorageにアクセス（お気に入りグループ等）
       if (typeof window !== 'undefined') {
-        // 保存されている銘柄と順序を読み込み
-        const saved = localStorage.getItem(STORAGE_KEY);
-        const savedOrder = localStorage.getItem(ORDER_STORAGE_KEY);
-
-        if (saved) {
-          try {
-            const parsedStocks = JSON.parse(saved);
-
-            // 保存された順序がある場合は使用、ない場合はデフォルトの順序
-            let orderedStocks = parsedStocks;
-            if (savedOrder) {
-              try {
-                const parsedOrder = JSON.parse(savedOrder);
-                // 順序配列にあるもののみ使用し、存在しないものは末尾に追加
-                const existingStocks = parsedOrder.filter((stock: string) => parsedStocks.includes(stock));
-                const newStocks = parsedStocks.filter((stock: string) => !parsedOrder.includes(stock));
-                orderedStocks = [...existingStocks, ...newStocks];
-              } catch (e) {
-                console.error('Failed to load saved order:', e);
-              }
-            }
-
-            setStocks(orderedStocks);
-            console.log('Loaded stocks:', orderedStocks);
-          } catch (e) {
-            console.error('Failed to load saved stocks:', e);
-          }
-        }
-
         // 保存されているお気に入りグループを読み込み
         const savedGroups = localStorage.getItem(GROUPS_STORAGE_KEY);
         console.log('Raw saved groups from localStorage:', savedGroups);
@@ -190,32 +170,7 @@ export default function Home() {
     initializeApp();
   }, []);
 
-  // 認証状態監視
-  useEffect(() => {
-    const supabase = createClient();
-
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setIsLoggedIn(!!session);
-    };
-
-    checkAuth();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setIsLoggedIn(!!session);
-      }
-    );
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined' && isInitialized) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(stocks));
-      console.log('Saved stocks:', stocks);
-    }
-  }, [stocks, isInitialized]);
+  // 株式データはカスタムフック内で管理されるため、従来のlocalStorage保存は削除
 
   useEffect(() => {
     if (typeof window !== 'undefined' && isInitialized) {
