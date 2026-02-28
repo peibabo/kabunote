@@ -1,17 +1,65 @@
 日本語でやり取りをお願いします。
 git commitをする前に修正内容をもとに必要であればREADME及びCLAUDE.mdを修正してください。
 
+## 🏆 プロジェクトマイルストーン
+
+### ✅ Phase 1 完了（2026年2月28日達成）
+**localStorage → データベース統合 完全移行成功**
+
+#### 技術的成果
+- ✅ **Supabase + Prisma + Next.js 16** 完全統合
+- ✅ **Google OAuth + Magic Link** 認証システム
+- ✅ **13テーブル設計** PostgreSQLスキーマ
+- ✅ **Row Level Security** データ保護実装
+- ✅ **ハイブリッドデータシステム** 構築
+- ✅ **Transaction Pooler** 高効率DB接続
+- ✅ **PKCE対応** セキュア認証フロー
+
+#### 解決した技術課題
+- 🔧 Next.js 16 Cookie API変更対応
+- 🔧 Prisma 7 PostgreSQLアダプター実装
+- 🔧 snake_case ↔ camelCase マッピング完全対応
+- 🔧 Supabase SSL接続最適化
+- 🔧 OAuth Server Beta問題解決
+
+#### システム状況
+- **認証済みユーザー**: PostgreSQLから高速データアクセス
+- **未認証ユーザー**: localStorageフォールバック維持
+- **データ件数**: 6銘柄正常稼働中
+- **レスポンス**: リアルタイムデータ取得成功
+
 # Kabunote - 投資思考整理ダッシュボード
 
 ## プロジェクト概要
-- **フレームワーク**: Next.js 16.1.6 + TypeScript + Tailwind CSS
-- **目的**: 投資家の思考を整理するダッシュボード
-- **機能**: 株式銘柄の管理・メモ・検索・分析
+- **フレームワーク**: Next.js 16.1.6 + TypeScript + Tailwind CSS + Supabase + Prisma
+- **目的**: 投資家の思考を整理する本格的なWebアプリケーション
+- **機能**: 株式銘柄の管理・メモ・検索・分析・アカウント管理・データベース統合
 
 ## 開発コマンド
 ```bash
 npm run dev  # localhost:3000
 ```
+
+## 🔐 認証・データベース統合システム
+
+### 認証機能
+- **Google OAuth**: メインログイン方式、ワンクリック認証
+- **Magic Link**: バックアップ認証方式（メール認証）
+- **セキュリティ**: Row Level Security (RLS) によるデータ保護
+- **セッション管理**: Supabase認証システムによる永続化
+
+### データベースアーキテクチャ
+- **PostgreSQL**: Supabase管理の高可用性データベース
+- **Prisma ORM**: 型安全なデータベースアクセス
+- **13テーブル設計**: 投資情報を正規化して効率的に管理
+- **トランザクション**: 整合性を保証したデータ操作
+- **バックアップ**: 自動バックアップ・ポイントインタイム復旧対応
+
+### ハイブリッドデータシステム
+- **認証済みユーザー**: PostgreSQLデータベースから高速アクセス
+- **未認証ユーザー**: localStorageフォールバック（従来通り）
+- **自動切り替え**: ログイン状態に応じて自動的にデータソース切り替え
+- **データ移行**: localStorage→データベースへの安全な移行機能
 
 ## 主要機能
 
@@ -132,6 +180,30 @@ npm run dev  # localhost:3000
 
 ## アーキテクチャ
 
+### データベーススキーマ設計
+```
+app_users (ユーザー管理)
+├── stocks (銘柄マスター)
+│   ├── stock_memos (銘柄メモ)
+│   ├── stock_prices (株価情報)
+│   ├── stock_positions (保有ポジション)
+│   ├── stock_events (銘柄イベント)
+│   ├── stock_dividends (配当情報)
+│   ├── stock_benefits (株主優待情報)
+│   ├── stock_tags (タグ管理)
+│   ├── next_action_plans (次の一手戦略)
+│   └── stock_tab_states (タブ状態管理)
+├── favorite_groups (お気に入りグループ)
+└── snoozed_alerts (アラートスヌーズ管理)
+```
+
+### 認証フロー
+1. **ログイン要求** → Supabase Auth
+2. **OAuth認証** → Google/Magic Link
+3. **JWT発行** → セッション確立
+4. **RLS適用** → ユーザー固有データアクセス
+5. **データ取得** → Prisma経由でPostgreSQL
+
 ### 主要コンポーネント
 - `StockCard.tsx`: 銘柄カードメイン（タブ制御・統合アラートシステム・スマートナビゲーション）
 - `InvestmentStrategyTab.tsx`: 投資戦略タブ（サブタブコンテナ）
@@ -151,22 +223,46 @@ npm run dev  # localhost:3000
 - `TodayTomorrowEvents.tsx`: 今日・明日の予定表示
 - `InvestmentPieChart.tsx`: 円グラフ分析
 
-### 型定義・カスタムフック
+### 型定義・カスタムフック・API層
 - `src/types/`: 各機能の型定義（配当・株主優待・権利確定日・NextActionPlan・投資戦略タブ・スヌーズ等）
-- `src/hooks/`: localStorage管理・デバウンス処理・タブ状態管理・投資戦略サブタブ管理・NextActionPlan管理・スヌーズ管理
+- `src/hooks/`: ハイブリッドデータ管理・デバウンス処理・タブ状態管理・投資戦略サブタブ管理・NextActionPlan管理・スヌーズ管理
+- `src/lib/`: Supabase・Prismaクライアント設定、認証ヘルパー
+- `src/app/api/`: RESTful API（株式一覧・CRUD操作・データ移行等）
 
-### データ永続化
-- **localStorage使用**: 全データをブラウザローカルに保存
+### データ永続化・統合システム
+- **データベース統合**: PostgreSQL + Prismaによる本格的なデータ管理
+- **ハイブリッドアプローチ**: 認証状態に応じて最適なデータソースを自動選択
 - **SSR対応**: サーバー・クライアント環境の適切な分離
 - **インポート/エクスポート**: dataManager.tsによる全データの一括管理
+- **データ移行**: localStorage→PostgreSQLへの安全な移行システム
 - **戦略設定対応**: Next Action Plan・投資戦略サブタブ状態・スヌーズ履歴の完全バックアップ・復元対応
 - **新機能対応**: 投資余力現金・Next Actionメモの完全バックアップ・復元対応
+- **リアルタイム同期**: 認証済みユーザーのデータをリアルタイムでデータベースと同期
 
 ## 主要技術スタック
-- **Next.js 16.1.6**: Reactフレームワーク
-- **TypeScript**: 型安全な開発
+
+### フロントエンド
+- **Next.js 16.1.6**: Reactフレームワーク（App Router使用）
+- **TypeScript**: 型安全な開発環境
 - **Tailwind CSS**: ユーティリティファーストCSS
 - **@dnd-kit**: ドラッグ&ドロップ機能
+
+### バックエンド・データベース
+- **Supabase**: PostgreSQL + 認証 + リアルタイム機能
+- **Prisma 7**: 次世代ORM、PostgreSQLアダプター使用
+- **PostgreSQL**: 高性能リレーショナルデータベース
+- **Row Level Security (RLS)**: データベースレベルでのアクセス制御
+
+### 認証・セキュリティ
+- **Supabase Auth**: OAuth 2.0 + PKCE対応
+- **Google OAuth**: メイン認証プロバイダー
+- **Magic Link**: セカンダリ認証方式
+- **JWT**: セッション管理・API認証
+
+### インフラ・運用
+- **Supabase Cloud**: フルマネージドサービス
+- **Transaction Pooler**: 高効率なデータベース接続
+- **SSL/TLS**: エンドツーエンド暗号化
 
 ## 📋 ローンチ準備チェックリスト
 
