@@ -1,0 +1,253 @@
+// Kabunote Database Schema
+// 投資思考整理ダッシュボードのためのデータベーススキーマ
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ユーザー管理
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  picture       String?
+  authProvider  String    // "google", "email"
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // ユーザー設定
+  cashAmount    Decimal?  @default(0) @map("cash_amount")
+  nextActionMemo String?  @map("next_action_memo")
+
+  // リレーション
+  stocks        Stock[]
+  favoriteGroups FavoriteGroup[]
+  snoozedAlerts SnoozedAlert[]
+
+  @@map("users")
+}
+
+// 銘柄マスター情報
+model Stock {
+  id          String    @id @default(cuid())
+  userId      String
+  symbol      String    // 銘柄コード (例: "7203")
+  name        String?   // 会社名
+  sector      String?   // 業種
+  market      String?   // 市場
+  order       Int       @default(0) // 表示順序
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // リレーション
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  memo        StockMemo?
+  prices      StockPrice[]
+  position    StockPosition?
+  events      StockEvent[]
+  dividend    StockDividend?
+  benefit     StockBenefit?
+  tags        StockTag[]
+  nextAction  NextActionPlan?
+  tabStates   StockTabState[]
+
+  @@unique([userId, symbol])
+  @@map("stocks")
+}
+
+// 銘柄メモ
+model StockMemo {
+  id        String   @id @default(cuid())
+  stockId   String   @unique
+  content   String   @default("")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  stock     Stock    @relation(fields: [stockId], references: [id], onDelete: Cascade)
+
+  @@map("stock_memos")
+}
+
+// 株価情報
+model StockPrice {
+  id            String    @id @default(cuid())
+  stockId       String    @unique
+  currentPrice  Decimal?  // 現在株価
+  targetPrice   Decimal?  // 目標株価
+  stopLossPrice Decimal?  // 損切り価格
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  stock         Stock     @relation(fields: [stockId], references: [id], onDelete: Cascade)
+
+  @@map("stock_prices")
+}
+
+// 保有ポジション
+model StockPosition {
+  id              String    @id @default(cuid())
+  stockId         String    @unique
+  shares          Int       @default(0)          // 保有株数
+  averagePrice    Decimal?                       // 平均取得価格
+  totalInvestment Decimal?                       // 総投資額
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  stock           Stock     @relation(fields: [stockId], references: [id], onDelete: Cascade)
+
+  @@map("stock_positions")
+}
+
+// 銘柄イベント（決算、株主総会等）
+model StockEvent {
+  id          String      @id @default(cuid())
+  stockId     String
+  eventType   EventType   // "earnings", "shareholder_meeting"
+  eventDate   DateTime
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  stock       Stock       @relation(fields: [stockId], references: [id], onDelete: Cascade)
+
+  @@map("stock_events")
+}
+
+// 配当情報
+model StockDividend {
+  id              String    @id @default(cuid())
+  stockId         String    @unique
+  dividendPerShare Decimal? // 1株配当金
+  frequency       Int?      @default(1) // 年間配当回数
+  rightsMonth     Int?      // 権利確定月
+  rightsDay       Int?      // 権利確定日
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  stock           Stock     @relation(fields: [stockId], references: [id], onDelete: Cascade)
+
+  @@map("stock_dividends")
+}
+
+// 株主優待情報
+model StockBenefit {
+  id             String    @id @default(cuid())
+  stockId        String    @unique
+  description    String?   // 優待内容
+  minimumShares  Int?      // 必要株数
+  estimatedValue Decimal?  // 推定価値
+  rightsMonth    Int?      // 権利確定月
+  rightsDay      Int?      // 権利確定日
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  stock          Stock     @relation(fields: [stockId], references: [id], onDelete: Cascade)
+
+  @@map("stock_benefits")
+}
+
+// タグ管理
+model StockTag {
+  id        String   @id @default(cuid())
+  stockId   String
+  name      String
+  color     String   @default("gray")
+  createdAt DateTime @default(now())
+
+  stock     Stock    @relation(fields: [stockId], references: [id], onDelete: Cascade)
+
+  @@unique([stockId, name])
+  @@map("stock_tags")
+}
+
+// Next Action Plan（次の一手戦略）
+model NextActionPlan {
+  id           String      @id @default(cuid())
+  stockId      String      @unique
+  actionType   ActionType  // "buy", "sell", "hold"
+  priority     Priority    // "high", "medium", "low"
+  targetPrice  Decimal?    // 目標価格
+  targetShares Int?        // 目標株数
+  strategyMemo String?     // 戦略メモ
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  stock        Stock       @relation(fields: [stockId], references: [id], onDelete: Cascade)
+
+  @@map("next_action_plans")
+}
+
+// お気に入りグループ
+model FavoriteGroup {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  color     String   @default("blue")
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, name])
+  @@map("favorite_groups")
+}
+
+// アラートスヌーズ管理
+model SnoozedAlert {
+  id          String     @id @default(cuid())
+  userId      String
+  stockSymbol String     // 銘柄コード
+  alertType   AlertType  // アラート種別
+  snoozeUntil DateTime   // スヌーズ終了時刻
+  createdAt   DateTime   @default(now())
+
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("snoozed_alerts")
+}
+
+// タブ状態管理
+model StockTabState {
+  id             String @id @default(cuid())
+  stockId        String
+  tabType        String // "active", "management", "investment_strategy"
+  currentTab     String // タブの現在状態
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  stock          Stock  @relation(fields: [stockId], references: [id], onDelete: Cascade)
+
+  @@unique([stockId, tabType])
+  @@map("stock_tab_states")
+}
+
+// Enums
+enum EventType {
+  EARNINGS
+  SHAREHOLDER_MEETING
+}
+
+enum ActionType {
+  BUY
+  SELL
+  HOLD
+}
+
+enum Priority {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum AlertType {
+  FUND_SHORTAGE
+  STOP_LOSS_EXCEEDED
+  NEXT_ACTION_URGENT
+  STOP_LOSS_APPROACHING
+  PROFIT_TARGET_APPROACHING
+  NEXT_ACTION_WARNING
+}

@@ -16,6 +16,8 @@ import HamburgerMenuButton from '@/components/HamburgerMenuButton';
 import SlideOutMenu from '@/components/SlideOutMenu';
 import EventCalendarPage from '@/components/EventCalendarPage';
 import DividendBenefitListPage from '@/components/DividendBenefitListPage';
+import AuthButton from '@/components/AuthButton';
+import MigrationBanner from '@/components/MigrationBanner';
 import { loadStockData, getStockData } from '@/data/stockNames';
 import { Position } from '@/types/positions';
 import { FavoriteGroup, GROUP_COLORS } from '@/types/favorites';
@@ -26,6 +28,7 @@ import { hasNextActionPlan } from '@/hooks/useNextActionPlan';
 import { getIntegratedAlert, getAllActiveAlerts } from '@/utils/alertSystem';
 import { calculatePositionSummary } from '@/types/positions';
 import { useDebouncedCallback } from '@/hooks/useDebounce';
+import { createClient } from '@/lib/supabase-client';
 import {
   DndContext,
   closestCenter,
@@ -62,6 +65,7 @@ export default function Home() {
   const [isDividendBenefitListOpen, setIsDividendBenefitListOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<string[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -184,6 +188,26 @@ export default function Home() {
     };
 
     initializeApp();
+  }, []);
+
+  // 認証状態監視
+  useEffect(() => {
+    const supabase = createClient();
+
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setIsLoggedIn(!!session);
+    };
+
+    checkAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setIsLoggedIn(!!session);
+      }
+    );
+
+    return () => subscription.unsubscribe();
   }, []);
 
   useEffect(() => {
@@ -1069,11 +1093,18 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gray-900">
+      {/* 移行バナー */}
+      <MigrationBanner isLoggedIn={isLoggedIn} />
+
       {/* Header with Logo */}
       <header className="bg-slate-900 border-b border-gray-700">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center justify-center gap-4 group cursor-default flex-1">
+            <a
+              href="/"
+              className="flex items-center justify-center gap-4 group cursor-pointer flex-1 transition-transform duration-200 hover:scale-105"
+              title="カブノオト ホームページ"
+            >
             <img
               src="/kabunote-logo.png"
               alt="Kabunote Logo"
@@ -1092,18 +1123,11 @@ export default function Home() {
             >
               カブノオト
             </h1>
-            <style jsx>{`
-              .group:hover img {
-                filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.8)) drop-shadow(0 0 40px rgba(255, 255, 255, 0.4)) drop-shadow(0 0 60px rgba(255, 255, 255, 0.2)) !important;
-              }
-              .group:hover h1 {
-                filter: drop-shadow(0 0 25px rgba(255, 255, 255, 0.9)) drop-shadow(0 0 50px rgba(255, 255, 255, 0.6)) drop-shadow(0 0 75px rgba(255, 255, 255, 0.3)) drop-shadow(0 0 100px rgba(255, 255, 255, 0.1)) !important;
-              }
-            `}</style>
-            </div>
+            </a>
 
             {/* ナビゲーション */}
-            <div className="flex-shrink-0">
+            <div className="flex items-center gap-3 flex-shrink-0">
+              <AuthButton />
               <HamburgerMenuButton
                 onClick={() => setIsMenuOpen(true)}
                 alertCounts={alertCounts}
@@ -1112,6 +1136,15 @@ export default function Home() {
           </div>
         </div>
       </header>
+
+      <style jsx>{`
+        .group:hover img {
+          filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.8)) drop-shadow(0 0 40px rgba(255, 255, 255, 0.4)) drop-shadow(0 0 60px rgba(255, 255, 255, 0.2)) !important;
+        }
+        .group:hover h1 {
+          filter: drop-shadow(0 0 25px rgba(255, 255, 255, 0.9)) drop-shadow(0 0 50px rgba(255, 255, 255, 0.6)) drop-shadow(0 0 75px rgba(255, 255, 255, 0.3)) drop-shadow(0 0 100px rgba(255, 255, 255, 0.1)) !important;
+        }
+      `}</style>
 
       <main className="container mx-auto px-4 py-8">
         <div className="mb-8">

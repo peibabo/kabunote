@@ -2,6 +2,7 @@ export interface KabunoteData {
   // メタデータ
   exportDate: string;
   version: string;
+  migrationTarget?: string; // DB移行用メタデータ
 
   // 銘柄関連データ
   stocks: string[];
@@ -17,6 +18,8 @@ export interface KabunoteData {
   rightsSettings: Record<string, string>;
   positions: Record<string, any[]>;
   activeTabs: Record<string, string>;
+  managementTabs: Record<string, string>; // 管理タブの状態
+  investmentStrategyTabs: Record<string, string>; // 投資戦略タブの状態
   dividendPerShare: Record<string, string>;
   dividendFrequency: Record<string, string>;
   benefitDescription: Record<string, string>;
@@ -33,6 +36,12 @@ export interface KabunoteData {
   selectedGroupFilter: string | null;
   cashAmount: string;
   nextActionMemo: string;
+
+  // アラート・スヌーズ関連
+  snoozedAlerts: any[];
+
+  // 生のLocalStorageデータ（DB移行用）
+  rawLocalStorage: Record<string, string>;
 }
 
 /**
@@ -41,7 +50,8 @@ export interface KabunoteData {
 export const exportKabunoteData = (): KabunoteData => {
   const data: KabunoteData = {
     exportDate: new Date().toISOString(),
-    version: '1.0.0',
+    version: '1.1.0',
+    migrationTarget: 'supabase',
     stocks: [],
     stocksOrder: [],
     memos: {},
@@ -53,6 +63,8 @@ export const exportKabunoteData = (): KabunoteData => {
     rightsSettings: {},
     positions: {},
     activeTabs: {},
+    managementTabs: {},
+    investmentStrategyTabs: {},
     dividendPerShare: {},
     dividendFrequency: {},
     benefitDescription: {},
@@ -67,6 +79,8 @@ export const exportKabunoteData = (): KabunoteData => {
     selectedGroupFilter: null,
     cashAmount: '0',
     nextActionMemo: '',
+    snoozedAlerts: [],
+    rawLocalStorage: {},
   };
 
   // localStorage の全アイテムを走査
@@ -76,6 +90,9 @@ export const exportKabunoteData = (): KabunoteData => {
 
     const value = localStorage.getItem(key);
     if (!value) continue;
+
+    // 生のLocalStorageデータを保存（DB移行時の完全性確保）
+    data.rawLocalStorage[key] = value;
 
     try {
       // キーの種類に応じて適切なカテゴリに分類
@@ -148,7 +165,16 @@ export const exportKabunoteData = (): KabunoteData => {
       } else if (key.startsWith('kabunote-next-action-plan-')) {
         const symbol = key.replace('kabunote-next-action-plan-', '');
         data.nextActionPlans[symbol] = value;
+      } else if (key.startsWith('kabunote-management-tab-')) {
+        const symbol = key.replace('kabunote-management-tab-', '');
+        data.managementTabs[symbol] = value;
+      } else if (key.startsWith('kabunote-investment-strategy-tab-')) {
+        const symbol = key.replace('kabunote-investment-strategy-tab-', '');
+        data.investmentStrategyTabs[symbol] = value;
+      } else if (key === 'kabunote-snoozed-alerts') {
+        data.snoozedAlerts = JSON.parse(value);
       }
+      // その他の未知のkabunoteキーも rawLocalStorage に含まれるため見落とし防止
     } catch (error) {
       console.warn(`Failed to parse localStorage key: ${key}`, error);
     }
@@ -173,6 +199,36 @@ export const downloadKabunoteData = () => {
   link.click();
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
+};
+
+/**
+ * DB移行専用の完全バックアップをダウンロード
+ */
+export const downloadMigrationBackup = () => {
+  const data = exportKabunoteData();
+
+  // 移行用のメタデータを追加
+  data.migrationTarget = 'supabase';
+
+  const jsonString = JSON.stringify(data, null, 2);
+  const blob = new Blob([jsonString], { type: 'application/json' });
+
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `kabunote-migration-backup-${new Date().toISOString().split('T')[0]}.json`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+
+  console.log('📦 DB移行用バックアップを作成しました:', {
+    exportDate: data.exportDate,
+    version: data.version,
+    stockCount: data.stocks.length,
+    rawStorageKeys: Object.keys(data.rawLocalStorage).length,
+    migrationTarget: data.migrationTarget
+  });
 };
 
 /**
@@ -347,6 +403,35 @@ export const importKabunoteData = (data: KabunoteData): { success: boolean; mess
       });
     }
 
+    if (data.managementTabs && typeof data.managementTabs === 'object') {
+      Object.entries(data.managementTabs).forEach(([symbol, tab]) => {
+        localStorage.setItem(`kabunote-management-tab-${symbol}`, tab);
+        importedCount++;
+      });
+    }
+
+    if (data.investmentStrategyTabs && typeof data.investmentStrategyTabs === 'object') {
+      Object.entries(data.investmentStrategyTabs).forEach(([symbol, tab]) => {
+        localStorage.setItem(`kabunote-investment-strategy-tab-${symbol}`, tab);
+        importedCount++;
+      });
+    }
+
+    if (data.snoozedAlerts && Array.isArray(data.snoozedAlerts)) {
+      localStorage.setItem('kabunote-snoozed-alerts', JSON.stringify(data.snoozedAlerts));
+      importedCount++;
+    }
+
+    // rawLocalStorageからの復元（見落としたデータの保険）
+    if (data.rawLocalStorage && typeof data.rawLocalStorage === 'object') {
+      Object.entries(data.rawLocalStorage).forEach(([key, value]) => {
+        if (key.startsWith('kabunote-') && !localStorage.getItem(key)) {
+          localStorage.setItem(key, value);
+          importedCount++;
+        }
+      });
+    }
+
     return {
       success: true,
       message: `データのインポートが完了しました。${importedCount}件のアイテムを復元しました。`,
@@ -408,6 +493,55 @@ export const importFromFile = (file: File): Promise<{ success: boolean; message:
 
     reader.readAsText(file);
   });
+};
+
+/**
+ * DB移行検証用 - 現在のLocalStorageの状態を分析
+ */
+export const analyzeLocalStorageForMigration = () => {
+  const analysis = {
+    totalKeys: 0,
+    stockCount: 0,
+    dataSizeKB: 0,
+    dataTypes: {} as Record<string, number>,
+    missingData: [] as string[],
+    migrationReadiness: false
+  };
+
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (!key || !key.startsWith('kabunote-')) continue;
+
+    const value = localStorage.getItem(key);
+    if (!value) continue;
+
+    analysis.totalKeys++;
+    analysis.dataSizeKB += (key.length + value.length) / 1024;
+
+    // データ型別の集計
+    if (key === 'kabunote-stocks') {
+      try {
+        const stocks = JSON.parse(value);
+        analysis.stockCount = stocks.length;
+        analysis.dataTypes['stocks'] = 1;
+      } catch (e) {
+        analysis.missingData.push('stocks-parse-error');
+      }
+    } else if (key.startsWith('kabunote-positions-')) {
+      analysis.dataTypes['positions'] = (analysis.dataTypes['positions'] || 0) + 1;
+    } else if (key.startsWith('kabunote-memo-')) {
+      analysis.dataTypes['memos'] = (analysis.dataTypes['memos'] || 0) + 1;
+    } else if (key.startsWith('kabunote-dividend-')) {
+      analysis.dataTypes['dividends'] = (analysis.dataTypes['dividends'] || 0) + 1;
+    }
+    // その他のデータ型も同様に集計...
+  }
+
+  // 移行準備度チェック
+  analysis.migrationReadiness = analysis.stockCount > 0 && analysis.totalKeys > 5;
+
+  console.log('📊 DB移行前のLocalStorage分析:', analysis);
+  return analysis;
 };
 
 /**
