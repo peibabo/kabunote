@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>LocalStorage データ取得</title>
+    <style>
+        body { font-family: monospace; padding: 20px; }
+        .data-block { background: #f5f5f5; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .copy-btn { background: #007cba; color: white; padding: 5px 10px; border: none; border-radius: 3px; cursor: pointer; margin: 5px; }
+    </style>
+</head>
+<body>
+    <h1>LocalStorage データ抽出</h1>
+    <p>このページでlocalStorageからデータを取得します（kabunote.comで実行してください）</p>
+
+    <button onclick="extractData()">データを抽出</button>
+
+    <h2>結果:</h2>
+    <div id="result"></div>
+
+    <script>
+    function extractData() {
+        const data = {};
+
+        // すべてのlocalStorageキーを取得
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key.startsWith('stocks_') ||
+                key.startsWith('stockMemos_') ||
+                key.startsWith('stockTags_') ||
+                key.startsWith('currentPrice_') ||
+                key.startsWith('targetPrice_') ||
+                key.startsWith('stopLossPrice_') ||
+                key.startsWith('shares_') ||
+                key.startsWith('averagePrice_') ||
+                key.startsWith('totalInvestment_') ||
+                key.startsWith('earningsDate_') ||
+                key.startsWith('shareholderMeetingDate_') ||
+                key.startsWith('dividendPerShare_') ||
+                key.startsWith('dividendFrequency_') ||
+                key.startsWith('dividendRightsSettings_') ||
+                key.startsWith('benefitDescription_') ||
+                key.startsWith('minimumShares_') ||
+                key.startsWith('estimatedValue_') ||
+                key.startsWith('shareholderRightsSettings_') ||
+                key.startsWith('nextActionPlan_') ||
+                key.startsWith('investmentStrategy_') ||
+                key.startsWith('snoozedAlerts_') ||
+                key.startsWith('tabStates_') ||
+                key === 'cashAmount' ||
+                key === 'nextActionMemo') {
+
+                try {
+                    const value = localStorage.getItem(key);
+                    data[key] = value;
+                } catch (e) {
+                    data[key] = `Error: ${e.message}`;
+                }
+            }
+        }
+
+        const resultDiv = document.getElementById('result');
+        resultDiv.innerHTML = `
+            <div class="data-block">
+                <h3>抽出されたデータ:</h3>
+                <button class="copy-btn" onclick="copyToClipboard('${btoa(JSON.stringify(data, null, 2))}')">コピー</button>
+                <pre>${JSON.stringify(data, null, 2)}</pre>
+            </div>
+        `;
+
+        console.log('LocalStorage Data:', data);
+    }
+
+    function copyToClipboard(base64Data) {
+        const data = atob(base64Data);
+        navigator.clipboard.writeText(data).then(() => {
+            alert('データをクリップボードにコピーしました！');
+        });
+    }
+    </script>
+</body>
+</html>
