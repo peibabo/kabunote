@@ -178,19 +178,15 @@ export function useStockData(): UseStockDataReturn {
     console.log(`🚀 データ読み込み開始 - 認証状態: ${isLoggedIn}`);
 
     try {
-      // 一時的にlocalStorageのみ使用（データベース問題解決まで）
-      console.log('📦 一時的措置：localStorageのみ使用');
-      loadDataFromLocalStorage();
-
-      // if (isLoggedIn) {
-      //   console.log('🔐 認証済みユーザー: データベースから取得を試行');
-      //   // 認証済みの場合はデータベースから取得
-      //   await loadDataFromDatabase();
-      // } else {
-      //   console.log('👤 未認証ユーザー: localStorageから取得');
-      //   // 未認証の場合はlocalStorageから取得
-      //   loadDataFromLocalStorage();
-      // }
+      if (isLoggedIn) {
+        console.log('🔐 認証済みユーザー: データベースから取得を試行');
+        // 認証済みの場合はデータベースから取得
+        await loadDataFromDatabase();
+      } else {
+        console.log('👤 未認証ユーザー: localStorageから取得');
+        // 未認証の場合はlocalStorageから取得
+        loadDataFromLocalStorage();
+      }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'データの取得に失敗しました';
       setError(errorMessage);

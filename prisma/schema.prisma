@@ -15,9 +15,9 @@ model User {
   email         String    @unique
   name          String?
   picture       String?
-  authProvider  String    // "google", "email"
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  authProvider  String    @map("auth_provider") // "google", "email"
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
 
   // ユーザー設定
   cashAmount    Decimal?  @default(0) @map("cash_amount")
@@ -28,20 +28,20 @@ model User {
   favoriteGroups FavoriteGroup[]
   snoozedAlerts SnoozedAlert[]
 
-  @@map("users")
+  @@map("app_users")
 }
 
 // 銘柄マスター情報
 model Stock {
   id          String    @id @default(cuid())
-  userId      String
+  userId      String    @map("user_id")
   symbol      String    // 銘柄コード (例: "7203")
   name        String?   // 会社名
   sector      String?   // 業種
   market      String?   // 市場
   order       Int       @default(0) // 表示順序
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
 
   // リレーション
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -62,10 +62,10 @@ model Stock {
 // 銘柄メモ
 model StockMemo {
   id        String   @id @default(cuid())
-  stockId   String   @unique
+  stockId   String   @unique @map("stock_id")
   content   String   @default("")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   stock     Stock    @relation(fields: [stockId], references: [id], onDelete: Cascade)
 
@@ -75,12 +75,12 @@ model StockMemo {
 // 株価情報
 model StockPrice {
   id            String    @id @default(cuid())
-  stockId       String    @unique
-  currentPrice  Decimal?  // 現在株価
-  targetPrice   Decimal?  // 目標株価
-  stopLossPrice Decimal?  // 損切り価格
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  stockId       String    @unique @map("stock_id")
+  currentPrice  Decimal?  @map("current_price")  // 現在株価
+  targetPrice   Decimal?  @map("target_price")   // 目標株価
+  stopLossPrice Decimal?  @map("stop_loss_price") // 損切り価格
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
 
   stock         Stock     @relation(fields: [stockId], references: [id], onDelete: Cascade)
 
@@ -90,12 +90,12 @@ model StockPrice {
 // 保有ポジション
 model StockPosition {
   id              String    @id @default(cuid())
-  stockId         String    @unique
+  stockId         String    @unique @map("stock_id")
   shares          Int       @default(0)          // 保有株数
-  averagePrice    Decimal?                       // 平均取得価格
-  totalInvestment Decimal?                       // 総投資額
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  averagePrice    Decimal?  @map("average_price") // 平均取得価格
+  totalInvestment Decimal?  @map("total_investment") // 総投資額
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
 
   stock           Stock     @relation(fields: [stockId], references: [id], onDelete: Cascade)
 
@@ -105,11 +105,11 @@ model StockPosition {
 // 銘柄イベント（決算、株主総会等）
 model StockEvent {
   id          String      @id @default(cuid())
-  stockId     String
-  eventType   EventType   // "earnings", "shareholder_meeting"
-  eventDate   DateTime
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  stockId     String      @map("stock_id")
+  eventType   EventType   @map("event_type") // "earnings", "shareholder_meeting"
+  eventDate   DateTime    @map("event_date")
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
 
   stock       Stock       @relation(fields: [stockId], references: [id], onDelete: Cascade)
 
@@ -119,13 +119,13 @@ model StockEvent {
 // 配当情報
 model StockDividend {
   id              String    @id @default(cuid())
-  stockId         String    @unique
-  dividendPerShare Decimal? // 1株配当金
+  stockId         String    @unique @map("stock_id")
+  dividendPerShare Decimal? @map("dividend_per_share") // 1株配当金
   frequency       Int?      @default(1) // 年間配当回数
-  rightsMonth     Int?      // 権利確定月
-  rightsDay       Int?      // 権利確定日
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  rightsMonth     Int?      @map("rights_month") // 権利確定月
+  rightsDay       Int?      @map("rights_day") // 権利確定日
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
 
   stock           Stock     @relation(fields: [stockId], references: [id], onDelete: Cascade)
 
@@ -135,14 +135,14 @@ model StockDividend {
 // 株主優待情報
 model StockBenefit {
   id             String    @id @default(cuid())
-  stockId        String    @unique
+  stockId        String    @unique @map("stock_id")
   description    String?   // 優待内容
-  minimumShares  Int?      // 必要株数
-  estimatedValue Decimal?  // 推定価値
-  rightsMonth    Int?      // 権利確定月
-  rightsDay      Int?      // 権利確定日
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  minimumShares  Int?      @map("minimum_shares") // 必要株数
+  estimatedValue Decimal?  @map("estimated_value") // 推定価値
+  rightsMonth    Int?      @map("rights_month") // 権利確定月
+  rightsDay      Int?      @map("rights_day") // 権利確定日
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
 
   stock          Stock     @relation(fields: [stockId], references: [id], onDelete: Cascade)
 
@@ -152,10 +152,10 @@ model StockBenefit {
 // タグ管理
 model StockTag {
   id        String   @id @default(cuid())
-  stockId   String
+  stockId   String   @map("stock_id")
   name      String
   color     String   @default("gray")
-  createdAt DateTime @default(now())
+  createdAt DateTime @default(now()) @map("created_at")
 
   stock     Stock    @relation(fields: [stockId], references: [id], onDelete: Cascade)
 
@@ -166,14 +166,14 @@ model StockTag {
 // Next Action Plan（次の一手戦略）
 model NextActionPlan {
   id           String      @id @default(cuid())
-  stockId      String      @unique
-  actionType   ActionType  // "buy", "sell", "hold"
+  stockId      String      @unique @map("stock_id")
+  actionType   ActionType  @map("action_type") // "buy", "sell", "hold"
   priority     Priority    // "high", "medium", "low"
-  targetPrice  Decimal?    // 目標価格
-  targetShares Int?        // 目標株数
-  strategyMemo String?     // 戦略メモ
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
+  targetPrice  Decimal?    @map("target_price") // 目標価格
+  targetShares Int?        @map("target_shares") // 目標株数
+  strategyMemo String?     @map("strategy_memo") // 戦略メモ
+  createdAt    DateTime    @default(now()) @map("created_at")
+  updatedAt    DateTime    @updatedAt @map("updated_at")
 
   stock        Stock       @relation(fields: [stockId], references: [id], onDelete: Cascade)
 
@@ -183,12 +183,12 @@ model NextActionPlan {
 // お気に入りグループ
 model FavoriteGroup {
   id        String   @id @default(cuid())
-  userId    String
+  userId    String   @map("user_id")
   name      String
   color     String   @default("blue")
   order     Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -199,11 +199,11 @@ model FavoriteGroup {
 // アラートスヌーズ管理
 model SnoozedAlert {
   id          String     @id @default(cuid())
-  userId      String
-  stockSymbol String     // 銘柄コード
-  alertType   AlertType  // アラート種別
-  snoozeUntil DateTime   // スヌーズ終了時刻
-  createdAt   DateTime   @default(now())
+  userId      String     @map("user_id")
+  stockSymbol String     @map("stock_symbol") // 銘柄コード
+  alertType   AlertType  @map("alert_type") // アラート種別
+  snoozeUntil DateTime   @map("snooze_until") // スヌーズ終了時刻
+  createdAt   DateTime   @default(now()) @map("created_at")
 
   user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -213,11 +213,11 @@ model SnoozedAlert {
 // タブ状態管理
 model StockTabState {
   id             String @id @default(cuid())
-  stockId        String
-  tabType        String // "active", "management", "investment_strategy"
-  currentTab     String // タブの現在状態
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  stockId        String @map("stock_id")
+  tabType        String @map("tab_type") // "active", "management", "investment_strategy"
+  currentTab     String @map("current_tab") // タブの現在状態
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
 
   stock          Stock  @relation(fields: [stockId], references: [id], onDelete: Cascade)
 
