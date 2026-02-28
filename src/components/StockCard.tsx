@@ -11,6 +11,8 @@ import { CSS } from '@dnd-kit/utilities';
 import { useStringLocalStorage, useArrayLocalStorage } from '@/hooks/useLocalStorage';
 import { useTabState } from '@/hooks/useTabState';
 import { useNextActionPlan } from '@/hooks/useNextActionPlan';
+import { useStockMemo } from '@/hooks/useStockMemo';
+import { useStockPosition } from '@/hooks/useStockPosition';
 import { getIntegratedAlert, getAllActiveAlerts } from '@/utils/alertSystem';
 
 // Components
@@ -58,12 +60,43 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
   // タブ状態管理
   const { activeTab, setActiveTab, tabs, isLoading: isTabLoading } = useTabState(symbol);
 
-  // データ管理（localStorage）
-  const [memo, setMemo] = useStringLocalStorage(`kabunote-memo-${symbol}`, '', 500);
+  // データ管理（ハイブリッドシステム：認証済み→DB、未認証→localStorage）
+  const {
+    memo,
+    updateMemo,
+    isLoading: isMemoLoading,
+    isSaving: isMemoSaving,
+    error: memoError,
+    lastSaved: memoLastSaved
+  } = useStockMemo(`stock-${symbol}`);
+
+  // 株式ポジション機能（投資規律設定）
+  const {
+    position,
+    updatePosition,
+    isLoading: isPositionLoading,
+    isSaving: isPositionSaving,
+    error: positionError,
+    lastSaved: positionLastSaved
+  } = useStockPosition(`stock-${symbol}`);
+
   const [customTags, setCustomTags] = useArrayLocalStorage<CustomTag>(`kabunote-tags-${symbol}`, [], 250);
-  const [targetPrice, setTargetPrice] = useStringLocalStorage(`kabunote-target-price-${symbol}`, '', 300);
-  const [stopLoss, setStopLoss] = useStringLocalStorage(`kabunote-stop-loss-${symbol}`, '', 300);
-  const [currentPrice, setCurrentPrice] = useStringLocalStorage(`kabunote-current-price-${symbol}`, '', 300);
+
+  // ポジションデータから価格情報を抽出
+  const targetPrice = position?.profitTarget?.toString() || '';
+  const stopLoss = position?.lossLimit?.toString() || '';
+  const currentPrice = position?.currentPrice?.toString() || '';
+
+  // ポジション更新用のヘルパー関数
+  const setTargetPrice = (value: string) => {
+    updatePosition({ profitTarget: value ? parseFloat(value) : null });
+  };
+  const setStopLoss = (value: string) => {
+    updatePosition({ lossLimit: value ? parseFloat(value) : null });
+  };
+  const setCurrentPrice = (value: string) => {
+    updatePosition({ currentPrice: value ? parseFloat(value) : null });
+  };
   const [earningsDate, setEarningsDate] = useStringLocalStorage(`kabunote-earnings-date-${symbol}`, '', 400);
   const [rightsSettings, setRightsSettings] = useStringLocalStorage(`kabunote-rights-settings-${symbol}`, JSON.stringify(createDefaultRightsSettings()), 400);
   const [dividendRightsSettings, setDividendRightsSettings] = useStringLocalStorage(`kabunote-dividend-rights-settings-${symbol}`, JSON.stringify(createDefaultDividendRightsSettings()), 400);
@@ -72,7 +105,7 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
   const [positions, setPositions] = useArrayLocalStorage<Position>(`kabunote-positions-${symbol}`, [], 200);
 
   // NextActionPlan の状態を取得
-  const { nextActionPlan } = useNextActionPlan(symbol);
+  const { nextActionPlan } = useNextActionPlan(`stock-${symbol}`);
 
   // 権利確定日設定をパース
   const parsedRightsSettings: RightsDateSettings = (() => {
@@ -301,17 +334,19 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
 
     return alerts;
   }, [
-    nextActionPlan.targetPrice,
-    nextActionPlan.targetQuantity,
-    nextActionPlan.actionType,
-    nextActionPlan.priority,
-    nextActionPlan.memo,
+    nextActionPlan?.targetPrice,
+    nextActionPlan?.targetQuantity,
+    nextActionPlan?.actionType,
+    nextActionPlan?.priority,
+    nextActionPlan?.memo,
     currentPrice,
     targetPrice,
     stopLoss,
     positionSummary,
     availableCash,
-    alertTrigger // 強制再計算トリガー
+    alertTrigger, // 強制再計算トリガー
+    isPositionLoading, // ポジション読み込み状態
+    position // ポジションデータ
   ]);
 
   // アラートに応じたカードスタイルを取得
@@ -474,8 +509,12 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
           <BasicTab
             symbol={symbol}
             memo={memo}
-            onMemoChange={setMemo}
+            onMemoChange={updateMemo}
             onMemoModalOpen={() => setIsMemoModalOpen(true)}
+            isMemoLoading={isMemoLoading}
+            isMemoSaving={isMemoSaving}
+            memoError={memoError}
+            memoLastSaved={memoLastSaved}
           />
         )}
 
@@ -543,7 +582,7 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
             <div className="space-y-3">
               <textarea
                 value={memo}
-                onChange={(e) => setMemo(e.target.value)}
+                onChange={(e) => updateMemo(e.target.value)}
                 placeholder="この銘柄について詳しく思考を整理しましょう..."
                 maxLength={2000}
                 className="w-full h-[70vh] px-4 py-3 bg-slate-100 border border-slate-300 rounded-lg text-slate-800 placeholder-slate-500 focus:border-blue-500 focus:outline-none resize-none font-mono leading-6 shadow-inner"

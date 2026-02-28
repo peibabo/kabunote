@@ -6,11 +6,13 @@ export type ActionType = 'buy' | 'sell' | 'hold';
 export type Priority = 'high' | 'medium' | 'low';
 
 export interface NextActionPlan {
-  targetPrice: number;        // 目標価格
-  targetQuantity: number;     // 追加/新規株数
+  id: string;                // ID
+  targetPrice: number | null; // 目標価格
+  targetQuantity: number | null; // 追加/新規株数
   memo: string;              // 作戦理由・メモ
   actionType: ActionType;    // アクション種別
   priority: Priority;        // 優先度
+  updatedAt: string;         // 更新日時
 }
 
 /**
@@ -36,11 +38,13 @@ export interface NextActionPlanAnalysis {
  * Next Action Plan のデフォルト値を生成
  */
 export const createDefaultNextActionPlan = (): NextActionPlan => ({
-  targetPrice: 0,
-  targetQuantity: 0,
+  id: 'local',
+  targetPrice: null,
+  targetQuantity: null,
   memo: '',
   actionType: 'buy',
-  priority: 'medium'
+  priority: 'medium',
+  updatedAt: new Date().toISOString()
 });
 
 /**
@@ -55,9 +59,9 @@ export const analyzeNextActionPlan = (
   } | null = null,
   availableCash?: number
 ): NextActionPlanAnalysis => {
-  const priceGap = plan.targetPrice - currentPrice;
+  const priceGap = (plan.targetPrice || 0) - currentPrice;
   const gapPercentage = currentPrice > 0 ? (priceGap / currentPrice) * 100 : 0;
-  const requiredInvestment = plan.targetPrice * plan.targetQuantity;
+  const requiredInvestment = (plan.targetPrice || 0) * (plan.targetQuantity || 0);
   const absGapPercentage = Math.abs(gapPercentage);
   const isApproaching = absGapPercentage <= 2; // 2%以内で接近とみなす
   const isWarning = absGapPercentage > 2 && absGapPercentage <= 5; // 2-5%以内で警告とみなす
@@ -67,7 +71,7 @@ export const analyzeNextActionPlan = (
   // 追加購入の場合の予想平均取得単価を計算
   if (currentHoldings && plan.actionType === 'buy') {
     const totalNewCost = currentHoldings.totalCost + requiredInvestment;
-    const totalNewShares = currentHoldings.totalShares + plan.targetQuantity;
+    const totalNewShares = currentHoldings.totalShares + (plan.targetQuantity || 0);
     predictedAveragePrice = totalNewShares > 0 ? totalNewCost / totalNewShares : 0;
   }
 
@@ -100,4 +104,23 @@ export const analyzeNextActionPlan = (
     cashAfterInvestment,
     cashRatioImpact
   };
+};
+
+/**
+ * Next Action Planが設定されているかチェック
+ */
+export const hasNextActionPlan = (plan: NextActionPlan): boolean => {
+  return plan.targetPrice !== null ||
+         plan.targetQuantity !== null ||
+         plan.memo.trim() !== '' ||
+         plan.actionType !== 'buy' ||
+         plan.priority !== 'medium';
+};
+
+/**
+ * Next Action Planが完全に設定されているかチェック
+ */
+export const isCompleteNextActionPlan = (plan: NextActionPlan): boolean => {
+  return plan.targetPrice !== null &&
+         plan.targetQuantity !== null;
 };

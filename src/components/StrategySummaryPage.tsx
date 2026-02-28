@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { useStringLocalStorage, useArrayLocalStorage } from '@/hooks/useLocalStorage';
-import { useNextActionPlan, hasNextActionPlan } from '@/hooks/useNextActionPlan';
-import { NextActionPlan, analyzeNextActionPlan } from '@/types/nextActionPlan';
+import { useArrayLocalStorage } from '@/hooks/useLocalStorage';
+import { useCash } from '@/hooks/useCash';
+import { useNextActionPlan } from '@/hooks/useNextActionPlan';
+import { NextActionPlan, analyzeNextActionPlan, hasNextActionPlan } from '@/types/nextActionPlan';
 import { getIntegratedAlert, AlertType } from '@/utils/alertSystem';
 import { getCompanyNameSync } from '@/data/stockNames';
 import { calculatePositionSummary } from '@/types/positions';
@@ -21,7 +22,7 @@ type SortKey = 'priority' | 'action' | 'alert' | 'symbol';
 
 export default function StrategySummaryPage() {
   const [stocks] = useArrayLocalStorage<string>('kabunote-stocks', []);
-  const [cashAmount] = useStringLocalStorage('kabunote-cash-amount', '0');
+  const { cashAmount } = useCash();
   const availableCash = parseFloat(cashAmount) || 0;
 
   const [sortBy, setSortBy] = useState<SortKey>('priority');
