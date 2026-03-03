@@ -2,33 +2,42 @@
 
 import { useMemo, useState, useEffect } from 'react';
 import InvestmentPieChart from '@/components/InvestmentPieChart';
-import { formatPrice, formatShares, formatProfitLoss, PortfolioTargetSummary, calculatePortfolioTargetSummary, calculatePositionSummary, calculateProfitLoss, StockTargetInfo } from '@/types/positions';
-import { useStockPosition } from '@/hooks/useStockPosition';
+import { formatPrice, formatShares, formatProfitLoss, PortfolioTargetSummary, calculatePortfolioTargetSummary, calculatePositionSummary, calculateProfitLoss, StockTargetInfo, Position } from '@/types/positions';
 import { PortfolioDividendSummary, calculateDividendInfo, formatDividendAmount, formatDividendYield } from '@/types/dividend';
 import { PortfolioShareholderSummary, calculateShareholderBenefit, formatBenefitValue, formatBenefitYield } from '@/types/shareholder';
 import { useStringLocalStorage } from '@/hooks/useLocalStorage';
+import { CustomTag } from '@/types/tags';
+import { getCompanyNameSync } from '@/data/stockNames';
 
 interface StockData {
   id: string;
   symbol: string;
   name: string;
-  sector?: string;
-}
-
-interface DatabasePortfolioSummaryProps {
-  portfolioData: StockData[];
-}
-
-interface PortfolioData {
-  symbol: string;
-  name: string;
-  stockId: string;
-  currentPrice: string;
-  sector: string;
+  sector: string | null;
+  currentPrice: number | null;
+  targetPrice: number | null;
+  stopLossPrice: number | null;
+  dividend: {
+    dividendPerShare: number | null;
+    frequency: number | null;
+    rightsMonth: number | null;
+    rightsDay: number | null;
+  } | null;
+  benefit: {
+    description?: string;
+    minimumShares: number | null;
+    estimatedValue: number | null;
+    rightsMonth: number | null;
+    rightsDay: number | null;
+  } | null;
+  tags: Array<{
+    name: string;
+    color: string;
+  }>;
 }
 
 interface PortfolioSummaryProps {
-  portfolioData: PortfolioData[];
+  portfolioData: StockData[];
 }
 
 interface CashRatioEvaluation {
@@ -61,7 +70,8 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
   const [isChartsExpanded, setIsChartsExpanded] = useState(false);
   const [isTargetSummaryExpanded, setIsTargetSummaryExpanded] = useState(false);
   const [isRiskRewardExpanded, setIsRiskRewardExpanded] = useState(false);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [stockPositions, setStockPositions] = useState<Map<string, Position[]>>(new Map());
 
   // 現金額の状態管理
   const [cashAmount, setCashAmount] = useStringLocalStorage('kabunote-cash-amount', '0', 300);
@@ -69,9 +79,56 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
   // Next Actionメモの状態管理
   const [nextActionMemo, setNextActionMemo] = useStringLocalStorage('kabunote-next-action-memo', '', 300);
 
+  // 全銘柄のポジションをAPIから取得（未認証時はlocalStorageフォールバック）
+  useEffect(() => {
+    if (portfolioData.length === 0) {
+      setIsLoading(false);
+      return;
+    }
+
+    const fetchAllPositions = async () => {
+      setIsLoading(true);
+      const newMap = new Map<string, Position[]>();
+
+      for (const stock of portfolioData) {
+        try {
+          const response = await fetch(`/api/stocks/${stock.id}/position`);
+          if (response.ok) {
+            const result = await response.json();
+            if (Array.isArray(result.data)) {
+              newMap.set(stock.id, result.data as Position[]);
+            }
+          } else if (response.status === 401) {
+            // 未認証: localStorageフォールバック
+            if (typeof window !== 'undefined') {
+              const localKey = `kabunote-positions-${stock.symbol}`;
+              try {
+                const stored = localStorage.getItem(localKey);
+                if (stored) {
+                  const positions = JSON.parse(stored);
+                  if (Array.isArray(positions)) {
+                    newMap.set(stock.id, positions as Position[]);
+                  }
+                }
+              } catch {
+                // JSONパースエラーは無視
+              }
+            }
+          }
+        } catch {
+          // ネットワークエラーは無視
+        }
+      }
+
+      setStockPositions(newMap);
+      setIsLoading(false);
+    };
+
+    fetchAllPositions();
+  }, [portfolioData]);
+
   // 現金比率評価を計算する関数
   const evaluateCashRatio = (cashRatio: number, cashAmount: number): CashRatioEvaluation => {
-    // 現金額が0円の場合は未入力として扱う
     if (cashAmount === 0) {
       return {
         status: 'moderate',
@@ -126,24 +183,6 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
     }
   };
 
-  // localStorage の変更を監視してリフレッシュトリガーを更新
-  useEffect(() => {
-    const handleStorageChange = () => {
-      setRefreshTrigger(prev => prev + 1);
-    };
-
-    // localStorage の変更を監視
-    window.addEventListener('storage', handleStorageChange);
-
-    // カスタムイベントも監視（同一タブ内での変更用）
-    window.addEventListener('localStorageChange', handleStorageChange);
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('localStorageChange', handleStorageChange);
-    };
-  }, []);
-
   // 全体のサマリーを計算
   const overallSummary = useMemo<OverallSummary>(() => {
     let totalInvestmentAll = 0;
@@ -154,126 +193,90 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
     let stocksWithPrices = 0;
     let stocksWithoutPrices = 0;
 
-    // 現金額を数値に変換
     const cashAmountNum = parseFloat(cashAmount) || 0;
 
-    // 配当サマリー用の変数
     let totalAnnualDividend = 0;
     let totalDividendInvestment = 0;
     let stocksWithDividend = 0;
 
-    // 株主優待サマリー用の変数
     let totalEligibleStocks = 0;
     let totalEstimatedValue = 0;
     let totalStocksWithBenefits = 0;
     let totalBenefitInvestment = 0;
 
     portfolioData.forEach(stock => {
-      // DB統合版では、個別にポジションデータを取得する必要がある
-      // とりあえず一時的に、localStorage から既に計算されたポジションサマリーを取得
-      const positionSummaryStr = typeof window !== 'undefined'
-        ? localStorage.getItem(`kabunote-db-position-summary-${stock.stockId}`)
-        : null;
+      const positions = stockPositions.get(stock.id) || [];
+      if (positions.length === 0) return;
 
-      let hasPosition = false;
-      let summary = { totalCost: 0, totalShares: 0, averagePrice: 0 };
+      const summary = calculatePositionSummary(positions);
+      if (summary.totalShares === 0) return;
 
-      if (positionSummaryStr) {
-        try {
-          const positionSummary = JSON.parse(positionSummaryStr);
-          if (positionSummary && positionSummary.totalShares > 0) {
-            hasPosition = true;
-            summary = {
-              totalCost: positionSummary.totalInvestment,
-              totalShares: positionSummary.totalShares,
-              averagePrice: positionSummary.averagePrice
-            };
-          }
-        } catch (e) {
-          // JSONパースエラーは無視
-        }
+      stocksWithPositions++;
+      totalInvestmentAll += summary.totalCost;
+      totalSharesAll += summary.totalShares;
+
+      // 現在株価：DBデータ優先、localStorageフォールバック
+      let currentPriceNum = stock.currentPrice ?? 0;
+      if (!currentPriceNum && typeof window !== 'undefined') {
+        const localPrice = localStorage.getItem(`kabunote-current-price-${stock.symbol}`) || '';
+        currentPriceNum = parseFloat(localPrice) || 0;
       }
 
-      if (hasPosition) {
-        stocksWithPositions++;
-        totalInvestmentAll += summary.totalCost;
-        totalSharesAll += summary.totalShares;
+      if (currentPriceNum > 0) {
+        stocksWithPrices++;
+        totalInvestmentWithPrice += summary.totalCost;
+        totalCurrentValue += summary.totalShares * currentPriceNum;
+      } else {
+        stocksWithoutPrices++;
+      }
 
-        // リアルタイムで現在価格を取得
-        const currentPrice = typeof window !== 'undefined'
-          ? localStorage.getItem(`kabunote-current-price-${stock.symbol}`) || ''
-          : '';
+      // 配当情報：DBデータ優先、localStorageフォールバック
+      let perShare = stock.dividend?.dividendPerShare ?? 0;
+      let frequency = stock.dividend?.frequency ?? 0;
+      if (!perShare && typeof window !== 'undefined') {
+        perShare = parseFloat(localStorage.getItem(`kabunote-dividend-per-share-${stock.symbol}`) || '') || 0;
+        frequency = parseInt(localStorage.getItem(`kabunote-dividend-frequency-${stock.symbol}`) || '1') || 1;
+      }
 
-        // 現在価格が設定されている場合は評価額計算に含める
-        if (currentPrice) {
-          const currentPriceNum = parseFloat(currentPrice);
-          if (!isNaN(currentPriceNum) && currentPriceNum > 0) {
-            stocksWithPrices++;
-            totalInvestmentWithPrice += summary.totalCost;
-            totalCurrentValue += summary.totalShares * currentPriceNum;
-          } else {
-            stocksWithoutPrices++;
-          }
-        } else {
-          stocksWithoutPrices++;
+      if (perShare > 0 && summary.totalShares > 0) {
+        stocksWithDividend++;
+        const dividendCalculation = calculateDividendInfo(
+          perShare,
+          (frequency || 1) as 1 | 2 | 4,
+          summary.totalShares,
+          summary.averagePrice
+        );
+        totalAnnualDividend += dividendCalculation.annualDividend;
+        totalDividendInvestment += summary.totalCost;
+      }
+
+      // 株主優待情報：DBデータ優先、localStorageフォールバック
+      let minShares = stock.benefit?.minimumShares ?? 0;
+      let estValue = stock.benefit?.estimatedValue ?? 0;
+      if (!minShares && typeof window !== 'undefined') {
+        minShares = parseInt(localStorage.getItem(`kabunote-minimum-shares-${stock.symbol}`) || '') || 0;
+        estValue = parseFloat(localStorage.getItem(`kabunote-estimated-value-${stock.symbol}`) || '') || 0;
+      }
+
+      if (minShares > 0 && estValue > 0 && summary.totalShares > 0) {
+        totalStocksWithBenefits++;
+        const benefitCalculation = calculateShareholderBenefit(
+          minShares,
+          summary.totalShares,
+          estValue,
+          summary.totalCost
+        );
+        if (benefitCalculation.isEligible) {
+          totalEligibleStocks++;
+          totalEstimatedValue += benefitCalculation.estimatedValue;
         }
-
-        // 配当情報を取得して計算
-        const dividendPerShare = typeof window !== 'undefined'
-          ? localStorage.getItem(`kabunote-dividend-per-share-${stock.symbol}`) || ''
-          : '';
-        const dividendFrequency = typeof window !== 'undefined'
-          ? localStorage.getItem(`kabunote-dividend-frequency-${stock.symbol}`) || '1'
-          : '1';
-
-        const perShare = parseFloat(dividendPerShare);
-        const frequency = parseInt(dividendFrequency) as 1 | 2 | 4;
-
-        if (perShare > 0 && summary.totalShares > 0) {
-          stocksWithDividend++;
-          const dividendCalculation = calculateDividendInfo(
-            perShare,
-            frequency,
-            summary.totalShares,
-            summary.averagePrice
-          );
-          totalAnnualDividend += dividendCalculation.annualDividend;
-          totalDividendInvestment += summary.totalCost;
-        }
-
-        // 株主優待情報を取得して計算
-        const minimumShares = typeof window !== 'undefined'
-          ? localStorage.getItem(`kabunote-minimum-shares-${stock.symbol}`) || ''
-          : '';
-        const estimatedValue = typeof window !== 'undefined'
-          ? localStorage.getItem(`kabunote-estimated-value-${stock.symbol}`) || ''
-          : '';
-
-        const minShares = parseInt(minimumShares);
-        const estValue = parseFloat(estimatedValue);
-
-        if (minShares > 0 && estValue > 0 && summary.totalShares > 0) {
-          totalStocksWithBenefits++;
-          const benefitCalculation = calculateShareholderBenefit(
-            minShares,
-            summary.totalShares,
-            estValue,
-            summary.totalCost
-          );
-          if (benefitCalculation.isEligible) {
-            totalEligibleStocks++;
-            totalEstimatedValue += benefitCalculation.estimatedValue;
-          }
-          totalBenefitInvestment += summary.totalCost;
-        }
+        totalBenefitInvestment += summary.totalCost;
       }
     });
 
-    // 損益計算は現在の株価が設定されている銘柄のみで計算
     const totalProfitLoss = totalCurrentValue - totalInvestmentWithPrice;
     const totalProfitLossRate = totalInvestmentWithPrice > 0 ? (totalProfitLoss / totalInvestmentWithPrice) * 100 : 0;
 
-    // 配当サマリーを作成
     const averageDividendYield = totalDividendInvestment > 0
       ? (totalAnnualDividend / totalDividendInvestment) * 100
       : 0;
@@ -286,7 +289,6 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
       totalStocksWithPositions: stocksWithPositions
     };
 
-    // 株主優待サマリーを作成
     const averageYield = totalBenefitInvestment > 0
       ? (totalEstimatedValue / totalBenefitInvestment) * 100
       : 0;
@@ -299,20 +301,23 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
       averageYield
     };
 
-    // 損益目標サマリーを作成
+    // 損益目標サマリー
     const stocksTargetData: StockTargetInfo[] = portfolioData.map(stock => {
-      const positionSummary = calculatePositionSummary([]);
+      const positions = stockPositions.get(stock.id) || [];
+      const positionSummary = calculatePositionSummary(positions);
 
-      // リアルタイムで目標価格・損切りラインを取得
-      const targetPriceStr = typeof window !== 'undefined'
-        ? localStorage.getItem(`kabunote-target-price-${stock.symbol}`) || ''
-        : '';
-      const stopLossPriceStr = typeof window !== 'undefined'
-        ? localStorage.getItem(`kabunote-stop-loss-${stock.symbol}`) || ''
-        : '';
+      // 目標価格・損切りライン：DBデータ優先、localStorageフォールバック
+      let targetPrice: number | undefined = stock.targetPrice ?? undefined;
+      let stopLossPrice: number | undefined = stock.stopLossPrice ?? undefined;
 
-      const targetPrice = targetPriceStr ? parseFloat(targetPriceStr) : undefined;
-      const stopLossPrice = stopLossPriceStr ? parseFloat(stopLossPriceStr) : undefined;
+      if (!targetPrice && typeof window !== 'undefined') {
+        const str = localStorage.getItem(`kabunote-target-price-${stock.symbol}`);
+        targetPrice = str ? parseFloat(str) || undefined : undefined;
+      }
+      if (!stopLossPrice && typeof window !== 'undefined') {
+        const str = localStorage.getItem(`kabunote-stop-loss-${stock.symbol}`);
+        stopLossPrice = str ? parseFloat(str) || undefined : undefined;
+      }
 
       const profitLossInfo = calculateProfitLoss(positionSummary, targetPrice, stopLossPrice);
 
@@ -327,13 +332,10 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
 
     const targetSummary = calculatePortfolioTargetSummary(stocksTargetData);
 
-    // Total Assets計算とキャッシュポジション比率計算
     const evaluationValue = totalCurrentValue > 0 ? totalCurrentValue : totalInvestmentAll;
     const totalAssetsValue = evaluationValue + cashAmountNum;
     const stockRatioValue = totalAssetsValue > 0 ? (evaluationValue / totalAssetsValue) * 100 : 0;
     const cashRatioValue = totalAssetsValue > 0 ? (cashAmountNum / totalAssetsValue) * 100 : 0;
-
-    // 現金比率評価を計算
     const cashRatioEvaluationValue = evaluateCashRatio(cashRatioValue, cashAmountNum);
 
     return {
@@ -354,7 +356,88 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
       shareholderSummary,
       targetSummary
     };
-  }, [portfolioData, refreshTrigger, cashAmount]);
+  }, [portfolioData, stockPositions, cashAmount]);
+
+  // InvestmentPieChart用データを構築（stockPositionsのポジション + DBの配当・優待データ）
+  const chartPortfolioData = useMemo(() => {
+    return portfolioData.map(stock => {
+      // 配当：DBデータ優先、localStorageフォールバック
+      let dividend: { dividendPerShare: number | null; frequency: number | null } | null = null;
+      if (stock.dividend?.dividendPerShare) {
+        dividend = {
+          dividendPerShare: stock.dividend.dividendPerShare,
+          frequency: stock.dividend.frequency,
+        };
+      } else if (typeof window !== 'undefined') {
+        const perShareStr = localStorage.getItem(`kabunote-dividend-per-share-${stock.symbol}`);
+        const frequencyStr = localStorage.getItem(`kabunote-dividend-frequency-${stock.symbol}`);
+        const perShare = perShareStr ? parseFloat(perShareStr) : null;
+        if (perShare && perShare > 0) {
+          dividend = {
+            dividendPerShare: perShare,
+            frequency: frequencyStr ? parseInt(frequencyStr) : 1,
+          };
+        }
+      }
+
+      // 優待：DBデータ優先、localStorageフォールバック
+      let benefit: { minimumShares: number | null; estimatedValue: number | null } | null = null;
+      if (stock.benefit?.minimumShares) {
+        benefit = {
+          minimumShares: stock.benefit.minimumShares,
+          estimatedValue: stock.benefit.estimatedValue,
+        };
+      } else if (typeof window !== 'undefined') {
+        const minSharesStr = localStorage.getItem(`kabunote-minimum-shares-${stock.symbol}`);
+        const estValueStr = localStorage.getItem(`kabunote-estimated-value-${stock.symbol}`);
+        const minShares = minSharesStr ? parseInt(minSharesStr) : null;
+        const estValue = estValueStr ? parseFloat(estValueStr) : null;
+        if (minShares && minShares > 0) {
+          benefit = {
+            minimumShares: minShares,
+            estimatedValue: estValue,
+          };
+        }
+      }
+
+      const csvName = getCompanyNameSync(stock.symbol);
+      const resolvedName = (stock.name && stock.name !== stock.symbol)
+        ? stock.name
+        : (csvName !== '読み込み中...' && csvName !== '銘柄情報なし' ? csvName : stock.symbol);
+
+      return {
+        symbol: stock.symbol,
+        name: resolvedName,
+        positions: stockPositions.get(stock.id) || [],
+        currentPrice: stock.currentPrice,
+        sector: stock.sector,
+        customTags: (stock.tags || []).map(tag => ({
+          id: `tag-${tag.name}`,
+          label: tag.name,
+          color: tag.color as CustomTag['color'],
+          createdAt: new Date().toISOString(),
+        })),
+        dividend,
+        benefit,
+      };
+    });
+  }, [portfolioData, stockPositions]);
+
+  // ローディング中の表示
+  if (isLoading && portfolioData.length > 0) {
+    return (
+      <div className="bg-gray-800 rounded-lg p-4 mb-6 font-thin">
+        <div className="flex items-center gap-3 mb-4">
+          <span className="text-lg">💼</span>
+          <h2 className="text-lg font-semibold text-white">ポートフォリオサマリー</h2>
+          <span className="text-xs text-gray-400">読み込み中...</span>
+        </div>
+        <div className="flex justify-center items-center py-8">
+          <div className="text-gray-400">📊 ポートフォリオデータを読み込み中...</div>
+        </div>
+      </div>
+    );
+  }
 
   // ポジションを持つ銘柄が1つもない場合は表示しない
   if (overallSummary.stocksWithPositions === 0) {
@@ -437,7 +520,6 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
                 {overallSummary.totalProfitLoss >= 0 ? '+' : ''}
                 {formatPrice(overallSummary.totalProfitLoss)}円
               </div>
-              {/* 税引後損益額 */}
               {overallSummary.totalProfitLoss > 0 && (
                 <div className="text-sm text-green-200 mt-1 font-medium">
                   税引後 {overallSummary.totalProfitLoss >= 0 ? '+' : ''}
@@ -714,12 +796,9 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
 
                 {/* プログレスバー */}
                 <div className="relative">
-                {/* バー背景 */}
                 <div className="w-full h-6 bg-gradient-to-r from-red-900 via-gray-800 to-green-900 rounded-full relative overflow-hidden">
-                  {/* グロー効果のためのオーバーレイ */}
                   <div className="absolute inset-0 bg-gradient-to-r from-red-500/20 via-transparent to-green-500/20 rounded-full"></div>
 
-                  {/* 中央の取得単価ライン */}
                   <div className="absolute left-1/2 top-0 w-0.5 h-full bg-white transform -translate-x-0.5">
                     <div className="absolute -top-1 left-1/2 w-2 h-2 bg-white rounded-full transform -translate-x-1/2 animate-pulse"
                          style={{
@@ -727,12 +806,9 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
                          }}></div>
                   </div>
 
-                  {/* リスクリワード比に基づく現在位置 */}
                   {(() => {
-                    // リスクリワード比を0-100%の位置に変換
-                    // 比率が1の時は中央（50%）、2の時は75%、0.5の時は25%
                     const ratio = overallSummary.targetSummary.riskRewardRatio;
-                    const maxRatio = 3; // 表示上の最大比率
+                    const maxRatio = 3;
                     const position = Math.min(100, Math.max(0,
                       50 + ((ratio - 1) / (maxRatio - 1)) * 50
                     ));
@@ -754,7 +830,6 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
                             : '0 0 20px rgba(239, 68, 68, 0.8), 0 0 40px rgba(239, 68, 68, 0.4)'
                         }}
                       >
-                        {/* 現在位置のドット */}
                         <div
                           className="absolute -top-1 left-1/2 w-3 h-3 rounded-full transform -translate-x-1/2 animate-pulse"
                           style={{
@@ -775,7 +850,6 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
                   })()}
                 </div>
 
-                {/* ラベル */}
                 <div className="flex justify-between items-center mt-3 text-xs">
                   <div className="text-red-300 font-medium flex flex-col items-center">
                     <span>🔻 高リスク</span>
@@ -791,7 +865,6 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
                   </div>
                 </div>
 
-                {/* 現在の比率と評価 */}
                 <div className="mt-4 text-center">
                   <div className="text-2xl font-bold text-white mb-2">
                     {overallSummary.targetSummary.riskRewardRatio.toFixed(2)}
@@ -854,20 +927,11 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
               : 'max-h-0 opacity-0'
           }`}>
             <div className="grid grid-cols-1 xl:grid-cols-3 lg:grid-cols-2 gap-6">
-              {/* 投資額割合円グラフ */}
-              <InvestmentPieChart portfolioData={portfolioData as any} type="investment" />
-
-              {/* 業種別分散円グラフ */}
-              <InvestmentPieChart portfolioData={portfolioData as any} type="sector" />
-
-              {/* タグ別分散円グラフ */}
-              <InvestmentPieChart portfolioData={portfolioData as any} type="tags" />
-
-              {/* 配当金額割合円グラフ */}
-              <InvestmentPieChart portfolioData={portfolioData as any} type="dividend" />
-
-              {/* 株主優待価値割合円グラフ */}
-              <InvestmentPieChart portfolioData={portfolioData as any} type="shareholder" />
+              <InvestmentPieChart portfolioData={chartPortfolioData} type="investment" />
+              <InvestmentPieChart portfolioData={chartPortfolioData} type="sector" />
+              <InvestmentPieChart portfolioData={chartPortfolioData} type="tags" />
+              <InvestmentPieChart portfolioData={chartPortfolioData} type="dividend" />
+              <InvestmentPieChart portfolioData={chartPortfolioData} type="shareholder" />
             </div>
           </div>
         </div>
