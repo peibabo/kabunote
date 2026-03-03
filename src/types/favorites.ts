@@ -4,6 +4,7 @@ export interface FavoriteGroup {
   id: string;
   name: string;
   color: GroupColor;
+  order?: number;
   createdAt: string;
   stocks: string[]; // 銘柄コードの配列
 }

@@ -44,16 +44,17 @@ model Stock {
   updatedAt   DateTime  @updatedAt @map("updated_at")
 
   // リレーション
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  memo        StockMemo?
-  prices      StockPrice[]
-  positions   StockPosition[]
-  events      StockEvent[]
-  dividend    StockDividend?
-  benefit     StockBenefit?
-  tags        StockTag[]
-  nextAction  NextActionPlan?
-  tabStates   StockTabState[]
+  user           User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  memo           StockMemo?
+  prices         StockPrice[]
+  positions      StockPosition[]
+  events         StockEvent[]
+  dividend       StockDividend?
+  benefit        StockBenefit?
+  tags           StockTag[]
+  nextAction     NextActionPlan?
+  tabStates      StockTabState[]
+  favoriteGroups StockFavoriteGroup[]
 
   @@unique([userId, symbol])
   @@map("stocks")
@@ -183,18 +184,32 @@ model NextActionPlan {
 
 // お気に入りグループ
 model FavoriteGroup {
-  id        String   @id @default(cuid())
-  userId    String   @map("user_id")
-  name      String
-  color     String   @default("blue")
-  order     Int      @default(0)
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id          String               @id @default(cuid())
+  userId      String               @map("user_id")
+  name        String
+  color       String               @default("blue")
+  order       Int                  @default(0)
+  createdAt   DateTime             @default(now()) @map("created_at")
+  updatedAt   DateTime             @updatedAt @map("updated_at")
 
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stockGroups StockFavoriteGroup[]
 
   @@unique([userId, name])
   @@map("favorite_groups")
+}
+
+// お気に入りグループ-銘柄 中間テーブル（多対多）
+model StockFavoriteGroup {
+  id      String        @id @default(cuid())
+  stockId String        @map("stock_id")
+  groupId String        @map("group_id")
+
+  stock   Stock         @relation(fields: [stockId], references: [id], onDelete: Cascade)
+  group   FavoriteGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([stockId, groupId])
+  @@map("stock_favorite_groups")
 }
 
 // アラートスヌーズ管理
