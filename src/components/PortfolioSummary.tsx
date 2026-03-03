@@ -5,7 +5,7 @@ import InvestmentPieChart from '@/components/InvestmentPieChart';
 import { formatPrice, formatShares, formatProfitLoss, PortfolioTargetSummary, calculatePortfolioTargetSummary, calculatePositionSummary, calculateProfitLoss, StockTargetInfo, Position } from '@/types/positions';
 import { PortfolioDividendSummary, calculateDividendInfo, formatDividendAmount, formatDividendYield } from '@/types/dividend';
 import { PortfolioShareholderSummary, calculateShareholderBenefit, formatBenefitValue, formatBenefitYield } from '@/types/shareholder';
-import { useStringLocalStorage } from '@/hooks/useLocalStorage';
+import { useCash } from '@/hooks/useCash';
 import { CustomTag } from '@/types/tags';
 import { getCompanyNameSync } from '@/data/stockNames';
 
@@ -71,11 +71,8 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
   const [isChartsExpanded, setIsChartsExpanded] = useState(false);
   const [isTargetSummaryExpanded, setIsTargetSummaryExpanded] = useState(false);
   const [isRiskRewardExpanded, setIsRiskRewardExpanded] = useState(false);
-  // 現金額の状態管理
-  const [cashAmount, setCashAmount] = useStringLocalStorage('kabunote-cash-amount', '0', 300);
-
-  // Next Actionメモの状態管理
-  const [nextActionMemo, setNextActionMemo] = useStringLocalStorage('kabunote-next-action-memo', '', 300);
+  // 現金額・Next Actionメモ管理（DB永続化 + localStorageフォールバック）
+  const { cashAmount, nextActionMemo, updateCash, updateNextActionMemo } = useCash();
 
   // 現金比率評価を計算する関数
   const evaluateCashRatio = (cashRatio: number, cashAmount: number): CashRatioEvaluation => {
@@ -562,7 +559,7 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
               <input
                 type="text"
                 value={cashAmount}
-                onChange={(e) => setCashAmount(e.target.value)}
+                onChange={(e) => updateCash(e.target.value)}
                 placeholder="0"
                 className="w-28 text-lg bg-gray-600 border border-gray-500 rounded px-2 py-1.5 text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none text-right"
               />
@@ -583,7 +580,7 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
             <input
               type="text"
               value={nextActionMemo}
-              onChange={(e) => setNextActionMemo(e.target.value)}
+              onChange={(e) => updateNextActionMemo(e.target.value)}
               placeholder="この余力現金は○○株が◯円になったときに買い増しする"
               maxLength={100}
               className="flex-1 max-w-2xl text-sm bg-gray-600 border border-gray-500 rounded px-2 py-1.5 text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
