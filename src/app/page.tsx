@@ -306,9 +306,16 @@ export default function Home() {
     };
     window.addEventListener('kabunote-db-calendar-update', handleDbCalendarUpdate);
 
+    // 認証済み: DBタグ保存後のポートフォリオグラフ更新
+    const handleDbTagUpdate = () => {
+      if (isLoggedIn) refreshData();
+    };
+    window.addEventListener('kabunote-db-tag-update', handleDbTagUpdate);
+
     return () => {
       window.removeEventListener('localStorageChange', handleStorageChange as EventListener);
       window.removeEventListener('kabunote-db-calendar-update', handleDbCalendarUpdate);
+      window.removeEventListener('kabunote-db-tag-update', handleDbTagUpdate);
     };
   }, [isInitialized, stocks, isLoggedIn, refreshData]);
 
