@@ -2,19 +2,19 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { loadStockData, getCompanyNameSync, isKnownStockSync, StockData } from '@/data/stockNames';
-import { CustomTag } from '@/types/tags';
 import { FavoriteGroup } from '@/types/favorites';
 import { ProfitLossInfo, calculateProfitLoss, calculatePositionSummary } from '@/types/positions';
 import { RightsDateSettings, createDefaultRightsSettings, calculateRightsDateFromSettings, shouldDeactivateRights, DividendRightsSettings, ShareholderRightsSettings, createDefaultDividendRightsSettings, createDefaultShareholderRightsSettings } from '@/types/rightsDate';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { useStringLocalStorage, useArrayLocalStorage } from '@/hooks/useLocalStorage';
+import { useStringLocalStorage } from '@/hooks/useLocalStorage';
 import { useTabState } from '@/hooks/useTabState';
 import { useNextActionPlan } from '@/hooks/useNextActionPlan';
 import { useStockMemo } from '@/hooks/useStockMemo';
 import { useStockPosition } from '@/hooks/useStockPosition';
 import { useStockPrice } from '@/hooks/useStockPrice';
 import { useStockEvent } from '@/hooks/useStockEvent';
+import { useStockTag } from '@/hooks/useStockTag';
 import { getAllActiveAlerts } from '@/utils/alertSystem';
 
 // Components
@@ -76,7 +76,7 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
     isLoading: isPositionLoading,
   } = useStockPosition(`stock-${symbol}`);
 
-  const [customTags, setCustomTags] = useArrayLocalStorage<CustomTag>(`kabunote-tags-${symbol}`, [], 250);
+  const { tags: customTags, addTag, removeTag: removeTagFromDB } = useStockTag(`stock-${symbol}`);
 
   // 投資規律設定（価格情報）はDB管理（未認証時はlocalStorageフォールバック）
   const {
@@ -241,8 +241,7 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
 
   // 個別タグ削除を処理
   const handleTagRemove = (tagId: string) => {
-    const updatedTags = customTags.filter(tag => tag.id !== tagId);
-    setCustomTags(updatedTags);
+    removeTagFromDB(tagId);
   };
 
   // 投資余力現金を取得
@@ -582,7 +581,8 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
         <TagEditor
           symbol={symbol}
           currentTags={customTags}
-          onTagsChange={setCustomTags}
+          onAddTag={addTag}
+          onRemoveTag={removeTagFromDB}
           onClose={() => setIsTagEditorOpen(false)}
         />
       )}

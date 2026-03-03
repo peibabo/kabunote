@@ -43,8 +43,10 @@ interface StockData {
     rightsDay: number;
   } | null;
   tags: Array<{
-    name: string;
+    id: string;
+    label: string;
     color: string;
+    createdAt: string;
   }>;
   nextActionPlan: {
     actionType: string;

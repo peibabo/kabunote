@@ -33,6 +33,9 @@ export async function GET(request: NextRequest) {
         events: true,
         dividend: true,
         benefit: true,
+        tags: {
+          orderBy: { createdAt: 'asc' }
+        },
       }
     })
 
@@ -83,7 +86,12 @@ export async function GET(request: NextRequest) {
           rightsMonth: stock.benefit.rightsMonth,
           rightsDay: stock.benefit.rightsDay,
         } : null,
-        tags: [],
+        tags: stock.tags.map(t => ({
+          id: t.id,
+          label: t.name,
+          color: t.color,
+          createdAt: t.createdAt.toISOString(),
+        })),
         nextActionPlan: null,
 
         createdAt: stock.createdAt.toISOString(),

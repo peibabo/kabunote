@@ -6,29 +6,21 @@ import { CustomTag, TagColor, TAG_COLORS, PRESET_TAGS } from '@/types/tags';
 interface TagEditorProps {
   symbol: string;
   currentTags: CustomTag[];
-  onTagsChange: (tags: CustomTag[]) => void;
+  onAddTag: (label: string, color: TagColor) => Promise<void>;
+  onRemoveTag: (tagId: string) => Promise<void>;
   onClose: () => void;
 }
 
-export default function TagEditor({ symbol, currentTags, onTagsChange, onClose }: TagEditorProps) {
+export default function TagEditor({ symbol: _symbol, currentTags, onAddTag, onRemoveTag, onClose }: TagEditorProps) {
   const [newTagLabel, setNewTagLabel] = useState('');
   const [newTagColor, setNewTagColor] = useState<TagColor>('blue');
 
   const handleAddTag = (label: string, color: TagColor) => {
-    const newTag: CustomTag = {
-      id: `${symbol}-${Date.now()}`,
-      label,
-      color,
-      createdAt: new Date().toISOString()
-    };
-
-    const updatedTags = [...currentTags, newTag];
-    onTagsChange(updatedTags);
+    onAddTag(label, color);
   };
 
   const handleRemoveTag = (tagId: string) => {
-    const updatedTags = currentTags.filter(tag => tag.id !== tagId);
-    onTagsChange(updatedTags);
+    onRemoveTag(tagId);
   };
 
   const handleAddCustomTag = () => {

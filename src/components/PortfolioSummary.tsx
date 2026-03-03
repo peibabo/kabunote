@@ -32,8 +32,10 @@ interface StockData {
     rightsDay: number | null;
   } | null;
   tags: Array<{
-    name: string;
+    id: string;
+    label: string;
     color: string;
+    createdAt: string;
   }>;
 }
 
@@ -359,10 +361,10 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
         currentPrice: stock.currentPrice,
         sector: stock.sector || getSectorSync(stock.symbol),
         customTags: (stock.tags || []).map(tag => ({
-          id: `tag-${tag.name}`,
-          label: tag.name,
+          id: tag.id,
+          label: tag.label,
           color: tag.color as CustomTag['color'],
-          createdAt: new Date().toISOString(),
+          createdAt: tag.createdAt,
         })),
         dividend,
         benefit,

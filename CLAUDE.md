@@ -105,6 +105,28 @@ git commitをする前に修正内容をもとに必要であればREADME及びC
 
 ---
 
+### ✅ DB_10 完了（2026年3月達成）
+**タグのDB完全移行**
+
+#### 技術的成果
+- ✅ **useStockTag hook** 新規：タグのDB/localStorageハイブリッド管理（楽観的更新・localStorage→DB自動移行）
+- ✅ **/api/stocks/[stockId]/tag** GET/POST APIルート追加（resolveStockId + upsert）
+- ✅ **/api/stocks/[stockId]/tag/[tagId]** DELETE APIルート追加
+- ✅ **stocks/list API** `tags: true` include追加、`tags: []` ハードコード削除
+- ✅ **StockCard.tsx** `useArrayLocalStorage` → `useStockTag` に切り替え
+- ✅ **TagEditor.tsx** `onTagsChange` → `onAddTag`/`onRemoveTag` 個別コールバックに変更
+- ✅ **RLS ポリシー** `add_rls_policy_stock_tags.sql`（Supabase Dashboard で実行が必要）
+
+#### 解決した技術課題
+- 🔧 `stock_tags` テーブルは既存だったが API・hook が未実装でタグが常に空だった問題を解消
+- 🔧 既存 localStorage データの自動DB移行ロジックを `useStockTag` に実装
+- 🔧 楽観的更新（即時UI反映 + バックグラウンドDB保存/ロールバック）パターン
+
+#### 手動対応必要
+- **Supabase Dashboard > SQL Editor で `add_rls_policy_stock_tags.sql` を実行**
+
+---
+
 ### ✅ feature/n+1 完了（2026年3月達成）
 **N+1クエリ解消 + 投資余力現金・Next ActionメモのDB永続化**
 
