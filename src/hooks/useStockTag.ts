@@ -135,6 +135,7 @@ export function useStockTag(stockId: string): UseStockTagReturn {
         const current = loadFromLocalStorage()
         const updated = [...current, newTag]
         localStorage.setItem(localStorageKey, JSON.stringify(updated))
+        window.dispatchEvent(new CustomEvent('localStorageChange', { detail: { key: localStorageKey } }))
       }
       return
     }
@@ -152,6 +153,7 @@ export function useStockTag(stockId: string): UseStockTagReturn {
       if (result.success) {
         // 仮IDをDBのIDに差し替え
         setTagsState(prev => prev.map(t => t.id === tempId ? result.data : t))
+        window.dispatchEvent(new CustomEvent('kabunote-db-tag-update'))
       }
     } catch {
       // 失敗時はロールバック
@@ -170,6 +172,7 @@ export function useStockTag(stockId: string): UseStockTagReturn {
         const current = loadFromLocalStorage()
         const updated = current.filter(t => t.id !== tagId)
         localStorage.setItem(localStorageKey, JSON.stringify(updated))
+        window.dispatchEvent(new CustomEvent('localStorageChange', { detail: { key: localStorageKey } }))
       }
       return
     }
@@ -180,6 +183,7 @@ export function useStockTag(stockId: string): UseStockTagReturn {
       })
 
       if (!response.ok) throw new Error('タグの削除に失敗しました')
+      window.dispatchEvent(new CustomEvent('kabunote-db-tag-update'))
     } catch {
       // 失敗時は再読み込みで復元
       await loadFromDatabase()

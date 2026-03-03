@@ -1,7 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { CustomTag, TagColor, TAG_COLORS, PRESET_TAGS } from '@/types/tags';
+
+interface UserTag {
+  label: string;
+  color: TagColor;
+  count: number;
+}
 
 interface TagEditorProps {
   symbol: string;
@@ -14,6 +20,16 @@ interface TagEditorProps {
 export default function TagEditor({ symbol: _symbol, currentTags, onAddTag, onRemoveTag, onClose }: TagEditorProps) {
   const [newTagLabel, setNewTagLabel] = useState('');
   const [newTagColor, setNewTagColor] = useState<TagColor>('blue');
+  const [userTags, setUserTags] = useState<UserTag[]>([]);
+
+  useEffect(() => {
+    fetch('/api/tags')
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data?.success) setUserTags(data.data as UserTag[]);
+      })
+      .catch(() => {});
+  }, []);
 
   const handleAddTag = (label: string, color: TagColor) => {
     onAddTag(label, color);
@@ -37,6 +53,13 @@ export default function TagEditor({ symbol: _symbol, currentTags, onAddTag, onRe
 
   const availablePresets = PRESET_TAGS.filter(
     preset => !currentTags.some(tag => tag.label === preset.label)
+  );
+
+  // 現在のタグ・プリセットタグと重複しないユーザーカスタムタグのみ表示
+  const presetLabels = new Set(PRESET_TAGS.map(p => p.label));
+  const currentTagLabels = new Set(currentTags.map(t => t.label));
+  const availableUserTags = userTags.filter(
+    t => !currentTagLabels.has(t.label) && !presetLabels.has(t.label)
   );
 
   return (
@@ -93,6 +116,24 @@ export default function TagEditor({ symbol: _symbol, currentTags, onAddTag, onRe
           </div>
         )}
 
+        {/* 過去に使ったタグ */}
+        {availableUserTags.length > 0 && (
+          <div className="mb-4">
+            <p className="text-sm text-gray-300 mb-2">過去に使ったタグ</p>
+            <div className="flex flex-wrap gap-2">
+              {availableUserTags.map((tag, index) => (
+                <button
+                  key={index}
+                  onClick={() => handleAddTag(tag.label, tag.color)}
+                  className={`text-xs px-3 py-2 rounded-full transition-opacity hover:opacity-80 ${TAG_COLORS[tag.color]?.bg ?? 'bg-gray-600'} ${TAG_COLORS[tag.color]?.text ?? 'text-gray-100'}`}
+                >
+                  + {tag.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* カスタムタグ作成 */}
         <div className="space-y-3">
           <p className="text-sm text-gray-300">カスタムタグを作成</p>
@@ -112,7 +153,7 @@ export default function TagEditor({ symbol: _symbol, currentTags, onAddTag, onRe
               onChange={(e) => setNewTagColor(e.target.value as TagColor)}
               className="px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:border-blue-500 focus:outline-none"
             >
-              {Object.entries(TAG_COLORS).map(([color, styles]) => (
+              {Object.entries(TAG_COLORS).map(([color]) => (
                 <option key={color} value={color}>
                   {color}
                 </option>
