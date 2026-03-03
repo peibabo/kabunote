@@ -6,7 +6,7 @@ import StockInput from '@/components/StockInput';
 import FavoriteGroupManager from '@/components/FavoriteGroupManager';
 import SearchBar from '@/components/SearchBar';
 import InvestmentCalendar from '@/components/InvestmentCalendar';
-import SimplePortfolioSummary from '@/components/SimplePortfolioSummary';
+import PortfolioSummary from '@/components/PortfolioSummary';
 import FloatingAddButton from '@/components/FloatingAddButton';
 import DataManager from '@/components/DataManager';
 import StrategySummaryPage from '@/components/StrategySummaryPage';
@@ -1134,7 +1134,7 @@ export default function Home() {
 
         {/* ポートフォリオサマリー */}
         <div className="portfolio-summary">
-          <SimplePortfolioSummary portfolioData={stockData} />
+          <PortfolioSummary portfolioData={stockData} />
         </div>
 
         {/* 投資カレンダー */}

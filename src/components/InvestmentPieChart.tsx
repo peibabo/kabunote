@@ -10,9 +10,17 @@ interface PortfolioData {
   symbol: string;
   name: string;
   positions: Position[];
-  currentPrice: string;
-  sector: string;
+  currentPrice: number | null;
+  sector: string | null;
   customTags: CustomTag[];
+  dividend?: {
+    dividendPerShare: number | null;
+    frequency: number | null;
+  } | null;
+  benefit?: {
+    minimumShares: number | null;
+    estimatedValue: number | null;
+  } | null;
 }
 
 interface InvestmentPieChartProps {
@@ -63,7 +71,7 @@ export default function InvestmentPieChart({ portfolioData, type }: InvestmentPi
         const summary = calculatePositionSummary(stock.positions);
         if (summary.totalCost > 0) {
           data.push({
-            label: `${stock.symbol} ${stock.name}`,
+            label: stock.name !== stock.symbol ? `${stock.name} (${stock.symbol})` : stock.symbol,
             value: summary.totalCost,
             color: CHART_COLORS[index % CHART_COLORS.length]
           });
@@ -179,16 +187,8 @@ export default function InvestmentPieChart({ portfolioData, type }: InvestmentPi
       if (stock.positions.length > 0) {
         const summary = calculatePositionSummary(stock.positions);
 
-        // localStorage から配当情報を取得
-        const dividendPerShare = typeof window !== 'undefined'
-          ? localStorage.getItem(`kabunote-dividend-per-share-${stock.symbol}`) || ''
-          : '';
-        const dividendFrequency = typeof window !== 'undefined'
-          ? localStorage.getItem(`kabunote-dividend-frequency-${stock.symbol}`) || '1'
-          : '1';
-
-        const perShare = parseFloat(dividendPerShare);
-        const frequency = parseInt(dividendFrequency) as 1 | 2 | 4;
+        const perShare = stock.dividend?.dividendPerShare ?? 0;
+        const frequency = (stock.dividend?.frequency ?? 1) as 1 | 2 | 4;
 
         if (perShare > 0 && summary.totalShares > 0) {
           const dividendCalculation = calculateDividendInfo(
@@ -199,7 +199,7 @@ export default function InvestmentPieChart({ portfolioData, type }: InvestmentPi
           );
 
           data.push({
-            label: `${stock.symbol} ${stock.name}`,
+            label: stock.name !== stock.symbol ? `${stock.name} (${stock.symbol})` : stock.symbol,
             value: dividendCalculation.annualDividend,
             color: CHART_COLORS[index % CHART_COLORS.length],
             percentage: 0, // 後で計算
@@ -226,16 +226,8 @@ export default function InvestmentPieChart({ portfolioData, type }: InvestmentPi
       if (stock.positions.length > 0) {
         const summary = calculatePositionSummary(stock.positions);
 
-        // localStorage から株主優待情報を取得
-        const minimumShares = typeof window !== 'undefined'
-          ? localStorage.getItem(`kabunote-minimum-shares-${stock.symbol}`) || ''
-          : '';
-        const estimatedValue = typeof window !== 'undefined'
-          ? localStorage.getItem(`kabunote-estimated-value-${stock.symbol}`) || ''
-          : '';
-
-        const minShares = parseInt(minimumShares);
-        const estValue = parseFloat(estimatedValue);
+        const minShares = stock.benefit?.minimumShares ?? 0;
+        const estValue = stock.benefit?.estimatedValue ?? 0;
 
         if (minShares > 0 && estValue > 0 && summary.totalShares > 0) {
           const benefitCalculation = calculateShareholderBenefit(
@@ -247,7 +239,7 @@ export default function InvestmentPieChart({ portfolioData, type }: InvestmentPi
 
           if (benefitCalculation.isEligible) {
             data.push({
-              label: `${stock.symbol} ${stock.name}`,
+              label: stock.name !== stock.symbol ? `${stock.name} (${stock.symbol})` : stock.symbol,
               value: benefitCalculation.estimatedValue,
               color: CHART_COLORS[index % CHART_COLORS.length],
               percentage: 0, // 後で計算
