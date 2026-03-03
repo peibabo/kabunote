@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
 
     console.log('📊 株式データ取得開始 - ユーザーID:', user.id)
 
-    // データベースから株式データを価格情報込みで取得
+    // データベースから株式データを価格情報・イベント・配当・優待込みで取得
     const stocks = await prisma.stock.findMany({
       where: {
         userId: user.id
@@ -26,7 +26,10 @@ export async function GET(request: NextRequest) {
         order: 'asc'
       },
       include: {
-        prices: true
+        prices: true,
+        events: true,
+        dividend: true,
+        benefit: true,
       }
     })
 
@@ -48,9 +51,28 @@ export async function GET(request: NextRequest) {
         stopLossPrice: price?.stopLossPrice != null ? Number(price.stopLossPrice) : null,
         memo: '',
         position: null,
-        events: [],
-        dividend: null,
-        benefit: null,
+        events: stock.events.map(e => ({
+          id: e.id,
+          eventType: e.eventType,
+          eventDate: e.eventDate ? e.eventDate.toISOString().split('T')[0] : null,
+          eventMonth: e.eventMonth,
+          eventDay: e.eventDay,
+          isRecurring: e.isRecurring,
+          isActive: e.isActive,
+        })),
+        dividend: stock.dividend ? {
+          dividendPerShare: stock.dividend.dividendPerShare != null ? Number(stock.dividend.dividendPerShare) : null,
+          frequency: stock.dividend.frequency,
+          rightsMonth: stock.dividend.rightsMonth,
+          rightsDay: stock.dividend.rightsDay,
+        } : null,
+        benefit: stock.benefit ? {
+          description: stock.benefit.description,
+          minimumShares: stock.benefit.minimumShares,
+          estimatedValue: stock.benefit.estimatedValue != null ? Number(stock.benefit.estimatedValue) : null,
+          rightsMonth: stock.benefit.rightsMonth,
+          rightsDay: stock.benefit.rightsDay,
+        } : null,
         tags: [],
         nextActionPlan: null,
 

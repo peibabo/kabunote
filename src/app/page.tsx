@@ -147,67 +147,80 @@ export default function Home() {
       for (const symbol of stocks) {
         const stockInfo = await getStockData(symbol);
 
-        // 決算発表日を取得
-        const earningsDate = typeof window !== 'undefined'
-          ? localStorage.getItem(`kabunote-earnings-date-${symbol}`) || ''
-          : '';
+        if (isLoggedIn && stockData.length > 0) {
+          // 認証済み: DBから取得したstockDataを使用
+          const dbStock = stockData.find(s => s.symbol === symbol);
 
-        // 配当権利確定日設定を取得
-        const dividendRightsSettingsStr = typeof window !== 'undefined'
-          ? localStorage.getItem(`kabunote-dividend-rights-settings-${symbol}`)
-          : null;
+          const earningsEvent = dbStock?.events?.find(e => e.eventType === 'EARNINGS');
+          const earningsDate = earningsEvent?.eventDate || '';
 
-        let dividendRightsSettings: DividendRightsSettings;
-        try {
-          dividendRightsSettings = dividendRightsSettingsStr
-            ? JSON.parse(dividendRightsSettingsStr)
-            : createDefaultDividendRightsSettings();
-        } catch {
-          dividendRightsSettings = createDefaultDividendRightsSettings();
-        }
+          const dividendRightsSettings: DividendRightsSettings =
+            dbStock?.dividend?.rightsMonth && dbStock.dividend.rightsDay
+              ? { month: dbStock.dividend.rightsMonth, day: dbStock.dividend.rightsDay, isRecurring: true, isActive: true }
+              : createDefaultDividendRightsSettings();
 
-        // 株主優待権利確定日設定を取得
-        const shareholderRightsSettingsStr = typeof window !== 'undefined'
-          ? localStorage.getItem(`kabunote-shareholder-rights-settings-${symbol}`)
-          : null;
+          const shareholderRightsSettings: ShareholderRightsSettings =
+            dbStock?.benefit?.rightsMonth && dbStock.benefit.rightsDay
+              ? { month: dbStock.benefit.rightsMonth, day: dbStock.benefit.rightsDay, isRecurring: true, isActive: true }
+              : createDefaultShareholderRightsSettings();
 
-        let shareholderRightsSettings: ShareholderRightsSettings;
-        try {
-          shareholderRightsSettings = shareholderRightsSettingsStr
-            ? JSON.parse(shareholderRightsSettingsStr)
-            : createDefaultShareholderRightsSettings();
-        } catch {
-          shareholderRightsSettings = createDefaultShareholderRightsSettings();
-        }
-
-        // 株主総会設定を取得
-        const shareholderMeetingSettingsStr = typeof window !== 'undefined'
-          ? localStorage.getItem(`kabunote-shareholder-meeting-${symbol}`)
-          : null;
-
-        let shareholderMeetingSettings: ShareholderMeetingSettings;
-        try {
-          shareholderMeetingSettings = shareholderMeetingSettingsStr
-            ? JSON.parse(shareholderMeetingSettingsStr)
+          const meetingEvent = dbStock?.events?.find(e => e.eventType === 'SHAREHOLDER_MEETING');
+          const shareholderMeetingSettings: ShareholderMeetingSettings = meetingEvent
+            ? { month: meetingEvent.eventMonth, day: meetingEvent.eventDay, isRecurring: meetingEvent.isRecurring, isActive: meetingEvent.isActive }
             : createDefaultShareholderMeetingSettings();
-        } catch {
-          shareholderMeetingSettings = createDefaultShareholderMeetingSettings();
-        }
 
-        calendarData[symbol] = {
-          name: stockInfo?.name || symbol,
-          earningsDate,
-          dividendRightsSettings,
-          shareholderRightsSettings,
-          shareholderMeetingSettings
-        };
+          calendarData[symbol] = {
+            name: dbStock?.name || stockInfo?.name || symbol,
+            earningsDate,
+            dividendRightsSettings,
+            shareholderRightsSettings,
+            shareholderMeetingSettings
+          };
+        } else {
+          // 未認証: localStorageから取得
+          const earningsDate = typeof window !== 'undefined'
+            ? localStorage.getItem(`kabunote-earnings-date-${symbol}`) || ''
+            : '';
+
+          let dividendRightsSettings: DividendRightsSettings;
+          try {
+            const str = typeof window !== 'undefined' ? localStorage.getItem(`kabunote-dividend-rights-settings-${symbol}`) : null;
+            dividendRightsSettings = str ? JSON.parse(str) : createDefaultDividendRightsSettings();
+          } catch {
+            dividendRightsSettings = createDefaultDividendRightsSettings();
+          }
+
+          let shareholderRightsSettings: ShareholderRightsSettings;
+          try {
+            const str = typeof window !== 'undefined' ? localStorage.getItem(`kabunote-shareholder-rights-settings-${symbol}`) : null;
+            shareholderRightsSettings = str ? JSON.parse(str) : createDefaultShareholderRightsSettings();
+          } catch {
+            shareholderRightsSettings = createDefaultShareholderRightsSettings();
+          }
+
+          let shareholderMeetingSettings: ShareholderMeetingSettings;
+          try {
+            const str = typeof window !== 'undefined' ? localStorage.getItem(`kabunote-shareholder-meeting-${symbol}`) : null;
+            shareholderMeetingSettings = str ? JSON.parse(str) : createDefaultShareholderMeetingSettings();
+          } catch {
+            shareholderMeetingSettings = createDefaultShareholderMeetingSettings();
+          }
+
+          calendarData[symbol] = {
+            name: stockInfo?.name || symbol,
+            earningsDate,
+            dividendRightsSettings,
+            shareholderRightsSettings,
+            shareholderMeetingSettings
+          };
+        }
       }
 
       setStockCalendarData(calendarData);
     };
 
     updateCalendarData();
-  }, [stocks, isInitialized]);
+  }, [stocks, isInitialized, isLoggedIn, stockData]);
 
   // カレンダーデータのリアルタイム更新
   useEffect(() => {
@@ -287,10 +300,17 @@ export default function Home() {
 
     window.addEventListener('localStorageChange', handleStorageChange as EventListener);
 
+    // 認証済み: DBイベント保存後のカレンダー更新
+    const handleDbCalendarUpdate = () => {
+      if (isLoggedIn) refreshData();
+    };
+    window.addEventListener('kabunote-db-calendar-update', handleDbCalendarUpdate);
+
     return () => {
       window.removeEventListener('localStorageChange', handleStorageChange as EventListener);
+      window.removeEventListener('kabunote-db-calendar-update', handleDbCalendarUpdate);
     };
-  }, [isInitialized, stocks]);
+  }, [isInitialized, stocks, isLoggedIn, refreshData]);
 
   // ポートフォリオ用データの更新
   useEffect(() => {

@@ -46,12 +46,62 @@ git commitをする前に修正内容をもとに必要であればREADME及びC
 #### APIルート構成（`src/app/api/stocks/`）
 | ルート | メソッド | 説明 |
 |--------|---------|------|
-| `list` | GET | 銘柄一覧（価格データ込み） |
+| `list` | GET | 銘柄一覧（価格・イベント・配当・優待データ込み） |
 | `[stockId]/memo` | GET/PUT/DELETE | 株ノオト |
 | `[stockId]/price` | GET/PUT | 株価情報（現在株価・目標・損切り） |
 | `[stockId]/position` | GET/POST | ポジション一覧・追加 |
 | `[stockId]/position/[positionId]` | PUT/DELETE | 個別ポジション編集・削除 |
 | `[stockId]/next-action-plan` | GET/PUT/DELETE | 次の一手戦略 |
+
+---
+
+### ✅ DB_5 完了（2026年3月達成）
+**お気に入りグループ DB完全移行**
+
+#### 技術的成果
+- ✅ **StockFavoriteGroup 中間テーブル追加** お気に入りグループ×銘柄の多対多管理
+- ✅ **useFavoriteGroups hook** DB/localStorageハイブリッド・楽観的更新・差分同期
+- ✅ **/api/favorite-groups 系APIルート** 一覧・作成・更新・削除・銘柄紐付け
+
+#### 解決した技術課題
+- 🔧 楽観的更新で操作レスポンスを維持しつつDB同期
+
+---
+
+### ✅ DB_6 完了（2026年3月達成）
+**イベント情報（決算日・株主総会日）DB完全移行**
+
+#### 技術的成果
+- ✅ **StockEvent テーブル拡張** `event_month`, `event_day`, `is_recurring`, `is_active` カラム追加
+- ✅ **UNIQUE制約追加** `stock_id + event_type`（1銘柄につき各イベント1件）
+- ✅ **useStockEvent hook** 新規：DB/localStorageハイブリッド・500msデバウンス自動保存
+- ✅ **/api/stocks/[stockId]/event** GET/PUT/DELETE APIルート追加
+- ✅ **StockCard.tsx 移行** localStorage → useStockEvent hook
+
+#### 解決した技術課題
+- 🔧 マイグレーション前の重複レコード削除（DISTINCT ON で最新レコードを残す）
+- 🔧 既存 `SHAREHOLDER_MEETING` レコードの `event_date` → `event_month`/`event_day` データ移行SQL
+- 🔧 `prisma generate` 後は開発サーバー再起動が必要（node_modules キャッシュ問題）
+
+#### APIルート構成（追加分）
+| ルート | メソッド | 説明 |
+|--------|---------|------|
+| `[stockId]/event` | GET/PUT/DELETE | 決算日・株主総会日管理 |
+
+---
+
+### ✅ DB_7 完了（2026年3月達成）
+**投資カレンダーのDB対応（スケジュールサマリー反映）**
+
+#### 技術的成果
+- ✅ **stocks/list API 拡張** events・dividend・benefit データを含めて返却
+- ✅ **投資カレンダー DB 反映** 認証済みユーザーは DB のイベントデータをカレンダーに反映
+- ✅ **リアルタイムカレンダー更新** `useStockEvent` 保存後に `kabunote-db-calendar-update` カスタムイベントで即時反映
+
+#### 解決した技術課題
+- 🔧 `page.tsx` の `updateCalendarData` が localStorage のみ参照していたため、DB に保存したイベントがカレンダーに反映されない不具合を修正
+- 🔧 認証済み時は `stockData`（DB取得済み）から決算日・株主総会日・配当権利確定日・優待権利確定日を組み立てるよう修正
+- 🔧 カード上での変更 → DB 保存 → カスタムイベント → `refreshData()` → カレンダー更新のリアルタイム同期フローを確立
 
 # Kabunote - 投資思考整理ダッシュボード
 
