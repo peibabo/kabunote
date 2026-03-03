@@ -142,6 +142,10 @@ export function useStockEvent(stockId: string): UseStockEventReturn {
       if (!response.ok && response.status !== 401) {
         throw new Error('決算日の保存に失敗しました')
       }
+      // カレンダーデータの再取得をトリガー
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('kabunote-db-calendar-update'))
+      }
     } catch {
       // エラー時は localStorage にフォールバック保存
       if (typeof window !== 'undefined') {
@@ -171,6 +175,10 @@ export function useStockEvent(stockId: string): UseStockEventReturn {
 
       if (!response.ok && response.status !== 401) {
         throw new Error('株主総会設定の保存に失敗しました')
+      }
+      // カレンダーデータの再取得をトリガー
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('kabunote-db-calendar-update'))
       }
     } catch {
       // エラー時は localStorage にフォールバック保存

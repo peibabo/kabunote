@@ -19,8 +19,12 @@ interface StockData {
   } | null;
   events: Array<{
     id: string;
-    type: string;
-    date: string;
+    eventType: string;
+    eventDate: string | null;
+    eventMonth: number | null;
+    eventDay: number | null;
+    isRecurring: boolean;
+    isActive: boolean;
   }>;
   dividend: {
     dividendPerShare: number;
