@@ -22,11 +22,36 @@ git commitをする前に修正内容をもとに必要であればREADME及びC
 - 🔧 Supabase SSL接続最適化
 - 🔧 OAuth Server Beta問題解決
 
-#### システム状況
-- **認証済みユーザー**: PostgreSQLから高速データアクセス
-- **未認証ユーザー**: localStorageフォールバック維持
-- **データ件数**: 6銘柄正常稼働中
-- **レスポンス**: リアルタイムデータ取得成功
+---
+
+### ✅ Phase 2 完了（2026年3月達成）
+**DB統合の完成：ポジション・株価・メモの全面DB対応**
+
+#### 技術的成果
+- ✅ **StockPosition 複数レコード設計** 購入ロットごとに1レコード（正規設計に復元）
+- ✅ **stock_prices DB統合** 現在株価・利確目標・損切りラインをDB管理
+- ✅ **useStockPrice hook** 新規：価格データのDB同期（300msデバウンス自動保存）
+- ✅ **useStockPosition hook** 複数ポジションCRUD（追加・編集・削除）
+- ✅ **resolveStockId() パターン** 全APIルートで `stock-SYMBOL` → DB UUID 変換を統一
+- ✅ **SimplePortfolioSummary** DB価格データをポートフォリオサマリーに反映
+- ✅ **stocks/list API 拡張** 価格データ込みで返却（N+1クエリ排除）
+
+#### 解決した技術課題
+- 🔧 `stock-SYMBOL` 形式のIDをDB UUIDに変換する `resolveStockId()` を全ルートに実装
+- 🔧 `StockPosition` の `@unique` 誤設定を複数レコード設計に修正
+- 🔧 DB接続：Transaction Pooler(6543)はDDL不可、Session Pooler(5432)を使用
+- 🔧 RLS ポリシー：`app_users.id` は `user_id` ではなく `id` でアクセス制御
+- 🔧 Prisma `--force-reset` 後のRLSポリシー再設定（`setup_rls_policies.sql`）
+
+#### APIルート構成（`src/app/api/stocks/`）
+| ルート | メソッド | 説明 |
+|--------|---------|------|
+| `list` | GET | 銘柄一覧（価格データ込み） |
+| `[stockId]/memo` | GET/PUT/DELETE | 株ノオト |
+| `[stockId]/price` | GET/PUT | 株価情報（現在株価・目標・損切り） |
+| `[stockId]/position` | GET/POST | ポジション一覧・追加 |
+| `[stockId]/position/[positionId]` | PUT/DELETE | 個別ポジション編集・削除 |
+| `[stockId]/next-action-plan` | GET/PUT/DELETE | 次の一手戦略 |
 
 # Kabunote - 投資思考整理ダッシュボード
 
@@ -111,7 +136,7 @@ npm run dev  # localhost:3000
 - **損益目標サマリー**: 利確目標合計・損切り合計・リスクリワード比の表示
 - **ネオンライト可視化**: リスクリワード比をネオンエフェクト付きプログレスバーで表現
 - **4種類の円グラフ**: 投資額割合・業種別分散・タグ別分散・配当金額割合
-- **リアルタイム更新**: 目安株価入力と同時に全体が自動更新
+- **リアルタイム更新**: 現在の株価入力と同時に全体が自動更新
 
 ### 8. 🚨 統合価格アラートシステム（Next Action Plan + 投資規律設定）
 - **戦略設定**: アクション種別（買い・売り・様子見）、優先度（高・中・低）設定
@@ -212,22 +237,29 @@ app_users (ユーザー管理)
 - `StrategySummaryPage.tsx`: 戦略一覧ダッシュボード（全銘柄戦略統合表示・ソート・統計）
 - `AlertSummaryPage.tsx`: アラート一覧（統合管理・スヌーズ機能・履歴表示・リアルタイム更新）
 - `ManagementTab.tsx`: 管理タブサブタブコンテナ
-- `PositionsManagement.tsx`: 保有状況管理
+- `PositionsManagement.tsx`: 保有状況管理（複数ロットCRUD・インライン編集）
+- `SimplePortfolioSummary.tsx`: ポートフォリオサマリー（DB価格データ反映）
 - `EventManagement.tsx`: 決算発表日・株主総会日管理
 - `DividendManagement.tsx`: 配当管理
 - `ShareholderBenefitManagement.tsx`: 株主優待管理
 - `DividendBenefitListPage.tsx`: 配当・優待一覧ダッシュボード（全銘柄統合表示・スマートナビゲーション）
-- `PortfolioSummary.tsx`: ポートフォリオサマリー
 - `InvestmentCalendar.tsx`: 投資カレンダー（今日・明日の予定とタイムラインを統合表示）
 - `InvestmentTimeline.tsx`: 投資タイムライン（月間カレンダーアコーディオンを内包）
 - `TodayTomorrowEvents.tsx`: 今日・明日の予定表示
 - `InvestmentPieChart.tsx`: 円グラフ分析
 
 ### 型定義・カスタムフック・API層
-- `src/types/`: 各機能の型定義（配当・株主優待・権利確定日・NextActionPlan・投資戦略タブ・スヌーズ等）
-- `src/hooks/`: ハイブリッドデータ管理・デバウンス処理・タブ状態管理・投資戦略サブタブ管理・NextActionPlan管理・スヌーズ管理
+- `src/types/`: 各機能の型定義（配当・株主優待・権利確定日・NextActionPlan・投資戦略タブ・スヌーズ・ポジション等）
+- `src/hooks/`:
+  - `useStockMemo`: 株ノオト（DB/localStorage自動切替・デバウンス自動保存）
+  - `useStockPrice`: 株価データ（現在株価・利確目標・損切り）DB管理
+  - `useStockPosition`: 複数ポジション管理（追加・編集・削除）
+  - `useNextActionPlan`: 次の一手戦略DB管理
+  - `useTabState` / `useInvestmentTabState` / `useManagementTabState`: タブ状態管理
+  - `useSnooze`: アラートスヌーズ管理
+  - `useAuth` / `useCash`: 認証・現金管理
 - `src/lib/`: Supabase・Prismaクライアント設定、認証ヘルパー
-- `src/app/api/`: RESTful API（株式一覧・CRUD操作・データ移行等）
+- `src/app/api/`: RESTful API（銘柄一覧+価格込み・CRUD・ポジション・株価・メモ・戦略等）
 
 ### データ永続化・統合システム
 - **データベース統合**: PostgreSQL + Prismaによる本格的なデータ管理

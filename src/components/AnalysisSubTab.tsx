@@ -269,8 +269,17 @@ export default function AnalysisSubTab({
                   {(() => {
                     const currentPriceNum = parseFloat(currentPrice);
                     const avgPrice = positionSummary.averagePrice;
+
+                    if (isNaN(currentPriceNum) || isNaN(avgPrice) || avgPrice === 0) {
+                      return (
+                        <div className="text-xs mt-1 text-gray-400">
+                          現在価格未設定
+                        </div>
+                      );
+                    }
+
                     const diff = currentPriceNum - avgPrice;
-                    const diffPercent = avgPrice > 0 ? (diff / avgPrice) * 100 : 0;
+                    const diffPercent = (diff / avgPrice) * 100;
 
                     return (
                       <div className={`text-xs mt-1 ${diff >= 0 ? 'text-green-200' : 'text-red-300'}`}>
@@ -309,11 +318,14 @@ export default function AnalysisSubTab({
                     return (
                       <div className="text-center">
                         <div className="text-xs text-gray-400 mb-1 whitespace-nowrap">損切ライン到達時</div>
-                        <div className={`text-sm font-bold ${profitLossInfo.stopLoss >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                          {formatProfitLoss(profitLossInfo.stopLoss)}円
+                        <div className={`text-sm font-bold ${profitLossInfo && profitLossInfo.stopLoss >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                          {profitLossInfo && !isNaN(profitLossInfo.stopLoss) ? formatProfitLoss(profitLossInfo.stopLoss) : '---'}円
                         </div>
-                        <div className={`text-xs ${profitLossInfo.stopLossPercent >= 0 ? 'text-green-300' : 'text-red-300'}`}>
-                          ({profitLossInfo.stopLossPercent >= 0 ? '+' : ''}{profitLossInfo.stopLossPercent.toFixed(1)}%)
+                        <div className={`text-xs ${profitLossInfo && profitLossInfo.stopLossPercent >= 0 ? 'text-green-300' : 'text-red-300'}`}>
+                          {profitLossInfo && !isNaN(profitLossInfo.stopLossPercent) ?
+                            `(${profitLossInfo.stopLossPercent >= 0 ? '+' : ''}${profitLossInfo.stopLossPercent.toFixed(1)}%)` :
+                            '(---%)'
+                          }
                         </div>
                       </div>
                     );
@@ -340,11 +352,14 @@ export default function AnalysisSubTab({
                     return (
                       <div className="text-center">
                         <div className="text-xs text-gray-400 mb-1 whitespace-nowrap">利確目標達成時</div>
-                        <div className={`text-sm font-bold ${profitLossInfo.targetProfit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                          {formatProfitLoss(profitLossInfo.targetProfit)}円
+                        <div className={`text-sm font-bold ${profitLossInfo && profitLossInfo.targetProfit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                          {profitLossInfo && !isNaN(profitLossInfo.targetProfit) ? formatProfitLoss(profitLossInfo.targetProfit) : '---'}円
                         </div>
-                        <div className={`text-xs ${profitLossInfo.targetProfitPercent >= 0 ? 'text-green-300' : 'text-red-300'}`}>
-                          ({profitLossInfo.targetProfitPercent >= 0 ? '+' : ''}{profitLossInfo.targetProfitPercent.toFixed(1)}%)
+                        <div className={`text-xs ${profitLossInfo && profitLossInfo.targetProfitPercent >= 0 ? 'text-green-300' : 'text-red-300'}`}>
+                          {profitLossInfo && !isNaN(profitLossInfo.targetProfitPercent) ?
+                            `(${profitLossInfo.targetProfitPercent >= 0 ? '+' : ''}${profitLossInfo.targetProfitPercent.toFixed(1)}%)` :
+                            '(---%)'
+                          }
                         </div>
                       </div>
                     );

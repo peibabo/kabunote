@@ -1,43 +1,30 @@
 import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase-client'
-import { useDebounce } from './useDebounce'
-
-interface StockPosition {
-  id: string
-  sharesOwned: number
-  averagePurchasePrice: number | null
-  currentPrice: number | null
-  profitTarget: number | null
-  lossLimit: number | null
-  updatedAt: string
-}
+import { Position, calculatePositionSummary } from '@/types/positions'
 
 interface UseStockPositionReturn {
-  position: StockPosition | null
+  positions: Position[]
   isLoading: boolean
   isSaving: boolean
   error: string | null
-  lastSaved: Date | null
-  updatePosition: (data: Partial<Omit<StockPosition, 'id' | 'updatedAt'>>) => void
-  savePosition: () => Promise<void>
-  deletePosition: () => Promise<void>
+  addPosition: (data: Omit<Position, 'id' | 'createdAt'>) => Promise<void>
+  updatePosition: (id: string, data: Partial<Omit<Position, 'id' | 'createdAt'>>) => Promise<void>
+  deletePosition: (id: string) => Promise<void>
+  refetch: () => Promise<void>
 }
 
+const LOCALSTORAGE_PREFIX = 'kabunote-positions-'
+
 export function useStockPosition(stockId: string): UseStockPositionReturn {
-  const [position, setPosition] = useState<StockPosition | null>(null)
+  const [positions, setPositions] = useState<Position[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const [hasUserInput, setHasUserInput] = useState(false)
 
-  // localStorage フォールバック（未認証時用）
-  const getLocalStorageKey = (field: string) =>
-    `kabunote-position-${stockId.replace('stock-', '')}-${field}`
-
-  // デバウンス処理（300ms遅延で自動保存）
-  const debouncedPosition = useDebounce(position, 300)
+  // シンボルを stockId から抽出（例: "stock-7203" → "7203"）
+  const symbol = stockId.replace('stock-', '')
+  const localKey = `${LOCALSTORAGE_PREFIX}${symbol}`
 
   // 認証状態を監視
   useEffect(() => {
@@ -51,7 +38,7 @@ export function useStockPosition(stockId: string): UseStockPositionReturn {
     checkAuth()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      (_event, session) => {
         setIsLoggedIn(!!session)
       }
     )
@@ -59,289 +46,200 @@ export function useStockPosition(stockId: string): UseStockPositionReturn {
     return () => subscription.unsubscribe()
   }, [])
 
-  // ポジション読み込み
-  const loadPosition = useCallback(async () => {
-    if (!isLoggedIn) {
-      // 未認証時はlocalStorageから読み込み
-      console.log('📦 未認証 - localStorageから読み込み:', stockId)
-      const localPosition = {
-        id: 'local',
-        sharesOwned: Number(localStorage.getItem(getLocalStorageKey('sharesOwned')) || '0'),
-        averagePurchasePrice: localStorage.getItem(getLocalStorageKey('averagePurchasePrice'))
-          ? Number(localStorage.getItem(getLocalStorageKey('averagePurchasePrice'))) : null,
-        currentPrice: localStorage.getItem(getLocalStorageKey('currentPrice'))
-          ? Number(localStorage.getItem(getLocalStorageKey('currentPrice'))) : null,
-        profitTarget: localStorage.getItem(getLocalStorageKey('profitTarget'))
-          ? Number(localStorage.getItem(getLocalStorageKey('profitTarget'))) : null,
-        lossLimit: localStorage.getItem(getLocalStorageKey('lossLimit'))
-          ? Number(localStorage.getItem(getLocalStorageKey('lossLimit'))) : null,
-        updatedAt: new Date().toISOString()
+  // localStorageにポジションをキャッシュ（他コンポーネントとの互換性維持）
+  const cacheToLocalStorage = useCallback((data: Position[]) => {
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem(localKey, JSON.stringify(data))
+        window.dispatchEvent(new CustomEvent('localStorageChange', {
+          detail: { key: localKey }
+        }))
+      } catch {
+        // ignore storage errors
       }
-      setPosition(localPosition)
-      setIsLoading(false)
-      return
     }
+  }, [localKey])
 
-    // 認証済み時はデータベースから読み込み
-    console.log('🔐 認証済み - データベースから読み込み:', stockId)
-    await loadDataFromDatabase()
-  }, [stockId, isLoggedIn])
-
-  // データベースからデータを取得
-  const loadDataFromDatabase = useCallback(async () => {
+  // DBからポジション一覧を取得
+  const loadFromDB = useCallback(async () => {
     try {
       setError(null)
       const response = await fetch(`/api/stocks/${stockId}/position`)
 
       if (!response.ok) {
         if (response.status === 401) {
-          // 認証エラー時はlocalStorageにフォールバック
-          console.log('🔄 認証が必要 - localStorageにフォールバック')
-          const localPosition = {
-            id: 'local',
-            sharesOwned: Number(localStorage.getItem(getLocalStorageKey('sharesOwned')) || '0'),
-            averagePurchasePrice: localStorage.getItem(getLocalStorageKey('averagePurchasePrice'))
-              ? Number(localStorage.getItem(getLocalStorageKey('averagePurchasePrice'))) : null,
-            currentPrice: localStorage.getItem(getLocalStorageKey('currentPrice'))
-              ? Number(localStorage.getItem(getLocalStorageKey('currentPrice'))) : null,
-            profitTarget: localStorage.getItem(getLocalStorageKey('profitTarget'))
-              ? Number(localStorage.getItem(getLocalStorageKey('profitTarget'))) : null,
-            lossLimit: localStorage.getItem(getLocalStorageKey('lossLimit'))
-              ? Number(localStorage.getItem(getLocalStorageKey('lossLimit'))) : null,
-            updatedAt: new Date().toISOString()
-          }
-          setPosition(localPosition)
-          setIsLoading(false)
-          return
+          return null // 認証失効 → fallback
         }
-        console.error('❌ 株式ポジション取得APIエラー:', response.status, response.statusText)
-        const errorData = await response.json().catch(() => ({ message: 'JSONパース失敗' }))
-        console.error('❌ エラーデータ:', errorData)
-        throw new Error(errorData.message || 'ポジションの読み込みに失敗しました')
+        throw new Error(`HTTP ${response.status}`)
       }
 
       const result = await response.json()
-
       if (result.success) {
-        setPosition(result.data)
-        setLastSaved(new Date(result.data.updatedAt))
-      } else {
-        throw new Error('APIレスポンスが無効です')
+        return result.data as Position[]
       }
-
-    } catch (err) {
-      console.error('❌ 株式ポジション読み込みエラー - localStorageにフォールバック:', err)
-      // エラー時もlocalStorageにフォールバック（エラー表示せず）
-      console.log('🔄 エラー発生 - localStorageにフォールバック（グレースフルデグラデーション）')
-      const localPosition = {
-        id: 'local',
-        sharesOwned: Number(localStorage.getItem(getLocalStorageKey('sharesOwned')) || '0'),
-        averagePurchasePrice: localStorage.getItem(getLocalStorageKey('averagePurchasePrice'))
-          ? Number(localStorage.getItem(getLocalStorageKey('averagePurchasePrice'))) : null,
-        currentPrice: localStorage.getItem(getLocalStorageKey('currentPrice'))
-          ? Number(localStorage.getItem(getLocalStorageKey('currentPrice'))) : null,
-        profitTarget: localStorage.getItem(getLocalStorageKey('profitTarget'))
-          ? Number(localStorage.getItem(getLocalStorageKey('profitTarget'))) : null,
-        lossLimit: localStorage.getItem(getLocalStorageKey('lossLimit'))
-          ? Number(localStorage.getItem(getLocalStorageKey('lossLimit'))) : null,
-        updatedAt: new Date().toISOString()
-      }
-      setPosition(localPosition)
-      // エラー表示をクリアしてシームレスなフォールバック
-      setError(null)
-    } finally {
-      setIsLoading(false)
+      throw new Error('APIレスポンスが無効です')
+    } catch {
+      return null // エラー → fallback
     }
   }, [stockId])
 
-  // ポジション保存
-  const savePosition = useCallback(async () => {
-    if (!position) return
-
-    if (!isLoggedIn) {
-      // 未認証時はlocalStorageに保存
-      localStorage.setItem(getLocalStorageKey('sharesOwned'), position.sharesOwned.toString())
-      if (position.averagePurchasePrice !== null) {
-        localStorage.setItem(getLocalStorageKey('averagePurchasePrice'), position.averagePurchasePrice.toString())
-      }
-      if (position.currentPrice !== null) {
-        localStorage.setItem(getLocalStorageKey('currentPrice'), position.currentPrice.toString())
-      }
-      if (position.profitTarget !== null) {
-        localStorage.setItem(getLocalStorageKey('profitTarget'), position.profitTarget.toString())
-      }
-      if (position.lossLimit !== null) {
-        localStorage.setItem(getLocalStorageKey('lossLimit'), position.lossLimit.toString())
-      }
-      setHasUserInput(false)
-      console.log('📦 未認証 - localStorageに保存:', stockId)
-      return
-    }
-
+  // localStorageからポジション一覧を取得
+  const loadFromLocalStorage = useCallback((): Position[] => {
+    if (typeof window === 'undefined') return []
     try {
-      setIsSaving(true)
-      setError(null)
+      const stored = localStorage.getItem(localKey)
+      return stored ? JSON.parse(stored) : []
+    } catch {
+      return []
+    }
+  }, [localKey])
 
-      const response = await fetch(`/api/stocks/${stockId}/position`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          sharesOwned: position.sharesOwned,
-          averagePurchasePrice: position.averagePurchasePrice,
-          currentPrice: position.currentPrice,
-          profitTarget: position.profitTarget,
-          lossLimit: position.lossLimit
-        }),
-      })
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          // 認証エラー時はlocalStorageにフォールバック
-          console.log('🔄 認証失効 - localStorageにフォールバック保存')
-          localStorage.setItem(getLocalStorageKey('sharesOwned'), position.sharesOwned.toString())
-          if (position.averagePurchasePrice !== null) {
-            localStorage.setItem(getLocalStorageKey('averagePurchasePrice'), position.averagePurchasePrice.toString())
-          }
-          if (position.currentPrice !== null) {
-            localStorage.setItem(getLocalStorageKey('currentPrice'), position.currentPrice.toString())
-          }
-          if (position.profitTarget !== null) {
-            localStorage.setItem(getLocalStorageKey('profitTarget'), position.profitTarget.toString())
-          }
-          if (position.lossLimit !== null) {
-            localStorage.setItem(getLocalStorageKey('lossLimit'), position.lossLimit.toString())
-          }
-          setHasUserInput(false)
-          setIsSaving(false)
+  // ポジション読み込み
+  const load = useCallback(async () => {
+    setIsLoading(true)
+    try {
+      if (isLoggedIn) {
+        const dbData = await loadFromDB()
+        if (dbData !== null) {
+          setPositions(dbData)
+          cacheToLocalStorage(dbData)
           return
         }
-        console.error('❌ 株式ポジション保存APIエラー:', response.status, response.statusText)
-        const errorData = await response.json().catch(() => ({ message: 'JSONパース失敗' }))
-        console.error('❌ エラーデータ:', errorData)
-        throw new Error(errorData.message || 'ポジションの保存に失敗しました')
+        // DBエラー時はlocalStorageにフォールバック
+      }
+      const localData = loadFromLocalStorage()
+      setPositions(localData)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [isLoggedIn, loadFromDB, loadFromLocalStorage, cacheToLocalStorage])
+
+  // 初回・認証状態変化時に読み込み
+  useEffect(() => {
+    load()
+  }, [load])
+
+  const refetch = load
+
+  // ポジション追加
+  const addPosition = useCallback(async (data: Omit<Position, 'id' | 'createdAt'>) => {
+    setIsSaving(true)
+    setError(null)
+    try {
+      if (isLoggedIn) {
+        const response = await fetch(`/api/stocks/${stockId}/position`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        })
+
+        if (response.ok) {
+          const result = await response.json()
+          if (result.success) {
+            await load()
+            return
+          }
+        }
+        if (response.status !== 401) {
+          throw new Error('保存に失敗しました')
+        }
+        // 401 → localStorageにフォールバック
       }
 
-      const result = await response.json()
-
-      if (result.success) {
-        setLastSaved(new Date(result.data.updatedAt))
-        setHasUserInput(false)
-        console.log('✅ 株式ポジション保存成功:', stockId)
-      } else {
-        throw new Error('APIレスポンスが無効です')
+      // localStorage保存
+      const newPosition: Position = {
+        ...data,
+        id: `local-${Date.now()}`,
+        createdAt: new Date().toISOString()
       }
+      const updated = [...positions, newPosition]
+      setPositions(updated)
+      cacheToLocalStorage(updated)
 
     } catch (err) {
-      console.error('❌ 株式ポジション保存エラー - localStorageにフォールバック:', err)
-      // エラー時はlocalStorageにフォールバック（グレースフルデグラデーション）
-      console.log('🔄 保存エラー - localStorageにフォールバック（シームレス継続）')
-      localStorage.setItem(getLocalStorageKey('sharesOwned'), position.sharesOwned.toString())
-      if (position.averagePurchasePrice !== null) {
-        localStorage.setItem(getLocalStorageKey('averagePurchasePrice'), position.averagePurchasePrice.toString())
-      }
-      if (position.currentPrice !== null) {
-        localStorage.setItem(getLocalStorageKey('currentPrice'), position.currentPrice.toString())
-      }
-      if (position.profitTarget !== null) {
-        localStorage.setItem(getLocalStorageKey('profitTarget'), position.profitTarget.toString())
-      }
-      if (position.lossLimit !== null) {
-        localStorage.setItem(getLocalStorageKey('lossLimit'), position.lossLimit.toString())
-      }
-      setHasUserInput(false)
-      // エラー表示をクリアしてシームレスなフォールバック
-      setError(null)
+      setError(err instanceof Error ? err.message : '追加エラー')
     } finally {
       setIsSaving(false)
     }
-  }, [stockId, position, isLoggedIn])
+  }, [isLoggedIn, stockId, positions, load, cacheToLocalStorage])
 
-  // ポジション削除
-  const deletePosition = useCallback(async () => {
-    if (!isLoggedIn) return
-
+  // ポジション更新
+  const updatePosition = useCallback(async (id: string, data: Partial<Omit<Position, 'id' | 'createdAt'>>) => {
+    setIsSaving(true)
+    setError(null)
     try {
-      setIsSaving(true)
-      setError(null)
-
-      const response = await fetch(`/api/stocks/${stockId}/position`, {
-        method: 'DELETE',
-      })
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          throw new Error('認証が必要です')
-        }
-        const errorData = await response.json()
-        throw new Error(errorData.message || 'ポジションの削除に失敗しました')
-      }
-
-      const result = await response.json()
-
-      if (result.success) {
-        setPosition({
-          id: 'local',
-          sharesOwned: 0,
-          averagePurchasePrice: null,
-          currentPrice: null,
-          profitTarget: null,
-          lossLimit: null,
-          updatedAt: new Date().toISOString()
+      if (isLoggedIn && !id.startsWith('local-')) {
+        const response = await fetch(`/api/stocks/${stockId}/position/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
         })
-        setLastSaved(null)
-        console.log('✅ 株式ポジション削除成功:', stockId)
-      } else {
-        throw new Error('APIレスポンスが無効です')
+
+        if (response.ok) {
+          const result = await response.json()
+          if (result.success) {
+            await load()
+            return
+          }
+        }
+        if (response.status !== 401) {
+          throw new Error('更新に失敗しました')
+        }
       }
+
+      // localStorageフォールバック
+      const updated = positions.map(p =>
+        p.id === id ? { ...p, ...data } : p
+      )
+      setPositions(updated)
+      cacheToLocalStorage(updated)
 
     } catch (err) {
-      console.error('❌ 株式ポジション削除エラー:', err)
+      setError(err instanceof Error ? err.message : '更新エラー')
+    } finally {
+      setIsSaving(false)
+    }
+  }, [isLoggedIn, stockId, positions, load, cacheToLocalStorage])
+
+  // ポジション削除
+  const deletePosition = useCallback(async (id: string) => {
+    setIsSaving(true)
+    setError(null)
+    try {
+      if (isLoggedIn && !id.startsWith('local-')) {
+        const response = await fetch(`/api/stocks/${stockId}/position/${id}`, {
+          method: 'DELETE'
+        })
+
+        if (response.ok) {
+          await load()
+          return
+        }
+        if (response.status !== 401) {
+          throw new Error('削除に失敗しました')
+        }
+      }
+
+      // localStorageフォールバック
+      const updated = positions.filter(p => p.id !== id)
+      setPositions(updated)
+      cacheToLocalStorage(updated)
+
+    } catch (err) {
       setError(err instanceof Error ? err.message : '削除エラー')
     } finally {
       setIsSaving(false)
     }
-  }, [stockId, isLoggedIn])
-
-  // ポジション更新（楽観的更新）
-  const updatePosition = useCallback((data: Partial<Omit<StockPosition, 'id' | 'updatedAt'>>) => {
-    setPosition(prev => prev ? {
-      ...prev,
-      ...data,
-      updatedAt: new Date().toISOString()
-    } : {
-      id: 'local',
-      sharesOwned: data.sharesOwned || 0,
-      averagePurchasePrice: data.averagePurchasePrice || null,
-      currentPrice: data.currentPrice || null,
-      profitTarget: data.profitTarget || null,
-      lossLimit: data.lossLimit || null,
-      updatedAt: new Date().toISOString()
-    })
-    setHasUserInput(true)
-  }, [])
-
-  // 初回読み込み
-  useEffect(() => {
-    loadPosition()
-  }, [loadPosition])
-
-  // デバウンス後の自動保存（ユーザー入力があった場合のみ）
-  useEffect(() => {
-    if (hasUserInput && !isLoading && position) {
-      savePosition()
-    }
-  }, [debouncedPosition, hasUserInput, isLoading, savePosition])
+  }, [isLoggedIn, stockId, positions, load, cacheToLocalStorage])
 
   return {
-    position,
+    positions,
     isLoading,
     isSaving,
     error,
-    lastSaved,
+    addPosition,
     updatePosition,
-    savePosition,
-    deletePosition
+    deletePosition,
+    refetch
   }
 }

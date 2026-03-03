@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { loadStockData, getCompanyNameSync, isKnownStockSync, StockData } from '@/data/stockNames';
 import { CustomTag } from '@/types/tags';
 import { FavoriteGroup } from '@/types/favorites';
-import { Position, PositionSummary, calculatePositionSummary, ProfitLossInfo, calculateProfitLoss } from '@/types/positions';
+import { ProfitLossInfo, calculateProfitLoss, calculatePositionSummary } from '@/types/positions';
 import { RightsDateSettings, createDefaultRightsSettings, calculateRightsDateFromSettings, shouldDeactivateRights, DividendRightsSettings, ShareholderRightsSettings, ShareholderMeetingSettings, createDefaultDividendRightsSettings, createDefaultShareholderRightsSettings, createDefaultShareholderMeetingSettings, shouldDeactivateShareholderMeeting } from '@/types/rightsDate';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -13,7 +13,8 @@ import { useTabState } from '@/hooks/useTabState';
 import { useNextActionPlan } from '@/hooks/useNextActionPlan';
 import { useStockMemo } from '@/hooks/useStockMemo';
 import { useStockPosition } from '@/hooks/useStockPosition';
-import { getIntegratedAlert, getAllActiveAlerts } from '@/utils/alertSystem';
+import { useStockPrice } from '@/hooks/useStockPrice';
+import { getAllActiveAlerts } from '@/utils/alertSystem';
 
 // Components
 import StockCardHeader from './StockCardHeader';
@@ -23,7 +24,6 @@ import ManagementTab from './ManagementTab';
 import AlertDisplay from './AlertDisplay';
 import TagEditor from './TagEditor';
 import FavoriteGroupSelector from './FavoriteGroupSelector';
-import PositionManager from './PositionManager';
 
 interface StockCardProps {
   symbol: string;
@@ -54,7 +54,6 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
   const [isLoading, setIsLoading] = useState(true);
   const [isTagEditorOpen, setIsTagEditorOpen] = useState(false);
   const [isFavoriteGroupSelectorOpen, setIsFavoriteGroupSelectorOpen] = useState(false);
-  const [isPositionManagerOpen, setIsPositionManagerOpen] = useState(false);
   const [isMemoModalOpen, setIsMemoModalOpen] = useState(false);
 
   // タブ状態管理
@@ -70,39 +69,28 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
     lastSaved: memoLastSaved
   } = useStockMemo(`stock-${symbol}`);
 
-  // 株式ポジション機能（投資規律設定）
+  // 株式ポジション機能（複数ロット管理）
   const {
-    position,
-    updatePosition,
+    positions,
     isLoading: isPositionLoading,
-    isSaving: isPositionSaving,
-    error: positionError,
-    lastSaved: positionLastSaved
   } = useStockPosition(`stock-${symbol}`);
 
   const [customTags, setCustomTags] = useArrayLocalStorage<CustomTag>(`kabunote-tags-${symbol}`, [], 250);
 
-  // ポジションデータから価格情報を抽出
-  const targetPrice = position?.profitTarget?.toString() || '';
-  const stopLoss = position?.lossLimit?.toString() || '';
-  const currentPrice = position?.currentPrice?.toString() || '';
-
-  // ポジション更新用のヘルパー関数
-  const setTargetPrice = (value: string) => {
-    updatePosition({ profitTarget: value ? parseFloat(value) : null });
-  };
-  const setStopLoss = (value: string) => {
-    updatePosition({ lossLimit: value ? parseFloat(value) : null });
-  };
-  const setCurrentPrice = (value: string) => {
-    updatePosition({ currentPrice: value ? parseFloat(value) : null });
-  };
+  // 投資規律設定（価格情報）はDB管理（未認証時はlocalStorageフォールバック）
+  const {
+    currentPrice,
+    targetPrice,
+    stopLoss,
+    setCurrentPrice,
+    setTargetPrice,
+    setStopLoss,
+  } = useStockPrice(`stock-${symbol}`);
   const [earningsDate, setEarningsDate] = useStringLocalStorage(`kabunote-earnings-date-${symbol}`, '', 400);
   const [rightsSettings, setRightsSettings] = useStringLocalStorage(`kabunote-rights-settings-${symbol}`, JSON.stringify(createDefaultRightsSettings()), 400);
   const [dividendRightsSettings, setDividendRightsSettings] = useStringLocalStorage(`kabunote-dividend-rights-settings-${symbol}`, JSON.stringify(createDefaultDividendRightsSettings()), 400);
   const [shareholderRightsSettings, setShareholderRightsSettings] = useStringLocalStorage(`kabunote-shareholder-rights-settings-${symbol}`, JSON.stringify(createDefaultShareholderRightsSettings()), 400);
   const [shareholderMeetingSettings, setShareholderMeetingSettings] = useStringLocalStorage(`kabunote-shareholder-meeting-${symbol}`, JSON.stringify(createDefaultShareholderMeetingSettings()), 400);
-  const [positions, setPositions] = useArrayLocalStorage<Position>(`kabunote-positions-${symbol}`, [], 200);
 
   // NextActionPlan の状態を取得
   const { nextActionPlan } = useNextActionPlan(`stock-${symbol}`);
@@ -191,8 +179,8 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
   // この銘柄が含まれているお気に入りグループ
   const belongingGroups = favoriteGroups.filter(group => group.stocks.includes(symbol));
 
-  // ポジションサマリーを計算
-  const positionSummary: PositionSummary = calculatePositionSummary(positions);
+  // ポジションサマリーを複数ポジション配列から計算
+  const positionSummary = calculatePositionSummary(positions);
 
   // 含み益・含み損を計算
   const profitLossInfo: ProfitLossInfo | null = calculateProfitLoss(
@@ -323,6 +311,7 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
     // 投資規律の利確目標価格を使用（Next Action Planの目標価格と分離）
     const investmentTargetPrice = parseFloat(targetPrice) || 0;
 
+    if (!latestNextActionPlan) return [];
     const alerts = getAllActiveAlerts(
       latestNextActionPlan,
       parseFloat(currentPrice) || 0,
@@ -346,7 +335,7 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
     availableCash,
     alertTrigger, // 強制再計算トリガー
     isPositionLoading, // ポジション読み込み状態
-    position // ポジションデータ
+    positions // ポジションデータ
   ]);
 
   // アラートに応じたカードスタイルを取得
@@ -540,9 +529,10 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
             rightsDate={rightsDate}
             rightsSettings={parsedRightsSettings}
             onRightsSettingsChange={(newSettings) => setRightsSettings(JSON.stringify(newSettings))}
-            positions={positions}
-            positionSummary={positionSummary}
-            onPositionManagerOpen={() => setIsPositionManagerOpen(true)}
+            onPositionManagerOpen={() => {
+              // DB統合版では管理タブ内で直接編集するため、何もしない
+              console.log('ポジション管理はこのタブ内で直接編集できます')
+            }}
             dividendRightsSettings={parsedDividendRightsSettings}
             onDividendRightsSettingsChange={(newSettings) => setDividendRightsSettings(JSON.stringify(newSettings))}
             shareholderRightsSettings={parsedShareholderRightsSettings}
@@ -553,14 +543,7 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
         )}
       </div>
 
-      {/* ポジション管理モーダル */}
-      {isPositionManagerOpen && (
-        <PositionManager
-          positions={positions}
-          onPositionsChange={setPositions}
-          onClose={() => setIsPositionManagerOpen(false)}
-        />
-      )}
+      {/* ポジション管理モーダル - DB統合版では不要（管理タブで直接編集） */}
 
       {/* メモ拡大モーダル */}
       {isMemoModalOpen && (

@@ -1,20 +1,30 @@
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
-import { Position, calculatePositionSummary, formatPrice, formatShares, PortfolioTargetSummary, StockTargetInfo, calculatePortfolioTargetSummary, calculateProfitLoss, formatProfitLoss } from '@/types/positions';
-import { CustomTag } from '@/types/tags';
-import { PortfolioDividendSummary, formatDividendAmount, formatDividendYield, calculateDividendInfo } from '@/types/dividend';
+import InvestmentPieChart from '@/components/InvestmentPieChart';
+import { formatPrice, formatShares, formatProfitLoss, PortfolioTargetSummary, calculatePortfolioTargetSummary, calculatePositionSummary, calculateProfitLoss, StockTargetInfo } from '@/types/positions';
+import { useStockPosition } from '@/hooks/useStockPosition';
+import { PortfolioDividendSummary, calculateDividendInfo, formatDividendAmount, formatDividendYield } from '@/types/dividend';
 import { PortfolioShareholderSummary, calculateShareholderBenefit, formatBenefitValue, formatBenefitYield } from '@/types/shareholder';
 import { useStringLocalStorage } from '@/hooks/useLocalStorage';
-import InvestmentPieChart from '@/components/InvestmentPieChart';
+
+interface StockData {
+  id: string;
+  symbol: string;
+  name: string;
+  sector?: string;
+}
+
+interface DatabasePortfolioSummaryProps {
+  portfolioData: StockData[];
+}
 
 interface PortfolioData {
   symbol: string;
   name: string;
-  positions: Position[];
+  stockId: string;
   currentPrice: string;
   sector: string;
-  customTags: CustomTag[];
 }
 
 interface PortfolioSummaryProps {
@@ -159,9 +169,33 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
     let totalBenefitInvestment = 0;
 
     portfolioData.forEach(stock => {
-      if (stock.positions.length > 0) {
+      // DB統合版では、個別にポジションデータを取得する必要がある
+      // とりあえず一時的に、localStorage から既に計算されたポジションサマリーを取得
+      const positionSummaryStr = typeof window !== 'undefined'
+        ? localStorage.getItem(`kabunote-db-position-summary-${stock.stockId}`)
+        : null;
+
+      let hasPosition = false;
+      let summary = { totalCost: 0, totalShares: 0, averagePrice: 0 };
+
+      if (positionSummaryStr) {
+        try {
+          const positionSummary = JSON.parse(positionSummaryStr);
+          if (positionSummary && positionSummary.totalShares > 0) {
+            hasPosition = true;
+            summary = {
+              totalCost: positionSummary.totalInvestment,
+              totalShares: positionSummary.totalShares,
+              averagePrice: positionSummary.averagePrice
+            };
+          }
+        } catch (e) {
+          // JSONパースエラーは無視
+        }
+      }
+
+      if (hasPosition) {
         stocksWithPositions++;
-        const summary = calculatePositionSummary(stock.positions);
         totalInvestmentAll += summary.totalCost;
         totalSharesAll += summary.totalShares;
 
@@ -235,7 +269,7 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
       }
     });
 
-    // 損益計算は目安株価が設定されている銘柄のみで計算
+    // 損益計算は現在の株価が設定されている銘柄のみで計算
     const totalProfitLoss = totalCurrentValue - totalInvestmentWithPrice;
     const totalProfitLossRate = totalInvestmentWithPrice > 0 ? (totalProfitLoss / totalInvestmentWithPrice) * 100 : 0;
 
@@ -267,7 +301,7 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
 
     // 損益目標サマリーを作成
     const stocksTargetData: StockTargetInfo[] = portfolioData.map(stock => {
-      const positionSummary = calculatePositionSummary(stock.positions);
+      const positionSummary = calculatePositionSummary([]);
 
       // リアルタイムで目標価格・損切りラインを取得
       const targetPriceStr = typeof window !== 'undefined'
@@ -353,14 +387,14 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
         </div>
       </div>
 
-      {/* 目安株価未設定の誘導メッセージ */}
+      {/* 現在の株価未設定の誘導メッセージ */}
       {overallSummary.stocksWithoutPrices > 0 && (
         <div className="mb-4 px-3 py-2 bg-blue-900 bg-opacity-30 border border-blue-700 rounded-lg text-sm text-blue-300">
           <div className="flex items-center gap-2">
             <span>💡</span>
             <span>
-              {overallSummary.stocksWithoutPrices}銘柄で目安株価が未設定です。
-              「📊 分析」タブで目安株価を設定すると損益が表示されます
+              {overallSummary.stocksWithoutPrices}銘柄で現在の株価が未設定です。
+              「📊 分析」タブで現在の株価を設定すると損益が表示されます
             </span>
           </div>
         </div>
@@ -389,7 +423,7 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
           </div>
           {overallSummary.totalCurrentValue > 0 && (
             <div className="text-xs text-gray-500 mt-1">
-              目安株価ベース
+              現在の株価ベース
             </div>
           )}
         </div>
@@ -821,19 +855,19 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
           }`}>
             <div className="grid grid-cols-1 xl:grid-cols-3 lg:grid-cols-2 gap-6">
               {/* 投資額割合円グラフ */}
-              <InvestmentPieChart portfolioData={portfolioData} type="investment" />
+              <InvestmentPieChart portfolioData={portfolioData as any} type="investment" />
 
               {/* 業種別分散円グラフ */}
-              <InvestmentPieChart portfolioData={portfolioData} type="sector" />
+              <InvestmentPieChart portfolioData={portfolioData as any} type="sector" />
 
               {/* タグ別分散円グラフ */}
-              <InvestmentPieChart portfolioData={portfolioData} type="tags" />
+              <InvestmentPieChart portfolioData={portfolioData as any} type="tags" />
 
               {/* 配当金額割合円グラフ */}
-              <InvestmentPieChart portfolioData={portfolioData} type="dividend" />
+              <InvestmentPieChart portfolioData={portfolioData as any} type="dividend" />
 
               {/* 株主優待価値割合円グラフ */}
-              <InvestmentPieChart portfolioData={portfolioData} type="shareholder" />
+              <InvestmentPieChart portfolioData={portfolioData as any} type="shareholder" />
             </div>
           </div>
         </div>

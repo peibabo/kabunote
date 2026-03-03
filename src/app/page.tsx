@@ -6,7 +6,7 @@ import StockInput from '@/components/StockInput';
 import FavoriteGroupManager from '@/components/FavoriteGroupManager';
 import SearchBar from '@/components/SearchBar';
 import InvestmentCalendar from '@/components/InvestmentCalendar';
-import PortfolioSummary from '@/components/PortfolioSummary';
+import SimplePortfolioSummary from '@/components/SimplePortfolioSummary';
 import FloatingAddButton from '@/components/FloatingAddButton';
 import DataManager from '@/components/DataManager';
 import StrategySummaryPage from '@/components/StrategySummaryPage';
@@ -941,11 +941,13 @@ export default function Home() {
         } else {
           // NextActionPlanがない場合はデフォルトプラン作成
           plan = {
+            id: '',
             targetPrice: 0,
             targetQuantity: 0,
             memo: '',
             actionType: 'buy',
-            priority: 'medium'
+            priority: 'medium',
+            updatedAt: ''
           };
         }
 
@@ -1173,7 +1175,7 @@ export default function Home() {
 
         {/* ポートフォリオサマリー */}
         <div className="portfolio-summary">
-          <PortfolioSummary portfolioData={portfolioData} />
+          <SimplePortfolioSummary portfolioData={stockData} />
         </div>
 
         {/* 投資カレンダー */}

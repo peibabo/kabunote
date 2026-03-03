@@ -12,7 +12,7 @@ export interface Position {
 export interface PositionSummary {
   totalShares: number; // 総保有株数
   averagePrice: number; // 平均取得価額
-  totalCost: number; // 総投資額
+  totalCost: number; // 総投資額（取得金額合計）
   positionCount: number; // ポジション数
 }
 
@@ -53,15 +53,26 @@ export const calculateProfitLoss = (
   targetPrice?: number,
   stopLossPrice?: number
 ): ProfitLossInfo | null => {
-  if (summary.totalShares === 0 || summary.averagePrice === 0) {
+  // データ検証
+  if (!summary ||
+      summary.totalShares === 0 ||
+      summary.averagePrice === 0 ||
+      isNaN(summary.totalShares) ||
+      isNaN(summary.averagePrice)) {
     return null;
   }
 
-  const targetProfit = targetPrice ? (targetPrice - summary.averagePrice) * summary.totalShares : 0;
-  const targetProfitPercent = targetPrice ? ((targetPrice - summary.averagePrice) / summary.averagePrice) * 100 : 0;
+  // 目標価格の計算
+  const targetProfit = (targetPrice && !isNaN(targetPrice)) ?
+    (targetPrice - summary.averagePrice) * summary.totalShares : 0;
+  const targetProfitPercent = (targetPrice && !isNaN(targetPrice)) ?
+    ((targetPrice - summary.averagePrice) / summary.averagePrice) * 100 : 0;
 
-  const stopLoss = stopLossPrice ? (stopLossPrice - summary.averagePrice) * summary.totalShares : 0;
-  const stopLossPercent = stopLossPrice ? ((stopLossPrice - summary.averagePrice) / summary.averagePrice) * 100 : 0;
+  // 損切価格の計算
+  const stopLoss = (stopLossPrice && !isNaN(stopLossPrice)) ?
+    (stopLossPrice - summary.averagePrice) * summary.totalShares : 0;
+  const stopLossPercent = (stopLossPrice && !isNaN(stopLossPrice)) ?
+    ((stopLossPrice - summary.averagePrice) / summary.averagePrice) * 100 : 0;
 
   return {
     targetProfit,
@@ -81,6 +92,9 @@ export const formatShares = (shares: number): string => {
 };
 
 export const formatProfitLoss = (amount: number): string => {
+  if (isNaN(amount) || !isFinite(amount)) {
+    return '---';
+  }
   const formatted = new Intl.NumberFormat('ja-JP').format(Math.abs(Math.round(amount)));
   return amount >= 0 ? `+${formatted}` : `-${formatted}`;
 };

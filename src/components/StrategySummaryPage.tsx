@@ -65,7 +65,7 @@ export default function StrategySummaryPage() {
         const alert = getIntegratedAlert(
           plan,
           currentPrice,
-          targetPriceStr,
+          parseFloat(targetPriceStr) || 0,
           stopLossStr,
           positionSummary && positionSummary.totalShares > 0 ? positionSummary : undefined,
           availableCash
@@ -244,7 +244,7 @@ export default function StrategySummaryPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-center text-white">
-                      {row.plan.targetPrice > 0 ? `${formatPrice(row.plan.targetPrice)}円` : '-'}
+                      {(row.plan.targetPrice ?? 0) > 0 ? `${formatPrice(row.plan.targetPrice!)}円` : '-'}
                     </td>
                     <td className="px-4 py-3 text-center text-white">
                       {row.currentPrice > 0 ? `${formatPrice(row.currentPrice)}円` : (
@@ -252,7 +252,7 @@ export default function StrategySummaryPage() {
                       )}
                     </td>
                     <td className="px-4 py-3 text-center text-white">
-                      {row.plan.targetQuantity > 0 ? `${Math.floor(row.plan.targetQuantity / 100)}単位` : '-'}
+                      {(row.plan.targetQuantity ?? 0) > 0 ? `${Math.floor(row.plan.targetQuantity! / 100)}単位` : '-'}
                     </td>
                     <td className="px-4 py-3 text-center">
                       <span className={`px-2 py-1 rounded text-xs ${

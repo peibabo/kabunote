@@ -17,43 +17,47 @@ export async function GET(request: NextRequest) {
 
     console.log('📊 株式データ取得開始 - ユーザーID:', user.id)
 
-    // データベースから株式データを取得（まずはシンプルに基本情報のみ）
+    // データベースから株式データを価格情報込みで取得
     const stocks = await prisma.stock.findMany({
       where: {
         userId: user.id
       },
       orderBy: {
         order: 'asc'
+      },
+      include: {
+        prices: true
       }
     })
 
     console.log(`✅ ${stocks.length}件の株式データを取得完了`)
 
-    // フロントエンド形式に変換（シンプル版）
-    const formattedStocks = stocks.map(stock => ({
-      id: stock.id,
-      symbol: stock.symbol,
-      name: stock.name || stock.symbol, // 名前がnullの場合はシンボルを使用
-      sector: stock.sector,
-      market: stock.market,
-      order: stock.order,
+    // フロントエンド形式に変換
+    const formattedStocks = stocks.map(stock => {
+      const price = stock.prices[0] ?? null
+      return {
+        id: stock.id,
+        symbol: stock.symbol,
+        name: stock.name || stock.symbol,
+        sector: stock.sector,
+        market: stock.market,
+        order: stock.order,
 
-      // 一時的にデフォルト値を設定（後で関連データから取得）
-      currentPrice: null,
-      targetPrice: null,
-      stopLossPrice: null,
-      memo: '',
-      position: null,
-      events: [],
-      dividend: null,
-      benefit: null,
-      tags: [],
-      nextActionPlan: null,
+        currentPrice: price?.currentPrice != null ? Number(price.currentPrice) : null,
+        targetPrice: price?.targetPrice != null ? Number(price.targetPrice) : null,
+        stopLossPrice: price?.stopLossPrice != null ? Number(price.stopLossPrice) : null,
+        memo: '',
+        position: null,
+        events: [],
+        dividend: null,
+        benefit: null,
+        tags: [],
+        nextActionPlan: null,
 
-      // 作成・更新日時
-      createdAt: stock.createdAt.toISOString(),
-      updatedAt: stock.updatedAt.toISOString()
-    }))
+        createdAt: stock.createdAt.toISOString(),
+        updatedAt: stock.updatedAt.toISOString()
+      }
+    })
 
     return NextResponse.json({
       success: true,
