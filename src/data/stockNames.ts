@@ -106,6 +106,12 @@ export const isKnownStockSync = (code: string): boolean => {
   return stockDataCache.has(code);
 };
 
+export const getSectorSync = (code: string): string | null => {
+  if (!stockDataCache) return null;
+  const stock = stockDataCache.get(code);
+  return stock?.sector || null;
+};
+
 // 日本語をローマ字に変換するマッピング（簡易版）
 const toRomaji = (text: string): string => {
   const romajiMap: { [key: string]: string } = {
