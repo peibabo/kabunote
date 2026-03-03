@@ -103,6 +103,23 @@ git commitをする前に修正内容をもとに必要であればREADME及びC
 - 🔧 認証済み時は `stockData`（DB取得済み）から決算日・株主総会日・配当権利確定日・優待権利確定日を組み立てるよう修正
 - 🔧 カード上での変更 → DB 保存 → カスタムイベント → `refreshData()` → カレンダー更新のリアルタイム同期フローを確立
 
+---
+
+### ✅ feature/n+1 完了（2026年3月達成）
+**N+1クエリ解消 + 投資余力現金・Next ActionメモのDB永続化**
+
+#### 技術的成果
+- ✅ **N+1クエリ解消** `/api/stocks/list` に `positions` を含め、銘柄ごとの個別API呼び出しを廃止
+- ✅ **PortfolioSummary 常時表示** 投資余力現金・Next Actionメモをポジション非依存で常時表示
+- ✅ **useCash DB永続化** 投資余力現金・Next ActionメモをDBに保存（ページリロード・デバイス変更後も保持）
+- ✅ **useCash 動的ユーザーID対応** ハードコードUUIDを廃止し、Supabase `getSession()` から実際の認証ユーザーIDを取得
+- ✅ **useCash デバウンス対応** update関数に300msデバウンスを追加し、タイピング中の過剰API呼び出しを防止
+
+#### 解決した技術課題
+- 🔧 `PortfolioSummary.tsx` が `useStringLocalStorage` を使っており localStorage 消去で値が消えるバグを修正 → `useCash` に移行
+- 🔧 `useCash.ts` のハードコード UUID（`550e8400-...`）が原因で実際のユーザーデータを取得・保存できなかった問題を修正
+- 🔧 即時UI更新（`setState`） + デバウンスDB保存のパターンを `useCash` に実装
+
 # Kabunote - 投資思考整理ダッシュボード
 
 ## プロジェクト概要
