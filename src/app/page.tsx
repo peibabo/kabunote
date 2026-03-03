@@ -26,9 +26,8 @@ import { DividendRightsSettings, ShareholderRightsSettings, ShareholderMeetingSe
 import { NextActionPlan, hasNextActionPlan } from '@/types/nextActionPlan';
 import { getIntegratedAlert, getAllActiveAlerts } from '@/utils/alertSystem';
 import { calculatePositionSummary } from '@/types/positions';
-import { useDebouncedCallback } from '@/hooks/useDebounce';
 import { useStockData } from '@/hooks/useStockData';
-import { createClient } from '@/lib/supabase-client';
+import { useFavoriteGroups } from '@/hooks/useFavoriteGroups';
 import {
   DndContext,
   closestCenter,
@@ -46,9 +45,6 @@ import {
 } from '@dnd-kit/sortable';
 
 const MAX_STOCKS = 30;
-const STORAGE_KEY = 'kabunote-stocks';
-const GROUPS_STORAGE_KEY = 'kabunote-favorite-groups';
-const FILTER_STORAGE_KEY = 'kabunote-selected-group-filter';
 const ORDER_STORAGE_KEY = 'kabunote-stocks-order';
 
 export default function Home() {
@@ -63,8 +59,12 @@ export default function Home() {
   const [additionalError, setAdditionalError] = useState('');
   const error = stockDataError || additionalError;
   const setError = setAdditionalError; // 後方互換性のため
-  const [favoriteGroups, setFavoriteGroups] = useState<FavoriteGroup[]>([]);
-  const [selectedGroupFilter, setSelectedGroupFilter] = useState<string | null>(null);
+  const {
+    groups: favoriteGroups,
+    setGroups: setFavoriteGroups,
+    selectedGroupFilter,
+    handleGroupFilterChange,
+  } = useFavoriteGroups();
   const [isGroupManagerOpen, setIsGroupManagerOpen] = useState(false);
   const [isDataManagerOpen, setIsDataManagerOpen] = useState(false);
   const [isStrategySummaryOpen, setIsStrategySummaryOpen] = useState(false);
@@ -80,15 +80,6 @@ export default function Home() {
   const [stockCalendarData, setStockCalendarData] = useState<{ [symbol: string]: { name: string; earningsDate: string; dividendRightsSettings: DividendRightsSettings; shareholderRightsSettings: ShareholderRightsSettings; shareholderMeetingSettings: ShareholderMeetingSettings } }>({});
   const [portfolioData, setPortfolioData] = useState<{ symbol: string; name: string; positions: Position[]; currentPrice: string; sector: string; customTags: CustomTag[]; }[]>([]);
   const [dividendBenefitData, setDividendBenefitData] = useState<any>({});
-
-  // デバウンスされたお気に入りグループ保存関数（250ms後に保存）
-  const debouncedSaveFavoriteGroups = useDebouncedCallback((groups: FavoriteGroup[]) => {
-    if (typeof window !== 'undefined') {
-      const groupsJson = JSON.stringify(groups);
-      localStorage.setItem(GROUPS_STORAGE_KEY, groupsJson);
-      console.log('🌟 お気に入りグループ保存:', `${groups.length}個のグループ:`, groups.map(g => g.name).join(', '));
-    }
-  }, 250);
 
   // ドラッグ&ドロップセンサー
   const sensors = useSensors(
@@ -125,9 +116,6 @@ export default function Home() {
     }
   };
 
-  // デバッグ用
-  console.log('Current favoriteGroups state:', favoriteGroups);
-
   useEffect(() => {
     const initializeApp = async () => {
       // CSVデータを事前読み込み（stockData検索等で使用）
@@ -138,31 +126,6 @@ export default function Home() {
         console.error('Failed to preload stock data:', error);
       }
 
-      // クライアントサイドでのみlocalStorageにアクセス（お気に入りグループ等）
-      if (typeof window !== 'undefined') {
-        // 保存されているお気に入りグループを読み込み
-        const savedGroups = localStorage.getItem(GROUPS_STORAGE_KEY);
-        console.log('Raw saved groups from localStorage:', savedGroups);
-        if (savedGroups) {
-          try {
-            const parsedGroups = JSON.parse(savedGroups);
-            console.log('Parsed groups:', parsedGroups);
-            setFavoriteGroups(parsedGroups);
-
-            // グループが読み込まれた後、保存されているフィルター状態を復元
-            const savedFilter = localStorage.getItem(FILTER_STORAGE_KEY);
-            if (savedFilter && parsedGroups.some((g: FavoriteGroup) => g.id === savedFilter)) {
-              // 保存されたグループが実際に存在する場合のみ復元
-              setSelectedGroupFilter(savedFilter);
-            }
-          } catch (e) {
-            console.error('Failed to load saved groups:', e);
-          }
-        } else {
-          console.log('No saved groups found in localStorage');
-        }
-      }
-
       setIsInitialized(true);
     };
 
@@ -170,18 +133,6 @@ export default function Home() {
   }, []);
 
   // 株式データはカスタムフック内で管理されるため、従来のlocalStorage保存は削除
-
-  useEffect(() => {
-    if (typeof window !== 'undefined' && isInitialized) {
-      // デバウンスで保存
-      debouncedSaveFavoriteGroups(favoriteGroups);
-
-      // 選択されているグループが削除された場合、フィルターをクリア
-      if (selectedGroupFilter && !favoriteGroups.some(g => g.id === selectedGroupFilter)) {
-        handleGroupFilterChange(null);
-      }
-    }
-  }, [favoriteGroups, isInitialized, selectedGroupFilter, debouncedSaveFavoriteGroups]);
 
   // カレンダー用データの更新
   useEffect(() => {
@@ -549,18 +500,6 @@ export default function Home() {
       stocks: group.stocks.filter(s => s !== code)
     }));
     setFavoriteGroups(updatedGroups);
-  };
-
-  // フィルター変更時に状態を保存
-  const handleGroupFilterChange = (groupId: string | null) => {
-    setSelectedGroupFilter(groupId);
-    if (typeof window !== 'undefined') {
-      if (groupId) {
-        localStorage.setItem(FILTER_STORAGE_KEY, groupId);
-      } else {
-        localStorage.removeItem(FILTER_STORAGE_KEY);
-      }
-    }
   };
 
   // 銘柄カードへのスムーススクロール
