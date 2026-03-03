@@ -27,6 +27,9 @@ export async function GET(request: NextRequest) {
       },
       include: {
         prices: true,
+        positions: {
+          orderBy: { createdAt: 'asc' }
+        },
         events: true,
         dividend: true,
         benefit: true,
@@ -50,7 +53,14 @@ export async function GET(request: NextRequest) {
         targetPrice: price?.targetPrice != null ? Number(price.targetPrice) : null,
         stopLossPrice: price?.stopLossPrice != null ? Number(price.stopLossPrice) : null,
         memo: '',
-        position: null,
+        positions: stock.positions.map(p => ({
+          id: p.id,
+          shares: p.shares,
+          purchasePrice: Number(p.purchasePrice),
+          purchaseDate: p.purchaseDate ?? '',
+          memo: p.memo ?? '',
+          createdAt: p.createdAt.toISOString()
+        })),
         events: stock.events.map(e => ({
           id: e.id,
           eventType: e.eventType,
