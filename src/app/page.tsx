@@ -779,17 +779,22 @@ export default function Home() {
         memo: typeof window !== 'undefined'
           ? localStorage.getItem(`kabunote-memo-${stockCode}`) || ''
           : '',
-        // タグを取得
-        tags: typeof window !== 'undefined'
-          ? (() => {
-              try {
-                const savedTags = localStorage.getItem(`kabunote-tags-${stockCode}`);
-                return savedTags ? JSON.parse(savedTags).map((tag: any) => tag.label).join(' ') : '';
-              } catch {
-                return '';
-              }
-            })()
-          : '',
+        // タグを取得（認証済み: stockData経由のDB / 未認証: localStorage フォールバック）
+        tags: (() => {
+          const dbStock = stockData.find(s => s.symbol === stockCode);
+          if (dbStock && dbStock.tags.length > 0) {
+            return dbStock.tags.map(tag => tag.label).join(' ');
+          }
+          if (typeof window !== 'undefined') {
+            try {
+              const savedTags = localStorage.getItem(`kabunote-tags-${stockCode}`);
+              return savedTags ? JSON.parse(savedTags).map((tag: any) => tag.label).join(' ') : '';
+            } catch {
+              return '';
+            }
+          }
+          return '';
+        })(),
         // グループ名を取得
         groups: favoriteGroups
           .filter(group => group.stocks.includes(stockCode))
