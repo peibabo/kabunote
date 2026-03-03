@@ -2,6 +2,16 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase-server'
 import { prisma } from '@/lib/prisma'
 
+async function resolveStockId(stockIdParam: string, userId: string): Promise<string | null> {
+  if (stockIdParam.startsWith('stock-')) {
+    const symbol = stockIdParam.replace('stock-', '')
+    const stock = await prisma.stock.findFirst({ where: { userId, symbol } })
+    return stock?.id ?? null
+  }
+  const stock = await prisma.stock.findFirst({ where: { id: stockIdParam, userId } })
+  return stock?.id ?? null
+}
+
 // GET: 株ノオト取得
 export async function GET(
   request: NextRequest,
@@ -19,7 +29,11 @@ export async function GET(
       )
     }
 
-    const { stockId } = await params
+    const { stockId: rawStockId } = await params
+    const stockId = await resolveStockId(rawStockId, user.id)
+    if (!stockId) {
+      return NextResponse.json({ error: 'Not Found', message: '銘柄が見つかりません' }, { status: 404 })
+    }
 
     // 株ノオト取得（存在しない場合は自動作成）
     let memo = await prisma.stockMemo.findUnique({
@@ -75,7 +89,11 @@ export async function PUT(
       )
     }
 
-    const { stockId } = await params
+    const { stockId: rawStockId } = await params
+    const stockId = await resolveStockId(rawStockId, user.id)
+    if (!stockId) {
+      return NextResponse.json({ error: 'Not Found', message: '銘柄が見つかりません' }, { status: 404 })
+    }
     const { content } = await request.json()
 
     // 入力検証
@@ -148,7 +166,11 @@ export async function DELETE(
       )
     }
 
-    const { stockId } = await params
+    const { stockId: rawStockId } = await params
+    const stockId = await resolveStockId(rawStockId, user.id)
+    if (!stockId) {
+      return NextResponse.json({ error: 'Not Found', message: '銘柄が見つかりません' }, { status: 404 })
+    }
 
     // 株ノオト削除
     await prisma.stockMemo.delete({

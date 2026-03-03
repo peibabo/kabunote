@@ -47,7 +47,7 @@ model Stock {
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   memo        StockMemo?
   prices      StockPrice[]
-  position    StockPosition?
+  positions   StockPosition[]
   events      StockEvent[]
   dividend    StockDividend?
   benefit     StockBenefit?
@@ -87,17 +87,18 @@ model StockPrice {
   @@map("stock_prices")
 }
 
-// 保有ポジション
+// 保有ポジション（購入ロットごとに1レコード）
 model StockPosition {
-  id              String    @id @default(cuid())
-  stockId         String    @unique @map("stock_id")
-  shares          Int       @default(0)          // 保有株数
-  averagePrice    Decimal?  @map("average_price") // 平均取得価格
-  totalInvestment Decimal?  @map("total_investment") // 総投資額
-  createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @updatedAt @map("updated_at")
+  id            String    @id @default(cuid())
+  stockId       String    @map("stock_id")        // @unique を削除：1銘柄に複数ポジション
+  shares        Int                                // 購入株数
+  purchasePrice Decimal   @map("purchase_price")  // 取得単価（1株あたり）
+  purchaseDate  String?   @map("purchase_date")   // 取得日（YYYY-MM-DD）
+  memo          String?                            // メモ
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
 
-  stock           Stock     @relation(fields: [stockId], references: [id], onDelete: Cascade)
+  stock         Stock     @relation(fields: [stockId], references: [id], onDelete: Cascade)
 
   @@map("stock_positions")
 }

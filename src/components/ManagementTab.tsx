@@ -1,8 +1,9 @@
 'use client';
 
-import { Position, PositionSummary } from '@/types/positions';
 import { RightsDateSettings, DividendRightsSettings, ShareholderRightsSettings, ShareholderMeetingSettings, createDefaultDividendRightsSettings, createDefaultShareholderRightsSettings, createDefaultShareholderMeetingSettings } from '@/types/rightsDate';
 import { useManagementTabState } from '@/hooks/useManagementTabState';
+import { useStockPosition } from '@/hooks/useStockPosition';
+import { calculatePositionSummary } from '@/types/positions';
 import EventManagement from '@/components/EventManagement';
 import DividendManagement from '@/components/DividendManagement';
 import ShareholderBenefitManagement from '@/components/ShareholderBenefitManagement';
@@ -15,8 +16,6 @@ interface ManagementTabProps {
   rightsDate: string;
   rightsSettings: RightsDateSettings;
   onRightsSettingsChange: (settings: RightsDateSettings) => void;
-  positions: Position[];
-  positionSummary: PositionSummary;
   onPositionManagerOpen: () => void;
   dividendRightsSettings: DividendRightsSettings;
   onDividendRightsSettingsChange: (settings: DividendRightsSettings) => void;
@@ -34,8 +33,6 @@ export default function ManagementTab({
   rightsDate,
   rightsSettings,
   onRightsSettingsChange,
-  positions,
-  positionSummary,
   onPositionManagerOpen,
   dividendRightsSettings,
   onDividendRightsSettingsChange,
@@ -45,6 +42,10 @@ export default function ManagementTab({
   onShareholderMeetingSettingsChange
 }: ManagementTabProps) {
   const { activeTab, setActiveTab, tabs, isLoading } = useManagementTabState(symbol, 'positions');
+
+  // ポジションサマリーを内部で取得（DividendManagement/ShareholderBenefitManagementに渡すため）
+  const { positions } = useStockPosition(`stock-${symbol}`);
+  const positionSummary = calculatePositionSummary(positions);
 
   if (isLoading) {
     return <div className="text-center text-gray-400">読み込み中...</div>;
@@ -75,8 +76,7 @@ export default function ManagementTab({
         {activeTab === 'positions' && (
           <PositionsManagement
             symbol={symbol}
-            positions={positions}
-            positionSummary={positionSummary}
+            stockId={`stock-${symbol}`}
             onPositionManagerOpen={onPositionManagerOpen}
           />
         )}

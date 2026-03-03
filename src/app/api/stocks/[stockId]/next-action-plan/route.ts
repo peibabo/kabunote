@@ -2,47 +2,38 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase-server'
 import { prisma } from '@/lib/prisma'
 
+async function resolveStockId(stockIdParam: string, userId: string): Promise<string | null> {
+  if (stockIdParam.startsWith('stock-')) {
+    const symbol = stockIdParam.replace('stock-', '')
+    const stock = await prisma.stock.findFirst({ where: { userId, symbol } })
+    return stock?.id ?? null
+  }
+  const stock = await prisma.stock.findFirst({ where: { id: stockIdParam, userId } })
+  return stock?.id ?? null
+}
+
 // GET: Next Action Plan取得
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ stockId: string }> }
 ) {
   try {
-    // 認証確認
     const supabase = await createClient()
     const { data: { user }, error: authError } = await supabase.auth.getUser()
 
     if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized', message: '認証が必要です' },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: 'Unauthorized', message: '認証が必要です' }, { status: 401 })
     }
 
-    const { stockId } = await params
-    console.log('📊 Next Action Plan API - 受信したstockId:', stockId);
+    const { stockId: rawStockId } = await params
+    const stockId = await resolveStockId(rawStockId, user.id)
+    if (!stockId) {
+      return NextResponse.json({ error: 'Not Found', message: '銘柄が見つかりません' }, { status: 404 })
+    }
 
-    // Next Action Plan取得（存在しない場合は自動作成）
-    let nextActionPlan = await prisma.nextActionPlan.findUnique({
-      where: { stockId }
-    })
-    console.log('📊 既存のNext Action Plan:', nextActionPlan);
+    let nextActionPlan = await prisma.nextActionPlan.findUnique({ where: { stockId } })
 
-    // Next Action Planが存在しない場合はデフォルト値で作成
     if (!nextActionPlan) {
-      console.log('📊 Next Action Plan作成を試行中:', stockId);
-
-      // まず、株式が存在するか確認
-      const stock = await prisma.stock.findUnique({
-        where: { id: stockId }
-      });
-      console.log('📊 対応する株式レコード:', stock);
-
-      if (!stock) {
-        console.error('❌ 株式が見つかりません:', stockId);
-        return NextResponse.json({ error: '株式が見つかりません' }, { status: 404 });
-      }
-
       nextActionPlan = await prisma.nextActionPlan.create({
         data: {
           stockId,
@@ -71,11 +62,7 @@ export async function GET(
   } catch (error) {
     console.error('❌ Next Action Plan取得エラー:', error)
     return NextResponse.json(
-      {
-        error: 'Internal Server Error',
-        message: 'Next Action Planの取得に失敗しました',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      },
+      { error: 'Internal Server Error', message: 'Next Action Planの取得に失敗しました' },
       { status: 500 }
     )
   }
@@ -87,27 +74,21 @@ export async function PUT(
   { params }: { params: Promise<{ stockId: string }> }
 ) {
   try {
-    // 認証確認
     const supabase = await createClient()
     const { data: { user }, error: authError } = await supabase.auth.getUser()
 
     if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized', message: '認証が必要です' },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: 'Unauthorized', message: '認証が必要です' }, { status: 401 })
     }
 
-    const { stockId } = await params
-    const {
-      actionType,
-      priority,
-      targetPrice,
-      targetQuantity,
-      memo
-    } = await request.json()
+    const { stockId: rawStockId } = await params
+    const stockId = await resolveStockId(rawStockId, user.id)
+    if (!stockId) {
+      return NextResponse.json({ error: 'Not Found', message: '銘柄が見つかりません' }, { status: 404 })
+    }
 
-    // ActionType、Priorityの変換（小文字 → 大文字）
+    const { actionType, priority, targetPrice, targetQuantity, memo } = await request.json()
+
     const validActionTypes = ['buy', 'sell', 'hold']
     const validPriorities = ['high', 'medium', 'low']
 
@@ -117,7 +98,6 @@ export async function PUT(
         { status: 400 }
       )
     }
-
     if (!validPriorities.includes(priority)) {
       return NextResponse.json(
         { error: 'Bad Request', message: 'priorityは high, medium, low のいずれかである必要があります' },
@@ -125,41 +105,34 @@ export async function PUT(
       )
     }
 
-    // Next Action Plan更新（手動でupsert）
-    let nextActionPlan = await prisma.nextActionPlan.findUnique({
-      where: { stockId }
-    })
-
     const dbActionType = actionType.toUpperCase() as 'BUY' | 'SELL' | 'HOLD'
     const dbPriority = priority.toUpperCase() as 'HIGH' | 'MEDIUM' | 'LOW'
 
+    let nextActionPlan = await prisma.nextActionPlan.findUnique({ where: { stockId } })
+
     if (nextActionPlan) {
-      // 既存レコードの更新
       nextActionPlan = await prisma.nextActionPlan.update({
         where: { stockId },
         data: {
           actionType: dbActionType,
           priority: dbPriority,
-          targetPrice: targetPrice,
+          targetPrice,
           targetShares: targetQuantity,
           strategyMemo: memo || null
         }
       })
     } else {
-      // 新規レコードの作成
       nextActionPlan = await prisma.nextActionPlan.create({
         data: {
           stockId,
           actionType: dbActionType,
           priority: dbPriority,
-          targetPrice: targetPrice,
+          targetPrice,
           targetShares: targetQuantity,
           strategyMemo: memo || null
         }
       })
     }
-
-    console.log(`✅ Next Action Plan更新成功 - 株ID: ${stockId}, アクション: ${actionType}, 優先度: ${priority}`)
 
     return NextResponse.json({
       success: true,
@@ -177,11 +150,7 @@ export async function PUT(
   } catch (error) {
     console.error('❌ Next Action Plan更新エラー:', error)
     return NextResponse.json(
-      {
-        error: 'Internal Server Error',
-        message: 'Next Action Planの更新に失敗しました',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      },
+      { error: 'Internal Server Error', message: 'Next Action Planの更新に失敗しました' },
       { status: 500 }
     )
   }
@@ -193,48 +162,32 @@ export async function DELETE(
   { params }: { params: Promise<{ stockId: string }> }
 ) {
   try {
-    // 認証確認
     const supabase = await createClient()
     const { data: { user }, error: authError } = await supabase.auth.getUser()
 
     if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized', message: '認証が必要です' },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: 'Unauthorized', message: '認証が必要です' }, { status: 401 })
     }
 
-    const { stockId } = await params
+    const { stockId: rawStockId } = await params
+    const stockId = await resolveStockId(rawStockId, user.id)
+    if (!stockId) {
+      return NextResponse.json({ error: 'Not Found', message: '銘柄が見つかりません' }, { status: 404 })
+    }
 
-    // Next Action Plan削除
-    await prisma.nextActionPlan.delete({
-      where: { stockId }
-    })
+    await prisma.nextActionPlan.delete({ where: { stockId } })
 
-    console.log(`✅ Next Action Plan削除成功 - 株ID: ${stockId}`)
-
-    return NextResponse.json({
-      success: true,
-      message: 'Next Action Planを削除しました'
-    })
+    return NextResponse.json({ success: true, message: 'Next Action Planを削除しました' })
 
   } catch (error) {
     console.error('❌ Next Action Plan削除エラー:', error)
 
-    // 存在しないレコードの削除試行の場合
     if (error instanceof Error && error.message.includes('Record to delete does not exist')) {
-      return NextResponse.json({
-        success: true,
-        message: 'Next Action Planは既に削除されています'
-      })
+      return NextResponse.json({ success: true, message: 'Next Action Planは既に削除されています' })
     }
 
     return NextResponse.json(
-      {
-        error: 'Internal Server Error',
-        message: 'Next Action Planの削除に失敗しました',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      },
+      { error: 'Internal Server Error', message: 'Next Action Planの削除に失敗しました' },
       { status: 500 }
     )
   }

@@ -114,18 +114,39 @@ export async function POST(request: Request) {
         // ポジション情報を移行
         const positions = localData.positions[symbol]
         if (positions && Array.isArray(positions)) {
-          // LocalStorageの形式: [shares, averagePrice, totalInvestment]
-          const [shares, averagePrice, totalInvestment] = positions
-          if (shares > 0) {
-            await tx.stockPosition.create({
-              data: {
-                stockId: stock.id,
-                shares: parseInt(shares) || 0,
-                averagePrice: averagePrice ? parseFloat(averagePrice) : null,
-                totalInvestment: totalInvestment ? parseFloat(totalInvestment) : null
+          // Position[] 形式の場合（新フォーマット）
+          if (positions.length > 0 && typeof positions[0] === 'object' && positions[0] !== null && 'purchasePrice' in positions[0]) {
+            for (const pos of positions) {
+              if (pos.shares > 0 && pos.purchasePrice > 0) {
+                await tx.stockPosition.create({
+                  data: {
+                    stockId: stock.id,
+                    shares: pos.shares,
+                    purchasePrice: pos.purchasePrice,
+                    purchaseDate: pos.purchaseDate || null,
+                    memo: pos.memo || null
+                  }
+                })
+                migrationStats.positions++
               }
-            })
-            migrationStats.positions++
+            }
+          } else if (positions.length >= 2) {
+            // 旧フォーマット: [shares, averagePrice, totalInvestment]
+            const [shares, averagePrice] = positions
+            const sharesNum = parseInt(shares) || 0
+            const avgPrice = averagePrice ? parseFloat(averagePrice) : 0
+            if (sharesNum > 0 && avgPrice > 0) {
+              await tx.stockPosition.create({
+                data: {
+                  stockId: stock.id,
+                  shares: sharesNum,
+                  purchasePrice: avgPrice,
+                  purchaseDate: null,
+                  memo: '移行データ'
+                }
+              })
+              migrationStats.positions++
+            }
           }
         }
 

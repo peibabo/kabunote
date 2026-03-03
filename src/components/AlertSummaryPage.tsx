@@ -159,11 +159,13 @@ export default function AlertSummaryPage() {
       // NextActionPlanがない場合はデフォルトプランを作成（投資規律アラート用）
       if (!plan) {
         plan = {
+          id: '',
           targetPrice: 0,
           targetQuantity: 0,
           memo: '',
           actionType: 'buy',
-          priority: 'medium'
+          priority: 'medium',
+          updatedAt: ''
         };
       }
 

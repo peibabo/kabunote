@@ -53,12 +53,23 @@ export default function NextActionSubTab({ symbol, currentPrice = 0, positionSum
     return <div className="text-gray-400">読み込み中...</div>;
   }
 
+  // デフォルト値でnull安全化
+  const plan = nextActionPlan ?? {
+    id: '',
+    actionType: 'buy' as ActionType,
+    priority: 'medium' as Priority,
+    targetPrice: null as number | null,
+    targetQuantity: null as number | null,
+    memo: '',
+    updatedAt: ''
+  };
+
   // 分析情報を計算（投資余力現金も含める）
-  const analysis: NextActionPlanAnalysis | null = currentPrice > 0 ?
+  const analysis: NextActionPlanAnalysis | null = currentPrice > 0 && nextActionPlan ?
     analyzeNextActionPlan(nextActionPlan, currentPrice, positionSummary || null, availableCash) : null;
 
-  const hasPlan = hasNextActionPlan(nextActionPlan);
-  const isComplete = isCompleteNextActionPlan(nextActionPlan);
+  const hasPlan = nextActionPlan ? hasNextActionPlan(nextActionPlan) : false;
+  const isComplete = nextActionPlan ? isCompleteNextActionPlan(nextActionPlan) : false;
 
   // フォーマット関数
   const formatPrice = (price: number): string => {
@@ -77,8 +88,8 @@ export default function NextActionSubTab({ symbol, currentPrice = 0, positionSum
         <div className="flex items-center gap-2">
           <h3 className="text-lg font-semibold text-white">🎯 次の一手</h3>
           {hasPlan && (
-            <div className={`px-2 py-1 rounded-md text-xs border ${PRIORITY_COLORS[nextActionPlan.priority]}`}>
-              {PRIORITY_LABELS[nextActionPlan.priority]}
+            <div className={`px-2 py-1 rounded-md text-xs border ${PRIORITY_COLORS[plan.priority]}`}>
+              {PRIORITY_LABELS[plan.priority]}
             </div>
           )}
         </div>
@@ -98,7 +109,7 @@ export default function NextActionSubTab({ symbol, currentPrice = 0, positionSum
         <div>
           <label className="block text-sm text-gray-300 mb-2">アクション</label>
           <select
-            value={nextActionPlan.actionType}
+            value={plan.actionType}
             onChange={(e) => updateNextActionPlan({ actionType: e.target.value as ActionType })}
             className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
@@ -112,7 +123,7 @@ export default function NextActionSubTab({ symbol, currentPrice = 0, positionSum
         <div>
           <label className="block text-sm text-gray-300 mb-2">優先度</label>
           <select
-            value={nextActionPlan.priority}
+            value={plan.priority}
             onChange={(e) => updateNextActionPlan({ priority: e.target.value as Priority })}
             className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
@@ -129,7 +140,7 @@ export default function NextActionSubTab({ symbol, currentPrice = 0, positionSum
           <label className="block text-sm text-gray-300 mb-2">目標価格（円）</label>
           <input
             type="number"
-            value={nextActionPlan.targetPrice || ''}
+            value={plan.targetPrice || ''}
             onChange={(e) => updateNextActionPlan({ targetPrice: parseFloat(e.target.value) || 0 })}
             placeholder="0"
             min="0"
@@ -140,12 +151,12 @@ export default function NextActionSubTab({ symbol, currentPrice = 0, positionSum
 
         <div>
           <label className="block text-sm text-gray-300 mb-2">
-            {nextActionPlan.actionType === 'buy' ? '追加株数（単位：100株）' : nextActionPlan.actionType === 'sell' ? '売却株数（単位：100株）' : '対象株数（単位：100株）'}
+            {plan.actionType === 'buy' ? '追加株数（単位：100株）' : plan.actionType === 'sell' ? '売却株数（単位：100株）' : '対象株数（単位：100株）'}
           </label>
           <div className="relative">
             <input
               type="number"
-              value={Math.floor((nextActionPlan.targetQuantity || 0) / 100) || ''}
+              value={Math.floor((plan.targetQuantity || 0) / 100) || ''}
               onChange={(e) => {
                 const units = parseInt(e.target.value) || 0;
                 updateNextActionPlan({ targetQuantity: units * 100 });
@@ -157,16 +168,16 @@ export default function NextActionSubTab({ symbol, currentPrice = 0, positionSum
             />
             <span className="absolute right-3 top-2 text-sm text-gray-400">×100株</span>
           </div>
-          {nextActionPlan.targetQuantity > 0 && (
+          {(plan.targetQuantity ?? 0) > 0 && (
             <div className="text-xs text-gray-400 mt-1">
-              = {nextActionPlan.targetQuantity.toLocaleString()}株
+              = {(plan.targetQuantity ?? 0).toLocaleString()}株
             </div>
           )}
         </div>
       </div>
 
       {/* 分析情報 */}
-      {nextActionPlan.targetPrice > 0 && (
+      {(plan.targetPrice ?? 0) > 0 && (
         <div className="bg-gray-800 rounded-lg p-4 space-y-3 border border-gray-600 shadow-lg">
           <h4 className="text-sm font-medium text-gray-300">📊 分析情報</h4>
 
@@ -221,7 +232,7 @@ export default function NextActionSubTab({ symbol, currentPrice = 0, positionSum
           </div>
 
           {/* 投資余力現金分析 */}
-          {nextActionPlan.actionType === 'buy' && nextActionPlan.targetPrice > 0 && nextActionPlan.targetQuantity > 0 && (
+          {plan.actionType === 'buy' && (plan.targetPrice ?? 0) > 0 && (plan.targetQuantity ?? 0) > 0 && (
             <div className="pt-3 border-t border-gray-700">
               <h5 className="text-sm font-medium text-gray-300 mb-3 flex items-center gap-2">
                 💰 投資余力状況
@@ -362,7 +373,7 @@ export default function NextActionSubTab({ symbol, currentPrice = 0, positionSum
       <div>
         <label className="block text-sm text-gray-300 mb-2">作戦理由・メモ</label>
         <textarea
-          value={nextActionPlan.memo}
+          value={plan.memo || ''}
           onChange={(e) => updateNextActionPlan({ memo: e.target.value })}
           placeholder="投資の理由や条件を記録..."
           rows={3}

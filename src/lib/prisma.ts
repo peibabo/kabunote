@@ -12,7 +12,7 @@ const globalForPrisma = globalThis as unknown as {
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false }, // Supabase用SSL設定
-  connectTimeoutMillis: 10000,
+  connectionTimeoutMillis: 10000,
   idleTimeoutMillis: 30000,
   max: 10 // 接続プールサイズ
 })

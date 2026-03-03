@@ -321,8 +321,8 @@ export default function InvestmentPieChart({ portfolioData, type }: InvestmentPi
                     color: item.color,
                     x: e.clientX - (containerRect?.left || 0),
                     y: e.clientY - (containerRect?.top || 0),
-                    ...(type === 'dividend' && 'dividendYield' in item && { dividendYield: item.dividendYield }),
-                    ...(type === 'shareholder' && 'benefitYield' in item && { benefitYield: item.benefitYield })
+                    ...(type === 'dividend' && 'dividendYield' in item && { dividendYield: item.dividendYield as number }),
+                    ...(type === 'shareholder' && 'benefitYield' in item && { benefitYield: item.benefitYield as number })
                   });
                 }}
                 onMouseMove={(e) => {
@@ -425,14 +425,14 @@ export default function InvestmentPieChart({ portfolioData, type }: InvestmentPi
               <div className="text-gray-400">
                 {tooltip.percentage.toFixed(1)}%
               </div>
-              {type === 'dividend' && 'dividendYield' in tooltip && (
+              {type === 'dividend' && 'dividendYield' in tooltip && tooltip.dividendYield !== undefined && (
                 <div className="text-green-300 text-xs">
-                  利回り {formatDividendYield(tooltip.dividendYield)}%
+                  利回り {formatDividendYield(tooltip.dividendYield as number)}%
                 </div>
               )}
-              {type === 'shareholder' && 'benefitYield' in tooltip && (
+              {type === 'shareholder' && 'benefitYield' in tooltip && tooltip.benefitYield !== undefined && (
                 <div className="text-purple-300 text-xs">
-                  優待利回り {formatBenefitYield(tooltip.benefitYield)}%
+                  優待利回り {formatBenefitYield(tooltip.benefitYield as number)}%
                 </div>
               )}
             </div>
