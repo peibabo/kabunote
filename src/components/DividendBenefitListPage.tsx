@@ -69,15 +69,17 @@ export default function DividendBenefitListPage({ stockSymbols, stockData, onSto
   useEffect(() => {
     const fetchCompanyNames = async () => {
       const names: { [symbol: string]: string } = {};
-      for (const symbol of stockSymbols) {
-        try {
-          const stockInfo = await getStockData(symbol);
-          names[symbol] = stockInfo?.name || symbol;
-        } catch (error) {
-          console.error(`Failed to fetch name for ${symbol}:`, error);
-          names[symbol] = symbol;
-        }
-      }
+      await Promise.all(
+        stockSymbols.map(async (symbol) => {
+          try {
+            const stockInfo = await getStockData(symbol);
+            names[symbol] = stockInfo?.name || symbol;
+          } catch (error) {
+            console.error(`Failed to fetch name for ${symbol}:`, error);
+            names[symbol] = symbol;
+          }
+        })
+      );
       setCompanyNames(names);
     };
 

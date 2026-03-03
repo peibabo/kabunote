@@ -12,11 +12,14 @@ interface StockData {
   targetPrice: number | null;
   stopLossPrice: number | null;
   memo: string;
-  position: {
+  positions: Array<{
+    id: string;
     shares: number;
-    averagePrice: number;
-    totalInvestment: number;
-  } | null;
+    purchasePrice: number;
+    purchaseDate: string;
+    memo: string;
+    createdAt: string;
+  }>;
   events: Array<{
     id: string;
     eventType: string;
@@ -146,7 +149,12 @@ export function useStockData(): UseStockDataReturn {
             targetPrice: null,
             stopLossPrice: null,
             memo: '',
-            position: null,
+            positions: (() => {
+              try {
+                const stored = localStorage.getItem(`kabunote-positions-${symbol}`);
+                return stored ? JSON.parse(stored) : [];
+              } catch { return []; }
+            })(),
             events: [],
             dividend: null,
             benefit: null,

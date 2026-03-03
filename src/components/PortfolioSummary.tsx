@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState } from 'react';
 import InvestmentPieChart from '@/components/InvestmentPieChart';
 import { formatPrice, formatShares, formatProfitLoss, PortfolioTargetSummary, calculatePortfolioTargetSummary, calculatePositionSummary, calculateProfitLoss, StockTargetInfo, Position } from '@/types/positions';
 import { PortfolioDividendSummary, calculateDividendInfo, formatDividendAmount, formatDividendYield } from '@/types/dividend';
@@ -17,6 +17,7 @@ interface StockData {
   currentPrice: number | null;
   targetPrice: number | null;
   stopLossPrice: number | null;
+  positions: Position[];
   dividend: {
     dividendPerShare: number | null;
     frequency: number | null;
@@ -70,62 +71,11 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
   const [isChartsExpanded, setIsChartsExpanded] = useState(false);
   const [isTargetSummaryExpanded, setIsTargetSummaryExpanded] = useState(false);
   const [isRiskRewardExpanded, setIsRiskRewardExpanded] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [stockPositions, setStockPositions] = useState<Map<string, Position[]>>(new Map());
-
   // 現金額の状態管理
   const [cashAmount, setCashAmount] = useStringLocalStorage('kabunote-cash-amount', '0', 300);
 
   // Next Actionメモの状態管理
   const [nextActionMemo, setNextActionMemo] = useStringLocalStorage('kabunote-next-action-memo', '', 300);
-
-  // 全銘柄のポジションをAPIから取得（未認証時はlocalStorageフォールバック）
-  useEffect(() => {
-    if (portfolioData.length === 0) {
-      setIsLoading(false);
-      return;
-    }
-
-    const fetchAllPositions = async () => {
-      setIsLoading(true);
-      const newMap = new Map<string, Position[]>();
-
-      for (const stock of portfolioData) {
-        try {
-          const response = await fetch(`/api/stocks/${stock.id}/position`);
-          if (response.ok) {
-            const result = await response.json();
-            if (Array.isArray(result.data)) {
-              newMap.set(stock.id, result.data as Position[]);
-            }
-          } else if (response.status === 401) {
-            // 未認証: localStorageフォールバック
-            if (typeof window !== 'undefined') {
-              const localKey = `kabunote-positions-${stock.symbol}`;
-              try {
-                const stored = localStorage.getItem(localKey);
-                if (stored) {
-                  const positions = JSON.parse(stored);
-                  if (Array.isArray(positions)) {
-                    newMap.set(stock.id, positions as Position[]);
-                  }
-                }
-              } catch {
-                // JSONパースエラーは無視
-              }
-            }
-          }
-        } catch {
-          // ネットワークエラーは無視
-        }
-      }
-
-      setStockPositions(newMap);
-      setIsLoading(false);
-    };
-
-    fetchAllPositions();
-  }, [portfolioData]);
 
   // 現金比率評価を計算する関数
   const evaluateCashRatio = (cashRatio: number, cashAmount: number): CashRatioEvaluation => {
@@ -205,7 +155,7 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
     let totalBenefitInvestment = 0;
 
     portfolioData.forEach(stock => {
-      const positions = stockPositions.get(stock.id) || [];
+      const positions = stock.positions || [];
       if (positions.length === 0) return;
 
       const summary = calculatePositionSummary(positions);
@@ -303,7 +253,7 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
 
     // 損益目標サマリー
     const stocksTargetData: StockTargetInfo[] = portfolioData.map(stock => {
-      const positions = stockPositions.get(stock.id) || [];
+      const positions = stock.positions || [];
       const positionSummary = calculatePositionSummary(positions);
 
       // 目標価格・損切りライン：DBデータ優先、localStorageフォールバック
@@ -356,7 +306,7 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
       shareholderSummary,
       targetSummary
     };
-  }, [portfolioData, stockPositions, cashAmount]);
+  }, [portfolioData, cashAmount]);
 
   // InvestmentPieChart用データを構築（stockPositionsのポジション + DBの配当・優待データ）
   const chartPortfolioData = useMemo(() => {
@@ -408,7 +358,7 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
       return {
         symbol: stock.symbol,
         name: resolvedName,
-        positions: stockPositions.get(stock.id) || [],
+        positions: stock.positions || [],
         currentPrice: stock.currentPrice,
         sector: stock.sector,
         customTags: (stock.tags || []).map(tag => ({
@@ -421,23 +371,7 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
         benefit,
       };
     });
-  }, [portfolioData, stockPositions]);
-
-  // ローディング中の表示
-  if (isLoading && portfolioData.length > 0) {
-    return (
-      <div className="bg-gray-800 rounded-lg p-4 mb-6 font-thin">
-        <div className="flex items-center gap-3 mb-4">
-          <span className="text-lg">💼</span>
-          <h2 className="text-lg font-semibold text-white">ポートフォリオサマリー</h2>
-          <span className="text-xs text-gray-400">読み込み中...</span>
-        </div>
-        <div className="flex justify-center items-center py-8">
-          <div className="text-gray-400">📊 ポートフォリオデータを読み込み中...</div>
-        </div>
-      </div>
-    );
-  }
+  }, [portfolioData]);
 
   // ポジションを持つ銘柄が1つもない場合は表示しない
   if (overallSummary.stocksWithPositions === 0) {
