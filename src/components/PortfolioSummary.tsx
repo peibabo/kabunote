@@ -7,7 +7,7 @@ import { PortfolioDividendSummary, calculateDividendInfo, formatDividendAmount, 
 import { PortfolioShareholderSummary, calculateShareholderBenefit, formatBenefitValue, formatBenefitYield } from '@/types/shareholder';
 import { useCash } from '@/hooks/useCash';
 import { CustomTag } from '@/types/tags';
-import { getCompanyNameSync } from '@/data/stockNames';
+import { getCompanyNameSync, getSectorSync } from '@/data/stockNames';
 
 interface StockData {
   id: string;
@@ -357,7 +357,7 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
         name: resolvedName,
         positions: stock.positions || [],
         currentPrice: stock.currentPrice,
-        sector: stock.sector,
+        sector: stock.sector || getSectorSync(stock.symbol),
         customTags: (stock.tags || []).map(tag => ({
           id: `tag-${tag.name}`,
           label: tag.name,
