@@ -373,10 +373,12 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
     });
   }, [portfolioData]);
 
-  // ポジションを持つ銘柄が1つもない場合は表示しない
-  if (overallSummary.stocksWithPositions === 0) {
+  // 銘柄が1つもない場合は表示しない（現金管理セクションは常に表示）
+  if (portfolioData.length === 0) {
     return null;
   }
+
+  const hasPositions = overallSummary.stocksWithPositions > 0;
 
   // 損益の色を決定
   const getProfitLossColor = (value: number) => {
@@ -398,12 +400,16 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
         <div className="flex items-center gap-3">
           <span className="text-lg">💼</span>
           <h2 className="text-lg font-semibold text-white">ポートフォリオサマリー</h2>
-          <span className="text-xs text-gray-400">
-            ({overallSummary.stocksWithPositions}銘柄でポジション保有中)
-          </span>
+          {hasPositions && (
+            <span className="text-xs text-gray-400">
+              ({overallSummary.stocksWithPositions}銘柄でポジション保有中)
+            </span>
+          )}
         </div>
       </div>
 
+      {hasPositions && (
+        <>
       {/* 現在の株価未設定の誘導メッセージ */}
       {overallSummary.stocksWithoutPrices > 0 && (
         <div className="mb-4 px-3 py-2 bg-blue-900 bg-opacity-30 border border-blue-700 rounded-lg text-sm text-blue-300">
@@ -543,6 +549,8 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
           )}
         </div>
       </div>
+        </>
+      )}
 
       {/* 余力現金・キャッシュポジションカード */}
       <div className="mt-4 bg-gray-700 rounded-lg p-3">
