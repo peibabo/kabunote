@@ -50,11 +50,10 @@ const ORDER_STORAGE_KEY = 'kabunote-stocks-order';
 
 export default function Home() {
   // 新しいカスタムフックを使用してデータを取得
-  const { stockData, stockSymbols, isLoading: isStockDataLoading, error: stockDataError, isLoggedIn, refreshData } = useStockData();
+  const { stockData, stockSymbols, isLoading: isStockDataLoading, error: stockDataError, isLoggedIn, refreshData, reorderStocks, addLocalStock } = useStockData();
   const stocks = stockSymbols; // 後方互換性のため
   const setStocks = (newStocks: string[]) => {
-    // TODO: API呼び出しで更新
-    console.log('setStocks called with:', newStocks);
+    reorderStocks(newStocks);
   };
   // エラーは stockDataError から取得、独自エラーと統合
   const [additionalError, setAdditionalError] = useState('');
@@ -103,17 +102,26 @@ export default function Home() {
       const newOrder = arrayMove(filteredStocks, oldIndex, newIndex);
 
       // stocks配列を新しい順序で再構成
-      const newStocks = [...stocks];
       const otherStocks = stocks.filter(stock => !filteredStocks.includes(stock));
 
       // フィルターされた株のみ並び替えて、他の株は元の位置に
       const updatedStocks = [...otherStocks, ...newOrder];
 
+      // 楽観的更新（即時UI反映）
       setStocks(updatedStocks);
 
-      // localStorage に順序を保存
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(updatedStocks));
+      if (isLoggedIn) {
+        // 認証済み: DBに並び順を保存
+        fetch('/api/stocks/reorder', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ symbols: updatedStocks }),
+        }).catch(err => console.error('並び順の保存に失敗:', err));
+      } else {
+        // 未認証: localStorageに保存
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(updatedStocks));
+        }
       }
     }
   };
@@ -502,13 +510,18 @@ export default function Home() {
       return;
     }
 
-    const newStocks = [...stocks, code];
-    setStocks(newStocks);
     setError('');
 
-    // localStorage に順序を保存
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(newStocks));
+    if (isLoggedIn) {
+      // 認証済み: ローカルに仮エントリを追加（StockCard マウント時の API 呼び出しで DB に自動登録される）
+      addLocalStock(code);
+    } else {
+      // 未認証: localStorage に保存
+      const newStocks = [...stocks, code];
+      setStocks(newStocks);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(newStocks));
+      }
     }
 
     // お気に入りグループフィルターが選択されている場合、自動的にそのグループに追加
@@ -528,12 +541,23 @@ export default function Home() {
 
   const handleRemoveStock = (code: string) => {
     const newStocks = stocks.filter(stock => stock !== code);
+
+    // 楽観的更新（即時UI反映）
     setStocks(newStocks);
     setError('');
 
-    // localStorage に順序を保存
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(newStocks));
+    if (isLoggedIn) {
+      // 認証済み: 残った銘柄の並び順をDBに保存
+      fetch('/api/stocks/reorder', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ symbols: newStocks }),
+      }).catch(err => console.error('並び順の保存に失敗:', err));
+    } else {
+      // 未認証: localStorage に保存
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(newStocks));
+      }
     }
 
     // クライアントサイドでのみlocalStorageにアクセス
