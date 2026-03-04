@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import StockCard from '@/components/StockCard';
 import StockInput from '@/components/StockInput';
 import FavoriteGroupManager from '@/components/FavoriteGroupManager';
+import TagManager from '@/components/TagManager';
 import SearchBar from '@/components/SearchBar';
 import InvestmentCalendar from '@/components/InvestmentCalendar';
 import PortfolioSummary from '@/components/PortfolioSummary';
@@ -66,6 +67,7 @@ export default function Home() {
     handleGroupFilterChange,
   } = useFavoriteGroups();
   const [isGroupManagerOpen, setIsGroupManagerOpen] = useState(false);
+  const [isTagManagerOpen, setIsTagManagerOpen] = useState(false);
   const [isDataManagerOpen, setIsDataManagerOpen] = useState(false);
   const [isStrategySummaryOpen, setIsStrategySummaryOpen] = useState(false);
   const [isPortfolioPositionsOpen, setIsPortfolioPositionsOpen] = useState(false);
@@ -602,6 +604,9 @@ export default function Home() {
         break;
       case 'groups':
         setIsGroupManagerOpen(true);
+        break;
+      case 'tags':
+        setIsTagManagerOpen(true);
         break;
       case 'help':
         // TODO: ヘルプページの実装
@@ -1388,6 +1393,12 @@ export default function Home() {
             onClose={() => setIsGroupManagerOpen(false)}
           />
         )}
+
+        {/* タグ管理モーダル */}
+        <TagManager
+          isOpen={isTagManagerOpen}
+          onClose={() => { setIsTagManagerOpen(false); if (isLoggedIn) refreshData(); }}
+        />
 
         {/* データ管理モーダル */}
         {isDataManagerOpen && (
