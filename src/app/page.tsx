@@ -591,9 +591,11 @@ export default function Home() {
         break;
       case 'events':
         setIsEventCalendarOpen(true);
+        if (isLoggedIn) refreshData();
         break;
       case 'dividends':
         setIsDividendBenefitListOpen(true);
+        if (isLoggedIn) refreshData();
         break;
       case 'data':
         setIsDataManagerOpen(true);
