@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { useArrayLocalStorage, useStringLocalStorage } from '@/hooks/useLocalStorage';
-import { Position, calculatePositionSummary, formatPrice, formatShares, calculateProfitLoss } from '@/types/positions';
+import { useArrayLocalStorage } from '@/hooks/useLocalStorage';
+import { Position, calculatePositionSummary, formatShares } from '@/types/positions';
 import { getCompanyNameSync } from '@/data/stockNames';
+import { StockData } from '@/hooks/useStockData';
 
 interface PositionRowData {
   symbol: string;
@@ -21,8 +22,13 @@ interface PositionRowData {
 
 type SortKey = 'symbol' | 'totalShares' | 'averagePrice' | 'totalCost' | 'currentValue' | 'profitLoss' | 'profitLossRate';
 
-export default function PortfolioPositionsPage() {
-  const [stocks] = useArrayLocalStorage<string>('kabunote-stocks', []);
+interface PortfolioPositionsPageProps {
+  stockData?: StockData[];
+  isLoggedIn?: boolean;
+}
+
+export default function PortfolioPositionsPage({ stockData = [], isLoggedIn = false }: PortfolioPositionsPageProps) {
+  const [localStocks] = useArrayLocalStorage<string>('kabunote-stocks', []);
   const [sortBy, setSortBy] = useState<SortKey>('profitLoss');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
@@ -31,30 +37,32 @@ export default function PortfolioPositionsPage() {
     const data: PositionRowData[] = [];
     let totalPortfolioValue = 0;
 
-    stocks.forEach(symbol => {
-      // ポジション情報を取得
-      const positionsJson = localStorage.getItem(`kabunote-positions-${symbol}`);
-      if (!positionsJson) return;
+    if (isLoggedIn && stockData.length > 0) {
+      // DBデータを使用
+      stockData.forEach(stock => {
+        if (!stock.positions || stock.positions.length === 0) return;
 
-      try {
-        const positions: Position[] = JSON.parse(positionsJson);
-        if (positions.length === 0) return;
+        const positions: Position[] = stock.positions.map(p => ({
+          id: p.id,
+          shares: p.shares,
+          purchasePrice: p.purchasePrice,
+          purchaseDate: p.purchaseDate,
+          memo: p.memo,
+          createdAt: p.createdAt,
+        }));
 
         const positionSummary = calculatePositionSummary(positions);
         if (positionSummary.totalShares === 0) return;
 
-        // 現在価格を取得
-        const currentPriceStr = localStorage.getItem(`kabunote-current-price-${symbol}`) || '0';
-        const currentPrice = parseFloat(currentPriceStr);
-
-        const companyName = getCompanyNameSync(symbol);
+        const currentPrice = stock.currentPrice ?? 0;
+        const companyName = stock.name || getCompanyNameSync(stock.symbol);
         const currentValue = currentPrice > 0 ? currentPrice * positionSummary.totalShares : 0;
         const profitLoss = currentValue - positionSummary.totalCost;
         const profitLossRate = positionSummary.totalCost > 0 ? (profitLoss / positionSummary.totalCost) * 100 : 0;
         const profitLossAfterTax = profitLoss > 0 ? profitLoss * 0.79685 : profitLoss;
 
         data.push({
-          symbol,
+          symbol: stock.symbol,
           companyName,
           totalShares: positionSummary.totalShares,
           averagePrice: positionSummary.averagePrice,
@@ -64,14 +72,53 @@ export default function PortfolioPositionsPage() {
           profitLoss,
           profitLossRate,
           profitLossAfterTax,
-          portfolioWeight: 0 // 後で計算
+          portfolioWeight: 0
         });
 
         totalPortfolioValue += currentValue > 0 ? currentValue : positionSummary.totalCost;
-      } catch (e) {
-        console.warn(`Failed to parse positions for ${symbol}:`, e);
-      }
-    });
+      });
+    } else {
+      // localStorageフォールバック
+      localStocks.forEach(symbol => {
+        const positionsJson = localStorage.getItem(`kabunote-positions-${symbol}`);
+        if (!positionsJson) return;
+
+        try {
+          const positions: Position[] = JSON.parse(positionsJson);
+          if (positions.length === 0) return;
+
+          const positionSummary = calculatePositionSummary(positions);
+          if (positionSummary.totalShares === 0) return;
+
+          const currentPriceStr = localStorage.getItem(`kabunote-current-price-${symbol}`) || '0';
+          const currentPrice = parseFloat(currentPriceStr);
+
+          const companyName = getCompanyNameSync(symbol);
+          const currentValue = currentPrice > 0 ? currentPrice * positionSummary.totalShares : 0;
+          const profitLoss = currentValue - positionSummary.totalCost;
+          const profitLossRate = positionSummary.totalCost > 0 ? (profitLoss / positionSummary.totalCost) * 100 : 0;
+          const profitLossAfterTax = profitLoss > 0 ? profitLoss * 0.79685 : profitLoss;
+
+          data.push({
+            symbol,
+            companyName,
+            totalShares: positionSummary.totalShares,
+            averagePrice: positionSummary.averagePrice,
+            totalCost: positionSummary.totalCost,
+            currentPrice,
+            currentValue,
+            profitLoss,
+            profitLossRate,
+            profitLossAfterTax,
+            portfolioWeight: 0
+          });
+
+          totalPortfolioValue += currentValue > 0 ? currentValue : positionSummary.totalCost;
+        } catch (e) {
+          console.warn(`Failed to parse positions for ${symbol}:`, e);
+        }
+      });
+    }
 
     // ポートフォリオ比率を計算
     data.forEach(row => {
@@ -80,7 +127,7 @@ export default function PortfolioPositionsPage() {
     });
 
     return data;
-  }, [stocks]);
+  }, [isLoggedIn, stockData, localStocks]);
 
   // ソート処理
   const sortedData = useMemo(() => {
@@ -122,15 +169,10 @@ export default function PortfolioPositionsPage() {
           bValue = b.profitLoss;
       }
 
-      if (sortOrder === 'asc') {
-        return aValue - bValue;
-      } else {
-        return bValue - aValue;
-      }
+      return sortOrder === 'asc' ? aValue - bValue : bValue - aValue;
     });
   }, [positionsData, sortBy, sortOrder]);
 
-  // ソート変更ハンドラー
   const handleSort = (key: SortKey) => {
     if (sortBy === key) {
       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
@@ -140,19 +182,16 @@ export default function PortfolioPositionsPage() {
     }
   };
 
-  // 損益の色を決定
   const getProfitLossColor = (value: number) => {
     if (value > 0) return 'text-green-400';
     if (value < 0) return 'text-red-400';
     return 'text-gray-300';
   };
 
-  // 価格フォーマット
   const formatPriceValue = (price: number): string => {
     return new Intl.NumberFormat('ja-JP').format(Math.round(price));
   };
 
-  // 統計サマリーを計算
   const summary = useMemo(() => {
     const totalInvestment = positionsData.reduce((sum, row) => sum + row.totalCost, 0);
     const totalCurrentValue = positionsData.reduce((sum, row) => sum + (row.currentValue > 0 ? row.currentValue : row.totalCost), 0);
@@ -172,7 +211,6 @@ export default function PortfolioPositionsPage() {
     };
   }, [positionsData]);
 
-  // データがない場合
   if (positionsData.length === 0) {
     return (
       <div className="min-h-screen bg-gray-900 text-white p-6">

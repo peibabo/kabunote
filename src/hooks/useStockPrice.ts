@@ -128,6 +128,8 @@ export function useStockPrice(stockId: string): UseStockPriceReturn {
         localStorage.setItem(localCurrentPriceKey, latest.currentPrice)
         localStorage.setItem(localTargetPriceKey, latest.targetPrice)
         localStorage.setItem(localStopLossKey, latest.stopLoss)
+      } else {
+        window.dispatchEvent(new CustomEvent('kabunote-db-price-update'))
       }
 
       setHasUserInput(false)

@@ -318,11 +318,25 @@ export default function Home() {
     };
     window.addEventListener('kabunote-db-strategy-update', handleDbStrategyUpdate);
 
+    // 認証済み: ポジション変更後のポジション一覧更新
+    const handleDbPositionUpdate = () => {
+      if (isLoggedIn) refreshData();
+    };
+    window.addEventListener('kabunote-db-position-update', handleDbPositionUpdate);
+
+    // 認証済み: 株価変更後のポジション一覧更新
+    const handleDbPriceUpdate = () => {
+      if (isLoggedIn) refreshData();
+    };
+    window.addEventListener('kabunote-db-price-update', handleDbPriceUpdate);
+
     return () => {
       window.removeEventListener('localStorageChange', handleStorageChange as EventListener);
       window.removeEventListener('kabunote-db-calendar-update', handleDbCalendarUpdate);
       window.removeEventListener('kabunote-db-tag-update', handleDbTagUpdate);
       window.removeEventListener('kabunote-db-strategy-update', handleDbStrategyUpdate);
+      window.removeEventListener('kabunote-db-position-update', handleDbPositionUpdate);
+      window.removeEventListener('kabunote-db-price-update', handleDbPriceUpdate);
     };
   }, [isInitialized, stocks, isLoggedIn, refreshData]);
 
@@ -569,6 +583,7 @@ export default function Home() {
         break;
       case 'positions':
         setIsPortfolioPositionsOpen(true);
+        if (isLoggedIn) refreshData();
         break;
       case 'portfolio':
         // ポートフォリオサマリーは既に表示されているのでスクロール
@@ -1434,7 +1449,7 @@ export default function Home() {
                 </button>
               </div>
               <div className="overflow-auto max-h-[calc(90vh-8rem)]">
-                <PortfolioPositionsPage />
+                <PortfolioPositionsPage stockData={stockData} isLoggedIn={isLoggedIn} />
               </div>
             </div>
           </div>
