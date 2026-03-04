@@ -81,6 +81,7 @@ export function useStockData(): UseStockDataReturn {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isAuthChecked, setIsAuthChecked] = useState(false);
 
   // 認証状態を監視
   useEffect(() => {
@@ -89,6 +90,7 @@ export function useStockData(): UseStockDataReturn {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       setIsLoggedIn(!!session);
+      setIsAuthChecked(true);
     };
 
     checkAuth();
@@ -244,10 +246,11 @@ export function useStockData(): UseStockDataReturn {
     }
   };
 
-  // 認証状態が変わった時やマウント時にデータを取得
+  // 認証確認完了後、または認証状態が変わった時にデータを取得
   useEffect(() => {
+    if (!isAuthChecked) return;
     refreshData();
-  }, [isLoggedIn]);
+  }, [isLoggedIn, isAuthChecked]);
 
   return {
     stockData,

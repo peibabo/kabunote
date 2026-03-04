@@ -1336,7 +1336,12 @@ export default function Home() {
         )}
 
         <div>
-          {filteredStocks.length === 0 ? (
+          {isStockDataLoading ? (
+            <div className="flex justify-center items-center py-20">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400" />
+              <span className="ml-3 text-gray-400">データを読み込み中...</span>
+            </div>
+          ) : filteredStocks.length === 0 ? (
             <div className="bg-gray-800 rounded-lg p-8 text-center">
               {stocks.length === 0 ? (
                 <>
