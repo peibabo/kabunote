@@ -137,6 +137,7 @@ export function useStockPosition(stockId: string): UseStockPositionReturn {
           const result = await response.json()
           if (result.success) {
             await load()
+            window.dispatchEvent(new CustomEvent('kabunote-db-position-update'))
             return
           }
         }
@@ -179,6 +180,7 @@ export function useStockPosition(stockId: string): UseStockPositionReturn {
           const result = await response.json()
           if (result.success) {
             await load()
+            window.dispatchEvent(new CustomEvent('kabunote-db-position-update'))
             return
           }
         }
@@ -213,6 +215,7 @@ export function useStockPosition(stockId: string): UseStockPositionReturn {
 
         if (response.ok) {
           await load()
+          window.dispatchEvent(new CustomEvent('kabunote-db-position-update'))
           return
         }
         if (response.status !== 401) {
