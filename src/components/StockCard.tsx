@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo } from 'react';
 import { loadStockData, getCompanyNameSync, isKnownStockSync, StockData } from '@/data/stockNames';
 import { FavoriteGroup } from '@/types/favorites';
 import { ProfitLossInfo, calculateProfitLoss, calculatePositionSummary } from '@/types/positions';
@@ -34,7 +34,7 @@ interface StockCardProps {
   onFavoriteGroupsChange: (groups: FavoriteGroup[]) => void;
 }
 
-export default function StockCard({ symbol, onRemove, favoriteGroups, onFavoriteGroupsChange }: StockCardProps) {
+function StockCard({ symbol, onRemove, favoriteGroups, onFavoriteGroupsChange }: StockCardProps) {
   // ドラッグ&ドロップ機能
   const {
     attributes,
@@ -450,3 +450,5 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
     </>
   );
 }
+
+export default memo(StockCard);

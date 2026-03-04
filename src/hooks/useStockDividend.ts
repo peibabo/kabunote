@@ -201,9 +201,19 @@ export function useStockDividend(stockId: string): UseStockDividendReturn {
       if (!response.ok && response.status !== 401) {
         throw new Error('配当情報の保存に失敗しました')
       }
-      // カレンダーデータの再取得をトリガー
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('kabunote-db-calendar-update'))
+      if (response.ok && typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('kabunote-db-calendar-update', {
+          detail: {
+            type: 'dividend' as const,
+            symbol: stockId.replace('stock-', ''),
+            dividend: {
+              dividendPerShare: perShare ? parseFloat(perShare) : null,
+              frequency: freq,
+              rightsMonth: rights.month,
+              rightsDay: rights.day,
+            }
+          }
+        }))
       }
     } catch {
       // エラー時は localStorage にフォールバック保存

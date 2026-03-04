@@ -11,7 +11,7 @@ interface UseStockPositionReturn {
   addPosition: (data: Omit<Position, 'id' | 'createdAt'>) => Promise<void>
   updatePosition: (id: string, data: Partial<Omit<Position, 'id' | 'createdAt'>>) => Promise<void>
   deletePosition: (id: string) => Promise<void>
-  refetch: () => Promise<void>
+  refetch: () => Promise<Position[]>
 }
 
 
@@ -94,8 +94,8 @@ export function useStockPosition(stockId: string): UseStockPositionReturn {
     }
   }, [localKey])
 
-  // ポジション読み込み
-  const load = useCallback(async () => {
+  // ポジション読み込み（更新後のリストを返す）
+  const load = useCallback(async (): Promise<Position[]> => {
     setIsLoading(true)
     try {
       if (isLoggedIn) {
@@ -103,12 +103,13 @@ export function useStockPosition(stockId: string): UseStockPositionReturn {
         if (dbData !== null) {
           setPositions(dbData)
           cacheToLocalStorage(dbData)
-          return
+          return dbData
         }
         // DBエラー時はlocalStorageにフォールバック
       }
       const localData = loadFromLocalStorage()
       setPositions(localData)
+      return localData
     } finally {
       setIsLoading(false)
     }
@@ -136,8 +137,10 @@ export function useStockPosition(stockId: string): UseStockPositionReturn {
         if (response.ok) {
           const result = await response.json()
           if (result.success) {
-            await load()
-            window.dispatchEvent(new CustomEvent('kabunote-db-position-update'))
+            const newPositions = await load()
+            window.dispatchEvent(new CustomEvent('kabunote-db-position-update', {
+              detail: { symbol, positions: newPositions }
+            }))
             return
           }
         }
@@ -179,8 +182,10 @@ export function useStockPosition(stockId: string): UseStockPositionReturn {
         if (response.ok) {
           const result = await response.json()
           if (result.success) {
-            await load()
-            window.dispatchEvent(new CustomEvent('kabunote-db-position-update'))
+            const updatedPositions = await load()
+            window.dispatchEvent(new CustomEvent('kabunote-db-position-update', {
+              detail: { symbol, positions: updatedPositions }
+            }))
             return
           }
         }
@@ -214,8 +219,10 @@ export function useStockPosition(stockId: string): UseStockPositionReturn {
         })
 
         if (response.ok) {
-          await load()
-          window.dispatchEvent(new CustomEvent('kabunote-db-position-update'))
+          const remainingPositions = await load()
+          window.dispatchEvent(new CustomEvent('kabunote-db-position-update', {
+            detail: { symbol, positions: remainingPositions }
+          }))
           return
         }
         if (response.status !== 401) {

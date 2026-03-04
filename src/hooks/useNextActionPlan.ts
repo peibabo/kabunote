@@ -200,7 +200,18 @@ export function useNextActionPlan(stockId: string): UseNextActionPlanReturn {
       if (result.success) {
         setLastSaved(new Date(result.data.updatedAt))
         setHasUserInput(false)
-        window.dispatchEvent(new CustomEvent('kabunote-db-strategy-update'))
+        window.dispatchEvent(new CustomEvent('kabunote-db-strategy-update', {
+          detail: {
+            symbol: stockId.replace('stock-', ''),
+            nextActionPlan: {
+              actionType: result.data.actionType,
+              priority: result.data.priority,
+              targetPrice: result.data.targetPrice,
+              targetShares: result.data.targetQuantity,
+              strategyMemo: result.data.memo,
+            }
+          }
+        }))
       } else {
         throw new Error('APIレスポンスが無効です')
       }
@@ -258,6 +269,9 @@ export function useNextActionPlan(stockId: string): UseNextActionPlanReturn {
           updatedAt: new Date().toISOString()
         })
         setLastSaved(null)
+        window.dispatchEvent(new CustomEvent('kabunote-db-strategy-update', {
+          detail: { symbol: stockId.replace('stock-', ''), nextActionPlan: null }
+        }))
       } else {
         throw new Error('APIレスポンスが無効です')
       }

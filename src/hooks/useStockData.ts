@@ -71,6 +71,12 @@ interface UseStockDataReturn {
   reorderStocks: (newSymbolOrder: string[]) => void;
   /** 新規銘柄をローカルステートに一時追加（DB未登録の仮エントリ） */
   addLocalStock: (symbol: string) => void;
+  /** 特定銘柄の価格データのみを部分更新（全再取得を避けるため） */
+  updateStockPrice: (symbol: string, priceData: { currentPrice: number | null; targetPrice: number | null; stopLossPrice: number | null }) => void;
+  /** 特定銘柄の任意フィールドを部分更新 */
+  updateStockData: (symbol: string, updates: Partial<StockData>) => void;
+  /** 特定銘柄の特定 eventType のイベントのみ差し替え（null で削除） */
+  updateStockEvent: (symbol: string, eventType: string, eventData: StockData['events'][0] | null) => void;
 }
 
 const STORAGE_KEY = STORAGE_KEYS.STOCKS;
@@ -192,6 +198,43 @@ export function useStockData(): UseStockDataReturn {
     });
   };
 
+  // 特定銘柄の価格データのみを部分更新（全再取得を避けるため）
+  const updateStockPrice = (
+    symbol: string,
+    priceData: { currentPrice: number | null; targetPrice: number | null; stopLossPrice: number | null }
+  ): void => {
+    setStockData(prev =>
+      prev.map(stock =>
+        stock.symbol === symbol
+          ? { ...stock, ...priceData }
+          : stock
+      )
+    );
+  };
+
+  // 特定銘柄の任意フィールドを部分更新
+  const updateStockData = (symbol: string, updates: Partial<StockData>): void => {
+    setStockData(prev =>
+      prev.map(stock => stock.symbol === symbol ? { ...stock, ...updates } : stock)
+    );
+  };
+
+  // 特定銘柄の特定 eventType のイベントのみ差し替え（null で削除）
+  const updateStockEvent = (
+    symbol: string,
+    eventType: string,
+    eventData: StockData['events'][0] | null
+  ): void => {
+    setStockData(prev =>
+      prev.map(stock => {
+        if (stock.symbol !== symbol) return stock;
+        const filtered = stock.events.filter(e => e.eventType !== eventType);
+        const newEvents = eventData ? [...filtered, eventData] : filtered;
+        return { ...stock, events: newEvents };
+      })
+    );
+  };
+
   // 新規銘柄をローカルステートに一時追加（DB未登録の仮エントリ）
   const addLocalStock = (symbol: string): void => {
     setStockData(prev => {
@@ -261,5 +304,8 @@ export function useStockData(): UseStockDataReturn {
     refreshData,
     reorderStocks,
     addLocalStock,
+    updateStockPrice,
+    updateStockData,
+    updateStockEvent,
   };
 }
