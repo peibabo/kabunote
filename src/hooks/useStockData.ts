@@ -66,6 +66,10 @@ interface UseStockDataReturn {
   error: string | null;
   isLoggedIn: boolean;
   refreshData: () => Promise<void>;
+  /** ローカルステートの並び順を更新（楽観的更新用） */
+  reorderStocks: (newSymbolOrder: string[]) => void;
+  /** 新規銘柄をローカルステートに一時追加（DB未登録の仮エントリ） */
+  addLocalStock: (symbol: string) => void;
 }
 
 const STORAGE_KEY = 'kabunote-stocks';
@@ -184,6 +188,49 @@ export function useStockData(): UseStockDataReturn {
     }
   };
 
+  // ローカルステートの並び順を更新（楽観的更新用）
+  const reorderStocks = (newSymbolOrder: string[]): void => {
+    setStockSymbols(newSymbolOrder);
+    setStockData(prev => {
+      const ordered = newSymbolOrder
+        .map(sym => prev.find(s => s.symbol === sym))
+        .filter((s): s is StockData => s !== undefined);
+      return ordered;
+    });
+  };
+
+  // 新規銘柄をローカルステートに一時追加（DB未登録の仮エントリ）
+  const addLocalStock = (symbol: string): void => {
+    setStockData(prev => {
+      if (prev.some(s => s.symbol === symbol)) return prev;
+      const tempEntry: StockData = {
+        id: `stock-${symbol}`,
+        symbol,
+        name: symbol,
+        sector: null,
+        market: null,
+        order: prev.length,
+        currentPrice: null,
+        targetPrice: null,
+        stopLossPrice: null,
+        memo: '',
+        positions: [],
+        events: [],
+        dividend: null,
+        benefit: null,
+        tags: [],
+        nextActionPlan: null,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      return [...prev, tempEntry];
+    });
+    setStockSymbols(prev => {
+      if (prev.includes(symbol)) return prev;
+      return [...prev, symbol];
+    });
+  };
+
   // データを読み込む
   const refreshData = async (): Promise<void> => {
     setIsLoading(true);
@@ -221,6 +268,8 @@ export function useStockData(): UseStockDataReturn {
     isLoading,
     error,
     isLoggedIn,
-    refreshData
+    refreshData,
+    reorderStocks,
+    addLocalStock,
   };
 }
