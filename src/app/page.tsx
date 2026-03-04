@@ -312,10 +312,17 @@ export default function Home() {
     };
     window.addEventListener('kabunote-db-tag-update', handleDbTagUpdate);
 
+    // 認証済み: Next Action Plan保存後の戦略一覧更新
+    const handleDbStrategyUpdate = () => {
+      if (isLoggedIn) refreshData();
+    };
+    window.addEventListener('kabunote-db-strategy-update', handleDbStrategyUpdate);
+
     return () => {
       window.removeEventListener('localStorageChange', handleStorageChange as EventListener);
       window.removeEventListener('kabunote-db-calendar-update', handleDbCalendarUpdate);
       window.removeEventListener('kabunote-db-tag-update', handleDbTagUpdate);
+      window.removeEventListener('kabunote-db-strategy-update', handleDbStrategyUpdate);
     };
   }, [isInitialized, stocks, isLoggedIn, refreshData]);
 
@@ -558,6 +565,7 @@ export default function Home() {
         break;
       case 'strategy':
         setIsStrategySummaryOpen(true);
+        if (isLoggedIn) refreshData();
         break;
       case 'positions':
         setIsPortfolioPositionsOpen(true);
@@ -1406,7 +1414,7 @@ export default function Home() {
                 </button>
               </div>
               <div className="overflow-auto max-h-[calc(90vh-8rem)]">
-                <StrategySummaryPage />
+                <StrategySummaryPage stockData={stockData} isLoggedIn={isLoggedIn} />
               </div>
             </div>
           </div>

@@ -36,6 +36,7 @@ export async function GET(request: NextRequest) {
         tags: {
           orderBy: { createdAt: 'asc' }
         },
+        nextAction: true,
       }
     })
 
@@ -92,7 +93,13 @@ export async function GET(request: NextRequest) {
           color: t.color,
           createdAt: t.createdAt.toISOString(),
         })),
-        nextActionPlan: null,
+        nextActionPlan: stock.nextAction ? {
+          actionType: stock.nextAction.actionType.toLowerCase(),
+          priority: stock.nextAction.priority.toLowerCase(),
+          targetPrice: stock.nextAction.targetPrice ? Number(stock.nextAction.targetPrice) : null,
+          targetShares: stock.nextAction.targetShares,
+          strategyMemo: stock.nextAction.strategyMemo || '',
+        } : null,
 
         createdAt: stock.createdAt.toISOString(),
         updatedAt: stock.updatedAt.toISOString()

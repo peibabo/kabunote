@@ -206,6 +206,7 @@ export function useNextActionPlan(stockId: string): UseNextActionPlanReturn {
         setLastSaved(new Date(result.data.updatedAt))
         setHasUserInput(false)
         console.log('✅ Next Action Plan保存成功:', stockId)
+        window.dispatchEvent(new CustomEvent('kabunote-db-strategy-update'))
       } else {
         throw new Error('APIレスポンスが無効です')
       }
