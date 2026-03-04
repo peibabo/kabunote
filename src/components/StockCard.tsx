@@ -324,9 +324,9 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
           bgClass: '',
           borderClass: 'border-red-500/40',
           bgAnimationStyle: {
-            background: 'linear-gradient(45deg, rgb(31 41 55), rgb(55 31 31))',
+            backgroundImage: 'linear-gradient(45deg, rgb(31 41 55), rgb(55 31 31))',
+            backgroundSize: '400% 400%',
             animation: 'bgPulse 2s ease-in-out infinite',
-            backgroundSize: '400% 400%'
           }
         };
       case 'stop-loss':
@@ -334,9 +334,9 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
           bgClass: '',
           borderClass: 'border-red-500/30',
           bgAnimationStyle: {
-            background: 'linear-gradient(45deg, rgb(31 41 55), rgb(51 35 35))',
+            backgroundImage: 'linear-gradient(45deg, rgb(31 41 55), rgb(51 35 35))',
+            backgroundSize: '400% 400%',
             animation: 'bgPulse 2.5s ease-in-out infinite',
-            backgroundSize: '400% 400%'
           }
         };
       case 'target-profit':
@@ -344,9 +344,9 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
           bgClass: '',
           borderClass: 'border-green-500/30',
           bgAnimationStyle: {
-            background: 'linear-gradient(45deg, rgb(31 41 55), rgb(31 51 35))',
+            backgroundImage: 'linear-gradient(45deg, rgb(31 41 55), rgb(31 51 35))',
+            backgroundSize: '400% 400%',
             animation: 'bgPulse 2.5s ease-in-out infinite',
-            backgroundSize: '400% 400%'
           }
         };
       case 'nextaction-warning':
@@ -355,9 +355,9 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
           bgClass: '',
           borderClass: 'border-yellow-500/30',
           bgAnimationStyle: {
-            background: 'linear-gradient(45deg, rgb(31 41 55), rgb(51 47 31))',
+            backgroundImage: 'linear-gradient(45deg, rgb(31 41 55), rgb(51 47 31))',
+            backgroundSize: '400% 400%',
             animation: 'bgPulse 3s ease-in-out infinite',
-            backgroundSize: '400% 400%'
           }
         };
     }
