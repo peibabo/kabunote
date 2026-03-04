@@ -143,9 +143,26 @@ export function useStockEvent(stockId: string): UseStockEventReturn {
       if (!response.ok && response.status !== 401) {
         throw new Error('決算日の保存に失敗しました')
       }
-      // カレンダーデータの再取得をトリガー
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('kabunote-db-calendar-update'))
+      if (response.ok && typeof window !== 'undefined') {
+        const result = await response.json()
+        if (result.success) {
+          window.dispatchEvent(new CustomEvent('kabunote-db-calendar-update', {
+            detail: {
+              type: 'event' as const,
+              symbol: stockId.replace('stock-', ''),
+              eventType: 'EARNINGS',
+              eventData: {
+                id: result.data.id,
+                eventType: 'EARNINGS',
+                eventDate: result.data.eventDate,
+                eventMonth: null,
+                eventDay: null,
+                isRecurring: false,
+                isActive: true,
+              }
+            }
+          }))
+        }
       }
     } catch {
       // エラー時は localStorage にフォールバック保存
@@ -177,9 +194,26 @@ export function useStockEvent(stockId: string): UseStockEventReturn {
       if (!response.ok && response.status !== 401) {
         throw new Error('株主総会設定の保存に失敗しました')
       }
-      // カレンダーデータの再取得をトリガー
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('kabunote-db-calendar-update'))
+      if (response.ok && typeof window !== 'undefined') {
+        const result = await response.json()
+        if (result.success) {
+          window.dispatchEvent(new CustomEvent('kabunote-db-calendar-update', {
+            detail: {
+              type: 'event' as const,
+              symbol: stockId.replace('stock-', ''),
+              eventType: 'SHAREHOLDER_MEETING',
+              eventData: {
+                id: result.data.id,
+                eventType: 'SHAREHOLDER_MEETING',
+                eventDate: null,
+                eventMonth: result.data.eventMonth,
+                eventDay: result.data.eventDay,
+                isRecurring: result.data.isRecurring,
+                isActive: result.data.isActive,
+              }
+            }
+          }))
+        }
       }
     } catch {
       // エラー時は localStorage にフォールバック保存

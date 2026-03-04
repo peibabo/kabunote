@@ -152,15 +152,18 @@ export function useStockTag(stockId: string): UseStockTagReturn {
 
       const result = await response.json()
       if (result.success) {
-        // 仮IDをDBのIDに差し替え
-        setTagsState(prev => prev.map(t => t.id === tempId ? result.data : t))
-        window.dispatchEvent(new CustomEvent('kabunote-db-tag-update'))
+        // 仮IDをDBのIDに差し替え（tags は依存配列経由で最新に近い値）
+        const updatedTags = [...tags.filter(t => t.id !== tempId), result.data]
+        setTagsState(updatedTags)
+        window.dispatchEvent(new CustomEvent('kabunote-db-tag-update', {
+          detail: { symbol, tags: updatedTags }
+        }))
       }
     } catch {
       // 失敗時はロールバック
       setTagsState(prev => prev.filter(t => t.id !== tempId))
     }
-  }, [isLoggedIn, stockId, localStorageKey, loadFromLocalStorage])
+  }, [isLoggedIn, stockId, localStorageKey, loadFromLocalStorage, tags, symbol])
 
   // タグ削除
   const removeTag = useCallback(async (tagId: string) => {
@@ -184,12 +187,15 @@ export function useStockTag(stockId: string): UseStockTagReturn {
       })
 
       if (!response.ok) throw new Error('タグの削除に失敗しました')
-      window.dispatchEvent(new CustomEvent('kabunote-db-tag-update'))
+      const newTags = tags.filter(t => t.id !== tagId)
+      window.dispatchEvent(new CustomEvent('kabunote-db-tag-update', {
+        detail: { symbol, tags: newTags }
+      }))
     } catch {
       // 失敗時は再読み込みで復元
       await loadFromDatabase()
     }
-  }, [isLoggedIn, stockId, localStorageKey, loadFromLocalStorage, loadFromDatabase])
+  }, [isLoggedIn, stockId, localStorageKey, loadFromLocalStorage, loadFromDatabase, tags, symbol])
 
   const setTags = useCallback((newTags: CustomTag[]) => {
     setTagsState(newTags)

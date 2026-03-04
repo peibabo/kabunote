@@ -30,7 +30,7 @@ import { ShareholderBenefitInfo } from '@/types/shareholder';
 import { SnoozedAlert } from '@/types/snooze';
 import { getIntegratedAlert, getAllActiveAlerts } from '@/utils/alertSystem';
 import { calculatePositionSummary } from '@/types/positions';
-import { useStockData } from '@/hooks/useStockData';
+import { useStockData, StockData } from '@/hooks/useStockData';
 import { useFavoriteGroups } from '@/hooks/useFavoriteGroups';
 import {
   DndContext,
@@ -62,7 +62,7 @@ type DividendBenefitStockData = {
 
 export default function Home() {
   // 新しいカスタムフックを使用してデータを取得
-  const { stockData, stockSymbols, isLoading: isStockDataLoading, error: stockDataError, isLoggedIn, refreshData, reorderStocks, addLocalStock } = useStockData();
+  const { stockData, stockSymbols, isLoading: isStockDataLoading, error: stockDataError, isLoggedIn, refreshData, reorderStocks, addLocalStock, updateStockPrice, updateStockData, updateStockEvent } = useStockData();
   const stocks = stockSymbols; // 後方互換性のため
   const setStocks = (newStocks: string[]) => {
     reorderStocks(newStocks);
@@ -321,33 +321,53 @@ export default function Home() {
 
     window.addEventListener('localStorageChange', handleStorageChange as EventListener);
 
-    // 認証済み: DBイベント保存後のカレンダー更新
-    const handleDbCalendarUpdate = () => {
-      if (isLoggedIn) refreshData();
+    // 認証済み: DBイベント保存後の部分更新（event/dividend/benefit）
+    const handleDbCalendarUpdate = (e: Event) => {
+      const ev = e as CustomEvent<{ type: 'event' | 'dividend' | 'benefit'; symbol: string; [key: string]: unknown }>;
+      if (!isLoggedIn || !ev.detail) return;
+      const { type, symbol } = ev.detail;
+      if (type === 'event') {
+        updateStockEvent(symbol, ev.detail.eventType as string, ev.detail.eventData as StockData['events'][0] | null);
+      } else if (type === 'dividend') {
+        updateStockData(symbol, { dividend: ev.detail.dividend as StockData['dividend'] });
+      } else if (type === 'benefit') {
+        updateStockData(symbol, { benefit: ev.detail.benefit as StockData['benefit'] });
+      }
     };
     window.addEventListener('kabunote-db-calendar-update', handleDbCalendarUpdate);
 
-    // 認証済み: DBタグ保存後のポートフォリオグラフ更新
-    const handleDbTagUpdate = () => {
-      if (isLoggedIn) refreshData();
+    // 認証済み: DBタグ保存後の部分更新
+    const handleDbTagUpdate = (e: Event) => {
+      const ev = e as CustomEvent<{ symbol: string; tags: StockData['tags'] }>;
+      if (isLoggedIn && ev.detail) updateStockData(ev.detail.symbol, { tags: ev.detail.tags });
     };
     window.addEventListener('kabunote-db-tag-update', handleDbTagUpdate);
 
-    // 認証済み: Next Action Plan保存後の戦略一覧更新
-    const handleDbStrategyUpdate = () => {
-      if (isLoggedIn) refreshData();
+    // 認証済み: Next Action Plan保存後の部分更新
+    const handleDbStrategyUpdate = (e: Event) => {
+      const ev = e as CustomEvent<{ symbol: string; nextActionPlan: StockData['nextActionPlan'] }>;
+      if (isLoggedIn && ev.detail) updateStockData(ev.detail.symbol, { nextActionPlan: ev.detail.nextActionPlan });
     };
     window.addEventListener('kabunote-db-strategy-update', handleDbStrategyUpdate);
 
-    // 認証済み: ポジション変更後のポジション一覧更新
-    const handleDbPositionUpdate = () => {
-      if (isLoggedIn) refreshData();
+    // 認証済み: ポジション変更後の部分更新
+    const handleDbPositionUpdate = (e: Event) => {
+      const ev = e as CustomEvent<{ symbol: string; positions: StockData['positions'] }>;
+      if (isLoggedIn && ev.detail) updateStockData(ev.detail.symbol, { positions: ev.detail.positions });
     };
     window.addEventListener('kabunote-db-position-update', handleDbPositionUpdate);
 
-    // 認証済み: 株価変更後のポジション一覧更新
-    const handleDbPriceUpdate = () => {
-      if (isLoggedIn) refreshData();
+    // 認証済み: 株価変更時は全再取得せず対象銘柄の価格のみ部分更新
+    const handleDbPriceUpdate = (e: Event) => {
+      const event = e as CustomEvent<{
+        symbol: string;
+        currentPrice: number | null;
+        targetPrice: number | null;
+        stopLossPrice: number | null;
+      }>;
+      if (isLoggedIn && event.detail) {
+        updateStockPrice(event.detail.symbol, event.detail);
+      }
     };
     window.addEventListener('kabunote-db-price-update', handleDbPriceUpdate);
 
@@ -359,7 +379,7 @@ export default function Home() {
       window.removeEventListener('kabunote-db-position-update', handleDbPositionUpdate);
       window.removeEventListener('kabunote-db-price-update', handleDbPriceUpdate);
     };
-  }, [isInitialized, stocks, isLoggedIn, refreshData]);
+  }, [isInitialized, stocks, isLoggedIn, refreshData, updateStockPrice, updateStockData, updateStockEvent]);
 
   // ポートフォリオ用データの更新
   useEffect(() => {
