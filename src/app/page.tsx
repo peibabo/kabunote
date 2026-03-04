@@ -672,10 +672,48 @@ export default function Home() {
 
     for (const symbol of stocks) {
       const stockInfo = await getStockData(symbol);
-      const dividendInfo = getDividendInfo(symbol);
-      const shareholderBenefitInfo = getShareholderBenefitInfo(symbol);
-      const dividendRightsSettings = getDividendRightsSettings(symbol);
-      const shareholderRightsSettings = getShareholderRightsSettings(symbol);
+
+      let dividendInfo;
+      let dividendRightsSettings;
+      let shareholderBenefitInfo;
+      let shareholderRightsSettings;
+
+      if (isLoggedIn && stockData.length > 0) {
+        // 認証済み: stockData（DBデータ）から取得
+        const dbStock = stockData.find(s => s.symbol === symbol);
+
+        dividendInfo = dbStock?.dividend?.dividendPerShare != null
+          ? {
+              dividendPerShare: String(dbStock.dividend.dividendPerShare),
+              dividendFrequency: (dbStock.dividend.frequency ?? 1) as 1 | 2 | 4,
+              lastUpdated: new Date().toISOString()
+            }
+          : null;
+
+        dividendRightsSettings = dbStock?.dividend?.rightsMonth != null && dbStock?.dividend?.rightsDay != null
+          ? { month: dbStock.dividend.rightsMonth, day: dbStock.dividend.rightsDay, isRecurring: true, isActive: true }
+          : createDefaultDividendRightsSettings();
+
+        shareholderBenefitInfo = dbStock?.benefit?.description
+          ? {
+              benefitDescription: dbStock.benefit.description,
+              minimumShares: dbStock.benefit.minimumShares != null ? String(dbStock.benefit.minimumShares) : '',
+              benefitMonth: dbStock.benefit.rightsMonth != null ? String(dbStock.benefit.rightsMonth) : '12',
+              estimatedValue: dbStock.benefit.estimatedValue != null ? String(dbStock.benefit.estimatedValue) : '',
+              lastUpdated: new Date().toISOString()
+            }
+          : null;
+
+        shareholderRightsSettings = dbStock?.benefit?.rightsMonth != null && dbStock?.benefit?.rightsDay != null
+          ? { month: dbStock.benefit.rightsMonth, day: dbStock.benefit.rightsDay, isRecurring: true, isActive: true }
+          : createDefaultShareholderRightsSettings();
+      } else {
+        // 未認証: localStorage から取得
+        dividendInfo = getDividendInfo(symbol);
+        dividendRightsSettings = getDividendRightsSettings(symbol);
+        shareholderBenefitInfo = getShareholderBenefitInfo(symbol);
+        shareholderRightsSettings = getShareholderRightsSettings(symbol);
+      }
 
       // portfolioDataから該当銘柄のポジション情報を取得し統合
       const portfolioItem = portfolioData.find(p => p.symbol === symbol);
@@ -706,39 +744,8 @@ export default function Home() {
         }
       }
 
-      // デバッグログを追加
-      if (symbol === '5527') {
-        console.log(`🔍 ${symbol} 詳細:`, {
-          'dividendPerShare': dividendInfo?.dividendPerShare,
-          'dividendFrequency': dividendInfo?.dividendFrequency,
-          'parsedDividendPerShare': parseFloat(dividendInfo?.dividendPerShare || '0'),
-          'benefitDescription': shareholderBenefitInfo?.benefitDescription,
-          'minimumShares': shareholderBenefitInfo?.minimumShares,
-          'estimatedValue': shareholderBenefitInfo?.estimatedValue,
-          'parsedEstimatedValue': parseFloat(shareholderBenefitInfo?.estimatedValue || '0'),
-          'position_totalShares': position?.totalShares,
-          'position_averagePrice': position?.averagePrice,
-          'hasPosition': !!position,
-          'hasDividend': !!dividendInfo?.dividendPerShare && parseFloat(dividendInfo.dividendPerShare) > 0,
-          'hasBenefit': !!shareholderBenefitInfo?.benefitDescription
-        });
-
-        // ポジション取得の詳細デバッグ
-        console.log(`🏦 ${symbol} ポジション詳細:`, {
-          'portfolioItem': portfolioItem,
-          'positionsArray': portfolioItem?.positions,
-          'positionsLength': portfolioItem?.positions?.length,
-          'firstPosition': portfolioItem?.positions?.[0],
-          'firstPosition_shares': portfolioItem?.positions?.[0]?.shares,
-          'firstPosition_purchasePrice': portfolioItem?.positions?.[0]?.purchasePrice,
-          'position': position,
-          'position_totalShares': position?.totalShares,
-          'position_averagePrice': position?.averagePrice
-        });
-      }
-
       result[symbol] = {
-        name: stockInfo?.name || symbol,
+        name: (isLoggedIn && stockData.find(s => s.symbol === symbol)?.name) || stockInfo?.name || symbol,
         dividendInfo,
         shareholderBenefitInfo,
         dividendRightsSettings,

@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { loadStockData, getCompanyNameSync, isKnownStockSync, StockData } from '@/data/stockNames';
 import { FavoriteGroup } from '@/types/favorites';
 import { ProfitLossInfo, calculateProfitLoss, calculatePositionSummary } from '@/types/positions';
-import { RightsDateSettings, createDefaultRightsSettings, calculateRightsDateFromSettings, shouldDeactivateRights, DividendRightsSettings, ShareholderRightsSettings, createDefaultDividendRightsSettings, createDefaultShareholderRightsSettings } from '@/types/rightsDate';
+import { RightsDateSettings, createDefaultRightsSettings, calculateRightsDateFromSettings, shouldDeactivateRights, ShareholderRightsSettings, createDefaultShareholderRightsSettings } from '@/types/rightsDate';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useStringLocalStorage } from '@/hooks/useLocalStorage';
@@ -88,7 +88,6 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
     setStopLoss,
   } = useStockPrice(`stock-${symbol}`);
   const [rightsSettings, setRightsSettings] = useStringLocalStorage(`kabunote-rights-settings-${symbol}`, JSON.stringify(createDefaultRightsSettings()), 400);
-  const [dividendRightsSettings, setDividendRightsSettings] = useStringLocalStorage(`kabunote-dividend-rights-settings-${symbol}`, JSON.stringify(createDefaultDividendRightsSettings()), 400);
   const [shareholderRightsSettings, setShareholderRightsSettings] = useStringLocalStorage(`kabunote-shareholder-rights-settings-${symbol}`, JSON.stringify(createDefaultShareholderRightsSettings()), 400);
   const {
     earningsDate,
@@ -106,15 +105,6 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
       return JSON.parse(rightsSettings);
     } catch {
       return createDefaultRightsSettings();
-    }
-  })();
-
-  // 配当権利確定日設定をパース
-  const parsedDividendRightsSettings: DividendRightsSettings = (() => {
-    try {
-      return JSON.parse(dividendRightsSettings);
-    } catch {
-      return createDefaultDividendRightsSettings();
     }
   })();
 
@@ -519,8 +509,6 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
               // DB統合版では管理タブ内で直接編集するため、何もしない
               console.log('ポジション管理はこのタブ内で直接編集できます')
             }}
-            dividendRightsSettings={parsedDividendRightsSettings}
-            onDividendRightsSettingsChange={(newSettings) => setDividendRightsSettings(JSON.stringify(newSettings))}
             shareholderRightsSettings={parsedShareholderRightsSettings}
             onShareholderRightsSettingsChange={(newSettings) => setShareholderRightsSettings(JSON.stringify(newSettings))}
             shareholderMeetingSettings={shareholderMeetingSettings}
