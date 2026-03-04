@@ -50,7 +50,7 @@ export default function FavoriteGroupSelector({
           </h3>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-white"
+            className="cursor-pointer text-gray-400 hover:text-white"
           >
             ✕
           </button>
@@ -77,13 +77,13 @@ export default function FavoriteGroupSelector({
             <div className="flex gap-2 mb-4">
               <button
                 onClick={handleSelectAll}
-                className="px-3 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
+                className="cursor-pointer px-3 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
               >
                 全選択
               </button>
               <button
                 onClick={handleDeselectAll}
-                className="px-3 py-1 text-xs bg-gray-600 hover:bg-gray-700 text-white rounded transition-colors"
+                className="cursor-pointer px-3 py-1 text-xs bg-gray-600 hover:bg-gray-700 text-white rounded transition-colors"
               >
                 全解除
               </button>
@@ -125,13 +125,13 @@ export default function FavoriteGroupSelector({
             <div className="flex gap-3">
               <button
                 onClick={handleSave}
-                className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
+                className="cursor-pointer flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
               >
                 保存
               </button>
               <button
                 onClick={onClose}
-                className="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded transition-colors"
+                className="cursor-pointer flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded transition-colors"
               >
                 キャンセル
               </button>

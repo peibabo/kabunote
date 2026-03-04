@@ -71,7 +71,7 @@ export default function SearchBar({
         {localQuery && (
           <button
             onClick={handleClear}
-            className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-white transition-colors"
+            className="cursor-pointer absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-white transition-colors"
           >
             <svg
               className="h-5 w-5"

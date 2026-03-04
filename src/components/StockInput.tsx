@@ -230,7 +230,7 @@ export default function StockInput({ onAddStock, isDisabled }: StockInputProps) 
           <button
             type="submit"
             disabled={isDisabled}
-            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white rounded-lg transition-colors whitespace-nowrap"
+            className="cursor-pointer px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg transition-colors whitespace-nowrap"
           >
             {isDisabled ? '上限達成' : '追加'}
           </button>
@@ -245,7 +245,7 @@ export default function StockInput({ onAddStock, isDisabled }: StockInputProps) 
               key={stock.code}
               onClick={() => handlePresetClick(stock.code)}
               disabled={isDisabled}
-              className="px-3 py-2 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 text-white text-sm rounded-lg transition-colors text-left"
+              className="cursor-pointer px-3 py-2 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:cursor-not-allowed text-white text-sm rounded-lg transition-colors text-left"
             >
               <div className="font-medium">{stock.code}</div>
               <div className="text-xs text-gray-300 truncate">{stock.name}</div>

@@ -244,7 +244,7 @@ export default function PortfolioPositionsPage({ stockData = [], isLoggedIn = fa
               <button
                 key={key}
                 onClick={() => handleSort(key)}
-                className={`px-3 py-1 text-xs rounded-md transition-colors ${
+                className={`cursor-pointer px-3 py-1 text-xs rounded-md transition-colors ${
                   sortBy === key
                     ? 'bg-blue-600 text-white'
                     : 'bg-gray-700 text-gray-300 hover:bg-gray-600'

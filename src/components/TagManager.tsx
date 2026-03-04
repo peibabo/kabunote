@@ -98,7 +98,7 @@ export default function TagManager({ isOpen, onClose }: TagManagerProps) {
       >
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-xl font-semibold text-white">🏷️ タグ管理</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-white">✕</button>
+          <button onClick={onClose} className="cursor-pointer text-gray-400 hover:text-white">✕</button>
         </div>
 
         {!isLoggedIn ? (
@@ -127,7 +127,7 @@ export default function TagManager({ isOpen, onClose }: TagManagerProps) {
                         <button
                           key={color}
                           onClick={() => setEditColor(color)}
-                          className={`w-6 h-6 rounded-full ${TAG_COLORS[color].bg} ${
+                          className={`cursor-pointer w-6 h-6 rounded-full ${TAG_COLORS[color].bg} ${
                             editColor === color ? 'ring-2 ring-white' : ''
                           }`}
                           title={color}
@@ -137,13 +137,13 @@ export default function TagManager({ isOpen, onClose }: TagManagerProps) {
                     <div className="flex gap-2">
                       <button
                         onClick={handleSaveEdit}
-                        className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm"
+                        className="cursor-pointer px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm"
                       >
                         保存
                       </button>
                       <button
                         onClick={() => setEditingLabel(null)}
-                        className="px-3 py-1 bg-gray-600 hover:bg-gray-500 text-white rounded text-sm"
+                        className="cursor-pointer px-3 py-1 bg-gray-600 hover:bg-gray-500 text-white rounded text-sm"
                       >
                         キャンセル
                       </button>
@@ -157,13 +157,13 @@ export default function TagManager({ isOpen, onClose }: TagManagerProps) {
                     <div className="flex gap-2">
                       <button
                         onClick={() => handleDelete(tag.label)}
-                        className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-sm"
+                        className="cursor-pointer px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-sm"
                       >
                         削除する
                       </button>
                       <button
                         onClick={() => setDeleteConfirm(null)}
-                        className="px-3 py-1 bg-gray-600 hover:bg-gray-500 text-white rounded text-sm"
+                        className="cursor-pointer px-3 py-1 bg-gray-600 hover:bg-gray-500 text-white rounded text-sm"
                       >
                         キャンセル
                       </button>
@@ -180,13 +180,13 @@ export default function TagManager({ isOpen, onClose }: TagManagerProps) {
                     <div className="flex gap-2">
                       <button
                         onClick={() => handleStartEdit(tag)}
-                        className="text-blue-400 hover:text-blue-300 text-sm"
+                        className="cursor-pointer text-blue-400 hover:text-blue-300 text-sm"
                       >
                         ✏️
                       </button>
                       <button
                         onClick={() => { setDeleteConfirm(tag.label); setEditingLabel(null); }}
-                        className="text-red-400 hover:text-red-300 text-sm"
+                        className="cursor-pointer text-red-400 hover:text-red-300 text-sm"
                       >
                         🗑️
                       </button>

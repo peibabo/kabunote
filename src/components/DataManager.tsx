@@ -179,7 +179,7 @@ export default function DataManager({ onClose, onDataImported }: DataManagerProp
             </p>
             <button
               onClick={handleExport}
-              className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium"
+              className="cursor-pointer w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium"
             >
               📥 データをダウンロード
             </button>
@@ -198,7 +198,7 @@ export default function DataManager({ onClose, onDataImported }: DataManagerProp
             <button
               onClick={handleImportClick}
               disabled={isImporting}
-              className="w-full px-4 py-3 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 text-white rounded-lg transition-colors font-medium"
+              className="cursor-pointer w-full px-4 py-3 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg transition-colors font-medium"
             >
               {isImporting ? (
                 <span className="flex items-center justify-center gap-2">
@@ -231,7 +231,7 @@ export default function DataManager({ onClose, onDataImported }: DataManagerProp
             {!showClearConfirm ? (
               <button
                 onClick={() => setShowClearConfirm(true)}
-                className="w-full px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium"
+                className="cursor-pointer w-full px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium"
               >
                 ⚠️ 全データを削除
               </button>
@@ -245,13 +245,13 @@ export default function DataManager({ onClose, onDataImported }: DataManagerProp
                 <div className="flex gap-3">
                   <button
                     onClick={() => setShowClearConfirm(false)}
-                    className="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
+                    className="cursor-pointer flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
                   >
                     キャンセル
                   </button>
                   <button
                     onClick={handleClearAll}
-                    className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium"
+                    className="cursor-pointer flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium"
                   >
                     削除実行
                   </button>

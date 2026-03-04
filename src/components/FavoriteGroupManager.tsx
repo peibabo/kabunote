@@ -102,7 +102,7 @@ export default function FavoriteGroupManager({ groups, onGroupsChange, onClose }
           <h3 className="text-xl font-semibold text-white">お気に入りグループ管理</h3>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-white"
+            className="cursor-pointer text-gray-400 hover:text-white"
           >
             ✕
           </button>
@@ -139,13 +139,13 @@ export default function FavoriteGroupManager({ groups, onGroupsChange, onClose }
                       </select>
                       <button
                         onClick={handleSaveEdit}
-                        className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm"
+                        className="cursor-pointer px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm"
                       >
                         保存
                       </button>
                       <button
                         onClick={() => setEditingGroup(null)}
-                        className="px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white rounded text-sm"
+                        className="cursor-pointer px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white rounded text-sm"
                       >
                         キャンセル
                       </button>
@@ -163,13 +163,13 @@ export default function FavoriteGroupManager({ groups, onGroupsChange, onClose }
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleEditGroup(group.id)}
-                          className="text-blue-400 hover:text-blue-300 text-sm"
+                          className="cursor-pointer text-blue-400 hover:text-blue-300 text-sm"
                         >
                           編集
                         </button>
                         <button
                           onClick={() => handleDeleteGroup(group.id)}
-                          className="text-red-400 hover:text-red-300 text-sm"
+                          className="cursor-pointer text-red-400 hover:text-red-300 text-sm"
                         >
                           削除
                         </button>
@@ -192,7 +192,7 @@ export default function FavoriteGroupManager({ groups, onGroupsChange, onClose }
                   key={index}
                   onClick={() => handleCreateFromPreset(preset)}
                   disabled={groups.length >= MAX_GROUPS}
-                  className={`flex items-center justify-center gap-2 p-3 rounded-lg transition-opacity hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed ${GROUP_COLORS[preset.color].bg} ${GROUP_COLORS[preset.color].text}`}
+                  className={`cursor-pointer flex items-center justify-center gap-2 p-3 rounded-lg transition-opacity hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed ${GROUP_COLORS[preset.color].bg} ${GROUP_COLORS[preset.color].text}`}
                 >
                   + {preset.name}
                 </button>
@@ -232,7 +232,7 @@ export default function FavoriteGroupManager({ groups, onGroupsChange, onClose }
             <button
               onClick={handleCreateGroup}
               disabled={!newGroupName.trim() || groups.length >= MAX_GROUPS}
-              className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded text-sm transition-colors"
+              className="cursor-pointer w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded text-sm transition-colors"
             >
               グループを作成
             </button>

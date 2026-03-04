@@ -104,13 +104,13 @@ export default function MigrationBanner({ isLoggedIn }: MigrationBannerProps) {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowModal(true)}
-                className="bg-white hover:bg-gray-100 text-blue-600 font-medium px-4 py-2 rounded-lg text-sm transition-colors"
+                className="cursor-pointer bg-white hover:bg-gray-100 text-blue-600 font-medium px-4 py-2 rounded-lg text-sm transition-colors"
               >
                 今すぐ移行
               </button>
               <button
                 onClick={handleDismiss}
-                className="text-blue-200 hover:text-white p-2 rounded transition-colors"
+                className="cursor-pointer text-blue-200 hover:text-white p-2 rounded transition-colors"
                 title="このお知らせを非表示"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

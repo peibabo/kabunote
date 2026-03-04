@@ -1172,7 +1172,7 @@ export default function Home() {
                 </div>
                 <button
                   onClick={() => setSearchQuery('')}
-                  className="text-xs text-gray-400 hover:text-white transition-colors"
+                  className="cursor-pointer text-xs text-gray-400 hover:text-white transition-colors"
                 >
                   検索をクリア
                 </button>
@@ -1293,7 +1293,7 @@ export default function Home() {
             <p className="text-gray-400 text-sm mb-3">お気に入りグループを作成して銘柄を整理しましょう</p>
             <button
               onClick={() => setIsGroupManagerOpen(true)}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition-colors"
+              className="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition-colors"
             >
               グループを作成
             </button>
@@ -1349,7 +1349,7 @@ export default function Home() {
                   <p className="text-gray-400">「{searchQuery}」に一致する銘柄・メモ・タグが見つかりませんでした。</p>
                   <button
                     onClick={() => setSearchQuery('')}
-                    className="mt-3 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                    className="cursor-pointer mt-3 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
                   >
                     検索をクリア
                   </button>

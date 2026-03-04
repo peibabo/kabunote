@@ -349,7 +349,7 @@ export default function AlertSummaryPage() {
           <div className="flex items-center gap-4">
             <button
               onClick={() => setShowSnoozed(!showSnoozed)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`cursor-pointer px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 showSnoozed
                   ? 'bg-blue-600 text-white'
                   : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
@@ -479,7 +479,7 @@ export default function AlertSummaryPage() {
                             </div>
                             <button
                               onClick={() => unsnoozeAlert(generateAlertKey(alert.symbol, alert.alertType))}
-                              className="text-xs text-red-400 hover:text-red-300 underline"
+                              className="cursor-pointer text-xs text-red-400 hover:text-red-300 underline"
                             >
                               解除
                             </button>

@@ -69,7 +69,7 @@ export default function TagEditor({ symbol: _symbol, currentTags, onAddTag, onRe
           <h3 className="text-lg font-semibold text-white">タグを編集</h3>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-white"
+            className="cursor-pointer text-gray-400 hover:text-white"
           >
             ✕
           </button>
@@ -88,7 +88,7 @@ export default function TagEditor({ symbol: _symbol, currentTags, onAddTag, onRe
                   <span>{tag.label}</span>
                   <button
                     onClick={() => handleRemoveTag(tag.id)}
-                    className="hover:bg-black hover:bg-opacity-20 rounded-full w-4 h-4 flex items-center justify-center"
+                    className="cursor-pointer hover:bg-black hover:bg-opacity-20 rounded-full w-4 h-4 flex items-center justify-center"
                   >
                     ×
                   </button>
@@ -107,7 +107,7 @@ export default function TagEditor({ symbol: _symbol, currentTags, onAddTag, onRe
                 <button
                   key={index}
                   onClick={() => handleAddTag(preset.label, preset.color)}
-                  className={`text-xs px-3 py-2 rounded-full transition-opacity hover:opacity-80 ${TAG_COLORS[preset.color].bg} ${TAG_COLORS[preset.color].text}`}
+                  className={`cursor-pointer text-xs px-3 py-2 rounded-full transition-opacity hover:opacity-80 ${TAG_COLORS[preset.color].bg} ${TAG_COLORS[preset.color].text}`}
                 >
                   + {preset.label}
                 </button>
@@ -125,7 +125,7 @@ export default function TagEditor({ symbol: _symbol, currentTags, onAddTag, onRe
                 <button
                   key={index}
                   onClick={() => handleAddTag(tag.label, tag.color)}
-                  className={`text-xs px-3 py-2 rounded-full transition-opacity hover:opacity-80 ${TAG_COLORS[tag.color]?.bg ?? 'bg-gray-600'} ${TAG_COLORS[tag.color]?.text ?? 'text-gray-100'}`}
+                  className={`cursor-pointer text-xs px-3 py-2 rounded-full transition-opacity hover:opacity-80 ${TAG_COLORS[tag.color]?.bg ?? 'bg-gray-600'} ${TAG_COLORS[tag.color]?.text ?? 'text-gray-100'}`}
                 >
                   + {tag.label}
                 </button>
@@ -164,7 +164,7 @@ export default function TagEditor({ symbol: _symbol, currentTags, onAddTag, onRe
           <button
             onClick={handleAddCustomTag}
             disabled={!newTagLabel.trim()}
-            className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded text-sm transition-colors"
+            className="cursor-pointer w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded text-sm transition-colors"
           >
             タグを追加
           </button>
