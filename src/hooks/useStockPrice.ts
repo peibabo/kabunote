@@ -1,7 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { createClient } from '@/lib/supabase-client'
 import { useDebounce } from './useDebounce'
-import { stockKey } from '@/lib/storageKeys'
 
 interface PriceState {
   currentPrice: string
@@ -22,44 +20,13 @@ interface UseStockPriceReturn {
 
 export function useStockPrice(stockId: string): UseStockPriceReturn {
   const symbol = stockId.replace('stock-', '')
-  const localCurrentPriceKey = stockKey.currentPrice(symbol)
-  const localTargetPriceKey = stockKey.targetPrice(symbol)
-  const localStopLossKey = stockKey.stopLoss(symbol)
 
   const [prices, setPrices] = useState<PriceState>({ currentPrice: '', targetPrice: '', stopLoss: '' })
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [hasUserInput, setHasUserInput] = useState(false)
 
   const debouncedPrices = useDebounce(prices, 300)
-
-  // 認証状態を監視
-  useEffect(() => {
-    const supabase = createClient()
-
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      setIsLoggedIn(!!session)
-    }
-    checkAuth()
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setIsLoggedIn(!!session)
-    })
-    return () => subscription.unsubscribe()
-  }, [])
-
-  // localStorageから読み込み
-  const loadFromLocalStorage = useCallback(() => {
-    if (typeof window === 'undefined') return
-    setPrices({
-      currentPrice: localStorage.getItem(localCurrentPriceKey) || '',
-      targetPrice: localStorage.getItem(localTargetPriceKey) || '',
-      stopLoss: localStorage.getItem(localStopLossKey) || '',
-    })
-    setIsLoading(false)
-  }, [localCurrentPriceKey, localTargetPriceKey, localStopLossKey])
 
   // DBから読み込み
   const loadFromDatabase = useCallback(async () => {
@@ -67,10 +34,6 @@ export function useStockPrice(stockId: string): UseStockPriceReturn {
       const response = await fetch(`/api/stocks/${stockId}/price`)
 
       if (!response.ok) {
-        if (response.status === 401) {
-          loadFromLocalStorage()
-          return
-        }
         throw new Error('株価の読み込みに失敗しました')
       }
 
@@ -83,32 +46,14 @@ export function useStockPrice(stockId: string): UseStockPriceReturn {
         })
       }
     } catch (err) {
-      console.error('❌ 株価読み込みエラー - localStorageにフォールバック:', err)
-      loadFromLocalStorage()
+      console.error('❌ 株価読み込みエラー:', err)
     } finally {
       setIsLoading(false)
     }
-  }, [stockId, loadFromLocalStorage])
-
-  // データ読み込み
-  const loadData = useCallback(async () => {
-    if (!isLoggedIn) {
-      loadFromLocalStorage()
-      return
-    }
-    await loadFromDatabase()
-  }, [isLoggedIn, loadFromLocalStorage, loadFromDatabase])
+  }, [stockId])
 
   // DBに保存
   const savePrices = useCallback(async (latest: PriceState) => {
-    if (!isLoggedIn) {
-      localStorage.setItem(localCurrentPriceKey, latest.currentPrice)
-      localStorage.setItem(localTargetPriceKey, latest.targetPrice)
-      localStorage.setItem(localStopLossKey, latest.stopLoss)
-      setHasUserInput(false)
-      return
-    }
-
     try {
       setIsSaving(true)
       const response = await fetch(`/api/stocks/${stockId}/price`, {
@@ -121,15 +66,7 @@ export function useStockPrice(stockId: string): UseStockPriceReturn {
         })
       })
 
-      if (!response.ok && response.status !== 401) {
-        throw new Error('株価の保存に失敗しました')
-      }
-
-      if (response.status === 401) {
-        localStorage.setItem(localCurrentPriceKey, latest.currentPrice)
-        localStorage.setItem(localTargetPriceKey, latest.targetPrice)
-        localStorage.setItem(localStopLossKey, latest.stopLoss)
-      } else {
+      if (response.ok) {
         window.dispatchEvent(new CustomEvent('kabunote-db-price-update', {
           detail: {
             symbol,
@@ -142,15 +79,11 @@ export function useStockPrice(stockId: string): UseStockPriceReturn {
 
       setHasUserInput(false)
     } catch (err) {
-      console.error('❌ 株価保存エラー - localStorageにフォールバック:', err)
-      localStorage.setItem(localCurrentPriceKey, latest.currentPrice)
-      localStorage.setItem(localTargetPriceKey, latest.targetPrice)
-      localStorage.setItem(localStopLossKey, latest.stopLoss)
-      setHasUserInput(false)
+      console.error('❌ 株価保存エラー:', err)
     } finally {
       setIsSaving(false)
     }
-  }, [stockId, isLoggedIn, localCurrentPriceKey, localTargetPriceKey, localStopLossKey])
+  }, [stockId, symbol])
 
   // セッター
   const setCurrentPrice = useCallback((value: string) => {
@@ -170,8 +103,8 @@ export function useStockPrice(stockId: string): UseStockPriceReturn {
 
   // 初回読み込み
   useEffect(() => {
-    loadData()
-  }, [loadData])
+    loadFromDatabase()
+  }, [loadFromDatabase])
 
   // デバウンス後の自動保存
   useEffect(() => {

@@ -163,6 +163,26 @@ git commitをする前に修正内容をもとに必要であればREADME及びC
 #### 手動対応必要
 - **Supabase Dashboard > SQL Editor で `add_rls_policy_stock_benefits.sql` を実行**
 
+---
+
+### ✅ feature/new 完了（2026年3月達成）
+**認証フロー修正・ログイン必須化・localStorageフォールバック削除**
+
+#### 技術的成果
+- ✅ **ログイン必須化** ミドルウェアで未認証→/login リダイレクト
+- ✅ **localStorageフォールバック完全削除** 全データDBのみ管理
+- ✅ **PKCE認証フロー修正** `/auth/callback` でコード交換→セッション確立→`/` リダイレクト
+- ✅ **login/page.tsx** Google OAuth・Magic Link の `redirectTo` を `/auth/callback` に統一
+- ✅ **初回ログイン対応** `/api/cash` でユーザー未存在時にデフォルト値を返却（404エラー解消）
+
+#### 解決した技術課題
+- 🔧 `/auth/callback/route.ts` が `exchangeCodeForSession()` を呼ばず `/auth/success` にリダイレクトするだけだったため、セッション未確立→白画面になっていた問題を修正
+- 🔧 `NextResponse.redirect()` に cookie をセットするため、`setAll` で `cookieStore` と `response.cookies` の両方に書き込むパターンを実装
+- 🔧 初回ログイン時に `app_users` レコードが存在せず `/api/cash` が 404 を返しエラーになっていた問題を修正
+
+#### Supabase ダッシュボード設定（手動対応必要）
+- **Authentication > URL Configuration > Redirect URLs** に `/auth/callback` を追加（本番・ローカル両方）
+
 # Kabunote - 投資思考整理ダッシュボード
 
 ## プロジェクト概要

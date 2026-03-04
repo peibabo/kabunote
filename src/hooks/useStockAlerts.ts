@@ -1,8 +1,7 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import { NextActionPlan } from '@/types/nextActionPlan';
 import { PositionSummary } from '@/types/positions';
 import { getAllActiveAlerts, AlertInfo } from '@/utils/alertSystem';
-import { stockKey, STORAGE_KEYS } from '@/lib/storageKeys';
 
 interface CardStyles {
   bgClass: string;
@@ -18,7 +17,6 @@ interface UseStockAlertsReturn {
 /**
  * 銘柄カードのアラート計算フック
  *
- * - localStorage変更をリアルタイム監視してアラートを再計算
  * - アラート種別に応じたカードスタイル（背景色・ボーダー・アニメーション）を返す
  */
 export function useStockAlerts(
@@ -31,46 +29,11 @@ export function useStockAlerts(
   availableCash: number,
   isPositionLoading: boolean,
 ): UseStockAlertsReturn {
-  const [alertTrigger, setAlertTrigger] = useState(0);
-
-  // localStorage 変更を監視してアラートをリアルタイム更新
-  useEffect(() => {
-    const handleStorageChange = (event: CustomEvent) => {
-      const { key } = event.detail;
-
-      if (
-        key === stockKey.nextActionPlan(symbol) ||
-        key === stockKey.currentPrice(symbol) ||
-        key === stockKey.targetPrice(symbol) ||
-        key === stockKey.stopLoss(symbol) ||
-        key === stockKey.positions(symbol) ||
-        key === STORAGE_KEYS.CASH_AMOUNT
-      ) {
-        // 50ms 遅延で状態更新を待ってから再計算
-        setTimeout(() => setAlertTrigger(prev => prev + 1), 50);
-      }
-    };
-
-    window.addEventListener('localStorageChange', handleStorageChange as EventListener);
-    return () => window.removeEventListener('localStorageChange', handleStorageChange as EventListener);
-  }, [symbol]);
-
   const alerts = useMemo<AlertInfo[]>(() => {
-    // localStorage から最新の NextActionPlan を取得（DBより新しい可能性があるため）
-    let latestPlan = nextActionPlan;
-    if (typeof window !== 'undefined') {
-      try {
-        const stored = localStorage.getItem(stockKey.nextActionPlan(symbol));
-        if (stored) latestPlan = JSON.parse(stored);
-      } catch (e) {
-        console.error('Failed to parse Next Action Plan from localStorage:', e);
-      }
-    }
-
-    if (!latestPlan) return [];
+    if (!nextActionPlan) return [];
 
     return getAllActiveAlerts(
-      latestPlan,
+      nextActionPlan,
       parseFloat(currentPrice) || 0,
       parseFloat(targetPrice) || 0,
       stopLoss,
@@ -89,7 +52,6 @@ export function useStockAlerts(
     stopLoss,
     positionSummary,
     availableCash,
-    alertTrigger,
     isPositionLoading,
   ]);
 

@@ -1,9 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { createClient } from '@/lib/supabase-client'
 import { FavoriteGroup } from '@/types/favorites'
 import { STORAGE_KEYS } from '@/lib/storageKeys'
 
-const GROUPS_STORAGE_KEY = STORAGE_KEYS.FAVORITE_GROUPS
 const FILTER_STORAGE_KEY = STORAGE_KEYS.SELECTED_GROUP_FILTER
 
 interface UseFavoriteGroupsReturn {
@@ -17,90 +15,43 @@ interface UseFavoriteGroupsReturn {
 export function useFavoriteGroups(): UseFavoriteGroupsReturn {
   const [groups, setGroupsState] = useState<FavoriteGroup[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [selectedGroupFilter, setSelectedGroupFilter] = useState<string | null>(null)
   // 前回のグループ状態を保持（差分計算用）
   const prevGroupsRef = useRef<FavoriteGroup[]>([])
   // DB同期中かどうか（競合防止）
   const isSyncingRef = useRef(false)
 
-  // 認証状態を監視
-  useEffect(() => {
-    const supabase = createClient()
-
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      setIsLoggedIn(!!session)
-    }
-
-    checkAuth()
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setIsLoggedIn(!!session)
-      }
-    )
-
-    return () => subscription.unsubscribe()
-  }, [])
-
   // 初回データ読み込み
   useEffect(() => {
     const loadGroups = async () => {
       setIsLoading(true)
+      try {
+        const response = await fetch('/api/favorite-groups')
+        if (response.ok) {
+          const result = await response.json()
+          if (result.success) {
+            const dbGroups: FavoriteGroup[] = result.data
+            setGroupsState(dbGroups)
+            prevGroupsRef.current = dbGroups
 
-      if (isLoggedIn) {
-        // 認証済み → DB から取得
-        try {
-          const response = await fetch('/api/favorite-groups')
-          if (response.ok) {
-            const result = await response.json()
-            if (result.success) {
-              const dbGroups: FavoriteGroup[] = result.data
-              setGroupsState(dbGroups)
-              prevGroupsRef.current = dbGroups
-
-              // 保存されているフィルター状態を復元
-              if (typeof window !== 'undefined') {
-                const savedFilter = localStorage.getItem(FILTER_STORAGE_KEY)
-                if (savedFilter && dbGroups.some(g => g.id === savedFilter)) {
-                  setSelectedGroupFilter(savedFilter)
-                }
+            // 保存されているフィルター状態を復元
+            if (typeof window !== 'undefined') {
+              const savedFilter = localStorage.getItem(FILTER_STORAGE_KEY)
+              if (savedFilter && dbGroups.some(g => g.id === savedFilter)) {
+                setSelectedGroupFilter(savedFilter)
               }
-              setIsLoading(false)
-              return
             }
           }
-        } catch (err) {
-          console.error('❌ グループ取得エラー - localStorageにフォールバック:', err)
         }
+      } catch (err) {
+        console.error('❌ グループ取得エラー:', err)
+      } finally {
+        setIsLoading(false)
       }
-
-      // 未認証 または DBエラー → localStorage から読み込み
-      if (typeof window !== 'undefined') {
-        try {
-          const saved = localStorage.getItem(GROUPS_STORAGE_KEY)
-          if (saved) {
-            const parsed: FavoriteGroup[] = JSON.parse(saved)
-            setGroupsState(parsed)
-            prevGroupsRef.current = parsed
-
-            const savedFilter = localStorage.getItem(FILTER_STORAGE_KEY)
-            if (savedFilter && parsed.some(g => g.id === savedFilter)) {
-              setSelectedGroupFilter(savedFilter)
-            }
-          }
-        } catch (e) {
-          console.error('❌ localStorageからのグループ読み込みエラー:', e)
-        }
-      }
-
-      setIsLoading(false)
     }
 
-    // isLoggedIn が確定したら読み込み
     loadGroups()
-  }, [isLoggedIn])
+  }, [])
 
   // DB同期処理
   const syncToDb = useCallback(async (newGroups: FavoriteGroup[], prevGroups: FavoriteGroup[]) => {
@@ -215,15 +166,8 @@ export function useFavoriteGroups(): UseFavoriteGroupsReturn {
     setGroupsState(newGroups)
     prevGroupsRef.current = newGroups
 
-    if (isLoggedIn) {
-      // DB同期（非同期・バックグラウンド）
-      syncToDb(newGroups, prevGroups)
-    } else {
-      // 未認証 → localStorage に保存
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(GROUPS_STORAGE_KEY, JSON.stringify(newGroups))
-      }
-    }
+    // DB同期（非同期・バックグラウンド）
+    syncToDb(newGroups, prevGroups)
 
     // 選択中グループが削除された場合、フィルターをクリア
     setSelectedGroupFilter(prev => {
@@ -235,9 +179,9 @@ export function useFavoriteGroups(): UseFavoriteGroupsReturn {
       }
       return prev
     })
-  }, [isLoggedIn, syncToDb])
+  }, [syncToDb])
 
-  // フィルター変更
+  // フィルター変更（UIのみ localStorage で保持）
   const handleGroupFilterChange = useCallback((groupId: string | null) => {
     setSelectedGroupFilter(groupId)
     if (typeof window !== 'undefined') {

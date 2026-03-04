@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase-client';
-import { STORAGE_KEYS } from '@/lib/storageKeys';
 
 export interface StockData {
   id: string;
@@ -79,36 +78,11 @@ interface UseStockDataReturn {
   updateStockEvent: (symbol: string, eventType: string, eventData: StockData['events'][0] | null) => void;
 }
 
-const STORAGE_KEY = STORAGE_KEYS.STOCKS;
-
 export function useStockData(): UseStockDataReturn {
   const [stockData, setStockData] = useState<StockData[]>([]);
   const [stockSymbols, setStockSymbols] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isAuthChecked, setIsAuthChecked] = useState(false);
-
-  // 認証状態を監視
-  useEffect(() => {
-    const supabase = createClient();
-
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setIsLoggedIn(!!session);
-      setIsAuthChecked(true);
-    };
-
-    checkAuth();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setIsLoggedIn(!!session);
-      }
-    );
-
-    return () => subscription.unsubscribe();
-  }, []);
 
   // データベースからデータを取得
   const loadDataFromDatabase = async (): Promise<void> => {
@@ -134,56 +108,6 @@ export function useStockData(): UseStockDataReturn {
     } catch (err) {
       console.error('❌ データベースからの取得エラー:', err);
       throw err;
-    }
-  };
-
-  // localStorageからデータを取得（フォールバック）
-  const loadDataFromLocalStorage = (): void => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem(STORAGE_KEY);
-
-      if (saved) {
-        try {
-          const parsedStocks = JSON.parse(saved);
-          setStockSymbols(parsedStocks);
-
-          // localStorageの場合は簡易データ形式
-          const simpleStockData = parsedStocks.map((symbol: string, index: number) => ({
-            id: `stock-${symbol}`,
-            symbol,
-            name: symbol, // 実際の名前は別途取得が必要
-            sector: null,
-            market: null,
-            order: index,
-            currentPrice: null,
-            targetPrice: null,
-            stopLossPrice: null,
-            memo: '',
-            positions: (() => {
-              try {
-                const stored = localStorage.getItem(`kabunote-positions-${symbol}`);
-                return stored ? JSON.parse(stored) : [];
-              } catch { return []; }
-            })(),
-            events: [],
-            dividend: null,
-            benefit: null,
-            tags: [],
-            nextActionPlan: null,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-          }));
-
-          setStockData(simpleStockData);
-        } catch (e) {
-          console.error('❌ localStorage読み込みエラー:', e);
-          setError('保存されたデータの読み込みに失敗しました');
-        }
-      } else {
-        // 初回時は空配列
-        setStockData([]);
-        setStockSymbols([]);
-      }
     }
   };
 
@@ -273,34 +197,41 @@ export function useStockData(): UseStockDataReturn {
     setError(null);
 
     try {
-      if (isLoggedIn) {
-        // 認証済みの場合はデータベースから取得
-        await loadDataFromDatabase();
-      } else {
-        // 未認証の場合はlocalStorageから取得
-        loadDataFromLocalStorage();
-      }
+      await loadDataFromDatabase();
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'データの取得に失敗しました';
       setError(errorMessage);
-      console.error('💥 完全なデータ取得失敗:', errorMessage);
+      console.error('💥 データ取得失敗:', errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // 認証確認完了後、または認証状態が変わった時にデータを取得
+  // セッション切れ検知
   useEffect(() => {
-    if (!isAuthChecked) return;
+    const supabase = createClient();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event) => {
+        if (event === 'SIGNED_OUT') {
+          setStockData([]);
+          setStockSymbols([]);
+        }
+      }
+    );
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // 初回データ取得
+  useEffect(() => {
     refreshData();
-  }, [isLoggedIn, isAuthChecked]);
+  }, []);
 
   return {
     stockData,
     stockSymbols,
     isLoading,
     error,
-    isLoggedIn,
+    isLoggedIn: true, // ミドルウェアで認証必須化済み
     refreshData,
     reorderStocks,
     addLocalStock,

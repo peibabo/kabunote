@@ -8,7 +8,6 @@ import { PortfolioShareholderSummary, calculateShareholderBenefit, formatBenefit
 import { useCash } from '@/hooks/useCash';
 import { CustomTag } from '@/types/tags';
 import { getCompanyNameSync, getSectorSync } from '@/data/stockNames';
-import { stockKey } from '@/lib/storageKeys';
 
 interface StockData {
   id: string;
@@ -167,12 +166,7 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
       totalInvestmentAll += summary.totalCost;
       totalSharesAll += summary.totalShares;
 
-      // 現在株価：DBデータ優先、localStorageフォールバック
-      let currentPriceNum = stock.currentPrice ?? 0;
-      if (!currentPriceNum && typeof window !== 'undefined') {
-        const localPrice = localStorage.getItem(stockKey.currentPrice(stock.symbol)) || '';
-        currentPriceNum = parseFloat(localPrice) || 0;
-      }
+      const currentPriceNum = stock.currentPrice ?? 0;
 
       if (currentPriceNum > 0) {
         stocksWithPrices++;
@@ -182,13 +176,8 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
         stocksWithoutPrices++;
       }
 
-      // 配当情報：DBデータ優先、localStorageフォールバック
-      let perShare = stock.dividend?.dividendPerShare ?? 0;
-      let frequency = stock.dividend?.frequency ?? 0;
-      if (!perShare && typeof window !== 'undefined') {
-        perShare = parseFloat(localStorage.getItem(stockKey.dividendPerShare(stock.symbol)) || '') || 0;
-        frequency = parseInt(localStorage.getItem(stockKey.dividendFrequency(stock.symbol)) || '1') || 1;
-      }
+      const perShare = stock.dividend?.dividendPerShare ?? 0;
+      const frequency = stock.dividend?.frequency ?? 0;
 
       if (perShare > 0 && summary.totalShares > 0) {
         stocksWithDividend++;
@@ -202,13 +191,8 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
         totalDividendInvestment += summary.totalCost;
       }
 
-      // 株主優待情報：DBデータ優先、localStorageフォールバック
-      let minShares = stock.benefit?.minimumShares ?? 0;
-      let estValue = stock.benefit?.estimatedValue ?? 0;
-      if (!minShares && typeof window !== 'undefined') {
-        minShares = parseInt(localStorage.getItem(stockKey.minimumShares(stock.symbol)) || '') || 0;
-        estValue = parseFloat(localStorage.getItem(stockKey.estimatedValue(stock.symbol)) || '') || 0;
-      }
+      const minShares = stock.benefit?.minimumShares ?? 0;
+      const estValue = stock.benefit?.estimatedValue ?? 0;
 
       if (minShares > 0 && estValue > 0 && summary.totalShares > 0) {
         totalStocksWithBenefits++;
@@ -258,18 +242,8 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
       const positions = stock.positions || [];
       const positionSummary = calculatePositionSummary(positions);
 
-      // 目標価格・損切りライン：DBデータ優先、localStorageフォールバック
-      let targetPrice: number | undefined = stock.targetPrice ?? undefined;
-      let stopLossPrice: number | undefined = stock.stopLossPrice ?? undefined;
-
-      if (!targetPrice && typeof window !== 'undefined') {
-        const str = localStorage.getItem(stockKey.targetPrice(stock.symbol));
-        targetPrice = str ? parseFloat(str) || undefined : undefined;
-      }
-      if (!stopLossPrice && typeof window !== 'undefined') {
-        const str = localStorage.getItem(stockKey.stopLoss(stock.symbol));
-        stopLossPrice = str ? parseFloat(str) || undefined : undefined;
-      }
+      const targetPrice: number | undefined = stock.targetPrice ?? undefined;
+      const stopLossPrice: number | undefined = stock.stopLossPrice ?? undefined;
 
       const profitLossInfo = calculateProfitLoss(positionSummary, targetPrice, stopLossPrice);
 
@@ -313,44 +287,13 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
   // InvestmentPieChart用データを構築（stockPositionsのポジション + DBの配当・優待データ）
   const chartPortfolioData = useMemo(() => {
     return portfolioData.map(stock => {
-      // 配当：DBデータ優先、localStorageフォールバック
-      let dividend: { dividendPerShare: number | null; frequency: number | null } | null = null;
-      if (stock.dividend?.dividendPerShare) {
-        dividend = {
-          dividendPerShare: stock.dividend.dividendPerShare,
-          frequency: stock.dividend.frequency,
-        };
-      } else if (typeof window !== 'undefined') {
-        const perShareStr = localStorage.getItem(stockKey.dividendPerShare(stock.symbol));
-        const frequencyStr = localStorage.getItem(stockKey.dividendFrequency(stock.symbol));
-        const perShare = perShareStr ? parseFloat(perShareStr) : null;
-        if (perShare && perShare > 0) {
-          dividend = {
-            dividendPerShare: perShare,
-            frequency: frequencyStr ? parseInt(frequencyStr) : 1,
-          };
-        }
-      }
+      const dividend = stock.dividend?.dividendPerShare
+        ? { dividendPerShare: stock.dividend.dividendPerShare, frequency: stock.dividend.frequency }
+        : null;
 
-      // 優待：DBデータ優先、localStorageフォールバック
-      let benefit: { minimumShares: number | null; estimatedValue: number | null } | null = null;
-      if (stock.benefit?.minimumShares) {
-        benefit = {
-          minimumShares: stock.benefit.minimumShares,
-          estimatedValue: stock.benefit.estimatedValue,
-        };
-      } else if (typeof window !== 'undefined') {
-        const minSharesStr = localStorage.getItem(stockKey.minimumShares(stock.symbol));
-        const estValueStr = localStorage.getItem(stockKey.estimatedValue(stock.symbol));
-        const minShares = minSharesStr ? parseInt(minSharesStr) : null;
-        const estValue = estValueStr ? parseFloat(estValueStr) : null;
-        if (minShares && minShares > 0) {
-          benefit = {
-            minimumShares: minShares,
-            estimatedValue: estValue,
-          };
-        }
-      }
+      const benefit = stock.benefit?.minimumShares
+        ? { minimumShares: stock.benefit.minimumShares, estimatedValue: stock.benefit.estimatedValue }
+        : null;
 
       const csvName = getCompanyNameSync(stock.symbol);
       const resolvedName = (stock.name && stock.name !== stock.symbol)
