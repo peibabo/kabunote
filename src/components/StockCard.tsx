@@ -517,7 +517,7 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
               </h3>
               <button
                 onClick={() => setIsMemoModalOpen(false)}
-                className="text-gray-400 hover:text-white text-xl"
+                className="cursor-pointer text-gray-400 hover:text-white text-xl"
               >
                 ×
               </button>

@@ -71,7 +71,7 @@ export default function MigrationModal({ isOpen, onClose, onSuccess }: Migration
           <button
             onClick={onClose}
             disabled={isLoading}
-            className="text-gray-400 hover:text-white transition-colors p-2 rounded"
+            className="cursor-pointer text-gray-400 hover:text-white transition-colors p-2 rounded"
           >
             ✕
           </button>
@@ -141,14 +141,14 @@ export default function MigrationModal({ isOpen, onClose, onSuccess }: Migration
               <button
                 onClick={onClose}
                 disabled={isLoading}
-                className="px-4 py-2 text-gray-400 hover:text-white transition-colors disabled:opacity-50"
+                className="cursor-pointer px-4 py-2 text-gray-400 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 キャンセル
               </button>
               <button
                 onClick={handleMigration}
                 disabled={isLoading || !localDataPreview || localDataPreview.stockCount === 0}
-                className="flex items-center gap-2 px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors"
+                className="cursor-pointer flex items-center gap-2 px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors"
               >
                 {isLoading ? (
                   <>
@@ -215,7 +215,7 @@ export default function MigrationModal({ isOpen, onClose, onSuccess }: Migration
 
             <button
               onClick={onClose}
-              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+              className="cursor-pointer px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
             >
               完了
             </button>

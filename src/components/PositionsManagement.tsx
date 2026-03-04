@@ -114,7 +114,7 @@ export default function PositionsManagement({
         <button
           onClick={handleAddClick}
           disabled={isSaving}
-          className="text-xs bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-600 text-white px-2 py-1 rounded transition-colors"
+          className="cursor-pointer text-xs bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-2 py-1 rounded transition-colors"
         >
           ＋ 追加
         </button>
@@ -164,7 +164,7 @@ export default function PositionsManagement({
               </p>
               <button
                 onClick={handleAddClick}
-                className="text-xs bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded transition-colors"
+                className="cursor-pointer text-xs bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded transition-colors"
               >
                 最初のポジションを追加
               </button>
@@ -212,14 +212,14 @@ export default function PositionsManagement({
                   <div className="flex gap-2 ml-2 shrink-0">
                     <button
                       onClick={() => handleEditClick(pos)}
-                      className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
+                      className="cursor-pointer text-xs text-blue-400 hover:text-blue-300 transition-colors"
                     >
                       編集
                     </button>
                     <button
                       onClick={() => handleDelete(pos.id)}
                       disabled={isSaving}
-                      className="text-xs text-red-400 hover:text-red-300 disabled:text-gray-500 transition-colors"
+                      className="cursor-pointer text-xs text-red-400 hover:text-red-300 disabled:text-gray-500 disabled:cursor-not-allowed transition-colors"
                     >
                       削除
                     </button>
@@ -330,13 +330,13 @@ function PositionFormFields({
         <button
           onClick={onSave}
           disabled={isSaving || !isValid}
-          className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 text-white text-sm rounded transition-colors"
+          className="cursor-pointer px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white text-sm rounded transition-colors"
         >
           {isSaving ? '保存中...' : label}
         </button>
         <button
           onClick={onCancel}
-          className="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white text-sm rounded transition-colors"
+          className="cursor-pointer px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white text-sm rounded transition-colors"
         >
           キャンセル
         </button>

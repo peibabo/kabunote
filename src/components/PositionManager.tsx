@@ -91,7 +91,7 @@ export default function PositionManager({ positions, onPositionsChange, onClose 
           <h3 className="text-lg font-semibold text-white">保有ポジション管理</h3>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-white text-xl"
+            className="cursor-pointer text-gray-400 hover:text-white text-xl"
           >
             ×
           </button>
@@ -162,13 +162,13 @@ export default function PositionManager({ positions, onPositionsChange, onClose 
               <>
                 <button
                   onClick={handleUpdatePosition}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded transition-colors"
+                  className="cursor-pointer px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded transition-colors"
                 >
                   更新
                 </button>
                 <button
                   onClick={resetForm}
-                  className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm rounded transition-colors"
+                  className="cursor-pointer px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm rounded transition-colors"
                 >
                   キャンセル
                 </button>
@@ -176,7 +176,7 @@ export default function PositionManager({ positions, onPositionsChange, onClose 
             ) : (
               <button
                 onClick={handleAddPosition}
-                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm rounded transition-colors"
+                className="cursor-pointer px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm rounded transition-colors"
               >
                 追加
               </button>
@@ -226,13 +226,13 @@ export default function PositionManager({ positions, onPositionsChange, onClose 
                     <div className="flex gap-1 ml-2">
                       <button
                         onClick={() => handleEditPosition(position)}
-                        className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded transition-colors"
+                        className="cursor-pointer px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded transition-colors"
                       >
                         編集
                       </button>
                       <button
                         onClick={() => handleDeletePosition(position.id)}
-                        className="px-2 py-1 bg-red-600 hover:bg-red-700 text-white text-xs rounded transition-colors"
+                        className="cursor-pointer px-2 py-1 bg-red-600 hover:bg-red-700 text-white text-xs rounded transition-colors"
                       >
                         削除
                       </button>
