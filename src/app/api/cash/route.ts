@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
     });
 
     if (!user) {
-      return NextResponse.json({ error: 'ユーザーが見つかりません' }, { status: 404 });
+      return NextResponse.json({ cashAmount: '0', nextActionMemo: '' });
     }
 
     return NextResponse.json({

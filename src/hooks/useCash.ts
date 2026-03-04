@@ -55,12 +55,6 @@ export function useCash(): UseCashResult {
     } catch (err) {
       console.error('現金データ取得エラー:', err);
       setError(err instanceof Error ? err.message : '不明なエラーが発生しました');
-
-      // エラー時はlocalStorageにフォールバック
-      const fallbackCashAmount = localStorage.getItem('kabunote-cash-amount') || '0';
-      const fallbackNextActionMemo = localStorage.getItem('kabunote-next-action-memo') || '';
-      setCashAmount(fallbackCashAmount);
-      setNextActionMemo(fallbackNextActionMemo);
     } finally {
       setIsLoading(false);
     }
@@ -77,34 +71,16 @@ export function useCash(): UseCashResult {
     try {
       const response = await fetch('/api/cash', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId,
-          ...data,
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, ...data }),
       });
 
       if (!response.ok) {
         throw new Error('データの更新に失敗しました');
       }
-
-      const result: CashData = await response.json();
-      // localStorageにもバックアップ保存
-      localStorage.setItem('kabunote-cash-amount', result.cashAmount);
-      localStorage.setItem('kabunote-next-action-memo', result.nextActionMemo);
     } catch (err) {
       console.error('データ更新エラー:', err);
       setError(err instanceof Error ? err.message : '更新に失敗しました');
-
-      // エラー時はlocalStorageに直接保存
-      if (data.cashAmount !== undefined) {
-        localStorage.setItem('kabunote-cash-amount', data.cashAmount);
-      }
-      if (data.nextActionMemo !== undefined) {
-        localStorage.setItem('kabunote-next-action-memo', data.nextActionMemo);
-      }
     }
   }, 300);
 

@@ -1,11 +1,9 @@
 import { useState, useEffect, useCallback } from 'react'
-import { createClient } from '@/lib/supabase-client'
 import { useDebounce } from './useDebounce'
 import {
   ShareholderMeetingSettings,
   createDefaultShareholderMeetingSettings
 } from '@/types/rightsDate'
-import { stockKey } from '@/lib/storageKeys'
 
 interface UseStockEventReturn {
   earningsDate: string
@@ -17,10 +15,7 @@ interface UseStockEventReturn {
 }
 
 export function useStockEvent(stockId: string): UseStockEventReturn {
-  // stockId: "stock-7203" 形式 → symbol: "7203"
   const symbol = stockId.replace('stock-', '')
-  const earningsKey = stockKey.earningsDate(symbol)
-  const meetingKey = stockKey.shareholderMeeting(symbol)
 
   const [earningsDate, setEarningsDate] = useState<string>('')
   const [shareholderMeetingSettings, setShareholderMeetingSettings] =
@@ -28,7 +23,6 @@ export function useStockEvent(stockId: string): UseStockEventReturn {
 
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
 
   const [hasEarningsInput, setHasEarningsInput] = useState(false)
   const [hasMeetingInput, setHasMeetingInput] = useState(false)
@@ -36,61 +30,12 @@ export function useStockEvent(stockId: string): UseStockEventReturn {
   const debouncedEarningsDate = useDebounce(earningsDate, 500)
   const debouncedMeetingSettings = useDebounce(shareholderMeetingSettings, 500)
 
-  // 認証状態を監視
-  useEffect(() => {
-    const supabase = createClient()
-
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      setIsLoggedIn(!!session)
-    }
-
-    checkAuth()
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setIsLoggedIn(!!session)
-    })
-
-    return () => subscription.unsubscribe()
-  }, [])
-
-  // localStorage からの読み込みヘルパー
-  const loadFromLocalStorage = useCallback(() => {
-    if (typeof window === 'undefined') return
-
-    const storedEarnings = localStorage.getItem(earningsKey)
-    if (storedEarnings !== null) {
-      setEarningsDate(storedEarnings)
-    }
-
-    const storedMeeting = localStorage.getItem(meetingKey)
-    if (storedMeeting !== null) {
-      try {
-        const parsed = JSON.parse(storedMeeting)
-        if (parsed && typeof parsed === 'object') {
-          setShareholderMeetingSettings({
-            month: typeof parsed.month === 'number' ? parsed.month : null,
-            day: typeof parsed.day === 'number' ? parsed.day : null,
-            isRecurring: typeof parsed.isRecurring === 'boolean' ? parsed.isRecurring : true,
-            isActive: typeof parsed.isActive === 'boolean' ? parsed.isActive : false,
-          })
-        }
-      } catch {
-        // パースエラーはデフォルト値のまま
-      }
-    }
-  }, [earningsKey, meetingKey])
-
   // DB からの読み込み
   const loadFromDatabase = useCallback(async () => {
     try {
       const response = await fetch(`/api/stocks/${stockId}/event`)
 
       if (!response.ok) {
-        if (response.status === 401) {
-          loadFromLocalStorage()
-          return
-        }
         throw new Error('イベントの読み込みに失敗しました')
       }
 
@@ -112,23 +57,17 @@ export function useStockEvent(stockId: string): UseStockEventReturn {
           setShareholderMeetingSettings(createDefaultShareholderMeetingSettings())
         }
       }
-    } catch {
-      // エラー時は localStorage にフォールバック
-      loadFromLocalStorage()
+    } catch (err) {
+      console.error('❌ イベント読み込みエラー:', err)
     } finally {
       setIsLoading(false)
     }
-  }, [stockId, loadFromLocalStorage])
+  }, [stockId])
 
   // 初回読み込み
   useEffect(() => {
-    if (!isLoggedIn) {
-      loadFromLocalStorage()
-      setIsLoading(false)
-      return
-    }
     loadFromDatabase()
-  }, [isLoggedIn, loadFromDatabase, loadFromLocalStorage])
+  }, [loadFromDatabase])
 
   // 決算日の DB 保存
   const saveEarningsToDatabase = useCallback(async (date: string) => {
@@ -140,16 +79,17 @@ export function useStockEvent(stockId: string): UseStockEventReturn {
         body: JSON.stringify({ eventType: 'EARNINGS', eventDate: date || null }),
       })
 
-      if (!response.ok && response.status !== 401) {
+      if (!response.ok) {
         throw new Error('決算日の保存に失敗しました')
       }
-      if (response.ok && typeof window !== 'undefined') {
+
+      if (typeof window !== 'undefined') {
         const result = await response.json()
         if (result.success) {
           window.dispatchEvent(new CustomEvent('kabunote-db-calendar-update', {
             detail: {
               type: 'event' as const,
-              symbol: stockId.replace('stock-', ''),
+              symbol,
               eventType: 'EARNINGS',
               eventData: {
                 id: result.data.id,
@@ -164,16 +104,13 @@ export function useStockEvent(stockId: string): UseStockEventReturn {
           }))
         }
       }
-    } catch {
-      // エラー時は localStorage にフォールバック保存
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(earningsKey, date)
-      }
+    } catch (err) {
+      console.error('❌ 決算日保存エラー:', err)
     } finally {
       setIsSaving(false)
       setHasEarningsInput(false)
     }
-  }, [stockId, earningsKey])
+  }, [stockId, symbol])
 
   // 株主総会設定の DB 保存
   const saveMeetingToDatabase = useCallback(async (settings: ShareholderMeetingSettings) => {
@@ -191,16 +128,17 @@ export function useStockEvent(stockId: string): UseStockEventReturn {
         }),
       })
 
-      if (!response.ok && response.status !== 401) {
+      if (!response.ok) {
         throw new Error('株主総会設定の保存に失敗しました')
       }
-      if (response.ok && typeof window !== 'undefined') {
+
+      if (typeof window !== 'undefined') {
         const result = await response.json()
         if (result.success) {
           window.dispatchEvent(new CustomEvent('kabunote-db-calendar-update', {
             detail: {
               type: 'event' as const,
-              symbol: stockId.replace('stock-', ''),
+              symbol,
               eventType: 'SHAREHOLDER_MEETING',
               eventData: {
                 id: result.data.id,
@@ -215,46 +153,25 @@ export function useStockEvent(stockId: string): UseStockEventReturn {
           }))
         }
       }
-    } catch {
-      // エラー時は localStorage にフォールバック保存
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(meetingKey, JSON.stringify(settings))
-      }
+    } catch (err) {
+      console.error('❌ 株主総会設定保存エラー:', err)
     } finally {
       setIsSaving(false)
       setHasMeetingInput(false)
     }
-  }, [stockId, meetingKey])
+  }, [stockId, symbol])
 
   // 決算日の自動保存（デバウンス後）
   useEffect(() => {
     if (!hasEarningsInput || isLoading) return
-
-    if (!isLoggedIn) {
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(earningsKey, debouncedEarningsDate)
-      }
-      setHasEarningsInput(false)
-      return
-    }
-
     saveEarningsToDatabase(debouncedEarningsDate)
-  }, [debouncedEarningsDate, hasEarningsInput, isLoading, isLoggedIn, earningsKey, saveEarningsToDatabase])
+  }, [debouncedEarningsDate, hasEarningsInput, isLoading, saveEarningsToDatabase])
 
   // 株主総会設定の自動保存（デバウンス後）
   useEffect(() => {
     if (!hasMeetingInput || isLoading) return
-
-    if (!isLoggedIn) {
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(meetingKey, JSON.stringify(debouncedMeetingSettings))
-      }
-      setHasMeetingInput(false)
-      return
-    }
-
     saveMeetingToDatabase(debouncedMeetingSettings)
-  }, [debouncedMeetingSettings, hasMeetingInput, isLoading, isLoggedIn, meetingKey, saveMeetingToDatabase])
+  }, [debouncedMeetingSettings, hasMeetingInput, isLoading, saveMeetingToDatabase])
 
   const updateEarningsDate = useCallback((date: string) => {
     setEarningsDate(date)

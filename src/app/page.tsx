@@ -9,7 +9,6 @@ import SearchBar from '@/components/SearchBar';
 import InvestmentCalendar from '@/components/InvestmentCalendar';
 import PortfolioSummary from '@/components/PortfolioSummary';
 import FloatingAddButton from '@/components/FloatingAddButton';
-import DataManager from '@/components/DataManager';
 import StrategySummaryPage from '@/components/StrategySummaryPage';
 import PortfolioPositionsPage from '@/components/PortfolioPositionsPage';
 import AlertSummaryPage from '@/components/AlertSummaryPage';
@@ -18,7 +17,6 @@ import SlideOutMenu from '@/components/SlideOutMenu';
 import EventCalendarPage from '@/components/EventCalendarPage';
 import DividendBenefitListPage from '@/components/DividendBenefitListPage';
 import AuthButton from '@/components/AuthButton';
-import MigrationBanner from '@/components/MigrationBanner';
 import { loadStockData, getStockData } from '@/data/stockNames';
 import { Position } from '@/types/positions';
 import { FavoriteGroup, GROUP_COLORS } from '@/types/favorites';
@@ -79,7 +77,6 @@ export default function Home() {
   } = useFavoriteGroups();
   const [isGroupManagerOpen, setIsGroupManagerOpen] = useState(false);
   const [isTagManagerOpen, setIsTagManagerOpen] = useState(false);
-  const [isDataManagerOpen, setIsDataManagerOpen] = useState(false);
   const [isStrategySummaryOpen, setIsStrategySummaryOpen] = useState(false);
   const [isPortfolioPositionsOpen, setIsPortfolioPositionsOpen] = useState(false);
   const [isAlertSummaryOpen, setIsAlertSummaryOpen] = useState(false);
@@ -623,10 +620,6 @@ export default function Home() {
     }
   };
 
-  // データインポート後のページリロード
-  const handleDataImported = () => {
-    window.location.reload();
-  };
 
   // メニュー項目クリックハンドラー
   const handleMenuItemClick = (action: string) => {
@@ -653,9 +646,6 @@ export default function Home() {
       case 'dividends':
         setIsDividendBenefitListOpen(true);
         if (isLoggedIn) refreshData();
-        break;
-      case 'data':
-        setIsDataManagerOpen(true);
         break;
       case 'groups':
         setIsGroupManagerOpen(true);
@@ -1112,9 +1102,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gray-900">
-      {/* 移行バナー */}
-      <MigrationBanner isLoggedIn={isLoggedIn} />
-
       {/* Header with Logo */}
       <header className="bg-slate-900 border-b border-gray-700">
         <div className="container mx-auto px-4 py-4">
@@ -1460,13 +1447,6 @@ export default function Home() {
           onClose={() => { setIsTagManagerOpen(false); if (isLoggedIn) refreshData(); }}
         />
 
-        {/* データ管理モーダル */}
-        {isDataManagerOpen && (
-          <DataManager
-            onClose={() => setIsDataManagerOpen(false)}
-            onDataImported={handleDataImported}
-          />
-        )}
 
         {/* アラート一覧モーダル */}
         {isAlertSummaryOpen && (

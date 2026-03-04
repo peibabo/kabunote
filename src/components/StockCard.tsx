@@ -16,7 +16,8 @@ import { useStockPrice } from '@/hooks/useStockPrice';
 import { useStockEvent } from '@/hooks/useStockEvent';
 import { useStockTag } from '@/hooks/useStockTag';
 import { useStockAlerts } from '@/hooks/useStockAlerts';
-import { stockKey, STORAGE_KEYS } from '@/lib/storageKeys';
+import { useCash } from '@/hooks/useCash';
+import { stockKey } from '@/lib/storageKeys';
 
 // Components
 import StockCardHeader from './StockCardHeader';
@@ -225,7 +226,7 @@ function StockCard({ symbol, onRemove, favoriteGroups, onFavoriteGroupsChange }:
   };
 
   // 投資余力現金を取得
-  const [cashAmount] = useStringLocalStorage(STORAGE_KEYS.CASH_AMOUNT, '0');
+  const { cashAmount } = useCash();
   const availableCash = parseFloat(cashAmount) || 0;
 
   // アラート計算（localStorage変更リアルタイム監視・カードスタイル算出を含む）
