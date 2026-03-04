@@ -1,9 +1,9 @@
 'use client';
 
 import { PositionSummary, formatPrice, formatShares } from '@/types/positions';
-import { DividendRightsSettings, calculateDividendRightsDateFromSettings, createDefaultDividendRightsSettings } from '@/types/rightsDate';
+import { DividendRightsSettings, calculateDividendRightsDateFromSettings } from '@/types/rightsDate';
 import { calculateDividendInfo, formatDividendAmount, formatDividendYield } from '@/types/dividend';
-import { useStringLocalStorage } from '@/hooks/useLocalStorage';
+import { useStockDividend } from '@/hooks/useStockDividend';
 
 interface EarningsCountdown {
   text: string;
@@ -13,8 +13,6 @@ interface EarningsCountdown {
 interface DividendManagementProps {
   symbol: string;
   positionSummary: PositionSummary;
-  dividendRightsSettings: DividendRightsSettings;
-  onDividendRightsSettingsChange: (settings: DividendRightsSettings) => void;
 }
 
 // 土日を除いた営業日前を計算する関数
@@ -108,17 +106,20 @@ const getStatusColor = (status: string) => {
 export default function DividendManagement({
   symbol,
   positionSummary,
-  dividendRightsSettings,
-  onDividendRightsSettingsChange
 }: DividendManagementProps) {
-  // 配当情報の状態管理
-  const [dividendPerShare, setDividendPerShare] = useStringLocalStorage(`kabunote-dividend-per-share-${symbol}`, '', 300);
-  const [dividendFrequency, setDividendFrequency] = useStringLocalStorage(`kabunote-dividend-frequency-${symbol}`, '1', 300);
+  const {
+    dividendPerShare,
+    dividendFrequency,
+    dividendRightsSettings,
+    updateDividendPerShare,
+    updateDividendFrequency,
+    updateDividendRightsSettings,
+  } = useStockDividend(`stock-${symbol}`);
 
   // 配当計算
   const dividendCalculation = (() => {
     const perShare = parseFloat(dividendPerShare);
-    const frequency = parseInt(dividendFrequency) as 1 | 2 | 4;
+    const frequency = dividendFrequency;
 
     if (!perShare || perShare <= 0 || positionSummary.totalShares === 0) {
       return null;
@@ -139,7 +140,7 @@ export default function DividendManagement({
   // 月/日の変更ハンドラー
   const handleMonthChange = (value: string) => {
     const month = value ? parseInt(value) : null;
-    onDividendRightsSettingsChange({
+    updateDividendRightsSettings({
       ...dividendRightsSettings,
       month,
       isActive: month !== null && dividendRightsSettings.day !== null
@@ -148,7 +149,7 @@ export default function DividendManagement({
 
   const handleDayChange = (value: string) => {
     const day = value ? parseInt(value) : null;
-    onDividendRightsSettingsChange({
+    updateDividendRightsSettings({
       ...dividendRightsSettings,
       day,
       isActive: dividendRightsSettings.month !== null && day !== null
@@ -156,7 +157,7 @@ export default function DividendManagement({
   };
 
   const handleRecurringChange = (isRecurring: boolean) => {
-    onDividendRightsSettingsChange({
+    updateDividendRightsSettings({
       ...dividendRightsSettings,
       isRecurring
     });
@@ -263,7 +264,7 @@ export default function DividendManagement({
                     id={`dividend-per-share-${symbol}`}
                     type="number"
                     value={dividendPerShare}
-                    onChange={(e) => setDividendPerShare(e.target.value)}
+                    onChange={(e) => updateDividendPerShare(e.target.value)}
                     placeholder="0"
                     className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-green-500 focus:outline-none text-sm pr-8"
                   />
@@ -278,7 +279,7 @@ export default function DividendManagement({
                 <select
                   id={`dividend-frequency-${symbol}`}
                   value={dividendFrequency}
-                  onChange={(e) => setDividendFrequency(e.target.value)}
+                  onChange={(e) => updateDividendFrequency(parseInt(e.target.value) as 1 | 2 | 4)}
                   className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:border-green-500 focus:outline-none text-sm"
                 >
                   <option value="1">年1回</option>
