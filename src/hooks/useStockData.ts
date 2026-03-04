@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase-client';
+import { STORAGE_KEYS } from '@/lib/storageKeys';
 
 export interface StockData {
   id: string;
@@ -72,7 +73,7 @@ interface UseStockDataReturn {
   addLocalStock: (symbol: string) => void;
 }
 
-const STORAGE_KEY = 'kabunote-stocks';
+const STORAGE_KEY = STORAGE_KEYS.STOCKS;
 
 export function useStockData(): UseStockDataReturn {
   const [stockData, setStockData] = useState<StockData[]>([]);
@@ -104,7 +105,6 @@ export function useStockData(): UseStockDataReturn {
   // データベースからデータを取得
   const loadDataFromDatabase = async (): Promise<void> => {
     try {
-      console.log('🔄 データベースからデータを取得開始...');
       const response = await fetch('/api/stocks/list');
 
       if (!response.ok) {
@@ -120,7 +120,6 @@ export function useStockData(): UseStockDataReturn {
       if (result.success) {
         setStockData(result.data);
         setStockSymbols(result.data.map((stock: StockData) => stock.symbol));
-        console.log(`✅ データベースから${result.count}件の株式データを取得完了`);
       } else {
         throw new Error('APIレスポンスが無効です');
       }
@@ -132,15 +131,12 @@ export function useStockData(): UseStockDataReturn {
 
   // localStorageからデータを取得（フォールバック）
   const loadDataFromLocalStorage = (): void => {
-    console.log('📦 localStorage読み込み開始...');
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem(STORAGE_KEY);
-      console.log('📦 localStorage rawData:', saved ? `${saved.length}文字` : 'null');
 
       if (saved) {
         try {
           const parsedStocks = JSON.parse(saved);
-          console.log('📦 パースされた株式データ:', parsedStocks);
           setStockSymbols(parsedStocks);
 
           // localStorageの場合は簡易データ形式
@@ -171,8 +167,6 @@ export function useStockData(): UseStockDataReturn {
           }));
 
           setStockData(simpleStockData);
-          console.log(`✅ localStorageから${parsedStocks.length}件の銘柄コードを取得完了`);
-          console.log('📊 設定されたstockData:', simpleStockData);
         } catch (e) {
           console.error('❌ localStorage読み込みエラー:', e);
           setError('保存されたデータの読み込みに失敗しました');
@@ -181,10 +175,7 @@ export function useStockData(): UseStockDataReturn {
         // 初回時は空配列
         setStockData([]);
         setStockSymbols([]);
-        console.log('📦 localStorage: データなし（初回）');
       }
-    } else {
-      console.log('❌ windowオブジェクトが利用できません');
     }
   };
 
@@ -236,15 +227,11 @@ export function useStockData(): UseStockDataReturn {
     setIsLoading(true);
     setError(null);
 
-    console.log(`🚀 データ読み込み開始 - 認証状態: ${isLoggedIn}`);
-
     try {
       if (isLoggedIn) {
-        console.log('🔐 認証済みユーザー: データベースから取得を試行');
         // 認証済みの場合はデータベースから取得
         await loadDataFromDatabase();
       } else {
-        console.log('👤 未認証ユーザー: localStorageから取得');
         // 未認証の場合はlocalStorageから取得
         loadDataFromLocalStorage();
       }

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase-client'
 import { useDebounce } from './useDebounce'
 import { ShareholderRightsSettings, createDefaultShareholderRightsSettings } from '@/types/rightsDate'
+import { stockKey } from '@/lib/storageKeys'
 
 interface UseStockBenefitReturn {
   description: string
@@ -19,10 +20,10 @@ interface UseStockBenefitReturn {
 export function useStockBenefit(stockId: string): UseStockBenefitReturn {
   // stockId: "stock-7203" 形式 → symbol: "7203"
   const symbol = stockId.replace('stock-', '')
-  const descriptionKey = `kabunote-benefit-description-${symbol}`
-  const minimumSharesKey = `kabunote-minimum-shares-${symbol}`
-  const estimatedValueKey = `kabunote-estimated-value-${symbol}`
-  const rightsKey = `kabunote-shareholder-rights-settings-${symbol}`
+  const descriptionKey = stockKey.benefitDescription(symbol)
+  const minimumSharesKey = stockKey.minimumShares(symbol)
+  const estimatedValueKey = stockKey.estimatedValue(symbol)
+  const rightsKey = stockKey.shareholderRightsSettings(symbol)
 
   const [description, setDescription] = useState<string>('')
   const [minimumShares, setMinimumShares] = useState<string>('')

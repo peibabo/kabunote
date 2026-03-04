@@ -132,24 +132,7 @@ export default function DividendBenefitListPage({ stockSymbols, stockData, onSto
         const totalShares = position!.totalShares;
         const averagePrice = position!.averagePrice;
 
-        // デバッグログ
-        if (symbol === '5527') {
-          console.log(`🔢 ${symbol} 配当計算:`, {
-            dividendPerShare,
-            frequency,
-            totalShares,
-            averagePrice,
-            hasDividend,
-            hasPosition
-          });
-        }
-
         dividendCalc = calculateDividendInfo(dividendPerShare, frequency, totalShares, averagePrice);
-
-        // 結果をログ
-        if (symbol === '5527') {
-          console.log(`💰 ${symbol} 配当結果:`, dividendCalc);
-        }
       }
 
       // 優待情報処理
@@ -163,24 +146,7 @@ export default function DividendBenefitListPage({ stockSymbols, stockData, onSto
         const estimatedValue = parseFloat(data.shareholderBenefitInfo!.estimatedValue) || 0;
         const totalInvestment = position!.totalShares * position!.averagePrice;
 
-        // デバッグログ
-        if (symbol === '5527') {
-          console.log(`🎁 ${symbol} 優待計算:`, {
-            minimumShares,
-            currentShares,
-            estimatedValue,
-            totalInvestment,
-            hasBenefit,
-            hasPosition
-          });
-        }
-
         benefitCalc = calculateShareholderBenefit(minimumShares, currentShares, estimatedValue, totalInvestment);
-
-        // 結果をログ
-        if (symbol === '5527') {
-          console.log(`🎁 ${symbol} 優待結果:`, benefitCalc);
-        }
       }
 
       // タイプ判定

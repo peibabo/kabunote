@@ -25,6 +25,9 @@ import { FavoriteGroup, GROUP_COLORS } from '@/types/favorites';
 import { CustomTag } from '@/types/tags';
 import { DividendRightsSettings, ShareholderRightsSettings, ShareholderMeetingSettings, createDefaultDividendRightsSettings, createDefaultShareholderRightsSettings, createDefaultShareholderMeetingSettings } from '@/types/rightsDate';
 import { NextActionPlan, hasNextActionPlan } from '@/types/nextActionPlan';
+import { DividendInfo } from '@/types/dividend';
+import { ShareholderBenefitInfo } from '@/types/shareholder';
+import { SnoozedAlert } from '@/types/snooze';
 import { getIntegratedAlert, getAllActiveAlerts } from '@/utils/alertSystem';
 import { calculatePositionSummary } from '@/types/positions';
 import { useStockData } from '@/hooks/useStockData';
@@ -47,6 +50,15 @@ import {
 
 const MAX_STOCKS = 30;
 const ORDER_STORAGE_KEY = 'kabunote-stocks-order';
+
+type DividendBenefitStockData = {
+  name: string;
+  dividendInfo?: DividendInfo;
+  shareholderBenefitInfo?: ShareholderBenefitInfo;
+  dividendRightsSettings: DividendRightsSettings;
+  shareholderRightsSettings: ShareholderRightsSettings;
+  position?: { totalShares: number; averagePrice: number; purchaseDate: string; notes: string };
+};
 
 export default function Home() {
   // 新しいカスタムフックを使用してデータを取得
@@ -80,7 +92,7 @@ export default function Home() {
   const [isSearching, setIsSearching] = useState(false);
   const [stockCalendarData, setStockCalendarData] = useState<{ [symbol: string]: { name: string; earningsDate: string; dividendRightsSettings: DividendRightsSettings; shareholderRightsSettings: ShareholderRightsSettings; shareholderMeetingSettings: ShareholderMeetingSettings } }>({});
   const [portfolioData, setPortfolioData] = useState<{ symbol: string; name: string; positions: Position[]; currentPrice: string; sector: string; customTags: CustomTag[]; }[]>([]);
-  const [dividendBenefitData, setDividendBenefitData] = useState<any>({});
+  const [dividendBenefitData, setDividendBenefitData] = useState<Record<string, DividendBenefitStockData>>({});
 
   // ドラッグ&ドロップセンサー
   const sensors = useSensors(
@@ -131,7 +143,6 @@ export default function Home() {
       // CSVデータを事前読み込み（stockData検索等で使用）
       try {
         await loadStockData();
-        console.log('Stock data preloaded successfully');
       } catch (error) {
         console.error('Failed to preload stock data:', error);
       }
@@ -722,7 +733,7 @@ export default function Home() {
 
   // 配当・優待データを準備する関数
   const getDividendBenefitData = async () => {
-    const result: any = {};
+    const result: Record<string, DividendBenefitStockData> = {};
 
     for (const symbol of stocks) {
       const stockInfo = await getStockData(symbol);
@@ -800,11 +811,11 @@ export default function Home() {
 
       result[symbol] = {
         name: (isLoggedIn && stockData.find(s => s.symbol === symbol)?.name) || stockInfo?.name || symbol,
-        dividendInfo,
-        shareholderBenefitInfo,
+        dividendInfo: dividendInfo ?? undefined,
+        shareholderBenefitInfo: shareholderBenefitInfo ?? undefined,
         dividendRightsSettings,
         shareholderRightsSettings,
-        position
+        position: position ?? undefined
       };
     }
     return result;
@@ -856,7 +867,7 @@ export default function Home() {
           if (typeof window !== 'undefined') {
             try {
               const savedTags = localStorage.getItem(`kabunote-tags-${stockCode}`);
-              return savedTags ? JSON.parse(savedTags).map((tag: any) => tag.label).join(' ') : '';
+              return savedTags ? JSON.parse(savedTags).map((tag: { label: string }) => tag.label).join(' ') : '';
             } catch {
               return '';
             }
@@ -1014,7 +1025,7 @@ export default function Home() {
             try {
               const snoozedAlerts = JSON.parse(snoozedAlertsStr);
               const alertKey = `${symbol}-${alert.type}`;
-              const snoozedAlert = snoozedAlerts.find((s: any) =>
+              const snoozedAlert = snoozedAlerts.find((s: SnoozedAlert) =>
                 s.alertKey === alertKey && s.snoozeUntil > Date.now()
               );
               isAlertSnoozed = !!snoozedAlert;

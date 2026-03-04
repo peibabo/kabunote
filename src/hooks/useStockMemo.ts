@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase-client'
 import { useDebounce } from './useDebounce'
 import { useStringLocalStorage } from './useLocalStorage'
+import { stockKey } from '@/lib/storageKeys'
 
 interface StockMemo {
   id: string
@@ -30,7 +31,7 @@ export function useStockMemo(stockId: string): UseStockMemoReturn {
   const [hasUserInput, setHasUserInput] = useState(false)
 
   // localStorage フォールバック（未認証時用）
-  const [localMemo, setLocalMemo] = useStringLocalStorage(`kabunote-memo-${stockId.replace('stock-', '')}`, '', 300)
+  const [localMemo, setLocalMemo] = useStringLocalStorage(stockKey.memo(stockId.replace('stock-', '')), '', 300)
 
   // デバウンス処理（300ms遅延で自動保存）
   const debouncedMemo = useDebounce(memo, 300)
@@ -59,14 +60,12 @@ export function useStockMemo(stockId: string): UseStockMemoReturn {
   const loadMemo = useCallback(async () => {
     if (!isLoggedIn) {
       // 未認証時はlocalStorageから読み込み
-      console.log('📦 未認証 - localStorageから読み込み:', stockId)
       setMemo(localMemo)
       setIsLoading(false)
       return
     }
 
     // 認証済み時はデータベースから読み込み
-    console.log('🔐 認証済み - データベースから読み込み:', stockId)
     await loadDataFromDatabase()
   }, [stockId, isLoggedIn, localMemo])
 
@@ -79,7 +78,6 @@ export function useStockMemo(stockId: string): UseStockMemoReturn {
       if (!response.ok) {
         if (response.status === 401) {
           // 認証エラー時はlocalStorageにフォールバック
-          console.log('🔄 認証が必要 - localStorageにフォールバック')
           setMemo(localMemo)
           setIsLoading(false)
           return
@@ -100,7 +98,6 @@ export function useStockMemo(stockId: string): UseStockMemoReturn {
     } catch (err) {
       console.error('❌ 株ノオト読み込みエラー - localStorageにフォールバック:', err)
       // エラー時もlocalStorageにフォールバック（エラー表示せず）
-      console.log('🔄 エラー発生 - localStorageにフォールバック（グレースフルデグラデーション）')
       setMemo(localMemo)
       // エラー表示をクリアしてシームレスなフォールバック
       setError(null)
@@ -115,7 +112,6 @@ export function useStockMemo(stockId: string): UseStockMemoReturn {
       // 未認証時はlocalStorageに保存
       setLocalMemo(memo)
       setHasUserInput(false) // 保存完了後にフラグをリセット
-      console.log('📦 未認証 - localStorageに保存:', stockId)
       return
     }
 
@@ -134,7 +130,6 @@ export function useStockMemo(stockId: string): UseStockMemoReturn {
       if (!response.ok) {
         if (response.status === 401) {
           // 認証エラー時はlocalStorageにフォールバック
-          console.log('🔄 認証失効 - localStorageにフォールバック保存')
           setLocalMemo(memo)
           setHasUserInput(false) // 保存完了後にフラグをリセット
           setIsSaving(false)
@@ -151,7 +146,6 @@ export function useStockMemo(stockId: string): UseStockMemoReturn {
       if (result.success) {
         setLastSaved(new Date(result.data.updatedAt))
         setHasUserInput(false) // 保存完了後にフラグをリセット
-        console.log('✅ 株ノオト保存成功:', stockId)
       } else {
         throw new Error('APIレスポンスが無効です')
       }
@@ -159,7 +153,6 @@ export function useStockMemo(stockId: string): UseStockMemoReturn {
     } catch (err) {
       console.error('❌ 株ノオト保存エラー - localStorageにフォールバック:', err)
       // エラー時はlocalStorageにフォールバック（グレースフルデグラデーション）
-      console.log('🔄 保存エラー - localStorageにフォールバック（シームレス継続）')
       setLocalMemo(memo)
       setHasUserInput(false) // 保存完了後にフラグをリセット
       // エラー表示をクリアしてシームレスなフォールバック
@@ -194,7 +187,6 @@ export function useStockMemo(stockId: string): UseStockMemoReturn {
       if (result.success) {
         setMemo('')
         setLastSaved(null)
-        console.log('✅ 株ノオト削除成功:', stockId)
       } else {
         throw new Error('APIレスポンスが無効です')
       }

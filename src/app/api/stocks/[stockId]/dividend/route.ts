@@ -1,16 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase-server'
 import { prisma } from '@/lib/prisma'
-
-async function resolveStockId(stockIdParam: string, userId: string): Promise<string | null> {
-  if (stockIdParam.startsWith('stock-')) {
-    const symbol = stockIdParam.replace('stock-', '')
-    const stock = await prisma.stock.findFirst({ where: { userId, symbol } })
-    return stock?.id ?? null
-  }
-  const stock = await prisma.stock.findFirst({ where: { id: stockIdParam, userId } })
-  return stock?.id ?? null
-}
+import { resolveStockId } from '@/lib/resolveStockId'
 
 // GET: 配当情報取得
 export async function GET(

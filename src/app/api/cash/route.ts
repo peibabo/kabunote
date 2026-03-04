@@ -6,7 +6,6 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
-    console.log('📧 Cash API - 受信したユーザーID:', userId);
 
     if (!userId) {
       return NextResponse.json({ error: 'ユーザーIDが必要です' }, { status: 400 });
@@ -51,7 +50,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const updateData: any = {};
+    const updateData: Partial<{ cashAmount: string; nextActionMemo: string }> = {};
     if (cashAmount !== undefined) {
       updateData.cashAmount = cashAmount;
     }
@@ -65,6 +64,7 @@ export async function POST(request: NextRequest) {
       create: {
         id: userId,
         email: `temp_${userId}@example.com`, // 一時的なメール
+        authProvider: 'unknown',
         ...updateData,
       },
       select: {

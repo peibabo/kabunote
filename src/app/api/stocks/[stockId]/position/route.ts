@@ -1,23 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase-server'
 import { prisma } from '@/lib/prisma'
-
-// stockIdパラメータからactualStockId（DB UUID）を解決するヘルパー
-async function resolveStockId(stockIdParam: string, userId: string): Promise<string | null> {
-  // stock-7203 形式の場合はシンボルで検索
-  if (stockIdParam.startsWith('stock-')) {
-    const symbol = stockIdParam.replace('stock-', '')
-    const stock = await prisma.stock.findFirst({
-      where: { userId, symbol }
-    })
-    return stock?.id ?? null
-  }
-  // UUID形式の場合はそのまま使用（存在確認のみ）
-  const stock = await prisma.stock.findFirst({
-    where: { id: stockIdParam, userId }
-  })
-  return stock?.id ?? null
-}
+import { resolveStockId } from '@/lib/resolveStockId'
 
 // GET: 銘柄の全ポジション一覧を取得
 export async function GET(

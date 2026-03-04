@@ -19,22 +19,12 @@ export async function POST(request: Request) {
       value: value.substring(0, 20) + '...' // 最初の20文字のみ表示
     }))
 
-    console.log('移行API認証チェック:', {
-      hasSession: !!session,
-      sessionUserId: session?.user?.id,
-      requestUserId: userId,
-      cookiesCount: allCookies.length,
-      supabaseCookies: allCookies.filter(c => c.name.includes('supabase'))
-    })
-
     if (!session || session.user.id !== userId) {
       return NextResponse.json(
         { error: '認証が必要です' },
         { status: 401 }
       )
     }
-
-    console.log('データ移行開始:', { userId, stockCount: localData.stocks.length })
 
     // トランザクションで全データを移行
     const result = await prisma.$transaction(async (tx) => {
@@ -341,8 +331,6 @@ export async function POST(request: Request) {
 
       return migrationStats
     })
-
-    console.log('移行完了:', result)
 
     return NextResponse.json({
       success: true,

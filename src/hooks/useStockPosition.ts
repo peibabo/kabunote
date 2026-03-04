@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase-client'
 import { Position, calculatePositionSummary } from '@/types/positions'
+import { stockKey } from '@/lib/storageKeys'
 
 interface UseStockPositionReturn {
   positions: Position[]
@@ -13,7 +14,6 @@ interface UseStockPositionReturn {
   refetch: () => Promise<void>
 }
 
-const LOCALSTORAGE_PREFIX = 'kabunote-positions-'
 
 export function useStockPosition(stockId: string): UseStockPositionReturn {
   const [positions, setPositions] = useState<Position[]>([])
@@ -24,7 +24,7 @@ export function useStockPosition(stockId: string): UseStockPositionReturn {
 
   // シンボルを stockId から抽出（例: "stock-7203" → "7203"）
   const symbol = stockId.replace('stock-', '')
-  const localKey = `${LOCALSTORAGE_PREFIX}${symbol}`
+  const localKey = stockKey.positions(symbol)
 
   // 認証状態を監視
   useEffect(() => {

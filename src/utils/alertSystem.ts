@@ -1,4 +1,4 @@
-import { NextActionPlan, analyzeNextActionPlan } from '@/types/nextActionPlan';
+import { NextActionPlan, NextActionPlanAnalysis, analyzeNextActionPlan } from '@/types/nextActionPlan';
 import { PositionSummary } from '@/types/positions';
 
 /**
@@ -29,7 +29,7 @@ export type AlertType =
 export interface AlertInfo {
   type: AlertType;
   gapPercentage?: number;
-  analysis?: any;
+  analysis?: NextActionPlanAnalysis;
   targetPrice?: number;
   stopLossPrice?: number;
 }

@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase-client'
 import { FavoriteGroup } from '@/types/favorites'
+import { STORAGE_KEYS } from '@/lib/storageKeys'
 
-const GROUPS_STORAGE_KEY = 'kabunote-favorite-groups'
-const FILTER_STORAGE_KEY = 'kabunote-selected-group-filter'
+const GROUPS_STORAGE_KEY = STORAGE_KEYS.FAVORITE_GROUPS
+const FILTER_STORAGE_KEY = STORAGE_KEYS.SELECTED_GROUP_FILTER
 
 interface UseFavoriteGroupsReturn {
   groups: FavoriteGroup[]

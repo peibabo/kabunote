@@ -62,7 +62,6 @@ export async function migrateLocalStorageToSupabase(
 
     // LocalStorageからデータを取得
     const localData = exportKabunoteData()
-    console.log('移行対象データ:', localData)
 
     if (localData.stocks.length === 0) {
       return {
