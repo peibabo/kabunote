@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase-client';
 
-interface StockData {
+export interface StockData {
   id: string;
   symbol: string;
   name: string;
