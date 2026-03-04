@@ -65,15 +65,15 @@ export default function ManagementTab({
 
       {/* サブタブコンテンツ */}
       <div className="min-h-[400px]">
-        {activeTab === 'positions' && (
+        <div className={activeTab === 'positions' ? '' : 'hidden'}>
           <PositionsManagement
             symbol={symbol}
             stockId={`stock-${symbol}`}
             onPositionManagerOpen={onPositionManagerOpen}
           />
-        )}
+        </div>
 
-        {activeTab === 'events' && (
+        <div className={activeTab === 'events' ? '' : 'hidden'}>
           <EventManagement
             symbol={symbol}
             earningsDate={earningsDate}
@@ -81,21 +81,21 @@ export default function ManagementTab({
             shareholderMeetingSettings={shareholderMeetingSettings}
             onShareholderMeetingSettingsChange={onShareholderMeetingSettingsChange}
           />
-        )}
+        </div>
 
-        {activeTab === 'dividend' && (
+        <div className={activeTab === 'dividend' ? '' : 'hidden'}>
           <DividendManagement
             symbol={symbol}
             positionSummary={positionSummary}
           />
-        )}
+        </div>
 
-        {activeTab === 'shareholder' && (
+        <div className={activeTab === 'shareholder' ? '' : 'hidden'}>
           <ShareholderBenefitManagement
             symbol={symbol}
             positionSummary={positionSummary}
           />
-        )}
+        </div>
       </div>
     </div>
   );
