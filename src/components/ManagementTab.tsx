@@ -1,6 +1,6 @@
 'use client';
 
-import { RightsDateSettings, ShareholderRightsSettings, ShareholderMeetingSettings, createDefaultShareholderRightsSettings, createDefaultShareholderMeetingSettings } from '@/types/rightsDate';
+import { RightsDateSettings, ShareholderMeetingSettings, createDefaultShareholderMeetingSettings } from '@/types/rightsDate';
 import { useManagementTabState } from '@/hooks/useManagementTabState';
 import { useStockPosition } from '@/hooks/useStockPosition';
 import { calculatePositionSummary } from '@/types/positions';
@@ -17,8 +17,6 @@ interface ManagementTabProps {
   rightsSettings: RightsDateSettings;
   onRightsSettingsChange: (settings: RightsDateSettings) => void;
   onPositionManagerOpen: () => void;
-  shareholderRightsSettings: ShareholderRightsSettings;
-  onShareholderRightsSettingsChange: (settings: ShareholderRightsSettings) => void;
   shareholderMeetingSettings: ShareholderMeetingSettings;
   onShareholderMeetingSettingsChange: (settings: ShareholderMeetingSettings) => void;
 }
@@ -32,8 +30,6 @@ export default function ManagementTab({
   rightsSettings,
   onRightsSettingsChange,
   onPositionManagerOpen,
-  shareholderRightsSettings,
-  onShareholderRightsSettingsChange,
   shareholderMeetingSettings,
   onShareholderMeetingSettingsChange
 }: ManagementTabProps) {
@@ -98,8 +94,6 @@ export default function ManagementTab({
           <ShareholderBenefitManagement
             symbol={symbol}
             positionSummary={positionSummary}
-            shareholderRightsSettings={shareholderRightsSettings}
-            onShareholderRightsSettingsChange={onShareholderRightsSettingsChange}
           />
         )}
       </div>

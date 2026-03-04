@@ -142,6 +142,27 @@ git commitをする前に修正内容をもとに必要であればREADME及びC
 - 🔧 `useCash.ts` のハードコード UUID（`550e8400-...`）が原因で実際のユーザーデータを取得・保存できなかった問題を修正
 - 🔧 即時UI更新（`setState`） + デバウンスDB保存のパターンを `useCash` に実装
 
+---
+
+### ✅ DB_13 完了（2026年3月達成）
+**株主優待管理のDB完全移行**
+
+#### 技術的成果
+- ✅ **useStockBenefit hook** 新規作成（DB/localStorageハイブリッド・500msデバウンス・localStorage→DB自動移行）
+- ✅ **/api/stocks/[stockId]/benefit** GET/PUT/DELETE APIルート新規作成
+- ✅ **ShareholderBenefitManagement.tsx**: props削除・`useStockBenefit` hook に切替（権利確定日設定も内包）
+- ✅ **ManagementTab.tsx**: `shareholderRightsSettings`・`onShareholderRightsSettingsChange` props を削除
+- ✅ **StockCard.tsx**: localStorage株主優待権利確定日状態（`shareholderRightsSettings`）を削除
+- ✅ **カレンダー連動**: 優待データ保存時に `kabunote-db-calendar-update` イベント発火
+
+#### 解決した技術課題
+- 🔧 `ShareholderBenefitManagement` が優待内容（description, minimumShares, estimatedValue）と権利確定日（rightsMonth, rightsDay）を別々に管理していた設計を統合
+- 🔧 `StockCard` → `ManagementTab` → `ShareholderBenefitManagement` と流れていたpropsチェーンをhookで完全自己完結化
+- 🔧 `isRecurring` フィールドはDBに保持しない（DB保存時は rightsMonth/rightsDay のみ、読み出し時に `isRecurring: true` で復元）
+
+#### 手動対応必要
+- **Supabase Dashboard > SQL Editor で `add_rls_policy_stock_benefits.sql` を実行**
+
 # Kabunote - 投資思考整理ダッシュボード
 
 ## プロジェクト概要

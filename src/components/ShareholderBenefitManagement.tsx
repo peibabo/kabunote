@@ -1,9 +1,9 @@
 'use client';
 
 import { PositionSummary } from '@/types/positions';
-import { ShareholderRightsSettings, calculateShareholderRightsDateFromSettings, createDefaultShareholderRightsSettings } from '@/types/rightsDate';
+import { calculateShareholderRightsDateFromSettings } from '@/types/rightsDate';
 import { calculateShareholderBenefit, formatBenefitValue, formatBenefitYield } from '@/types/shareholder';
-import { useStringLocalStorage } from '@/hooks/useLocalStorage';
+import { useStockBenefit } from '@/hooks/useStockBenefit';
 
 interface EarningsCountdown {
   text: string;
@@ -13,8 +13,6 @@ interface EarningsCountdown {
 interface ShareholderBenefitManagementProps {
   symbol: string;
   positionSummary: PositionSummary;
-  shareholderRightsSettings: ShareholderRightsSettings;
-  onShareholderRightsSettingsChange: (settings: ShareholderRightsSettings) => void;
 }
 
 // 土日を除いた営業日前を計算する関数
@@ -108,13 +106,17 @@ const getStatusColor = (status: string) => {
 export default function ShareholderBenefitManagement({
   symbol,
   positionSummary,
-  shareholderRightsSettings,
-  onShareholderRightsSettingsChange
 }: ShareholderBenefitManagementProps) {
-  // 株主優待情報の状態管理
-  const [benefitDescription, setBenefitDescription] = useStringLocalStorage(`kabunote-benefit-description-${symbol}`, '', 300);
-  const [minimumShares, setMinimumShares] = useStringLocalStorage(`kabunote-minimum-shares-${symbol}`, '', 300);
-  const [estimatedValue, setEstimatedValue] = useStringLocalStorage(`kabunote-estimated-value-${symbol}`, '', 300);
+  const {
+    description: benefitDescription,
+    minimumShares,
+    estimatedValue,
+    rightsSettings: shareholderRightsSettings,
+    updateDescription: setBenefitDescription,
+    updateMinimumShares: setMinimumShares,
+    updateEstimatedValue: setEstimatedValue,
+    updateRightsSettings: onShareholderRightsSettingsChange,
+  } = useStockBenefit(`stock-${symbol}`)
 
   // 株主優待計算
   const shareholderBenefitCalculation = (() => {
