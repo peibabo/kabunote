@@ -1,33 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase-server'
 import { prisma } from '@/lib/prisma'
-
-async function resolveStockId(stockIdParam: string, userId: string): Promise<string | null> {
-  if (stockIdParam.startsWith('stock-')) {
-    const symbol = stockIdParam.replace('stock-', '')
-    // 既存の銘柄を検索し、なければ末尾順で新規作成（新銘柄追加時の lazy 登録）
-    const existing = await prisma.stock.findFirst({ where: { userId, symbol } })
-    if (existing) return existing.id
-
-    try {
-      const maxOrder = await prisma.stock.aggregate({
-        where: { userId },
-        _max: { order: true },
-      })
-      const nextOrder = (maxOrder._max.order ?? -1) + 1
-      const stock = await prisma.stock.create({
-        data: { userId, symbol, name: null, sector: null, market: null, order: nextOrder },
-      })
-      return stock.id
-    } catch {
-      // unique制約違反（競合）の場合は再取得
-      const fallback = await prisma.stock.findFirst({ where: { userId, symbol } })
-      return fallback?.id ?? null
-    }
-  }
-  const stock = await prisma.stock.findFirst({ where: { id: stockIdParam, userId } })
-  return stock?.id ?? null
-}
+import { resolveStockId } from '@/lib/resolveStockId'
 
 // GET: 株ノオト取得
 export async function GET(
@@ -47,7 +21,7 @@ export async function GET(
     }
 
     const { stockId: rawStockId } = await params
-    const stockId = await resolveStockId(rawStockId, user.id)
+    const stockId = await resolveStockId(rawStockId, user.id, true)
     if (!stockId) {
       return NextResponse.json({ error: 'Not Found', message: '銘柄が見つかりません' }, { status: 404 })
     }
@@ -107,7 +81,7 @@ export async function PUT(
     }
 
     const { stockId: rawStockId } = await params
-    const stockId = await resolveStockId(rawStockId, user.id)
+    const stockId = await resolveStockId(rawStockId, user.id, true)
     if (!stockId) {
       return NextResponse.json({ error: 'Not Found', message: '銘柄が見つかりません' }, { status: 404 })
     }
@@ -141,8 +115,6 @@ export async function PUT(
         }
       })
     }
-
-    console.log(`✅ 株ノオト更新成功 - 株ID: ${stockId}, 文字数: ${content.length}`)
 
     return NextResponse.json({
       success: true,
@@ -184,7 +156,7 @@ export async function DELETE(
     }
 
     const { stockId: rawStockId } = await params
-    const stockId = await resolveStockId(rawStockId, user.id)
+    const stockId = await resolveStockId(rawStockId, user.id, true)
     if (!stockId) {
       return NextResponse.json({ error: 'Not Found', message: '銘柄が見つかりません' }, { status: 404 })
     }
@@ -193,8 +165,6 @@ export async function DELETE(
     await prisma.stockMemo.delete({
       where: { stockId }
     })
-
-    console.log(`✅ 株ノオト削除成功 - 株ID: ${stockId}`)
 
     return NextResponse.json({
       success: true,

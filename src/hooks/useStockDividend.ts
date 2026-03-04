@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase-client'
 import { useDebounce } from './useDebounce'
 import { DividendRightsSettings, createDefaultDividendRightsSettings } from '@/types/rightsDate'
+import { stockKey } from '@/lib/storageKeys'
 
 interface UseStockDividendReturn {
   dividendPerShare: string
@@ -17,9 +18,9 @@ interface UseStockDividendReturn {
 export function useStockDividend(stockId: string): UseStockDividendReturn {
   // stockId: "stock-7203" 形式 → symbol: "7203"
   const symbol = stockId.replace('stock-', '')
-  const perShareKey = `kabunote-dividend-per-share-${symbol}`
-  const frequencyKey = `kabunote-dividend-frequency-${symbol}`
-  const rightsKey = `kabunote-dividend-rights-settings-${symbol}`
+  const perShareKey = stockKey.dividendPerShare(symbol)
+  const frequencyKey = stockKey.dividendFrequency(symbol)
+  const rightsKey = stockKey.dividendRightsSettings(symbol)
 
   const [dividendPerShare, setDividendPerShare] = useState<string>('')
   const [dividendFrequency, setDividendFrequency] = useState<1 | 2 | 4>(1)

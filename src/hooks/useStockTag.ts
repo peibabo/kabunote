@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase-client'
 import { CustomTag, TagColor } from '@/types/tags'
+import { stockKey } from '@/lib/storageKeys'
 
 interface UseStockTagReturn {
   tags: CustomTag[]
@@ -13,7 +14,7 @@ interface UseStockTagReturn {
 export function useStockTag(stockId: string): UseStockTagReturn {
   // stockId: "stock-7203" 形式 → symbol: "7203"
   const symbol = stockId.replace('stock-', '')
-  const localStorageKey = `kabunote-tags-${symbol}`
+  const localStorageKey = stockKey.tags(symbol)
 
   const [tags, setTagsState] = useState<CustomTag[]>([])
   const [isLoading, setIsLoading] = useState(true)

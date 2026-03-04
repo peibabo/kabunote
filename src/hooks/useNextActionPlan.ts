@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase-client'
 import { useDebounce } from './useDebounce'
 import { NextActionPlan } from '@/types/nextActionPlan'
+import { stockKey } from '@/lib/storageKeys'
 
 interface UseNextActionPlanReturn {
   nextActionPlan: NextActionPlan | null
@@ -25,7 +26,7 @@ export function useNextActionPlan(stockId: string): UseNextActionPlanReturn {
 
   // localStorage フォールバック（未認証時用）
   const getLocalStorageKey = (field: string) =>
-    `kabunote-next-action-plan-${stockId.replace('stock-', '')}-${field}`
+    stockKey.nextActionPlanField(stockId.replace('stock-', ''), field)
 
   // デバウンス処理（300ms遅延で自動保存）
   const debouncedNextActionPlan = useDebounce(nextActionPlan, 300)
@@ -54,7 +55,6 @@ export function useNextActionPlan(stockId: string): UseNextActionPlanReturn {
   const loadNextActionPlan = useCallback(async () => {
     if (!isLoggedIn) {
       // 未認証時はlocalStorageから読み込み
-      console.log('📦 未認証 - localStorageから読み込み:', stockId)
       const localPlan = {
         id: 'local',
         actionType: (localStorage.getItem(getLocalStorageKey('actionType')) as 'buy' | 'sell' | 'hold') || 'buy',
@@ -72,7 +72,6 @@ export function useNextActionPlan(stockId: string): UseNextActionPlanReturn {
     }
 
     // 認証済み時はデータベースから読み込み
-    console.log('🔐 認証済み - データベースから読み込み:', stockId)
     await loadDataFromDatabase()
   }, [stockId, isLoggedIn])
 
@@ -85,7 +84,6 @@ export function useNextActionPlan(stockId: string): UseNextActionPlanReturn {
       if (!response.ok) {
         if (response.status === 401) {
           // 認証エラー時はlocalStorageにフォールバック
-          console.log('🔄 認証が必要 - localStorageにフォールバック')
           const localPlan = {
             id: 'local',
             actionType: (localStorage.getItem(getLocalStorageKey('actionType')) as 'buy' | 'sell' | 'hold') || 'buy',
@@ -119,7 +117,6 @@ export function useNextActionPlan(stockId: string): UseNextActionPlanReturn {
     } catch (err) {
       console.error('❌ Next Action Plan読み込みエラー - localStorageにフォールバック:', err)
       // エラー時もlocalStorageにフォールバック（エラー表示せず）
-      console.log('🔄 エラー発生 - localStorageにフォールバック（グレースフルデグラデーション）')
       const localPlan = {
         id: 'local',
         actionType: (localStorage.getItem(getLocalStorageKey('actionType')) as 'buy' | 'sell' | 'hold') || 'buy',
@@ -155,7 +152,6 @@ export function useNextActionPlan(stockId: string): UseNextActionPlanReturn {
       }
       localStorage.setItem(getLocalStorageKey('memo'), nextActionPlan.memo)
       setHasUserInput(false)
-      console.log('📦 未認証 - localStorageに保存:', stockId)
       return
     }
 
@@ -180,7 +176,6 @@ export function useNextActionPlan(stockId: string): UseNextActionPlanReturn {
       if (!response.ok) {
         if (response.status === 401) {
           // 認証エラー時はlocalStorageにフォールバック
-          console.log('🔄 認証失効 - localStorageにフォールバック保存')
           localStorage.setItem(getLocalStorageKey('actionType'), nextActionPlan.actionType)
           localStorage.setItem(getLocalStorageKey('priority'), nextActionPlan.priority)
           if (nextActionPlan.targetPrice !== null) {
@@ -205,7 +200,6 @@ export function useNextActionPlan(stockId: string): UseNextActionPlanReturn {
       if (result.success) {
         setLastSaved(new Date(result.data.updatedAt))
         setHasUserInput(false)
-        console.log('✅ Next Action Plan保存成功:', stockId)
         window.dispatchEvent(new CustomEvent('kabunote-db-strategy-update'))
       } else {
         throw new Error('APIレスポンスが無効です')
@@ -214,7 +208,6 @@ export function useNextActionPlan(stockId: string): UseNextActionPlanReturn {
     } catch (err) {
       console.error('❌ Next Action Plan保存エラー - localStorageにフォールバック:', err)
       // エラー時はlocalStorageにフォールバック（グレースフルデグラデーション）
-      console.log('🔄 保存エラー - localStorageにフォールバック（シームレス継続）')
       localStorage.setItem(getLocalStorageKey('actionType'), nextActionPlan.actionType)
       localStorage.setItem(getLocalStorageKey('priority'), nextActionPlan.priority)
       if (nextActionPlan.targetPrice !== null) {
@@ -265,7 +258,6 @@ export function useNextActionPlan(stockId: string): UseNextActionPlanReturn {
           updatedAt: new Date().toISOString()
         })
         setLastSaved(null)
-        console.log('✅ Next Action Plan削除成功:', stockId)
       } else {
         throw new Error('APIレスポンスが無効です')
       }

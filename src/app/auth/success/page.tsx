@@ -28,7 +28,6 @@ export default function AuthSuccess() {
           const { data: sessionData } = await supabase.auth.getSession()
 
           if (sessionData.session) {
-            console.log('認証成功:', sessionData.session.user.email)
             // 1秒後にホームページへリダイレクト
             setTimeout(() => {
               router.push('/')
@@ -40,7 +39,6 @@ export default function AuthSuccess() {
           if (attempts < maxAttempts) {
             setTimeout(checkSession, 500) // 500ms後に再チェック
           } else {
-            console.log('セッション確認がタイムアウトしました')
             router.push('/')
           }
 

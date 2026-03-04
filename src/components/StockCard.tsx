@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { loadStockData, getCompanyNameSync, isKnownStockSync, StockData } from '@/data/stockNames';
 import { FavoriteGroup } from '@/types/favorites';
 import { ProfitLossInfo, calculateProfitLoss, calculatePositionSummary } from '@/types/positions';
@@ -15,7 +15,8 @@ import { useStockPosition } from '@/hooks/useStockPosition';
 import { useStockPrice } from '@/hooks/useStockPrice';
 import { useStockEvent } from '@/hooks/useStockEvent';
 import { useStockTag } from '@/hooks/useStockTag';
-import { getAllActiveAlerts } from '@/utils/alertSystem';
+import { useStockAlerts } from '@/hooks/useStockAlerts';
+import { stockKey, STORAGE_KEYS } from '@/lib/storageKeys';
 
 // Components
 import StockCardHeader from './StockCardHeader';
@@ -177,10 +178,10 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    const tabInstruction = localStorage.getItem(`kabunote-open-tab-${symbol}`);
+    const tabInstruction = localStorage.getItem(stockKey.openTab(symbol));
     if (tabInstruction) {
       // 指示を読み取った後は削除
-      localStorage.removeItem(`kabunote-open-tab-${symbol}`);
+      localStorage.removeItem(stockKey.openTab(symbol));
 
       // 配当・優待関連は管理タブに移動
       if (tabInstruction === 'dividend' || tabInstruction === 'management') {
@@ -190,10 +191,10 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
         if (tabInstruction === 'dividend') {
           // 少し遅延させて管理タブがマウントされた後に設定
           setTimeout(() => {
-            localStorage.setItem(`kabunote-management-tab-${symbol}`, 'dividend');
+            localStorage.setItem(stockKey.managementTab(symbol), 'dividend');
             // カスタムイベントを発火して管理タブに通知
             window.dispatchEvent(new CustomEvent('localStorageChange', {
-              detail: { key: `kabunote-management-tab-${symbol}` }
+              detail: { key: stockKey.managementTab(symbol) }
             }));
           }, 100);
         }
@@ -224,146 +225,20 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
   };
 
   // 投資余力現金を取得
-  const [cashAmount] = useStringLocalStorage('kabunote-cash-amount', '0');
+  const [cashAmount] = useStringLocalStorage(STORAGE_KEYS.CASH_AMOUNT, '0');
   const availableCash = parseFloat(cashAmount) || 0;
 
-  // アラート再計算用の状態
-  const [alertTrigger, setAlertTrigger] = useState(0);
-
-  // localStorage変更監視でアラート表示をリアルタイム更新
-  useEffect(() => {
-    const handleStorageChange = (event: CustomEvent) => {
-      const { key } = event.detail;
-
-      // このカードに関連するキーの変更を検知
-      if (key === `kabunote-next-action-plan-${symbol}` ||
-          key === `kabunote-current-price-${symbol}` ||
-          key === `kabunote-target-price-${symbol}` ||
-          key === `kabunote-stop-loss-${symbol}` ||
-          key === `kabunote-positions-${symbol}` ||
-          key === 'kabunote-cash-amount') {
-
-        // アラート再計算をトリガー（少し遅延させて状態更新を待つ）
-        setTimeout(() => {
-          setAlertTrigger(prev => prev + 1);
-        }, 50); // 50ms遅延
-      }
-    };
-
-    window.addEventListener('localStorageChange', handleStorageChange as EventListener);
-
-    return () => {
-      window.removeEventListener('localStorageChange', handleStorageChange as EventListener);
-    };
-  }, [symbol]);
-
-  // 統合アラート判定（NextActionPlan + 投資規律設定）
-  const targetPriceAlert = useMemo(() => {
-    // 直接localStorageから最新のNextActionPlanを取得
-    let latestNextActionPlan = nextActionPlan;
-    if (typeof window !== 'undefined') {
-      try {
-        const storedPlan = localStorage.getItem(`kabunote-next-action-plan-${symbol}`);
-        if (storedPlan) {
-          const parsedPlan = JSON.parse(storedPlan);
-          latestNextActionPlan = parsedPlan;
-        }
-      } catch (e) {
-        console.error('Failed to parse Next Action Plan from localStorage:', e);
-      }
-    }
-
-    // 投資規律の利確目標価格を使用（Next Action Planの目標価格と分離）
-    const investmentTargetPrice = parseFloat(targetPrice) || 0;
-
-    if (!latestNextActionPlan) return [];
-    const alerts = getAllActiveAlerts(
-      latestNextActionPlan,
-      parseFloat(currentPrice) || 0,
-      investmentTargetPrice, // 投資規律の利確目標のみ使用
-      stopLoss,
-      positionSummary.totalShares > 0 ? positionSummary : undefined,
-      availableCash
-    );
-
-    return alerts;
-  }, [
-    nextActionPlan?.targetPrice,
-    nextActionPlan?.targetQuantity,
-    nextActionPlan?.actionType,
-    nextActionPlan?.priority,
-    nextActionPlan?.memo,
+  // アラート計算（localStorage変更リアルタイム監視・カードスタイル算出を含む）
+  const { alerts: targetPriceAlert, cardStyles } = useStockAlerts(
+    symbol,
+    nextActionPlan,
     currentPrice,
     targetPrice,
     stopLoss,
     positionSummary,
     availableCash,
-    alertTrigger, // 強制再計算トリガー
-    isPositionLoading, // ポジション読み込み状態
-    positions // ポジションデータ
-  ]);
-
-  // アラートに応じたカードスタイルを取得
-  const getCardAlertStyles = () => {
-    if (!targetPriceAlert || targetPriceAlert.length === 0) {
-      return {
-        bgClass: 'bg-gray-800',
-        borderClass: 'border-gray-700',
-        bgAnimationStyle: {}
-      };
-    }
-
-    // メインアラート（最優先）に基づいてスタイル決定
-    const primaryAlert = targetPriceAlert[0];
-
-    switch (primaryAlert.type) {
-      case 'insufficient-funds':
-      case 'stop-loss-exceeded':
-      case 'nextaction-approaching':
-        return {
-          bgClass: '',
-          borderClass: 'border-red-500/40',
-          bgAnimationStyle: {
-            backgroundImage: 'linear-gradient(45deg, rgb(31 41 55), rgb(55 31 31))',
-            backgroundSize: '400% 400%',
-            animation: 'bgPulse 2s ease-in-out infinite',
-          }
-        };
-      case 'stop-loss':
-        return {
-          bgClass: '',
-          borderClass: 'border-red-500/30',
-          bgAnimationStyle: {
-            backgroundImage: 'linear-gradient(45deg, rgb(31 41 55), rgb(51 35 35))',
-            backgroundSize: '400% 400%',
-            animation: 'bgPulse 2.5s ease-in-out infinite',
-          }
-        };
-      case 'target-profit':
-        return {
-          bgClass: '',
-          borderClass: 'border-green-500/30',
-          bgAnimationStyle: {
-            backgroundImage: 'linear-gradient(45deg, rgb(31 41 55), rgb(31 51 35))',
-            backgroundSize: '400% 400%',
-            animation: 'bgPulse 2.5s ease-in-out infinite',
-          }
-        };
-      case 'nextaction-warning':
-      default:
-        return {
-          bgClass: '',
-          borderClass: 'border-yellow-500/30',
-          bgAnimationStyle: {
-            backgroundImage: 'linear-gradient(45deg, rgb(31 41 55), rgb(51 47 31))',
-            backgroundSize: '400% 400%',
-            animation: 'bgPulse 3s ease-in-out infinite',
-          }
-        };
-    }
-  };
-
-  const cardStyles = getCardAlertStyles();
+    isPositionLoading,
+  );
 
   return (
     <>
@@ -416,11 +291,11 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
                                ? 'nextaction' : 'analysis';
 
           // サブタブの状態を更新
-          localStorage.setItem(`kabunote-investment-tab-${symbol}`, targetSubTab);
+          localStorage.setItem(stockKey.investmentTab(symbol), targetSubTab);
 
           // カスタムイベントを発火してサブタブコンポーネントに変更を通知
           window.dispatchEvent(new CustomEvent('localStorageChange', {
-            detail: { key: `kabunote-investment-tab-${symbol}` }
+            detail: { key: stockKey.investmentTab(symbol) }
           }));
         }}
       />
@@ -496,7 +371,6 @@ export default function StockCard({ symbol, onRemove, favoriteGroups, onFavorite
             onRightsSettingsChange={(newSettings) => setRightsSettings(JSON.stringify(newSettings))}
             onPositionManagerOpen={() => {
               // DB統合版では管理タブ内で直接編集するため、何もしない
-              console.log('ポジション管理はこのタブ内で直接編集できます')
             }}
             shareholderMeetingSettings={shareholderMeetingSettings}
             onShareholderMeetingSettingsChange={updateShareholderMeetingSettings}

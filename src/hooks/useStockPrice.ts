@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase-client'
 import { useDebounce } from './useDebounce'
+import { stockKey } from '@/lib/storageKeys'
 
 interface PriceState {
   currentPrice: string
@@ -21,9 +22,9 @@ interface UseStockPriceReturn {
 
 export function useStockPrice(stockId: string): UseStockPriceReturn {
   const symbol = stockId.replace('stock-', '')
-  const localCurrentPriceKey = `kabunote-current-price-${symbol}`
-  const localTargetPriceKey = `kabunote-target-price-${symbol}`
-  const localStopLossKey = `kabunote-stop-loss-${symbol}`
+  const localCurrentPriceKey = stockKey.currentPrice(symbol)
+  const localTargetPriceKey = stockKey.targetPrice(symbol)
+  const localStopLossKey = stockKey.stopLoss(symbol)
 
   const [prices, setPrices] = useState<PriceState>({ currentPrice: '', targetPrice: '', stopLoss: '' })
   const [isLoading, setIsLoading] = useState(true)

@@ -8,6 +8,7 @@ import { PortfolioShareholderSummary, calculateShareholderBenefit, formatBenefit
 import { useCash } from '@/hooks/useCash';
 import { CustomTag } from '@/types/tags';
 import { getCompanyNameSync, getSectorSync } from '@/data/stockNames';
+import { stockKey } from '@/lib/storageKeys';
 
 interface StockData {
   id: string;
@@ -50,6 +51,64 @@ interface CashRatioEvaluation {
   color: string;
 }
 
+// ─────────────────────────────────────────
+// 現金比率評価（純粋関数）
+// ─────────────────────────────────────────
+function evaluateCashRatio(cashRatio: number, cashAmount: number): CashRatioEvaluation {
+  if (cashAmount === 0) {
+    return {
+      status: 'moderate',
+      message: '余力現金を入力すると、より詳細なポートフォリオ分析が可能になります',
+      icon: '💡',
+      color: 'text-blue-400'
+    };
+  }
+
+  if (cashRatio >= 50) {
+    return {
+      status: 'dangerous',
+      message: '現金比率が高すぎます。投資機会を逃している可能性があります',
+      icon: '🔴',
+      color: 'text-red-400'
+    };
+  } else if (cashRatio >= 35) {
+    return {
+      status: 'risky',
+      message: '現金比率がやや高めです。投資バランスを見直しましょう',
+      icon: '🟡',
+      color: 'text-yellow-400'
+    };
+  } else if (cashRatio >= 20) {
+    return {
+      status: 'good',
+      message: '理想的な現金比率です。リスク管理と投資のバランスが取れています',
+      icon: '🟢',
+      color: 'text-green-400'
+    };
+  } else if (cashRatio >= 10) {
+    return {
+      status: 'moderate',
+      message: '適正な現金比率です。緊急時の備えを考慮しつつ積極的に投資中',
+      icon: '🔵',
+      color: 'text-blue-400'
+    };
+  } else if (cashRatio >= 5) {
+    return {
+      status: 'risky',
+      message: '現金比率が低めです。急な調整相場に備えて現金を確保しましょう',
+      icon: '🟡',
+      color: 'text-yellow-400'
+    };
+  } else {
+    return {
+      status: 'dangerous',
+      message: '現金不足の状態です。緊急時資金と投資資金の確保を検討してください',
+      icon: '🔴',
+      color: 'text-red-400'
+    };
+  }
+}
+
 interface OverallSummary {
   totalInvestment: number;
   totalCurrentValue: number;
@@ -75,62 +134,6 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
   const [isRiskRewardExpanded, setIsRiskRewardExpanded] = useState(false);
   // 現金額・Next Actionメモ管理（DB永続化 + localStorageフォールバック）
   const { cashAmount, nextActionMemo, updateCash, updateNextActionMemo } = useCash();
-
-  // 現金比率評価を計算する関数
-  const evaluateCashRatio = (cashRatio: number, cashAmount: number): CashRatioEvaluation => {
-    if (cashAmount === 0) {
-      return {
-        status: 'moderate',
-        message: '余力現金を入力すると、より詳細なポートフォリオ分析が可能になります',
-        icon: '💡',
-        color: 'text-blue-400'
-      };
-    }
-
-    if (cashRatio >= 50) {
-      return {
-        status: 'dangerous',
-        message: '現金比率が高すぎます。投資機会を逃している可能性があります',
-        icon: '🔴',
-        color: 'text-red-400'
-      };
-    } else if (cashRatio >= 35) {
-      return {
-        status: 'risky',
-        message: '現金比率がやや高めです。投資バランスを見直しましょう',
-        icon: '🟡',
-        color: 'text-yellow-400'
-      };
-    } else if (cashRatio >= 20) {
-      return {
-        status: 'good',
-        message: '理想的な現金比率です。リスク管理と投資のバランスが取れています',
-        icon: '🟢',
-        color: 'text-green-400'
-      };
-    } else if (cashRatio >= 10) {
-      return {
-        status: 'moderate',
-        message: '適正な現金比率です。緊急時の備えを考慮しつつ積極的に投資中',
-        icon: '🔵',
-        color: 'text-blue-400'
-      };
-    } else if (cashRatio >= 5) {
-      return {
-        status: 'risky',
-        message: '現金比率が低めです。急な調整相場に備えて現金を確保しましょう',
-        icon: '🟡',
-        color: 'text-yellow-400'
-      };
-    } else {
-      return {
-        status: 'dangerous',
-        message: '現金不足の状態です。緊急時資金と投資資金の確保を検討してください',
-        icon: '🔴',
-        color: 'text-red-400'
-      };
-    }
-  };
 
   // 全体のサマリーを計算
   const overallSummary = useMemo<OverallSummary>(() => {
@@ -167,7 +170,7 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
       // 現在株価：DBデータ優先、localStorageフォールバック
       let currentPriceNum = stock.currentPrice ?? 0;
       if (!currentPriceNum && typeof window !== 'undefined') {
-        const localPrice = localStorage.getItem(`kabunote-current-price-${stock.symbol}`) || '';
+        const localPrice = localStorage.getItem(stockKey.currentPrice(stock.symbol)) || '';
         currentPriceNum = parseFloat(localPrice) || 0;
       }
 
@@ -183,8 +186,8 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
       let perShare = stock.dividend?.dividendPerShare ?? 0;
       let frequency = stock.dividend?.frequency ?? 0;
       if (!perShare && typeof window !== 'undefined') {
-        perShare = parseFloat(localStorage.getItem(`kabunote-dividend-per-share-${stock.symbol}`) || '') || 0;
-        frequency = parseInt(localStorage.getItem(`kabunote-dividend-frequency-${stock.symbol}`) || '1') || 1;
+        perShare = parseFloat(localStorage.getItem(stockKey.dividendPerShare(stock.symbol)) || '') || 0;
+        frequency = parseInt(localStorage.getItem(stockKey.dividendFrequency(stock.symbol)) || '1') || 1;
       }
 
       if (perShare > 0 && summary.totalShares > 0) {
@@ -203,8 +206,8 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
       let minShares = stock.benefit?.minimumShares ?? 0;
       let estValue = stock.benefit?.estimatedValue ?? 0;
       if (!minShares && typeof window !== 'undefined') {
-        minShares = parseInt(localStorage.getItem(`kabunote-minimum-shares-${stock.symbol}`) || '') || 0;
-        estValue = parseFloat(localStorage.getItem(`kabunote-estimated-value-${stock.symbol}`) || '') || 0;
+        minShares = parseInt(localStorage.getItem(stockKey.minimumShares(stock.symbol)) || '') || 0;
+        estValue = parseFloat(localStorage.getItem(stockKey.estimatedValue(stock.symbol)) || '') || 0;
       }
 
       if (minShares > 0 && estValue > 0 && summary.totalShares > 0) {
@@ -260,11 +263,11 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
       let stopLossPrice: number | undefined = stock.stopLossPrice ?? undefined;
 
       if (!targetPrice && typeof window !== 'undefined') {
-        const str = localStorage.getItem(`kabunote-target-price-${stock.symbol}`);
+        const str = localStorage.getItem(stockKey.targetPrice(stock.symbol));
         targetPrice = str ? parseFloat(str) || undefined : undefined;
       }
       if (!stopLossPrice && typeof window !== 'undefined') {
-        const str = localStorage.getItem(`kabunote-stop-loss-${stock.symbol}`);
+        const str = localStorage.getItem(stockKey.stopLoss(stock.symbol));
         stopLossPrice = str ? parseFloat(str) || undefined : undefined;
       }
 
@@ -318,8 +321,8 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
           frequency: stock.dividend.frequency,
         };
       } else if (typeof window !== 'undefined') {
-        const perShareStr = localStorage.getItem(`kabunote-dividend-per-share-${stock.symbol}`);
-        const frequencyStr = localStorage.getItem(`kabunote-dividend-frequency-${stock.symbol}`);
+        const perShareStr = localStorage.getItem(stockKey.dividendPerShare(stock.symbol));
+        const frequencyStr = localStorage.getItem(stockKey.dividendFrequency(stock.symbol));
         const perShare = perShareStr ? parseFloat(perShareStr) : null;
         if (perShare && perShare > 0) {
           dividend = {
@@ -337,8 +340,8 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
           estimatedValue: stock.benefit.estimatedValue,
         };
       } else if (typeof window !== 'undefined') {
-        const minSharesStr = localStorage.getItem(`kabunote-minimum-shares-${stock.symbol}`);
-        const estValueStr = localStorage.getItem(`kabunote-estimated-value-${stock.symbol}`);
+        const minSharesStr = localStorage.getItem(stockKey.minimumShares(stock.symbol));
+        const estValueStr = localStorage.getItem(stockKey.estimatedValue(stock.symbol));
         const minShares = minSharesStr ? parseInt(minSharesStr) : null;
         const estValue = estValueStr ? parseFloat(estValueStr) : null;
         if (minShares && minShares > 0) {

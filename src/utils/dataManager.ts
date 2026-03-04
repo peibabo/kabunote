@@ -222,13 +222,6 @@ export const downloadMigrationBackup = () => {
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
 
-  console.log('📦 DB移行用バックアップを作成しました:', {
-    exportDate: data.exportDate,
-    version: data.version,
-    stockCount: data.stocks.length,
-    rawStorageKeys: Object.keys(data.rawLocalStorage).length,
-    migrationTarget: data.migrationTarget
-  });
 };
 
 /**
@@ -540,7 +533,6 @@ export const analyzeLocalStorageForMigration = () => {
   // 移行準備度チェック
   analysis.migrationReadiness = analysis.stockCount > 0 && analysis.totalKeys > 5;
 
-  console.log('📊 DB移行前のLocalStorage分析:', analysis);
   return analysis;
 };
 

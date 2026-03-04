@@ -15,8 +15,6 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    console.log('📊 株式データ取得開始 - ユーザーID:', user.id)
-
     // データベースから株式データを価格情報・イベント・配当・優待込みで取得
     const stocks = await prisma.stock.findMany({
       where: {
@@ -39,8 +37,6 @@ export async function GET(request: NextRequest) {
         nextAction: true,
       }
     })
-
-    console.log(`✅ ${stocks.length}件の株式データを取得完了`)
 
     // フロントエンド形式に変換
     const formattedStocks = stocks.map(stock => {

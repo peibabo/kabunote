@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { SnoozedAlert, SnoozeDuration, generateAlertKey } from '@/types/snooze';
 import { AlertType } from '@/utils/alertSystem';
+import { STORAGE_KEYS } from '@/lib/storageKeys';
 
-const STORAGE_KEY = 'kabunote-snoozed-alerts';
+const STORAGE_KEY = STORAGE_KEYS.SNOOZED_ALERTS;
 
 /**
  * スヌーズ機能管理フック
@@ -106,7 +107,6 @@ export const useSnooze = () => {
     setSnoozedAlerts(updatedAlerts);
     saveSnoozedAlerts(updatedAlerts);
 
-    console.log(`Alert snoozed: ${alertKey} for ${duration} minutes`);
   }, [snoozedAlerts, saveSnoozedAlerts]);
 
   /**
@@ -117,7 +117,6 @@ export const useSnooze = () => {
     setSnoozedAlerts(updatedAlerts);
     saveSnoozedAlerts(updatedAlerts);
 
-    console.log(`Alert unsnoozed: ${alertKey}`);
   }, [snoozedAlerts, saveSnoozedAlerts]);
 
   /**

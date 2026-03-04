@@ -5,6 +5,7 @@ import {
   ShareholderMeetingSettings,
   createDefaultShareholderMeetingSettings
 } from '@/types/rightsDate'
+import { stockKey } from '@/lib/storageKeys'
 
 interface UseStockEventReturn {
   earningsDate: string
@@ -18,8 +19,8 @@ interface UseStockEventReturn {
 export function useStockEvent(stockId: string): UseStockEventReturn {
   // stockId: "stock-7203" 形式 → symbol: "7203"
   const symbol = stockId.replace('stock-', '')
-  const earningsKey = `kabunote-earnings-date-${symbol}`
-  const meetingKey = `kabunote-shareholder-meeting-${symbol}`
+  const earningsKey = stockKey.earningsDate(symbol)
+  const meetingKey = stockKey.shareholderMeeting(symbol)
 
   const [earningsDate, setEarningsDate] = useState<string>('')
   const [shareholderMeetingSettings, setShareholderMeetingSettings] =

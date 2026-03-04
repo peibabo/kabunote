@@ -15,8 +15,7 @@ export default function AuthButton() {
 
   useEffect(() => {
     const getUser = async () => {
-      const { data: { session }, error } = await supabase.auth.getSession()
-      console.log('Initial session check:', { session: !!session, user: session?.user?.email, error })
+      const { data: { session } } = await supabase.auth.getSession()
       setUser(session?.user ?? null)
       setLoading(false)
     }
@@ -25,7 +24,6 @@ export default function AuthButton() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        console.log('Auth state changed:', { event, session: !!session, user: session?.user?.email })
         setUser(session?.user ?? null)
 
         // ログイン成功時の通知

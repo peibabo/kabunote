@@ -109,33 +109,20 @@ export default function AlertSummaryPage() {
 
   // アラートデータを収集（スヌーズ済みを除外）
   const alertsData = useMemo(() => {
-    console.log('AlertSummaryPage - アラートデータ収集開始:', { isLoaded, stocksLength: stocks.length, availableCash });
-
     if (!isLoaded || stocks.length === 0 || !snoozeLoaded) {
-      console.log('AlertSummaryPage - データ未ロードまたは銘柄なし');
       return [];
     }
 
     const alerts: AlertRowData[] = [];
 
     stocks.forEach(symbol => {
-      console.log(`AlertSummaryPage - ${symbol}のアラート判定開始`);
-
       // 現在価格・投資規律設定を取得
       const currentPriceStr = localStorage.getItem(`kabunote-current-price-${symbol}`) || '0';
       const targetPriceStr = localStorage.getItem(`kabunote-target-price-${symbol}`) || '0';
       const stopLossStr = localStorage.getItem(`kabunote-stop-loss-${symbol}`) || '0';
       const currentPrice = parseFloat(currentPriceStr);
 
-      console.log(`AlertSummaryPage - ${symbol}: 価格情報`, {
-        currentPrice,
-        currentPriceStr,
-        targetPriceStr,
-        stopLossStr
-      });
-
       if (currentPrice <= 0) {
-        console.log(`AlertSummaryPage - ${symbol}: 現在価格未設定のためスキップ`);
         return; // 現在価格が未設定の場合はスキップ
       }
 
@@ -148,12 +135,9 @@ export default function AlertSummaryPage() {
         try {
           plan = JSON.parse(planData);
           hasValidPlan = plan ? hasNextActionPlan(plan) : false;
-          console.log(`AlertSummaryPage - ${symbol}: NextActionPlan取得`, { plan, hasValidPlan });
         } catch (e) {
-          console.log(`AlertSummaryPage - ${symbol}: NextActionPlan解析エラー`, e);
+          console.warn(`Failed to parse NextActionPlan for ${symbol}:`, e);
         }
-      } else {
-        console.log(`AlertSummaryPage - ${symbol}: NextActionPlanなし`);
       }
 
       // NextActionPlanがない場合はデフォルトプランを作成（投資規律アラート用）
@@ -194,16 +178,12 @@ export default function AlertSummaryPage() {
           availableCash
         );
 
-        console.log(`AlertSummaryPage - ${symbol}: アラート判定結果`, alertList);
-
         // 各アラートを処理（複数アラート対応）
         alertList.forEach(alert => {
           const { message, detail, priority } = getAlertDisplayInfo(alert);
 
           // スヌーズ中でない場合のみ表示
           if (!showSnoozed && !isAlertSnoozed(symbol, alert.type)) {
-            console.log(`AlertSummaryPage - ${symbol}: アラート追加`, { message, detail, priority });
-
             alerts.push({
               symbol,
               companyName,
@@ -230,21 +210,13 @@ export default function AlertSummaryPage() {
               targetPrice: alert.targetPrice,
               stopLossPrice: alert.stopLossPrice
             });
-          } else {
-            console.log(`AlertSummaryPage - ${symbol}: アラート ${alert.type} はスヌーズ中`);
           }
         });
-
-        if (alertList.length === 0) {
-          console.log(`AlertSummaryPage - ${symbol}: アラートなし`);
-        }
       } catch (e) {
         console.warn(`Failed to parse alert data for ${symbol}:`, e);
       }
     });
 
-    // 優先度順にソート（優先度が低い数字ほど上位）
-    console.log('AlertSummaryPage - 最終アラートデータ:', alerts);
     return alerts.sort((a, b) => a.priority - b.priority);
   }, [stocks, availableCash, isLoaded, snoozeLoaded, showSnoozed, isAlertSnoozed]);
 
