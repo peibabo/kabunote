@@ -859,7 +859,7 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
           {/* アコーディオンコンテンツ */}
           <div className={`overflow-hidden transition-all duration-300 ease-in-out ${
             isChartsExpanded
-              ? 'max-h-[2000px] opacity-100 mt-4'
+              ? 'max-h-[3000px] opacity-100 mt-4'
               : 'max-h-0 opacity-0'
           }`}>
             <div className="grid grid-cols-1 xl:grid-cols-3 lg:grid-cols-2 gap-6">
