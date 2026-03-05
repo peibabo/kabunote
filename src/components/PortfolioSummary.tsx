@@ -543,7 +543,7 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
           <div className="bg-gray-700 rounded-lg p-3">
             <div className="space-y-2 mb-2">
               {/* 現金入力行 */}
-              <div className="flex items-center justify-center gap-4">
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4">
                 <div className="flex items-center gap-2">
                   <label className="text-xs text-gray-300 whitespace-nowrap">投資余力現金:</label>
                   <input
@@ -565,7 +565,7 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
               </div>
 
               {/* Next Action メモ */}
-              <div className="flex items-center justify-center gap-2">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-center gap-1 sm:gap-2">
                 <label className="text-xs font-semibold text-gray-300 whitespace-nowrap">Next Action メモ:</label>
                 <input
                   type="text"
@@ -573,7 +573,7 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
                   onChange={(e) => updateNextActionMemo(e.target.value)}
                   placeholder="この余力現金は○○株が◯円になったときに買い増しする"
                   maxLength={100}
-                  className="flex-1 max-w-2xl text-sm bg-gray-600 border border-gray-500 rounded px-2 py-1.5 text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
+                  className="w-full sm:flex-1 max-w-2xl text-sm bg-gray-600 border border-gray-500 rounded px-2 py-1.5 text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
                 />
               </div>
             </div>
@@ -658,11 +658,16 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* 利確目標合計 */}
             {overallSummary.targetSummary.targetSetCount > 0 && (
-              <div className="bg-green-900 bg-opacity-30 border border-green-700 rounded-lg p-4">
+              <div className="bg-green-900 bg-opacity-30 border border-green-700 rounded-lg p-4 text-center">
                 <div className="text-xs text-green-300 mb-2">利確目標達成時</div>
                 <div className="text-xl font-medium text-green-300">
                   {formatProfitLoss(overallSummary.targetSummary.totalTargetProfit)}円
                 </div>
+                {overallSummary.targetSummary.totalTargetProfit > 0 && (
+                  <div className="text-sm text-green-200 mt-1">
+                    税引後 {formatProfitLoss(Math.round(overallSummary.targetSummary.totalTargetProfit * 0.79685))}円
+                  </div>
+                )}
                 <div className="text-sm text-green-400 mt-1">
                   {overallSummary.targetSummary.targetSetCount}銘柄で設定
                 </div>
@@ -671,7 +676,7 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
 
             {/* 損切り合計 */}
             {overallSummary.targetSummary.stopLossSetCount > 0 && (
-              <div className="bg-red-900 bg-opacity-30 border border-red-700 rounded-lg p-4">
+              <div className="bg-red-900 bg-opacity-30 border border-red-700 rounded-lg p-4 text-center">
                 <div className="text-xs text-red-300 mb-2">損切り実行時</div>
                 <div className="text-xl font-medium text-red-300">
                   {formatProfitLoss(overallSummary.targetSummary.totalStopLoss)}円
