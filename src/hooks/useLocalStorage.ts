@@ -55,6 +55,28 @@ export function useLocalStorage<T>(
     setIsLoading(false);
   }, [key]); // initialValue と parser を依存配列から除外
 
+  // 外部からの localStorageChange イベントを受信して state を更新
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handleExternalChange = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail?.key !== key) return;
+      try {
+        const item = localStorage.getItem(key);
+        if (item !== null) {
+          const parsedValue = parser ? parser(item) : JSON.parse(item);
+          setStoredValue(parsedValue);
+        }
+      } catch (error) {
+        console.error(`Failed to parse localStorage value on external change (${key}):`, error);
+      }
+    };
+
+    window.addEventListener('localStorageChange', handleExternalChange);
+    return () => window.removeEventListener('localStorageChange', handleExternalChange);
+  }, [key]); // parser を意図的に除外（初期化時のみ参照）
+
   // 値を設定する関数（即座にUI更新、デバウンスで保存）
   const setValue = useCallback((value: T | ((prev: T) => T)) => {
     try {
