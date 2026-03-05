@@ -1311,10 +1311,10 @@ export default function Home() {
                 グループ管理
               </button>
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex gap-2 overflow-x-auto md:flex-wrap md:overflow-x-visible pb-2 md:pb-0 scrollbar-hide">
               <button
                 onClick={() => handleGroupFilterChange(null)}
-                className={`cursor-pointer text-sm px-3 py-2 rounded-full transition-colors ${
+                className={`cursor-pointer text-sm px-3 py-2 rounded-full transition-colors whitespace-nowrap shrink-0 md:shrink ${
                   selectedGroupFilter === null
                     ? 'bg-white text-gray-900'
                     : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
@@ -1326,7 +1326,7 @@ export default function Home() {
                 <button
                   key={group.id}
                   onClick={() => handleGroupFilterChange(group.id)}
-                  className={`cursor-pointer text-sm px-3 py-2 rounded-full transition-colors ${
+                  className={`cursor-pointer text-sm px-3 py-2 rounded-full transition-colors whitespace-nowrap shrink-0 md:shrink ${
                     selectedGroupFilter === group.id
                       ? `${GROUP_COLORS[group.color].bg} ${GROUP_COLORS[group.color].text}`
                       : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
