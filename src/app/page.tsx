@@ -1109,27 +1109,17 @@ export default function Home() {
           <div className="flex items-center justify-between">
             <a
               href="/"
-              className="flex items-center justify-center gap-4 group cursor-pointer flex-1 transition-transform duration-200 hover:scale-105"
+              className="flex items-center gap-4 group cursor-pointer transition-transform duration-200 hover:scale-105"
               title="カブノオト ホームページ"
             >
             <img
               src="/kabunote-logo.png"
-              alt="Kabunote Logo"
-              className="h-16 w-auto transition-all duration-300"
+              alt="カブノオト - 投資思考整理ダッシュボード"
+              className="h-12 md:h-16 w-auto transition-all duration-300"
               style={{
                 filter: 'drop-shadow(0 0 8px rgba(255, 255, 255, 0.4))'
               }}
             />
-            <h1
-              className="text-3xl text-white tracking-wider transition-all duration-300"
-              style={{
-                fontFamily: '"M PLUS 1p", sans-serif',
-                fontWeight: 100,
-                filter: 'drop-shadow(0 0 8px rgba(255, 255, 255, 0.5))'
-              }}
-            >
-              カブノオト
-            </h1>
             </a>
 
             {/* ナビゲーション */}
@@ -1147,9 +1137,6 @@ export default function Home() {
       <style jsx>{`
         .group:hover img {
           filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.8)) drop-shadow(0 0 40px rgba(255, 255, 255, 0.4)) drop-shadow(0 0 60px rgba(255, 255, 255, 0.2)) !important;
-        }
-        .group:hover h1 {
-          filter: drop-shadow(0 0 25px rgba(255, 255, 255, 0.9)) drop-shadow(0 0 50px rgba(255, 255, 255, 0.6)) drop-shadow(0 0 75px rgba(255, 255, 255, 0.3)) drop-shadow(0 0 100px rgba(255, 255, 255, 0.1)) !important;
         }
       `}</style>
 
