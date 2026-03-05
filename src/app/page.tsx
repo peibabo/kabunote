@@ -1154,8 +1154,30 @@ export default function Home() {
             </div>
           </div>
 
-          {/* 外部分析リンク */}
-          <div className="flex flex-wrap gap-3 mb-4">
+          {/* 外部分析リンク：モバイル用（横スクロール・アイコン+小テキスト） */}
+          <div className="flex overflow-x-auto gap-3 mb-4 md:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            {[
+              { href: 'https://kabutan.jp/warning/record_w52_high_price&dispmode=normal', icon: '📈', label: '52週高値', gradient: 'from-green-600 to-blue-600' },
+              { href: 'https://sekai-kabuka.com/', icon: '🌍', label: '世界の株価', gradient: 'from-purple-600 to-pink-600' },
+              { href: 'https://www.release.tdnet.info/inbs/I_main_00.html', icon: '📋', label: '適時開示', gradient: 'from-orange-600 to-red-600' },
+            ].map((link) => (
+              <a
+                key={link.label}
+                href={link.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`flex-shrink-0 flex flex-col items-center gap-1`}
+              >
+                <span className={`w-11 h-11 rounded-full bg-gradient-to-r ${link.gradient} flex items-center justify-center text-lg shadow-lg`}>
+                  {link.icon}
+                </span>
+                <span className="text-[10px] text-gray-400 whitespace-nowrap">{link.label}</span>
+              </a>
+            ))}
+          </div>
+
+          {/* 外部分析リンク：デスクトップ用 */}
+          <div className="hidden md:flex flex-wrap gap-3 mb-4">
             <a
               href="https://kabutan.jp/warning/record_w52_high_price&dispmode=normal"
               target="_blank"
