@@ -17,6 +17,7 @@ import SlideOutMenu from '@/components/SlideOutMenu';
 import EventCalendarPage from '@/components/EventCalendarPage';
 import DividendBenefitListPage from '@/components/DividendBenefitListPage';
 import AuthButton from '@/components/AuthButton';
+import BulkTabSwitcher from '@/components/BulkTabSwitcher';
 import { loadStockData, getStockData } from '@/data/stockNames';
 import { Position } from '@/types/positions';
 import { FavoriteGroup, GROUP_COLORS } from '@/types/favorites';
@@ -1341,6 +1342,8 @@ export default function Home() {
             </button>
           </div>
         )}
+
+        <BulkTabSwitcher stockSymbols={filteredStocks} />
 
         <div>
           {isStockDataLoading ? (
