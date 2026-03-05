@@ -354,7 +354,7 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
           <span className="text-lg">💼</span>
           <h2 className="text-lg font-semibold text-white">ポートフォリオサマリー</h2>
           {hasPositions && (
-            <span className="text-xs text-gray-400">
+            <span className="text-xs text-gray-400 hidden sm:inline">
               ({overallSummary.stocksWithPositions}銘柄でポジション保有中)
             </span>
           )}
@@ -380,7 +380,7 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
         {/* 総投資額 */}
         <div className="bg-gray-700 rounded-lg p-3">
           <div className="text-xs text-gray-400 mb-1">総投資額</div>
-          <div className="text-lg font-medium text-white">
+          <div className="text-base sm:text-lg font-medium text-white">
             {formatPrice(overallSummary.totalInvestment)}円
           </div>
           <div className="text-xs text-gray-500 mt-1 font-medium">
@@ -391,7 +391,7 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
         {/* 現在評価額 */}
         <div className="bg-gray-700 rounded-lg p-3">
           <div className="text-xs text-gray-400 mb-1">現在評価額</div>
-          <div className="text-lg font-medium text-blue-300">
+          <div className="text-base sm:text-lg font-medium text-blue-300">
             {overallSummary.totalCurrentValue > 0
               ? `${formatPrice(overallSummary.totalCurrentValue)}円`
               : '未設定'
@@ -409,7 +409,7 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
           <div className="text-xs text-gray-400 mb-1">損益額</div>
           {overallSummary.totalCurrentValue > 0 ? (
             <div>
-              <div className={`text-lg font-medium ${getProfitLossColor(overallSummary.totalProfitLoss)}`}>
+              <div className={`text-base sm:text-lg font-medium ${getProfitLossColor(overallSummary.totalProfitLoss)}`}>
                 {overallSummary.totalProfitLoss >= 0 ? '+' : ''}
                 {formatPrice(overallSummary.totalProfitLoss)}円
               </div>
@@ -421,7 +421,7 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
               )}
             </div>
           ) : (
-            <div className="text-lg font-medium text-gray-500">
+            <div className="text-base sm:text-lg font-medium text-gray-500">
               未設定
             </div>
           )}
@@ -431,12 +431,12 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
         <div className={`rounded-lg p-3 border ${getProfitLossBgColor(overallSummary.totalProfitLossRate)}`}>
           <div className="text-xs text-gray-300 mb-1">損益率</div>
           {overallSummary.totalCurrentValue > 0 ? (
-            <div className={`text-lg font-medium ${getProfitLossColor(overallSummary.totalProfitLoss)}`}>
+            <div className={`text-base sm:text-lg font-medium ${getProfitLossColor(overallSummary.totalProfitLoss)}`}>
               {overallSummary.totalProfitLossRate >= 0 ? '+' : ''}
               {overallSummary.totalProfitLossRate.toFixed(2)}%
             </div>
           ) : (
-            <div className="text-lg font-medium text-gray-500">
+            <div className="text-base sm:text-lg font-medium text-gray-500">
               未設定
             </div>
           )}
@@ -447,7 +447,7 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
           <div className="text-xs text-gray-400 mb-1">年間配当金額</div>
           {overallSummary.dividendSummary.stocksWithDividend > 0 ? (
             <>
-              <div className="text-lg font-medium text-green-300">
+              <div className="text-base sm:text-lg font-medium text-green-300">
                 {formatDividendAmount(overallSummary.dividendSummary.totalAnnualDividend)}円
               </div>
               <div className="text-sm text-green-200 mt-1 font-medium">
@@ -462,7 +462,7 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
             </>
           ) : (
             <>
-              <div className="text-lg font-medium text-gray-500">
+              <div className="text-base sm:text-lg font-medium text-gray-500">
                 未設定
               </div>
               <div className="text-xs text-gray-500 mt-1">
@@ -477,7 +477,7 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
           <div className="text-xs text-gray-400 mb-1">年間優待価値</div>
           {overallSummary.shareholderSummary.totalStocksWithBenefits > 0 ? (
             <>
-              <div className="text-lg font-medium text-purple-300">
+              <div className="text-base sm:text-lg font-medium text-purple-300">
                 {formatBenefitValue(overallSummary.shareholderSummary.totalEstimatedValue)}円
               </div>
               <div className="text-xs text-gray-500 mt-1">
@@ -492,7 +492,7 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
             </>
           ) : (
             <>
-              <div className="text-lg font-medium text-gray-500">
+              <div className="text-base sm:text-lg font-medium text-gray-500">
                 未設定
               </div>
               <div className="text-xs text-gray-500 mt-1">
@@ -522,7 +522,7 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
               余力現金・キャッシュポジション
             </h3>
             {!isCashSectionExpanded && overallSummary.cashAmount > 0 && (
-              <span className="text-xs text-yellow-300">
+              <span className="text-xs text-yellow-300 hidden sm:inline">
                 {formatPrice(overallSummary.cashAmount)}円（現金{overallSummary.cashRatio.toFixed(1)}%）
               </span>
             )}
@@ -636,7 +636,7 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
               <h3 className="text-sm font-medium text-gray-200">
                 損益目標サマリー
               </h3>
-              <span className="text-xs text-gray-400">
+              <span className="text-xs text-gray-400 hidden sm:inline">
                 ({overallSummary.targetSummary.targetSetCount + overallSummary.targetSummary.stopLossSetCount}/{overallSummary.targetSummary.totalStocksWithPosition}銘柄で設定済み)
               </span>
             </div>
@@ -838,7 +838,7 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
               <h3 className="text-sm font-medium text-gray-200">
                 ポートフォリオ分析グラフ
               </h3>
-              <span className="text-xs text-gray-400">
+              <span className="text-xs text-gray-400 hidden sm:inline">
                 (投資額割合・業種別・タグ別・配当金額割合・株主優待価値割合)
               </span>
             </div>
