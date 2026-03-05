@@ -15,6 +15,8 @@ export const STORAGE_KEYS = {
   SNOOZED_ALERTS: 'kabunote-snoozed-alerts',
   /** タイムラインのカレンダーアコーディオン展開状態 */
   TIMELINE_CALENDAR_EXPANDED: 'kabunote-timeline-calendar-expanded',
+  /** 余力現金セクションのアコーディオン展開状態 */
+  CASH_SECTION_EXPANDED: 'kabunote-cash-section-expanded',
 } as const;
 
 // ─────────────────────────────────────────
