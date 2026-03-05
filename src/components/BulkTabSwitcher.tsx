@@ -98,7 +98,7 @@ export default function BulkTabSwitcher({ stockSymbols }: Props) {
   return (
     <div className="bg-slate-800 border-b border-gray-700 px-4 py-2 rounded-lg mb-2">
       <div className="container mx-auto flex flex-wrap items-center gap-1">
-        <span className="text-gray-400 text-xs mr-2 whitespace-nowrap">全カード:</span>
+        <span className="text-gray-400 text-xs mr-2 whitespace-nowrap">全カード切り替え:</span>
         {TAB_OPTIONS.map(option => {
           const isActive = activeOption?.label === option.label;
           return (

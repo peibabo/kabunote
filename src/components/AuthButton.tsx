@@ -97,7 +97,7 @@ export default function AuthButton() {
               className="w-6 h-6 rounded-full"
             />
           )}
-          <span className="text-sm text-white">
+          <span className="text-sm text-white hidden md:inline">
             {user.user_metadata?.full_name || user.email}
           </span>
         </div>

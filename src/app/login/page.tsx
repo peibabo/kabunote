@@ -48,8 +48,14 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gray-900 flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">カブノオト</h1>
-          <p className="text-gray-400">投資思考整理ダッシュボード</p>
+          <img
+            src="/kabunote-logo.png"
+            alt="カブノオト - 投資思考整理ダッシュボード"
+            className="h-16 w-auto mx-auto"
+            style={{
+              filter: 'drop-shadow(0 0 8px rgba(255, 255, 255, 0.4))'
+            }}
+          />
         </div>
 
         <div className="bg-gray-800 rounded-2xl p-8 shadow-xl">
