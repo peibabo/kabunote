@@ -293,8 +293,6 @@ export default function DividendBenefitListPage({ stockSymbols, stockData, onSto
   return (
     <div className="min-h-screen bg-gray-900 text-white p-6">
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-2xl font-bold mb-6">💰 配当・優待一覧</h1>
-
         {/* 検索とフィルター */}
         <div className="flex flex-col md:flex-row gap-4 mb-6">
           {/* 検索 */}

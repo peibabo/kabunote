@@ -211,7 +211,6 @@ export default function StrategySummaryPage({ stockData = [], isLoggedIn = false
     return (
       <div className="min-h-screen bg-gray-900 text-white p-3 sm:p-6">
         <div className="max-w-6xl mx-auto">
-          <h1 className="text-lg sm:text-2xl font-bold mb-6">🎯 戦略一覧ダッシュボード</h1>
           <div className="text-center py-12">
             <div className="text-gray-400 text-lg mb-4">📊 設定済みの戦略がありません</div>
             <div className="text-sm text-gray-500">銘柄カードの「🎯 次の一手」タブで戦略を設定してください</div>
@@ -224,8 +223,7 @@ export default function StrategySummaryPage({ stockData = [], isLoggedIn = false
   return (
     <div className="min-h-screen bg-gray-900 text-white p-3 sm:p-6">
       <div className="max-w-6xl mx-auto">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-6">
-          <h1 className="text-lg sm:text-2xl font-bold">🎯 戦略一覧ダッシュボード</h1>
+        <div className="flex justify-end mb-6">
           <div className="text-xs sm:text-sm text-gray-400">
             {strategiesData.length}件の戦略設定
           </div>
