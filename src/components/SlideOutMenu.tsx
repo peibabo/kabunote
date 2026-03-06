@@ -141,13 +141,6 @@ export default function SlideOutMenu({ isOpen, onClose, alertCounts, onMenuItemC
             {expandedSections.has('settings') && (
               <div className="ml-8 mt-2 space-y-1">
                 <button
-                  onClick={() => handleMenuClick('data')}
-                  className="w-full flex items-center space-x-3 p-2 text-left hover:bg-gray-700 rounded-lg transition-colors cursor-pointer"
-                >
-                  <span className="text-lg">💾</span>
-                  <span className="text-gray-300">データ管理</span>
-                </button>
-                <button
                   onClick={() => handleMenuClick('groups')}
                   className="w-full flex items-center space-x-3 p-2 text-left hover:bg-gray-700 rounded-lg transition-colors cursor-pointer"
                 >
