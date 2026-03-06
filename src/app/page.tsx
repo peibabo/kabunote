@@ -1,8 +1,7 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import StockCard from '@/components/StockCard';
-import StockInput from '@/components/StockInput';
 import FavoriteGroupManager from '@/components/FavoriteGroupManager';
 import TagManager from '@/components/TagManager';
 import SearchBar from '@/components/SearchBar';
@@ -18,19 +17,17 @@ import EventCalendarPage from '@/components/EventCalendarPage';
 import DividendBenefitListPage from '@/components/DividendBenefitListPage';
 import AuthButton from '@/components/AuthButton';
 import BulkTabSwitcher from '@/components/BulkTabSwitcher';
-import { loadStockData, getStockData } from '@/data/stockNames';
-import { Position } from '@/types/positions';
-import { FavoriteGroup, GROUP_COLORS } from '@/types/favorites';
-import { CustomTag } from '@/types/tags';
-import { DividendRightsSettings, ShareholderRightsSettings, ShareholderMeetingSettings, createDefaultDividendRightsSettings, createDefaultShareholderRightsSettings, createDefaultShareholderMeetingSettings } from '@/types/rightsDate';
-import { NextActionPlan, hasNextActionPlan } from '@/types/nextActionPlan';
-import { DividendInfo } from '@/types/dividend';
-import { ShareholderBenefitInfo } from '@/types/shareholder';
-import { SnoozedAlert } from '@/types/snooze';
-import { getIntegratedAlert, getAllActiveAlerts } from '@/utils/alertSystem';
-import { calculatePositionSummary } from '@/types/positions';
-import { useStockData, StockData } from '@/hooks/useStockData';
+import { loadStockData } from '@/data/stockNames';
+import { GROUP_COLORS } from '@/types/favorites';
+import { useStockData } from '@/hooks/useStockData';
 import { useFavoriteGroups } from '@/hooks/useFavoriteGroups';
+import { useCash } from '@/hooks/useCash';
+import { useModals } from '@/hooks/useModals';
+import { useStockSearch } from '@/hooks/useStockSearch';
+import { useAlertCounts } from '@/hooks/useAlertCounts';
+import { useCalendarData } from '@/hooks/useCalendarData';
+import { usePortfolioData } from '@/hooks/usePortfolioData';
+import { useDividendBenefitData } from '@/hooks/useDividendBenefitData';
 import {
   DndContext,
   closestCenter,
@@ -48,49 +45,40 @@ import {
 } from '@dnd-kit/sortable';
 
 const MAX_STOCKS = 30;
-const ORDER_STORAGE_KEY = 'kabunote-stocks-order';
-
-type DividendBenefitStockData = {
-  name: string;
-  dividendInfo?: DividendInfo;
-  shareholderBenefitInfo?: ShareholderBenefitInfo;
-  dividendRightsSettings: DividendRightsSettings;
-  shareholderRightsSettings: ShareholderRightsSettings;
-  position?: { totalShares: number; averagePrice: number; purchaseDate: string; notes: string };
-};
 
 export default function Home() {
-  // 新しいカスタムフックを使用してデータを取得
-  const { stockData, stockSymbols, isLoading: isStockDataLoading, error: stockDataError, isLoggedIn, refreshData, reorderStocks, addLocalStock, updateStockPrice, updateStockData, updateStockEvent } = useStockData();
-  const stocks = stockSymbols; // 後方互換性のため
-  const setStocks = (newStocks: string[]) => {
-    reorderStocks(newStocks);
-  };
-  // エラーは stockDataError から取得、独自エラーと統合
+  const {
+    stockData, stockSymbols, isLoading: isStockDataLoading,
+    error: stockDataError, refreshData, reorderStocks, addLocalStock,
+    updateStockPrice, updateStockData, updateStockEvent,
+  } = useStockData();
+
   const [additionalError, setAdditionalError] = useState('');
   const error = stockDataError || additionalError;
-  const setError = setAdditionalError; // 後方互換性のため
+  const setError = setAdditionalError;
+
   const {
-    groups: favoriteGroups,
-    setGroups: setFavoriteGroups,
-    selectedGroupFilter,
-    handleGroupFilterChange,
+    groups: favoriteGroups, setGroups: setFavoriteGroups,
+    selectedGroupFilter, handleGroupFilterChange,
   } = useFavoriteGroups();
-  const [isGroupManagerOpen, setIsGroupManagerOpen] = useState(false);
-  const [isTagManagerOpen, setIsTagManagerOpen] = useState(false);
-  const [isStrategySummaryOpen, setIsStrategySummaryOpen] = useState(false);
-  const [isPortfolioPositionsOpen, setIsPortfolioPositionsOpen] = useState(false);
-  const [isAlertSummaryOpen, setIsAlertSummaryOpen] = useState(false);
-  const [isEventCalendarOpen, setIsEventCalendarOpen] = useState(false);
-  const [isDividendBenefitListOpen, setIsDividendBenefitListOpen] = useState(false);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const { cashAmount } = useCash();
+
   const [isInitialized, setIsInitialized] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<string[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
-  const [stockCalendarData, setStockCalendarData] = useState<{ [symbol: string]: { name: string; earningsDate: string; dividendRightsSettings: DividendRightsSettings; shareholderRightsSettings: ShareholderRightsSettings; shareholderMeetingSettings: ShareholderMeetingSettings } }>({});
-  const [portfolioData, setPortfolioData] = useState<{ symbol: string; name: string; positions: Position[]; currentPrice: string; sector: string; customTags: CustomTag[]; }[]>([]);
-  const [dividendBenefitData, setDividendBenefitData] = useState<Record<string, DividendBenefitStockData>>({});
+
+  // Custom hooks
+  const modals = useModals(refreshData);
+  const { searchQuery, setSearchQuery, isSearching, filteredStocks } = useStockSearch(
+    stockSymbols, stockData, selectedGroupFilter, favoriteGroups
+  );
+  const { alertCounts } = useAlertCounts(stockSymbols, stockData, isInitialized, cashAmount);
+  const { stockCalendarData, hasCalendarData } = useCalendarData(
+    stockSymbols, stockData, isInitialized, updateStockPrice, updateStockData, updateStockEvent
+  );
+  const { hasPortfolioData } = usePortfolioData(stockData, isInitialized);
+  const { dividendBenefitData } = useDividendBenefitData(
+    stockSymbols, stockData, modals.isDividendBenefitListOpen, isInitialized
+  );
 
   // ドラッグ&ドロップセンサー
   const sensors = useSensors(
@@ -107,460 +95,48 @@ export default function Home() {
     if (over && active.id !== over.id) {
       const oldIndex = filteredStocks.indexOf(active.id as string);
       const newIndex = filteredStocks.indexOf(over.id as string);
-
-      // ソートされた新しい順序を計算
       const newOrder = arrayMove(filteredStocks, oldIndex, newIndex);
-
-      // stocks配列を新しい順序で再構成
-      const otherStocks = stocks.filter(stock => !filteredStocks.includes(stock));
-
-      // フィルターされた株のみ並び替えて、他の株は元の位置に
+      const otherStocks = stockSymbols.filter(stock => !filteredStocks.includes(stock));
       const updatedStocks = [...otherStocks, ...newOrder];
 
-      // 楽観的更新（即時UI反映）
-      setStocks(updatedStocks);
+      reorderStocks(updatedStocks);
 
-      if (isLoggedIn) {
-        // 認証済み: DBに並び順を保存
-        fetch('/api/stocks/reorder', {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ symbols: updatedStocks }),
-        }).catch(err => console.error('並び順の保存に失敗:', err));
-      } else {
-        // 未認証: localStorageに保存
-        if (typeof window !== 'undefined') {
-          localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(updatedStocks));
-        }
-      }
+      fetch('/api/stocks/reorder', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ symbols: updatedStocks }),
+      }).catch(err => console.error('並び順の保存に失敗:', err));
     }
   };
 
   useEffect(() => {
     const initializeApp = async () => {
-      // CSVデータを事前読み込み（stockData検索等で使用）
       try {
         await loadStockData();
       } catch (error) {
         console.error('Failed to preload stock data:', error);
       }
-
       setIsInitialized(true);
     };
-
     initializeApp();
   }, []);
 
-  // 株式データはカスタムフック内で管理されるため、従来のlocalStorage保存は削除
-
-  // カレンダー用データの更新
-  useEffect(() => {
-    const updateCalendarData = async () => {
-      if (!isInitialized || stocks.length === 0) return;
-
-      const calendarData: { [symbol: string]: { name: string; earningsDate: string; dividendRightsSettings: DividendRightsSettings; shareholderRightsSettings: ShareholderRightsSettings; shareholderMeetingSettings: ShareholderMeetingSettings } } = {};
-
-      // 株式データを読み込み
-      await loadStockData();
-
-      for (const symbol of stocks) {
-        const stockInfo = await getStockData(symbol);
-
-        if (isLoggedIn && stockData.length > 0) {
-          // 認証済み: DBから取得したstockDataを使用
-          const dbStock = stockData.find(s => s.symbol === symbol);
-
-          const earningsEvent = dbStock?.events?.find(e => e.eventType === 'EARNINGS');
-          const earningsDate = earningsEvent?.eventDate || '';
-
-          const dividendRightsSettings: DividendRightsSettings =
-            dbStock?.dividend?.rightsMonth && dbStock.dividend.rightsDay
-              ? { month: dbStock.dividend.rightsMonth, day: dbStock.dividend.rightsDay, isRecurring: true, isActive: true }
-              : createDefaultDividendRightsSettings();
-
-          const shareholderRightsSettings: ShareholderRightsSettings =
-            dbStock?.benefit?.rightsMonth && dbStock.benefit.rightsDay
-              ? { month: dbStock.benefit.rightsMonth, day: dbStock.benefit.rightsDay, isRecurring: true, isActive: true }
-              : createDefaultShareholderRightsSettings();
-
-          const meetingEvent = dbStock?.events?.find(e => e.eventType === 'SHAREHOLDER_MEETING');
-          const shareholderMeetingSettings: ShareholderMeetingSettings = meetingEvent
-            ? { month: meetingEvent.eventMonth, day: meetingEvent.eventDay, isRecurring: meetingEvent.isRecurring, isActive: meetingEvent.isActive }
-            : createDefaultShareholderMeetingSettings();
-
-          calendarData[symbol] = {
-            name: dbStock?.name || stockInfo?.name || symbol,
-            earningsDate,
-            dividendRightsSettings,
-            shareholderRightsSettings,
-            shareholderMeetingSettings
-          };
-        } else {
-          // 未認証: localStorageから取得
-          const earningsDate = typeof window !== 'undefined'
-            ? localStorage.getItem(`kabunote-earnings-date-${symbol}`) || ''
-            : '';
-
-          let dividendRightsSettings: DividendRightsSettings;
-          try {
-            const str = typeof window !== 'undefined' ? localStorage.getItem(`kabunote-dividend-rights-settings-${symbol}`) : null;
-            dividendRightsSettings = str ? JSON.parse(str) : createDefaultDividendRightsSettings();
-          } catch {
-            dividendRightsSettings = createDefaultDividendRightsSettings();
-          }
-
-          let shareholderRightsSettings: ShareholderRightsSettings;
-          try {
-            const str = typeof window !== 'undefined' ? localStorage.getItem(`kabunote-shareholder-rights-settings-${symbol}`) : null;
-            shareholderRightsSettings = str ? JSON.parse(str) : createDefaultShareholderRightsSettings();
-          } catch {
-            shareholderRightsSettings = createDefaultShareholderRightsSettings();
-          }
-
-          let shareholderMeetingSettings: ShareholderMeetingSettings;
-          try {
-            const str = typeof window !== 'undefined' ? localStorage.getItem(`kabunote-shareholder-meeting-${symbol}`) : null;
-            shareholderMeetingSettings = str ? JSON.parse(str) : createDefaultShareholderMeetingSettings();
-          } catch {
-            shareholderMeetingSettings = createDefaultShareholderMeetingSettings();
-          }
-
-          calendarData[symbol] = {
-            name: stockInfo?.name || symbol,
-            earningsDate,
-            dividendRightsSettings,
-            shareholderRightsSettings,
-            shareholderMeetingSettings
-          };
-        }
-      }
-
-      setStockCalendarData(calendarData);
-    };
-
-    updateCalendarData();
-  }, [stocks, isInitialized, isLoggedIn, stockData]);
-
-  // カレンダーデータのリアルタイム更新
-  useEffect(() => {
-    if (!isInitialized) return;
-
-    const handleStorageChange = (event: CustomEvent) => {
-      const { key } = event.detail;
-
-      // カレンダー関連のキーかチェック
-      if (key.includes('earnings-date-') ||
-          key.includes('dividend-rights-settings-') ||
-          key.includes('shareholder-rights-settings-') ||
-          key.includes('shareholder-meeting-')) {
-
-        // カレンダーデータを再更新
-        const updateCalendarData = async () => {
-          if (stocks.length === 0) return;
-
-          const calendarData: { [symbol: string]: { name: string; earningsDate: string; dividendRightsSettings: DividendRightsSettings; shareholderRightsSettings: ShareholderRightsSettings; shareholderMeetingSettings: ShareholderMeetingSettings } } = {};
-
-          await loadStockData();
-
-          for (const symbol of stocks) {
-            const stockInfo = await getStockData(symbol);
-
-            // 決算発表日を取得
-            const earningsDate = localStorage.getItem(`kabunote-earnings-date-${symbol}`) || '';
-
-            // 配当権利確定日設定を取得
-            const dividendRightsSettingsStr = localStorage.getItem(`kabunote-dividend-rights-settings-${symbol}`);
-            let dividendRightsSettings: DividendRightsSettings;
-            try {
-              dividendRightsSettings = dividendRightsSettingsStr
-                ? JSON.parse(dividendRightsSettingsStr)
-                : createDefaultDividendRightsSettings();
-            } catch {
-              dividendRightsSettings = createDefaultDividendRightsSettings();
-            }
-
-            // 株主優待権利確定日設定を取得
-            const shareholderRightsSettingsStr = localStorage.getItem(`kabunote-shareholder-rights-settings-${symbol}`);
-            let shareholderRightsSettings: ShareholderRightsSettings;
-            try {
-              shareholderRightsSettings = shareholderRightsSettingsStr
-                ? JSON.parse(shareholderRightsSettingsStr)
-                : createDefaultShareholderRightsSettings();
-            } catch {
-              shareholderRightsSettings = createDefaultShareholderRightsSettings();
-            }
-
-            // 株主総会設定を取得
-            const shareholderMeetingSettingsStr = localStorage.getItem(`kabunote-shareholder-meeting-${symbol}`);
-            let shareholderMeetingSettings: ShareholderMeetingSettings;
-            try {
-              shareholderMeetingSettings = shareholderMeetingSettingsStr
-                ? JSON.parse(shareholderMeetingSettingsStr)
-                : createDefaultShareholderMeetingSettings();
-            } catch {
-              shareholderMeetingSettings = createDefaultShareholderMeetingSettings();
-            }
-
-            calendarData[symbol] = {
-              name: stockInfo?.name || symbol,
-              earningsDate,
-              dividendRightsSettings,
-              shareholderRightsSettings,
-              shareholderMeetingSettings
-            };
-          }
-
-          setStockCalendarData(calendarData);
-        };
-
-        updateCalendarData();
-      }
-    };
-
-    window.addEventListener('localStorageChange', handleStorageChange as EventListener);
-
-    // 認証済み: DBイベント保存後の部分更新（event/dividend/benefit）
-    const handleDbCalendarUpdate = (e: Event) => {
-      const ev = e as CustomEvent<{ type: 'event' | 'dividend' | 'benefit'; symbol: string; [key: string]: unknown }>;
-      if (!isLoggedIn || !ev.detail) return;
-      const { type, symbol } = ev.detail;
-      if (type === 'event') {
-        updateStockEvent(symbol, ev.detail.eventType as string, ev.detail.eventData as StockData['events'][0] | null);
-      } else if (type === 'dividend') {
-        updateStockData(symbol, { dividend: ev.detail.dividend as StockData['dividend'] });
-      } else if (type === 'benefit') {
-        updateStockData(symbol, { benefit: ev.detail.benefit as StockData['benefit'] });
-      }
-    };
-    window.addEventListener('kabunote-db-calendar-update', handleDbCalendarUpdate);
-
-    // 認証済み: DBタグ保存後の部分更新
-    const handleDbTagUpdate = (e: Event) => {
-      const ev = e as CustomEvent<{ symbol: string; tags: StockData['tags'] }>;
-      if (isLoggedIn && ev.detail) updateStockData(ev.detail.symbol, { tags: ev.detail.tags });
-    };
-    window.addEventListener('kabunote-db-tag-update', handleDbTagUpdate);
-
-    // 認証済み: Next Action Plan保存後の部分更新
-    const handleDbStrategyUpdate = (e: Event) => {
-      const ev = e as CustomEvent<{ symbol: string; nextActionPlan: StockData['nextActionPlan'] }>;
-      if (isLoggedIn && ev.detail) updateStockData(ev.detail.symbol, { nextActionPlan: ev.detail.nextActionPlan });
-    };
-    window.addEventListener('kabunote-db-strategy-update', handleDbStrategyUpdate);
-
-    // 認証済み: ポジション変更後の部分更新
-    const handleDbPositionUpdate = (e: Event) => {
-      const ev = e as CustomEvent<{ symbol: string; positions: StockData['positions'] }>;
-      if (isLoggedIn && ev.detail) updateStockData(ev.detail.symbol, { positions: ev.detail.positions });
-    };
-    window.addEventListener('kabunote-db-position-update', handleDbPositionUpdate);
-
-    // 認証済み: 株価変更時は全再取得せず対象銘柄の価格のみ部分更新
-    const handleDbPriceUpdate = (e: Event) => {
-      const event = e as CustomEvent<{
-        symbol: string;
-        currentPrice: number | null;
-        targetPrice: number | null;
-        stopLossPrice: number | null;
-      }>;
-      if (isLoggedIn && event.detail) {
-        updateStockPrice(event.detail.symbol, event.detail);
-      }
-    };
-    window.addEventListener('kabunote-db-price-update', handleDbPriceUpdate);
-
-    return () => {
-      window.removeEventListener('localStorageChange', handleStorageChange as EventListener);
-      window.removeEventListener('kabunote-db-calendar-update', handleDbCalendarUpdate);
-      window.removeEventListener('kabunote-db-tag-update', handleDbTagUpdate);
-      window.removeEventListener('kabunote-db-strategy-update', handleDbStrategyUpdate);
-      window.removeEventListener('kabunote-db-position-update', handleDbPositionUpdate);
-      window.removeEventListener('kabunote-db-price-update', handleDbPriceUpdate);
-    };
-  }, [isInitialized, stocks, isLoggedIn, refreshData, updateStockPrice, updateStockData, updateStockEvent]);
-
-  // ポートフォリオ用データの更新
-  useEffect(() => {
-    const updatePortfolioData = async () => {
-      if (!isInitialized || stocks.length === 0) return;
-
-      const portfolio: { symbol: string; name: string; positions: Position[]; currentPrice: string; sector: string; customTags: CustomTag[]; }[] = [];
-
-      // 株式データを読み込み
-      await loadStockData();
-
-      for (const symbol of stocks) {
-        const stockInfo = await getStockData(symbol);
-
-        // ポジション情報を取得
-        const positionsStr = typeof window !== 'undefined'
-          ? localStorage.getItem(`kabunote-positions-${symbol}`)
-          : null;
-
-        let positions: Position[] = [];
-        try {
-          positions = positionsStr ? JSON.parse(positionsStr) : [];
-        } catch {
-          positions = [];
-        }
-
-        // 現在株価を取得
-        const currentPrice = typeof window !== 'undefined'
-          ? localStorage.getItem(`kabunote-current-price-${symbol}`) || ''
-          : '';
-
-        // カスタムタグを取得
-        const tagsStr = typeof window !== 'undefined'
-          ? localStorage.getItem(`kabunote-tags-${symbol}`)
-          : null;
-
-        let customTags: CustomTag[] = [];
-        try {
-          customTags = tagsStr ? JSON.parse(tagsStr) : [];
-        } catch {
-          customTags = [];
-        }
-
-        // ポジションを持つ銘柄のみ追加
-        if (positions.length > 0) {
-          portfolio.push({
-            symbol,
-            name: stockInfo?.name || symbol,
-            positions,
-            currentPrice,
-            sector: stockInfo?.sector || 'その他',
-            customTags
-          });
-        }
-      }
-
-      setPortfolioData(portfolio);
-    };
-
-    updatePortfolioData();
-  }, [stocks, isInitialized]);
-
-  // ポートフォリオデータのリアルタイム更新
-  useEffect(() => {
-    if (!isInitialized) return;
-
-    const handleStorageChange = (event: CustomEvent) => {
-      const { key } = event.detail;
-
-      // ポートフォリオ関連のキーかチェック
-      if (key.includes('positions-') ||
-          key.includes('current-price-') ||
-          key.includes('tags-') ||
-          key.includes('dividend-per-share-') ||
-          key.includes('dividend-frequency-') ||
-          key.includes('estimated-value-') ||
-          key.includes('minimum-shares-') ||
-          key.includes('benefit-description-')) {
-
-        // ポートフォリオデータを再更新
-        const updatePortfolioData = async () => {
-          if (stocks.length === 0) return;
-
-          const portfolio: { symbol: string; name: string; positions: Position[]; currentPrice: string; sector: string; customTags: CustomTag[]; }[] = [];
-
-          await loadStockData();
-
-          for (const symbol of stocks) {
-            const stockInfo = await getStockData(symbol);
-
-            // ポジション情報を取得
-            const positionsStr = localStorage.getItem(`kabunote-positions-${symbol}`);
-            let positions: Position[] = [];
-            try {
-              positions = positionsStr ? JSON.parse(positionsStr) : [];
-            } catch {
-              positions = [];
-            }
-
-            // 現在株価を取得
-            const currentPrice = localStorage.getItem(`kabunote-current-price-${symbol}`) || '';
-
-            // カスタムタグを取得
-            const tagsStr = localStorage.getItem(`kabunote-tags-${symbol}`);
-            let customTags: CustomTag[] = [];
-            try {
-              customTags = tagsStr ? JSON.parse(tagsStr) : [];
-            } catch {
-              customTags = [];
-            }
-
-            // ポジションを持つ銘柄のみ追加
-            if (positions.length > 0) {
-              portfolio.push({
-                symbol,
-                name: stockInfo?.name || symbol,
-                positions,
-                currentPrice,
-                sector: stockInfo?.sector || 'その他',
-                customTags
-              });
-            }
-          }
-
-          setPortfolioData(portfolio);
-        };
-
-        updatePortfolioData();
-      }
-    };
-
-    window.addEventListener('localStorageChange', handleStorageChange as EventListener);
-
-    return () => {
-      window.removeEventListener('localStorageChange', handleStorageChange as EventListener);
-    };
-  }, [isInitialized, stocks]);
-
-  // 配当・優待データの準備（isDividendBenefitListOpen時に実行）
-  useEffect(() => {
-    if (!isDividendBenefitListOpen || !isInitialized) return;
-
-    const loadDividendBenefitData = async () => {
-      const data = await getDividendBenefitData();
-      setDividendBenefitData(data);
-    };
-
-    loadDividendBenefitData();
-  }, [isDividendBenefitListOpen, isInitialized, stocks]);
-
   const handleAddStock = (code: string) => {
-    if (stocks.length >= MAX_STOCKS) {
+    if (stockSymbols.length >= MAX_STOCKS) {
       setError(`最大${MAX_STOCKS}銘柄まで表示できます`);
       return;
     }
-
-    if (stocks.includes(code)) {
+    if (stockSymbols.includes(code)) {
       setError('この銘柄は既に追加されています');
       return;
     }
-
     setError('');
+    addLocalStock(code);
 
-    if (isLoggedIn) {
-      // 認証済み: ローカルに仮エントリを追加（StockCard マウント時の API 呼び出しで DB に自動登録される）
-      addLocalStock(code);
-    } else {
-      // 未認証: localStorage に保存
-      const newStocks = [...stocks, code];
-      setStocks(newStocks);
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(newStocks));
-      }
-    }
-
-    // お気に入りグループフィルターが選択されている場合、自動的にそのグループに追加
     if (selectedGroupFilter) {
       const updatedGroups = favoriteGroups.map(group => {
-        if (group.id === selectedGroupFilter) {
-          // 既にグループに含まれていない場合のみ追加
-          if (!group.stocks.includes(code)) {
-            return { ...group, stocks: [...group.stocks, code] };
-          }
+        if (group.id === selectedGroupFilter && !group.stocks.includes(code)) {
+          return { ...group, stocks: [...group.stocks, code] };
         }
         return group;
       });
@@ -569,35 +145,16 @@ export default function Home() {
   };
 
   const handleRemoveStock = (code: string) => {
-    const newStocks = stocks.filter(stock => stock !== code);
-
-    // 楽観的更新（即時UI反映）
-    setStocks(newStocks);
+    const newStocks = stockSymbols.filter(stock => stock !== code);
+    reorderStocks(newStocks);
     setError('');
 
-    if (isLoggedIn) {
-      // 認証済み: 残った銘柄の並び順をDBに保存
-      fetch('/api/stocks/reorder', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ symbols: newStocks }),
-      }).catch(err => console.error('並び順の保存に失敗:', err));
-    } else {
-      // 未認証: localStorage に保存
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(newStocks));
-      }
-    }
+    fetch('/api/stocks/reorder', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ symbols: newStocks }),
+    }).catch(err => console.error('並び順の保存に失敗:', err));
 
-    // クライアントサイドでのみlocalStorageにアクセス
-    if (typeof window !== 'undefined') {
-      // メモも削除
-      localStorage.removeItem(`kabunote-memo-${code}`);
-      // タグも削除
-      localStorage.removeItem(`kabunote-tags-${code}`);
-    }
-
-    // お気に入りグループからも削除
     const updatedGroups = favoriteGroups.map(group => ({
       ...group,
       stocks: group.stocks.filter(s => s !== code)
@@ -605,12 +162,10 @@ export default function Home() {
     setFavoriteGroups(updatedGroups);
   };
 
-  // 銘柄カードへのスムーススクロール
   const handleStockClick = (symbol: string) => {
     const element = document.getElementById(`stock-card-${symbol}`);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      // スクロール後にカードを少し強調表示
       element.style.transform = 'scale(1.02)';
       element.style.boxShadow = '0 0 20px rgba(59, 130, 246, 0.5)';
       setTimeout(() => {
@@ -621,478 +176,7 @@ export default function Home() {
     }
   };
 
-
-  // メニュー項目クリックハンドラー
-  const handleMenuItemClick = (action: string) => {
-    switch (action) {
-      case 'alerts':
-        setIsAlertSummaryOpen(true);
-        break;
-      case 'strategy':
-        setIsStrategySummaryOpen(true);
-        if (isLoggedIn) refreshData();
-        break;
-      case 'positions':
-        setIsPortfolioPositionsOpen(true);
-        if (isLoggedIn) refreshData();
-        break;
-      case 'portfolio':
-        // ポートフォリオサマリーは既に表示されているのでスクロール
-        document.querySelector('.portfolio-summary')?.scrollIntoView({ behavior: 'smooth' });
-        break;
-      case 'events':
-        setIsEventCalendarOpen(true);
-        if (isLoggedIn) refreshData();
-        break;
-      case 'dividends':
-        setIsDividendBenefitListOpen(true);
-        if (isLoggedIn) refreshData();
-        break;
-      case 'groups':
-        setIsGroupManagerOpen(true);
-        break;
-      case 'tags':
-        setIsTagManagerOpen(true);
-        break;
-      case 'help':
-        // TODO: ヘルプページの実装
-        alert('ヘルプ機能は今後実装予定です');
-        break;
-      default:
-        break;
-    }
-  };
-
-  // 投資カレンダーにデータがあるかどうかを判定
-  const hasCalendarData = Object.values(stockCalendarData).some(data => {
-    return data.earningsDate ||
-           (data.dividendRightsSettings.isActive && data.dividendRightsSettings.month && data.dividendRightsSettings.day) ||
-           (data.shareholderRightsSettings.isActive && data.shareholderRightsSettings.month && data.shareholderRightsSettings.day) ||
-           (data.shareholderMeetingSettings && data.shareholderMeetingSettings.isActive && data.shareholderMeetingSettings.month && data.shareholderMeetingSettings.day);
-  });
-
-  // ポートフォリオデータがあるかどうかを判定
-  const hasPortfolioData = portfolioData.length > 0;
-
-  // 次のステップのヒントが必要かどうかを判定
-  const shouldShowHints = stocks.length > 0 && (!hasPortfolioData || !hasCalendarData);
-
-  // 配当情報を取得する関数
-  const getDividendInfo = (symbol: string) => {
-    if (typeof window === 'undefined') return null;
-
-    const dividendPerShare = localStorage.getItem(`kabunote-dividend-per-share-${symbol}`) || '';
-    const dividendFrequency = localStorage.getItem(`kabunote-dividend-frequency-${symbol}`) || '1';
-
-    if (!dividendPerShare) return null;
-
-    return {
-      dividendPerShare,
-      dividendFrequency: parseInt(dividendFrequency) as 1 | 2 | 4,
-      lastUpdated: new Date().toISOString()
-    };
-  };
-
-  // 株主優待情報を取得する関数
-  const getShareholderBenefitInfo = (symbol: string) => {
-    if (typeof window === 'undefined') return null;
-
-    const benefitDescription = localStorage.getItem(`kabunote-benefit-description-${symbol}`) || '';
-    const minimumShares = localStorage.getItem(`kabunote-minimum-shares-${symbol}`) || '';
-    const estimatedValue = localStorage.getItem(`kabunote-estimated-value-${symbol}`) || '';
-
-    if (!benefitDescription) return null;
-
-    return {
-      benefitDescription,
-      minimumShares,
-      benefitMonth: '12', // デフォルト値、実際の実装では権利確定日設定から取得
-      estimatedValue,
-      lastUpdated: new Date().toISOString()
-    };
-  };
-
-  // 配当権利確定日設定を取得する関数
-  const getDividendRightsSettings = (symbol: string): DividendRightsSettings => {
-    if (typeof window === 'undefined') return createDefaultDividendRightsSettings();
-
-    const settingsStr = localStorage.getItem(`kabunote-dividend-rights-settings-${symbol}`);
-    if (settingsStr) {
-      try {
-        return JSON.parse(settingsStr);
-      } catch {
-        return createDefaultDividendRightsSettings();
-      }
-    }
-    return createDefaultDividendRightsSettings();
-  };
-
-  // 株主優待権利確定日設定を取得する関数
-  const getShareholderRightsSettings = (symbol: string): ShareholderRightsSettings => {
-    if (typeof window === 'undefined') return createDefaultShareholderRightsSettings();
-
-    const settingsStr = localStorage.getItem(`kabunote-shareholder-rights-settings-${symbol}`);
-    if (settingsStr) {
-      try {
-        return JSON.parse(settingsStr);
-      } catch {
-        return createDefaultShareholderRightsSettings();
-      }
-    }
-    return createDefaultShareholderRightsSettings();
-  };
-
-  // 配当・優待データを準備する関数
-  const getDividendBenefitData = async () => {
-    const result: Record<string, DividendBenefitStockData> = {};
-
-    for (const symbol of stocks) {
-      const stockInfo = await getStockData(symbol);
-
-      let dividendInfo;
-      let dividendRightsSettings;
-      let shareholderBenefitInfo;
-      let shareholderRightsSettings;
-
-      if (isLoggedIn && stockData.length > 0) {
-        // 認証済み: stockData（DBデータ）から取得
-        const dbStock = stockData.find(s => s.symbol === symbol);
-
-        dividendInfo = dbStock?.dividend?.dividendPerShare != null
-          ? {
-              dividendPerShare: String(dbStock.dividend.dividendPerShare),
-              dividendFrequency: (dbStock.dividend.frequency ?? 1) as 1 | 2 | 4,
-              lastUpdated: new Date().toISOString()
-            }
-          : null;
-
-        dividendRightsSettings = dbStock?.dividend?.rightsMonth != null && dbStock?.dividend?.rightsDay != null
-          ? { month: dbStock.dividend.rightsMonth, day: dbStock.dividend.rightsDay, isRecurring: true, isActive: true }
-          : createDefaultDividendRightsSettings();
-
-        shareholderBenefitInfo = dbStock?.benefit?.description
-          ? {
-              benefitDescription: dbStock.benefit.description,
-              minimumShares: dbStock.benefit.minimumShares != null ? String(dbStock.benefit.minimumShares) : '',
-              benefitMonth: dbStock.benefit.rightsMonth != null ? String(dbStock.benefit.rightsMonth) : '12',
-              estimatedValue: dbStock.benefit.estimatedValue != null ? String(dbStock.benefit.estimatedValue) : '',
-              lastUpdated: new Date().toISOString()
-            }
-          : null;
-
-        shareholderRightsSettings = dbStock?.benefit?.rightsMonth != null && dbStock?.benefit?.rightsDay != null
-          ? { month: dbStock.benefit.rightsMonth, day: dbStock.benefit.rightsDay, isRecurring: true, isActive: true }
-          : createDefaultShareholderRightsSettings();
-      } else {
-        // 未認証: localStorage から取得
-        dividendInfo = getDividendInfo(symbol);
-        dividendRightsSettings = getDividendRightsSettings(symbol);
-        shareholderBenefitInfo = getShareholderBenefitInfo(symbol);
-        shareholderRightsSettings = getShareholderRightsSettings(symbol);
-      }
-
-      // portfolioDataから該当銘柄のポジション情報を取得し統合
-      const portfolioItem = portfolioData.find(p => p.symbol === symbol);
-      let position = null;
-
-      if (portfolioItem && portfolioItem.positions.length > 0) {
-        // 複数ポジションがある場合は統合
-        if (portfolioItem.positions.length > 1) {
-          const totalShares = portfolioItem.positions.reduce((sum, pos) => sum + pos.shares, 0);
-          const totalCost = portfolioItem.positions.reduce((sum, pos) => sum + (pos.shares * pos.purchasePrice), 0);
-          const averagePrice = totalShares > 0 ? totalCost / totalShares : 0;
-
-          position = {
-            totalShares,
-            averagePrice,
-            purchaseDate: portfolioItem.positions[0].purchaseDate,
-            notes: portfolioItem.positions.map(p => p.memo).filter(Boolean).join(', ')
-          };
-        } else {
-          // 単一ポジションの場合は統合形式に変換
-          const pos = portfolioItem.positions[0];
-          position = {
-            totalShares: pos.shares,
-            averagePrice: pos.purchasePrice,
-            purchaseDate: pos.purchaseDate,
-            notes: pos.memo || ''
-          };
-        }
-      }
-
-      result[symbol] = {
-        name: (isLoggedIn && stockData.find(s => s.symbol === symbol)?.name) || stockInfo?.name || symbol,
-        dividendInfo: dividendInfo ?? undefined,
-        shareholderBenefitInfo: shareholderBenefitInfo ?? undefined,
-        dividendRightsSettings,
-        shareholderRightsSettings,
-        position: position ?? undefined
-      };
-    }
-    return result;
-  };
-
-  // 検索機能
-  const searchStocks = async (stocks: string[], query: string): Promise<string[]> => {
-    if (!query || query.length < 2) return stocks;
-
-    // クエリを正規化（全角→半角、大文字→小文字、カタカナ→ひらがな）
-    const normalizedQuery = query
-      .replace(/[Ａ-Ｚａ-ｚ０-９]/g, (char) => {
-        return String.fromCharCode(char.charCodeAt(0) - 0xFEE0);
-      })
-      .replace(/[\u30A1-\u30F6]/g, (char) => {
-        return String.fromCharCode(char.charCodeAt(0) - 0x60);
-      })
-      .toLowerCase();
-
-    const searchTerms = normalizedQuery.split(' ').filter(term => term.length > 0);
-
-    // 株式データを事前に読み込み
-    await loadStockData();
-
-    const results: string[] = [];
-
-    for (const stockCode of stocks) {
-      // 検索対象データを準備
-      const stockInfo = await getStockData(stockCode);
-
-      const searchData = {
-        code: stockCode,
-        // 会社名を取得
-        name: stockInfo?.name || '',
-        // 業種を取得
-        sector: stockInfo?.sector || '',
-        // 市場を取得
-        market: stockInfo?.market || '',
-        // メモを取得
-        memo: typeof window !== 'undefined'
-          ? localStorage.getItem(`kabunote-memo-${stockCode}`) || ''
-          : '',
-        // タグを取得（認証済み: stockData経由のDB / 未認証: localStorage フォールバック）
-        tags: (() => {
-          const dbStock = stockData.find(s => s.symbol === stockCode);
-          if (dbStock && dbStock.tags.length > 0) {
-            return dbStock.tags.map(tag => tag.label).join(' ');
-          }
-          if (typeof window !== 'undefined') {
-            try {
-              const savedTags = localStorage.getItem(`kabunote-tags-${stockCode}`);
-              return savedTags ? JSON.parse(savedTags).map((tag: { label: string }) => tag.label).join(' ') : '';
-            } catch {
-              return '';
-            }
-          }
-          return '';
-        })(),
-        // グループ名を取得
-        groups: favoriteGroups
-          .filter(group => group.stocks.includes(stockCode))
-          .map(group => group.name)
-          .join(' ')
-      };
-
-      // 検索対象テキストを結合して正規化
-      const searchText = [
-        searchData.code,
-        searchData.name,
-        searchData.sector,
-        searchData.market,
-        searchData.memo,
-        searchData.tags,
-        searchData.groups
-      ].join(' ')
-        .replace(/[Ａ-Ｚａ-ｚ０-９]/g, (char) => {
-          return String.fromCharCode(char.charCodeAt(0) - 0xFEE0);
-        })
-        .replace(/[\u30A1-\u30F6]/g, (char) => {
-          return String.fromCharCode(char.charCodeAt(0) - 0x60);
-        })
-        .toLowerCase();
-
-      // すべての検索語が含まれているかチェック（AND検索）
-      if (searchTerms.every(term => searchText.includes(term))) {
-        results.push(stockCode);
-      }
-    }
-
-    return results;
-  };
-
-  // 検索処理のuseEffect
-  useEffect(() => {
-    const performSearch = async () => {
-      if (!searchQuery.trim()) {
-        setSearchResults([]);
-        setIsSearching(false);
-        return;
-      }
-
-      setIsSearching(true);
-      try {
-        // グループフィルターが適用されている場合はそれを考慮
-        const baseStocks = selectedGroupFilter
-          ? stocks.filter(stock => {
-              const group = favoriteGroups.find(g => g.id === selectedGroupFilter);
-              return group?.stocks.includes(stock);
-            })
-          : stocks;
-
-        const results = await searchStocks(baseStocks, searchQuery);
-        setSearchResults(results);
-      } catch (error) {
-        console.error('Search failed:', error);
-        setSearchResults([]);
-      } finally {
-        setIsSearching(false);
-      }
-    };
-
-    const timeoutId = setTimeout(performSearch, 300);
-    return () => clearTimeout(timeoutId);
-  }, [searchQuery, stocks, selectedGroupFilter, favoriteGroups]);
-
-  // フィルタリングされた株式リスト
-  const filteredStocks = searchQuery.trim()
-    ? searchResults
-    : selectedGroupFilter
-    ? stocks.filter(stock => {
-        const group = favoriteGroups.find(g => g.id === selectedGroupFilter);
-        return group?.stocks.includes(stock);
-      })
-    : stocks;
-
-  // アラート件数を計算（リアルタイム更新対応）
-  const [alertCounts, setAlertCounts] = useState({ total: 0, urgent: 0 });
-
-  const calculateAlertCounts = useCallback(() => {
-    if (!isInitialized || stocks.length === 0) {
-      return { total: 0, urgent: 0 };
-    }
-
-    const cashAmount = typeof window !== 'undefined' ? localStorage.getItem('kabunote-cash-amount') || '0' : '0';
-    const availableCash = parseFloat(cashAmount) || 0;
-
-    let totalAlerts = 0;
-    let urgentAlerts = 0;
-
-    // スヌーズ判定用の共通処理
-    const checkSnooze = (symbol: string, alertType: string): boolean => {
-      const snoozedAlertsStr = typeof window !== 'undefined' ? localStorage.getItem('kabunote-snoozed-alerts') : null;
-      if (!snoozedAlertsStr) return false;
-      try {
-        const snoozedAlerts = JSON.parse(snoozedAlertsStr);
-        const alertKey = `${symbol}-${alertType}`;
-        return snoozedAlerts.some((s: SnoozedAlert) => s.alertKey === alertKey && s.snoozeUntil > Date.now());
-      } catch { return false; }
-    };
-
-    // アラートカウント共通処理
-    const countAlerts = (symbol: string, currentPrice: number, targetPrice: number, stopLossPrice: number, plan: NextActionPlan, positionSummary: ReturnType<typeof calculatePositionSummary> | null) => {
-      const alerts = getAllActiveAlerts(
-        plan, currentPrice, targetPrice, stopLossPrice.toString(),
-        positionSummary && positionSummary.totalShares > 0 ? positionSummary : undefined,
-        availableCash
-      );
-
-      alerts.forEach(alert => {
-        if (!checkSnooze(symbol, alert.type)) {
-          totalAlerts++;
-          if (alert.type === 'insufficient-funds' || alert.type === 'stop-loss-exceeded' || alert.type === 'nextaction-approaching') {
-            urgentAlerts++;
-          }
-        }
-      });
-    };
-
-    if (isLoggedIn && stockData.length > 0) {
-      // 認証済み: DBデータを使用
-      stockData.forEach(stock => {
-        const currentPrice = stock.currentPrice ?? 0;
-        if (currentPrice <= 0) return;
-
-        const targetPrice = stock.targetPrice ?? 0;
-        const stopLossPrice = stock.stopLossPrice ?? 0;
-
-        const nap = stock.nextActionPlan;
-        const plan: NextActionPlan = nap ? {
-          id: 'db',
-          actionType: nap.actionType as 'buy' | 'sell' | 'hold',
-          priority: nap.priority as 'high' | 'medium' | 'low',
-          targetPrice: nap.targetPrice ?? 0,
-          targetQuantity: nap.targetShares ?? 0,
-          memo: nap.strategyMemo,
-          updatedAt: '',
-        } : { id: '', targetPrice: 0, targetQuantity: 0, memo: '', actionType: 'buy', priority: 'medium', updatedAt: '' };
-
-        const positionSummary = stock.positions.length > 0 ? calculatePositionSummary(stock.positions) : null;
-
-        countAlerts(stock.symbol, currentPrice, targetPrice, stopLossPrice, plan, positionSummary);
-      });
-    } else {
-      // 未認証: localStorage
-      stocks.forEach(symbol => {
-        const currentPriceStr = typeof window !== 'undefined' ? localStorage.getItem(`kabunote-current-price-${symbol}`) || '0' : '0';
-        const targetPriceStr = typeof window !== 'undefined' ? localStorage.getItem(`kabunote-target-price-${symbol}`) || '0' : '0';
-        const stopLossStr = typeof window !== 'undefined' ? localStorage.getItem(`kabunote-stop-loss-${symbol}`) || '0' : '0';
-        const currentPrice = parseFloat(currentPriceStr);
-
-        if (currentPrice <= 0) return;
-
-        try {
-          const planData = typeof window !== 'undefined' ? localStorage.getItem(`kabunote-next-action-plan-${symbol}`) : null;
-          let plan: NextActionPlan;
-          if (planData) { plan = JSON.parse(planData); }
-          else { plan = { id: '', targetPrice: 0, targetQuantity: 0, memo: '', actionType: 'buy', priority: 'medium', updatedAt: '' }; }
-
-          const positionsData = typeof window !== 'undefined' ? localStorage.getItem(`kabunote-positions-${symbol}`) : null;
-          let positionSummary = null;
-          if (positionsData) { try { positionSummary = calculatePositionSummary(JSON.parse(positionsData)); } catch { /* ignore */ } }
-
-          countAlerts(symbol, currentPrice, parseFloat(targetPriceStr) || 0, parseFloat(stopLossStr) || 0, plan, positionSummary);
-        } catch { /* ignore */ }
-      });
-    }
-
-    return { total: totalAlerts, urgent: urgentAlerts };
-  }, [stocks, isInitialized, isLoggedIn, stockData]);
-
-  // 初期アラート件数計算 & stocks/isInitialized変更時の再計算
-  useEffect(() => {
-    const counts = calculateAlertCounts();
-    setAlertCounts(counts);
-  }, [calculateAlertCounts]);
-
-  // localStorage変更監視でアラート件数をリアルタイム更新
-  useEffect(() => {
-    if (!isInitialized) return;
-
-    const handleStorageChange = (event: CustomEvent) => {
-      const { key } = event.detail;
-
-      // アラートに影響するキーの変更を検知
-      if (key.includes('current-price-') ||
-          key.includes('target-price-') ||
-          key.includes('stop-loss-') ||
-          key.includes('next-action-plan-') ||
-          key.includes('positions-') ||
-          key === 'kabunote-cash-amount' ||
-          key === 'kabunote-snoozed-alerts') {
-
-        // アラート件数を再計算
-        setTimeout(() => {
-          const counts = calculateAlertCounts();
-          setAlertCounts(counts);
-        }, 100); // 少し遅延させて確実にデータが更新された後に計算
-      }
-    };
-
-    window.addEventListener('localStorageChange', handleStorageChange as EventListener);
-
-    return () => {
-      window.removeEventListener('localStorageChange', handleStorageChange as EventListener);
-    };
-  }, [isInitialized, calculateAlertCounts]);
+  const shouldShowHints = stockSymbols.length > 0 && (!hasPortfolioData || !hasCalendarData);
 
   return (
     <div className="min-h-screen bg-gray-900">
@@ -1119,7 +203,7 @@ export default function Home() {
             <div className="flex items-center gap-3 flex-shrink-0">
               <AuthButton />
               <HamburgerMenuButton
-                onClick={() => setIsMenuOpen(true)}
+                onClick={() => modals.setIsMenuOpen(true)}
                 alertCounts={alertCounts}
               />
             </div>
@@ -1232,9 +316,9 @@ export default function Home() {
         </div>
 
         {/* 投資カレンダー */}
-        {stocks.length > 0 && hasCalendarData && (
+        {stockSymbols.length > 0 && hasCalendarData && (
           <InvestmentCalendar
-            stockSymbols={stocks}
+            stockSymbols={stockSymbols}
             stockData={stockCalendarData}
             onStockClick={handleStockClick}
           />
@@ -1280,7 +364,7 @@ export default function Home() {
         onAddStock={handleAddStock}
         error={error}
         setError={setError}
-        disabled={stocks.length >= MAX_STOCKS}
+        disabled={stockSymbols.length >= MAX_STOCKS}
         selectedGroupInfo={
           selectedGroupFilter
             ? {
@@ -1289,16 +373,16 @@ export default function Home() {
               }
             : null
         }
-        isFirstTime={stocks.length === 0}
+        isFirstTime={stockSymbols.length === 0}
       />
 
         {/* お気に入りグループフィルター */}
-        {favoriteGroups.length > 0 && stocks.length > 0 && (
+        {favoriteGroups.length > 0 && stockSymbols.length > 0 && (
           <div className="bg-gray-800 rounded-lg p-4 mb-6">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-lg font-semibold text-white">⭐ お気に入りグループ</h3>
               <button
-                onClick={() => setIsGroupManagerOpen(true)}
+                onClick={() => modals.setIsGroupManagerOpen(true)}
                 className="cursor-pointer text-sm bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded transition-colors"
               >
                 グループ管理
@@ -1313,7 +397,7 @@ export default function Home() {
                     : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
                 }`}
               >
-                すべて ({stocks.length})
+                すべて ({stockSymbols.length})
               </button>
               {favoriteGroups.map((group) => (
                 <button
@@ -1333,11 +417,11 @@ export default function Home() {
         )}
 
         {/* グループ管理ボタン（グループがない場合） */}
-        {favoriteGroups.length === 0 && stocks.length > 0 && (
+        {favoriteGroups.length === 0 && stockSymbols.length > 0 && (
           <div className="bg-gray-800 rounded-lg p-4 mb-6 text-center">
             <p className="text-gray-400 text-sm mb-3">お気に入りグループを作成して銘柄を整理しましょう</p>
             <button
-              onClick={() => setIsGroupManagerOpen(true)}
+              onClick={() => modals.setIsGroupManagerOpen(true)}
               className="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition-colors"
             >
               グループを作成
@@ -1355,7 +439,7 @@ export default function Home() {
             </div>
           ) : filteredStocks.length === 0 ? (
             <div className="bg-gray-800 rounded-lg p-8 text-center">
-              {stocks.length === 0 ? (
+              {stockSymbols.length === 0 ? (
                 <>
                   <div className="mb-6">
                     <h3 className="text-xl font-medium text-white mb-3">🎯 銘柄カードを追加してください</h3>
@@ -1438,89 +522,89 @@ export default function Home() {
         </div>
 
         {/* グループ管理モーダル */}
-        {isGroupManagerOpen && (
+        {modals.isGroupManagerOpen && (
           <FavoriteGroupManager
             groups={favoriteGroups}
             onGroupsChange={setFavoriteGroups}
-            onClose={() => setIsGroupManagerOpen(false)}
+            onClose={() => modals.setIsGroupManagerOpen(false)}
           />
         )}
 
         {/* タグ管理モーダル */}
         <TagManager
-          isOpen={isTagManagerOpen}
-          onClose={() => { setIsTagManagerOpen(false); if (isLoggedIn) refreshData(); }}
+          isOpen={modals.isTagManagerOpen}
+          onClose={() => { modals.setIsTagManagerOpen(false); refreshData(); }}
         />
 
 
         {/* アラート一覧モーダル */}
-        {isAlertSummaryOpen && (
+        {modals.isAlertSummaryOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-gray-900 rounded-lg p-4 max-w-6xl w-full mx-4 max-h-[90vh] overflow-hidden">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-bold text-white">🚨 アラート一覧</h2>
                 <button
-                  onClick={() => setIsAlertSummaryOpen(false)}
+                  onClick={() => modals.setIsAlertSummaryOpen(false)}
                   className="cursor-pointer text-gray-400 hover:text-white transition-colors"
                 >
                   ✕
                 </button>
               </div>
               <div className="overflow-auto max-h-[calc(90vh-8rem)]">
-                <AlertSummaryPage stockData={stockData} isLoggedIn={isLoggedIn} />
+                <AlertSummaryPage stockData={stockData} />
               </div>
             </div>
           </div>
         )}
 
         {/* 戦略一覧ダッシュボードモーダル */}
-        {isStrategySummaryOpen && (
+        {modals.isStrategySummaryOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-gray-900 rounded-lg p-4 max-w-7xl w-full mx-4 max-h-[90vh] overflow-hidden">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-bold text-white">🎯 戦略一覧ダッシュボード</h2>
                 <button
-                  onClick={() => setIsStrategySummaryOpen(false)}
+                  onClick={() => modals.setIsStrategySummaryOpen(false)}
                   className="text-gray-400 hover:text-white transition-colors cursor-pointer"
                 >
                   ✕
                 </button>
               </div>
               <div className="overflow-auto max-h-[calc(90vh-8rem)]">
-                <StrategySummaryPage stockData={stockData} isLoggedIn={isLoggedIn} />
+                <StrategySummaryPage stockData={stockData} />
               </div>
             </div>
           </div>
         )}
 
         {/* 保有ポジション一覧ダッシュボードモーダル */}
-        {isPortfolioPositionsOpen && (
+        {modals.isPortfolioPositionsOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-gray-900 rounded-lg p-4 max-w-7xl w-full mx-4 max-h-[90vh] overflow-hidden">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-bold text-white">💼 保有ポジション一覧</h2>
                 <button
-                  onClick={() => setIsPortfolioPositionsOpen(false)}
+                  onClick={() => modals.setIsPortfolioPositionsOpen(false)}
                   className="text-gray-400 hover:text-white transition-colors cursor-pointer"
                 >
                   ✕
                 </button>
               </div>
               <div className="overflow-auto max-h-[calc(90vh-8rem)]">
-                <PortfolioPositionsPage stockData={stockData} isLoggedIn={isLoggedIn} />
+                <PortfolioPositionsPage stockData={stockData} />
               </div>
             </div>
           </div>
         )}
 
         {/* イベント一覧モーダル */}
-        {isEventCalendarOpen && (
+        {modals.isEventCalendarOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-gray-900 rounded-lg p-4 max-w-6xl w-full mx-4 max-h-[90vh] overflow-hidden">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-bold text-white">📅 イベント一覧</h2>
                 <button
-                  onClick={() => setIsEventCalendarOpen(false)}
+                  onClick={() => modals.setIsEventCalendarOpen(false)}
                   className="cursor-pointer text-gray-400 hover:text-white transition-colors p-2 rounded"
                 >
                   ✕
@@ -1528,7 +612,7 @@ export default function Home() {
               </div>
               <div className="overflow-auto max-h-[calc(90vh-8rem)]">
                 <EventCalendarPage
-                  stockSymbols={stocks}
+                  stockSymbols={stockSymbols}
                   stockData={stockCalendarData}
                 />
               </div>
@@ -1537,13 +621,13 @@ export default function Home() {
         )}
 
         {/* 配当・優待一覧モーダル */}
-        {isDividendBenefitListOpen && (
+        {modals.isDividendBenefitListOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-gray-900 rounded-lg p-4 max-w-7xl w-full mx-4 max-h-[90vh] overflow-hidden">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-bold text-white">💰 配当・優待一覧</h2>
                 <button
-                  onClick={() => setIsDividendBenefitListOpen(false)}
+                  onClick={() => modals.setIsDividendBenefitListOpen(false)}
                   className="cursor-pointer text-gray-400 hover:text-white transition-colors p-2 rounded"
                 >
                   ✕
@@ -1551,11 +635,10 @@ export default function Home() {
               </div>
               <div className="overflow-auto max-h-[calc(90vh-8rem)]">
                 <DividendBenefitListPage
-                    stockSymbols={stocks}
+                    stockSymbols={stockSymbols}
                     stockData={dividendBenefitData}
                     onStockClick={(symbol) => {
-                      setIsDividendBenefitListOpen(false);
-                      // 配当・優待タブを開くための指示をlocalStorageに保存
+                      modals.setIsDividendBenefitListOpen(false);
                       if (typeof window !== 'undefined') {
                         localStorage.setItem(`kabunote-open-tab-${symbol}`, 'dividend');
                       }
@@ -1570,10 +653,10 @@ export default function Home() {
 
       {/* スライドアウトメニュー */}
       <SlideOutMenu
-        isOpen={isMenuOpen}
-        onClose={() => setIsMenuOpen(false)}
+        isOpen={modals.isMenuOpen}
+        onClose={() => modals.setIsMenuOpen(false)}
         alertCounts={alertCounts}
-        onMenuItemClick={handleMenuItemClick}
+        onMenuItemClick={modals.handleMenuItemClick}
       />
     </div>
   );
