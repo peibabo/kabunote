@@ -166,7 +166,7 @@ export default function AnalysisSubTab({
                 </div>
 
                 <div className="text-blue-300 font-medium flex flex-col items-center">
-                  <span className="text-blue-400 mb-2 font-bold text-lg md:text-2xl">{formatPrice(parseFloat(currentPrice))}円</span>
+                  <span className="text-blue-400 mb-2 font-bold text-lg md:text-2xl">{formatPrice(parseFloat(currentPrice))}<span className="text-xs text-blue-400"> 円</span></span>
                 </div>
 
                 <div className="text-green-300 font-medium flex flex-col items-center">

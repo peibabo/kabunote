@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { FavoriteGroup } from '@/types/favorites'
 import { STORAGE_KEYS } from '@/lib/storageKeys'
+import { toast } from '@/lib/toast'
 
 const FILTER_STORAGE_KEY = STORAGE_KEYS.SELECTED_GROUP_FILTER
 
@@ -45,6 +46,7 @@ export function useFavoriteGroups(): UseFavoriteGroupsReturn {
         }
       } catch (err) {
         console.error('❌ グループ取得エラー:', err)
+        toast.error('グループの取得に失敗しました')
       } finally {
         setIsLoading(false)
       }
@@ -154,6 +156,7 @@ export function useFavoriteGroups(): UseFavoriteGroupsReturn {
       }
     } catch (err) {
       console.error('❌ グループ同期エラー:', err)
+      toast.error('グループの保存に失敗しました')
     } finally {
       isSyncingRef.current = false
     }

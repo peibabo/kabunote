@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react'
+import { toast } from '@/lib/toast'
 
 export function useAsyncState(initialLoading = true) {
   const [isLoading, setIsLoading] = useState(initialLoading)
@@ -11,7 +12,9 @@ export function useAsyncState(initialLoading = true) {
     try {
       return await fn()
     } catch (err) {
-      setError(err instanceof Error ? err.message : '読み込みエラー')
+      const msg = err instanceof Error ? err.message : '読み込みエラー'
+      setError(msg)
+      toast.error(msg)
       console.error('❌', err)
       return undefined
     } finally {
@@ -25,7 +28,9 @@ export function useAsyncState(initialLoading = true) {
     try {
       return await fn()
     } catch (err) {
-      setError(err instanceof Error ? err.message : '保存エラー')
+      const msg = err instanceof Error ? err.message : '保存エラー'
+      setError(msg)
+      toast.error(msg)
       console.error('❌', err)
       return undefined
     } finally {
