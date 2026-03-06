@@ -18,7 +18,7 @@ interface UseStockBenefitOptions {
     estimatedValue: number | null
     rightsMonth: number | null
     rightsDay: number | null
-  }
+  } | null
 }
 
 interface UseStockBenefitReturn {

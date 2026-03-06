@@ -16,7 +16,7 @@ interface UseStockDividendOptions {
     frequency: number
     rightsMonth: number | null
     rightsDay: number | null
-  }
+  } | null
 }
 
 interface UseStockDividendReturn {
