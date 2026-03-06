@@ -1,6 +1,14 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useDebounce } from './useDebounce'
+import { apiFetch } from '@/lib/apiClient'
+import { useAsyncState } from './useAsyncState'
+import { useAutoSave } from './useAutoSave'
 import { DividendRightsSettings, createDefaultDividendRightsSettings } from '@/types/rightsDate'
+
+interface DividendState {
+  dividendPerShare: string
+  dividendFrequency: 1 | 2 | 4
+  dividendRightsSettings: DividendRightsSettings
+}
 
 interface UseStockDividendReturn {
   dividendPerShare: string
@@ -14,128 +22,83 @@ interface UseStockDividendReturn {
 }
 
 export function useStockDividend(stockId: string): UseStockDividendReturn {
-  const [dividendPerShare, setDividendPerShare] = useState<string>('')
-  const [dividendFrequency, setDividendFrequency] = useState<1 | 2 | 4>(1)
-  const [dividendRightsSettings, setDividendRightsSettings] =
-    useState<DividendRightsSettings>(createDefaultDividendRightsSettings())
+  const [state, setState] = useState<DividendState>({
+    dividendPerShare: '',
+    dividendFrequency: 1,
+    dividendRightsSettings: createDefaultDividendRightsSettings(),
+  })
+  const { isLoading, isSaving, withLoading, withSaving } = useAsyncState()
 
-  const [isLoading, setIsLoading] = useState(true)
-  const [isSaving, setIsSaving] = useState(false)
-  const [hasDividendInput, setHasDividendInput] = useState(false)
-
-  const debouncedPerShare = useDebounce(dividendPerShare, 500)
-  const debouncedFrequency = useDebounce(dividendFrequency, 500)
-  const debouncedRightsSettings = useDebounce(dividendRightsSettings, 500)
-
-  // DB からの読み込み
-  const loadFromDatabase = useCallback(async () => {
-    try {
-      const response = await fetch(`/api/stocks/${stockId}/dividend`)
-
-      if (!response.ok) {
-        throw new Error('配当情報の読み込みに失敗しました')
-      }
-
-      const result = await response.json()
-
-      if (result.success && result.data) {
-        const { dividendPerShare: dbPerShare, frequency: dbFreq, rightsMonth, rightsDay } = result.data
-
-        setDividendPerShare(dbPerShare != null ? String(dbPerShare) : '')
-        const freq = (dbFreq === 2 || dbFreq === 4) ? dbFreq : 1
-        setDividendFrequency(freq as 1 | 2 | 4)
-        setDividendRightsSettings(
-          rightsMonth != null && rightsDay != null
-            ? { month: rightsMonth, day: rightsDay, isRecurring: true, isActive: true }
-            : createDefaultDividendRightsSettings()
-        )
-      }
-    } catch (err) {
-      console.error('❌ 配当情報読み込みエラー:', err)
-    } finally {
-      setIsLoading(false)
-    }
-  }, [stockId])
-
-  // 初回読み込み
-  useEffect(() => {
-    loadFromDatabase()
-  }, [loadFromDatabase])
-
-  // DB 保存
-  const saveToDatabaseWithValues = useCallback(async (
-    perShare: string,
-    freq: 1 | 2 | 4,
-    rights: DividendRightsSettings
-  ) => {
-    try {
-      setIsSaving(true)
-      const response = await fetch(`/api/stocks/${stockId}/dividend`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          dividendPerShare: perShare ? parseFloat(perShare) : null,
-          frequency: freq,
-          rightsMonth: rights.month,
-          rightsDay: rights.day,
-        }),
+  const loadData = useCallback(() => withLoading(async () => {
+    const data = await apiFetch<{
+      dividendPerShare: number | null; frequency: number; rightsMonth: number | null; rightsDay: number | null
+    }>(`/api/stocks/${stockId}/dividend`)
+    if (data) {
+      const freq = (data.frequency === 2 || data.frequency === 4) ? data.frequency : 1
+      setState({
+        dividendPerShare: data.dividendPerShare != null ? String(data.dividendPerShare) : '',
+        dividendFrequency: freq as 1 | 2 | 4,
+        dividendRightsSettings: data.rightsMonth != null && data.rightsDay != null
+          ? { month: data.rightsMonth, day: data.rightsDay, isRecurring: true, isActive: true }
+          : createDefaultDividendRightsSettings(),
       })
+    }
+  }), [stockId, withLoading])
 
-      if (!response.ok) {
-        throw new Error('配当情報の保存に失敗しました')
-      }
+  useEffect(() => { loadData() }, [loadData])
 
-      if (typeof window !== 'undefined') {
+  const { markDirty } = useAutoSave({
+    value: state,
+    delay: 500,
+    isLoading,
+    onSave: async (val) => {
+      await withSaving(async () => {
+        const response = await fetch(`/api/stocks/${stockId}/dividend`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            dividendPerShare: val.dividendPerShare ? parseFloat(val.dividendPerShare) : null,
+            frequency: val.dividendFrequency,
+            rightsMonth: val.dividendRightsSettings.month,
+            rightsDay: val.dividendRightsSettings.day,
+          }),
+        })
+        if (!response.ok) throw new Error('配当情報の保存に失敗しました')
         window.dispatchEvent(new CustomEvent('kabunote-db-calendar-update', {
           detail: {
             type: 'dividend' as const,
             symbol: stockId.replace('stock-', ''),
             dividend: {
-              dividendPerShare: perShare ? parseFloat(perShare) : null,
-              frequency: freq,
-              rightsMonth: rights.month,
-              rightsDay: rights.day,
+              dividendPerShare: val.dividendPerShare ? parseFloat(val.dividendPerShare) : null,
+              frequency: val.dividendFrequency,
+              rightsMonth: val.dividendRightsSettings.month,
+              rightsDay: val.dividendRightsSettings.day,
             }
           }
         }))
-      }
-    } catch (err) {
-      console.error('❌ 配当情報保存エラー:', err)
-    } finally {
-      setIsSaving(false)
-      setHasDividendInput(false)
-    }
-  }, [stockId])
-
-  // 自動保存（デバウンス後）
-  useEffect(() => {
-    if (!hasDividendInput || isLoading) return
-    saveToDatabaseWithValues(debouncedPerShare, debouncedFrequency, debouncedRightsSettings)
-  }, [
-    debouncedPerShare, debouncedFrequency, debouncedRightsSettings,
-    hasDividendInput, isLoading,
-    saveToDatabaseWithValues,
-  ])
+      })
+    },
+  })
 
   const updateDividendPerShare = useCallback((value: string) => {
-    setDividendPerShare(value)
-    setHasDividendInput(true)
-  }, [])
+    setState(prev => ({ ...prev, dividendPerShare: value }))
+    markDirty()
+  }, [markDirty])
 
   const updateDividendFrequency = useCallback((value: 1 | 2 | 4) => {
-    setDividendFrequency(value)
-    setHasDividendInput(true)
-  }, [])
+    setState(prev => ({ ...prev, dividendFrequency: value }))
+    markDirty()
+  }, [markDirty])
 
   const updateDividendRightsSettings = useCallback((settings: DividendRightsSettings) => {
-    setDividendRightsSettings(settings)
-    setHasDividendInput(true)
-  }, [])
+    setState(prev => ({ ...prev, dividendRightsSettings: settings }))
+    markDirty()
+  }, [markDirty])
 
   return {
-    dividendPerShare,
-    dividendFrequency,
-    dividendRightsSettings,
+    dividendPerShare: state.dividendPerShare,
+    dividendFrequency: state.dividendFrequency,
+    dividendRightsSettings: state.dividendRightsSettings,
     isLoading,
     isSaving,
     updateDividendPerShare,

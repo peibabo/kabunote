@@ -24,7 +24,6 @@ export function useCash(): UseCashResult {
   const [error, setError] = useState<string | null>(null);
   const [userId, setUserId] = useState<string>('');
 
-  // Supabase認証ユーザーIDを取得
   useEffect(() => {
     const getUser = async () => {
       const supabase = createClient();
@@ -36,19 +35,13 @@ export function useCash(): UseCashResult {
     getUser();
   }, []);
 
-  // データ取得
   const fetchCashData = useCallback(async () => {
     if (!userId) return;
     try {
       setIsLoading(true);
       setError(null);
-
-      const url = `/api/cash?userId=${userId}`;
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error('現金残高の取得に失敗しました');
-      }
-
+      const response = await fetch(`/api/cash?userId=${userId}`);
+      if (!response.ok) throw new Error('現金残高の取得に失敗しました');
       const data: CashData = await response.json();
       setCashAmount(data.cashAmount);
       setNextActionMemo(data.nextActionMemo);
@@ -60,12 +53,8 @@ export function useCash(): UseCashResult {
     }
   }, [userId]);
 
-  // userId が確定したらデータ取得
-  useEffect(() => {
-    fetchCashData();
-  }, [fetchCashData]);
+  useEffect(() => { fetchCashData(); }, [fetchCashData]);
 
-  // デバウンスされたAPI保存関数（300ms）
   const debouncedSaveToApi = useDebouncedCallback(async (data: Partial<CashData>) => {
     if (!userId) return;
     try {
@@ -74,42 +63,28 @@ export function useCash(): UseCashResult {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, ...data }),
       });
-
-      if (!response.ok) {
-        throw new Error('データの更新に失敗しました');
-      }
+      if (!response.ok) throw new Error('データの更新に失敗しました');
     } catch (err) {
       console.error('データ更新エラー:', err);
       setError(err instanceof Error ? err.message : '更新に失敗しました');
     }
   }, 300);
 
-  // 現金残高のみ更新（即時UI更新 + デバウンスDB保存）
   const updateCash = useCallback((newCashAmount: string) => {
     setCashAmount(newCashAmount);
     debouncedSaveToApi({ cashAmount: newCashAmount });
   }, [debouncedSaveToApi]);
 
-  // Next Actionメモのみ更新（即時UI更新 + デバウンスDB保存）
   const updateNextActionMemo = useCallback((memo: string) => {
     setNextActionMemo(memo);
     debouncedSaveToApi({ nextActionMemo: memo });
   }, [debouncedSaveToApi]);
 
-  // 両方同時更新（即時UI更新 + デバウンスDB保存）
   const updateBoth = useCallback((newCashAmount: string, memo: string) => {
     setCashAmount(newCashAmount);
     setNextActionMemo(memo);
     debouncedSaveToApi({ cashAmount: newCashAmount, nextActionMemo: memo });
   }, [debouncedSaveToApi]);
 
-  return {
-    cashAmount,
-    nextActionMemo,
-    isLoading,
-    error,
-    updateCash,
-    updateNextActionMemo,
-    updateBoth,
-  };
+  return { cashAmount, nextActionMemo, isLoading, error, updateCash, updateNextActionMemo, updateBoth };
 }

@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useDebounce } from './useDebounce'
+import { apiFetch, apiPut, apiDelete } from '@/lib/apiClient'
+import { useAsyncState } from './useAsyncState'
+import { useAutoSave } from './useAutoSave'
 
 interface UseStockMemoReturn {
   memo: string
@@ -13,132 +15,40 @@ interface UseStockMemoReturn {
 }
 
 export function useStockMemo(stockId: string): UseStockMemoReturn {
-  const [memo, setMemo] = useState<string>('')
-  const [isLoading, setIsLoading] = useState(true)
-  const [isSaving, setIsSaving] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [memo, setMemo] = useState('')
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
-  const [hasUserInput, setHasUserInput] = useState(false)
+  const { isLoading, isSaving, error, withLoading, withSaving } = useAsyncState()
 
-  const debouncedMemo = useDebounce(memo, 300)
+  const loadMemo = useCallback(() => withLoading(async () => {
+    const data = await apiFetch<{ content: string; updatedAt: string }>(`/api/stocks/${stockId}/memo`)
+    setMemo(data.content)
+    setLastSaved(new Date(data.updatedAt))
+  }), [stockId, withLoading])
 
-  // 株ノオト読み込み
-  const loadMemo = useCallback(async () => {
-    try {
-      setError(null)
-      const response = await fetch(`/api/stocks/${stockId}/memo`)
+  useEffect(() => { loadMemo() }, [loadMemo])
 
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.message || 'メモの読み込みに失敗しました')
-      }
-
-      const result = await response.json()
-
-      if (result.success) {
-        setMemo(result.data.content)
-        setLastSaved(new Date(result.data.updatedAt))
-      } else {
-        throw new Error('APIレスポンスが無効です')
-      }
-    } catch (err) {
-      console.error('❌ 株ノオト読み込みエラー:', err)
-      setError(err instanceof Error ? err.message : '読み込みエラー')
-    } finally {
-      setIsLoading(false)
-    }
-  }, [stockId])
-
-  // 株ノオト保存
-  const saveMemo = useCallback(async () => {
-    try {
-      setIsSaving(true)
-      setError(null)
-
-      const response = await fetch(`/api/stocks/${stockId}/memo`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: memo }),
+  const { markDirty } = useAutoSave({
+    value: memo,
+    delay: 300,
+    isLoading,
+    onSave: async (val) => {
+      await withSaving(async () => {
+        const data = await apiPut<{ updatedAt: string }>(`/api/stocks/${stockId}/memo`, { content: val })
+        if (data) setLastSaved(new Date(data.updatedAt))
       })
+    },
+  })
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'JSONパース失敗' }))
-        throw new Error(errorData.message || 'メモの保存に失敗しました')
-      }
-
-      const result = await response.json()
-
-      if (result.success) {
-        setLastSaved(new Date(result.data.updatedAt))
-        setHasUserInput(false)
-      } else {
-        throw new Error('APIレスポンスが無効です')
-      }
-    } catch (err) {
-      console.error('❌ 株ノオト保存エラー:', err)
-      setError(err instanceof Error ? err.message : '保存エラー')
-    } finally {
-      setIsSaving(false)
-    }
-  }, [stockId, memo])
-
-  // 株ノオト削除
-  const deleteMemo = useCallback(async () => {
-    try {
-      setIsSaving(true)
-      setError(null)
-
-      const response = await fetch(`/api/stocks/${stockId}/memo`, {
-        method: 'DELETE',
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.message || 'メモの削除に失敗しました')
-      }
-
-      const result = await response.json()
-
-      if (result.success) {
-        setMemo('')
-        setLastSaved(null)
-      } else {
-        throw new Error('APIレスポンスが無効です')
-      }
-    } catch (err) {
-      console.error('❌ 株ノオト削除エラー:', err)
-      setError(err instanceof Error ? err.message : '削除エラー')
-    } finally {
-      setIsSaving(false)
-    }
-  }, [stockId])
-
-  // メモ更新（楽観的更新）
   const updateMemo = useCallback((content: string) => {
     setMemo(content)
-    setHasUserInput(true)
-  }, [])
+    markDirty()
+  }, [markDirty])
 
-  // 初回読み込み
-  useEffect(() => {
-    loadMemo()
-  }, [loadMemo])
+  const deleteMemo = useCallback(() => withSaving(async () => {
+    await apiDelete(`/api/stocks/${stockId}/memo`)
+    setMemo('')
+    setLastSaved(null)
+  }) as Promise<void>, [stockId, withSaving])
 
-  // デバウンス後の自動保存（ユーザー入力があった場合のみ）
-  useEffect(() => {
-    if (hasUserInput && !isLoading) {
-      saveMemo()
-    }
-  }, [debouncedMemo, hasUserInput, isLoading, saveMemo])
-
-  return {
-    memo,
-    isLoading,
-    isSaving,
-    error,
-    lastSaved,
-    updateMemo,
-    saveMemo,
-    deleteMemo
-  }
+  return { memo, isLoading, isSaving, error, lastSaved, updateMemo, saveMemo: () => Promise.resolve(), deleteMemo }
 }
