@@ -418,8 +418,8 @@ function StockCard({ symbol, onRemove, favoriteGroups, onFavoriteGroupsChange, i
             onShareholderMeetingSettingsChange={updateShareholderMeetingSettings}
             positionSummary={positionSummary}
             initialPositions={initialStockData?.positions}
-            initialDividend={initialStockData?.dividend ?? undefined}
-            initialBenefit={initialStockData?.benefit ?? undefined}
+            initialDividend={initialStockData ? (initialStockData.dividend ?? null) : undefined}
+            initialBenefit={initialStockData ? (initialStockData.benefit ?? null) : undefined}
           />
         )}
       </div>

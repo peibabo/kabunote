@@ -18,7 +18,7 @@ interface DividendManagementProps {
     frequency: number;
     rightsMonth: number | null;
     rightsDay: number | null;
-  };
+  } | null;
 }
 
 // 土日を除いた営業日前を計算する関数
@@ -121,7 +121,7 @@ export default function DividendManagement({
     updateDividendPerShare,
     updateDividendFrequency,
     updateDividendRightsSettings,
-  } = useStockDividend(`stock-${symbol}`, initialDividend ? { initialData: initialDividend } : undefined);
+  } = useStockDividend(`stock-${symbol}`, initialDividend !== undefined ? { initialData: initialDividend } : undefined);
 
   // 配当計算
   const dividendCalculation = (() => {

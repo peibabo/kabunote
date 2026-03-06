@@ -26,14 +26,14 @@ interface ManagementTabProps {
     frequency: number;
     rightsMonth: number | null;
     rightsDay: number | null;
-  };
+  } | null;
   initialBenefit?: {
     description: string | null;
     minimumShares: number | null;
     estimatedValue: number | null;
     rightsMonth: number | null;
     rightsDay: number | null;
-  };
+  } | null;
 }
 
 
@@ -99,21 +99,21 @@ export default function ManagementTab({
           />
         </div>
 
-        <div className={activeTab === 'dividend' ? '' : 'hidden'}>
+        {activeTab === 'dividend' && (
           <DividendManagement
             symbol={symbol}
             positionSummary={positionSummary}
             initialDividend={initialDividend}
           />
-        </div>
+        )}
 
-        <div className={activeTab === 'shareholder' ? '' : 'hidden'}>
+        {activeTab === 'shareholder' && (
           <ShareholderBenefitManagement
             symbol={symbol}
             positionSummary={positionSummary}
             initialBenefit={initialBenefit}
           />
-        </div>
+        )}
       </div>
     </div>
   );

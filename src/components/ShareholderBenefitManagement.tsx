@@ -19,7 +19,7 @@ interface ShareholderBenefitManagementProps {
     estimatedValue: number | null;
     rightsMonth: number | null;
     rightsDay: number | null;
-  };
+  } | null;
 }
 
 // 土日を除いた営業日前を計算する関数
@@ -124,7 +124,7 @@ export default function ShareholderBenefitManagement({
     updateMinimumShares: setMinimumShares,
     updateEstimatedValue: setEstimatedValue,
     updateRightsSettings: onShareholderRightsSettingsChange,
-  } = useStockBenefit(`stock-${symbol}`, initialBenefit ? { initialData: initialBenefit } : undefined)
+  } = useStockBenefit(`stock-${symbol}`, initialBenefit !== undefined ? { initialData: initialBenefit } : undefined)
 
   // 株主優待計算
   const shareholderBenefitCalculation = (() => {
