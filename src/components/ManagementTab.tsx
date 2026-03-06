@@ -1,6 +1,6 @@
 'use client';
 
-import { RightsDateSettings, ShareholderMeetingSettings, createDefaultShareholderMeetingSettings } from '@/types/rightsDate';
+import { RightsDateSettings, ShareholderMeetingSettings, createDefaultRightsSettings } from '@/types/rightsDate';
 import { useManagementTabState } from '@/hooks/useManagementTabState';
 import { useStockPosition } from '@/hooks/useStockPosition';
 import { calculatePositionSummary } from '@/types/positions';

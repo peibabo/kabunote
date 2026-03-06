@@ -6,8 +6,7 @@ import { ShareholderBenefitInfo } from '@/types/shareholder';
 import {
   DividendRightsSettings,
   ShareholderRightsSettings,
-  createDefaultDividendRightsSettings,
-  createDefaultShareholderRightsSettings,
+  createDefaultRightsSettings,
 } from '@/types/rightsDate';
 
 export type DividendBenefitStockData = {
@@ -51,7 +50,7 @@ export function useDividendBenefitData(
 
         const dividendRightsSettings = dbStock?.dividend?.rightsMonth != null && dbStock?.dividend?.rightsDay != null
           ? { month: dbStock.dividend.rightsMonth, day: dbStock.dividend.rightsDay, isRecurring: true, isActive: true }
-          : createDefaultDividendRightsSettings();
+          : createDefaultRightsSettings();
 
         const shareholderBenefitInfo = dbStock?.benefit?.description
           ? {
@@ -65,7 +64,7 @@ export function useDividendBenefitData(
 
         const shareholderRightsSettings = dbStock?.benefit?.rightsMonth != null && dbStock?.benefit?.rightsDay != null
           ? { month: dbStock.benefit.rightsMonth, day: dbStock.benefit.rightsDay, isRecurring: true, isActive: true }
-          : createDefaultShareholderRightsSettings();
+          : createDefaultRightsSettings();
 
         // stockData からポジション情報を直接取得
         let position: DividendBenefitStockData['position'] = undefined;

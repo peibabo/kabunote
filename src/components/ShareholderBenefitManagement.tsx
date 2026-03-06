@@ -1,7 +1,7 @@
 'use client';
 
 import { PositionSummary } from '@/types/positions';
-import { calculateShareholderRightsDateFromSettings } from '@/types/rightsDate';
+import { calculateRightsDateFromSettings } from '@/types/rightsDate';
 import { calculateShareholderBenefit, formatBenefitValue, formatBenefitYield } from '@/types/shareholder';
 import { useStockBenefit } from '@/hooks/useStockBenefit';
 
@@ -136,7 +136,7 @@ export default function ShareholderBenefitManagement({
   })();
 
   // 株主優待権利確定日の取得
-  const shareholderRightsDate = calculateShareholderRightsDateFromSettings(shareholderRightsSettings);
+  const shareholderRightsDate = calculateRightsDateFromSettings(shareholderRightsSettings);
   const rightsCountdown = getRightsCountdown(shareholderRightsDate);
 
   // 月/日の変更ハンドラー

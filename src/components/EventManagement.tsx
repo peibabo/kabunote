@@ -1,7 +1,7 @@
 'use client';
 
 import { useStringLocalStorage } from '@/hooks/useLocalStorage';
-import { ShareholderMeetingSettings, createDefaultShareholderMeetingSettings, calculateShareholderMeetingDateFromSettings, shouldDeactivateShareholderMeeting } from '@/types/rightsDate';
+import { ShareholderMeetingSettings, createDefaultRightsSettings, calculateRightsDateFromSettings, shouldDeactivateRights } from '@/types/rightsDate';
 import { useEffect } from 'react';
 
 interface EarningsCountdown {
@@ -112,7 +112,7 @@ export default function EventManagement({
   const countdown = getEarningsCountdown(earningsDate);
 
   // 株主総会日を計算
-  const shareholderMeetingDate = calculateShareholderMeetingDateFromSettings(shareholderMeetingSettings);
+  const shareholderMeetingDate = calculateRightsDateFromSettings(shareholderMeetingSettings);
   const meetingCountdown = getMeetingCountdown(shareholderMeetingDate);
 
   // 株主総会日の自動無効化チェック（無効化 - ユーザーが手動で管理）

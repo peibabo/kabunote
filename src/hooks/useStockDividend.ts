@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { apiFetch } from '@/lib/apiClient'
 import { useAsyncState } from './useAsyncState'
 import { useAutoSave } from './useAutoSave'
-import { DividendRightsSettings, createDefaultDividendRightsSettings } from '@/types/rightsDate'
+import { DividendRightsSettings, createDefaultRightsSettings } from '@/types/rightsDate'
 
 interface DividendState {
   dividendPerShare: string
@@ -25,7 +25,7 @@ export function useStockDividend(stockId: string): UseStockDividendReturn {
   const [state, setState] = useState<DividendState>({
     dividendPerShare: '',
     dividendFrequency: 1,
-    dividendRightsSettings: createDefaultDividendRightsSettings(),
+    dividendRightsSettings: createDefaultRightsSettings(),
   })
   const { isLoading, isSaving, withLoading, withSaving } = useAsyncState()
 
@@ -40,7 +40,7 @@ export function useStockDividend(stockId: string): UseStockDividendReturn {
         dividendFrequency: freq as 1 | 2 | 4,
         dividendRightsSettings: data.rightsMonth != null && data.rightsDay != null
           ? { month: data.rightsMonth, day: data.rightsDay, isRecurring: true, isActive: true }
-          : createDefaultDividendRightsSettings(),
+          : createDefaultRightsSettings(),
       })
     }
   }), [stockId, withLoading])

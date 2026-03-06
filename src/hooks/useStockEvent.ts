@@ -4,7 +4,7 @@ import { useAsyncState } from './useAsyncState'
 import { useAutoSave } from './useAutoSave'
 import {
   ShareholderMeetingSettings,
-  createDefaultShareholderMeetingSettings
+  createDefaultRightsSettings
 } from '@/types/rightsDate'
 
 interface UseStockEventReturn {
@@ -21,7 +21,7 @@ export function useStockEvent(stockId: string): UseStockEventReturn {
 
   const [earningsDate, setEarningsDate] = useState<string>('')
   const [meetingSettings, setMeetingSettings] =
-    useState<ShareholderMeetingSettings>(createDefaultShareholderMeetingSettings())
+    useState<ShareholderMeetingSettings>(createDefaultRightsSettings())
 
   const { isLoading, isSaving, withLoading, withSaving } = useAsyncState()
 
@@ -39,7 +39,7 @@ export function useStockEvent(stockId: string): UseStockEventReturn {
         isActive: data.shareholderMeeting.isActive ?? false,
       })
     } else {
-      setMeetingSettings(createDefaultShareholderMeetingSettings())
+      setMeetingSettings(createDefaultRightsSettings())
     }
   }), [stockId, withLoading])
 

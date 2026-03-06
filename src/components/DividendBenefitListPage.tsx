@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { DividendInfo, calculateDividendInfo, formatDividendAmount, formatDividendYield } from '@/types/dividend';
 import { ShareholderBenefitInfo, calculateShareholderBenefit, formatBenefitValue, formatBenefitYield } from '@/types/shareholder';
-import { DividendRightsSettings, ShareholderRightsSettings, formatDividendMonthDay, formatShareholderMonthDay } from '@/types/rightsDate';
+import { DividendRightsSettings, ShareholderRightsSettings, formatMonthDay } from '@/types/rightsDate';
 import { Position, PositionSummary } from '@/types/positions';
 import { getStockData } from '@/data/stockNames';
 
