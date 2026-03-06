@@ -289,22 +289,21 @@ export default function EventCalendarPage({ stockSymbols, stockData }: EventCale
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-6">
+    <div className="min-h-screen bg-gray-900 text-white p-2 sm:p-6">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-2xl font-bold mb-6">📅 イベント一覧</h1>
 
         {/* 月ナビゲーション（統一位置） */}
-        <div className="flex items-center justify-center gap-4 mb-6">
+        <div className="flex items-center justify-center gap-2 sm:gap-4 mb-4 sm:mb-6">
           <button
             onClick={() => changeMonth('prev')}
-            className="cursor-pointer p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
+            className="cursor-pointer p-1 sm:p-2 text-sm sm:text-base text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
           >
             ← 前月
           </button>
-          <h2 className="text-xl font-semibold">{selectedYear}年 {monthNames[selectedMonth]}</h2>
+          <h2 className="text-lg sm:text-xl font-semibold">{selectedYear}年 {monthNames[selectedMonth]}</h2>
           <button
             onClick={() => changeMonth('next')}
-            className="cursor-pointer p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
+            className="cursor-pointer p-1 sm:p-2 text-sm sm:text-base text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
           >
             次月 →
           </button>
@@ -320,7 +319,7 @@ export default function EventCalendarPage({ stockSymbols, stockData }: EventCale
         ) : (
           <>
             {/* フィルター（常に表示） */}
-            <div className="flex justify-center gap-2 mb-6">
+            <div className="flex justify-center gap-1 sm:gap-2 mb-4 sm:mb-6">
               {[
                 { key: 'all' as FilterType, label: '全て' },
                 { key: 'earnings' as FilterType, label: '決算' },
@@ -331,7 +330,7 @@ export default function EventCalendarPage({ stockSymbols, stockData }: EventCale
                 <button
                   key={key}
                   onClick={() => setFilterType(key)}
-                  className={`cursor-pointer px-3 py-1 text-xs rounded-md transition-colors ${
+                  className={`cursor-pointer px-2 py-1 sm:px-3 text-xs rounded-md transition-colors whitespace-nowrap ${
                     filterType === key
                       ? 'bg-blue-600 text-white'
                       : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
@@ -343,8 +342,8 @@ export default function EventCalendarPage({ stockSymbols, stockData }: EventCale
             </div>
 
             {/* ソートボタン */}
-            <div className="flex gap-2 mb-6">
-              <span className="text-sm text-gray-400 self-center mr-2">並び替え:</span>
+            <div className="flex flex-wrap gap-1 sm:gap-2 mb-4 sm:mb-6">
+              <span className="text-xs sm:text-sm text-gray-400 self-center mr-1 sm:mr-2">並び替え:</span>
               {[
                 { key: 'date' as SortKey, label: '日付' },
                 { key: 'daysUntil' as SortKey, label: '日数' },
@@ -354,7 +353,7 @@ export default function EventCalendarPage({ stockSymbols, stockData }: EventCale
                 <button
                   key={key}
                   onClick={() => handleSort(key)}
-                  className={`cursor-pointer px-3 py-1 text-xs rounded-md transition-colors ${
+                  className={`cursor-pointer px-2 py-1 sm:px-3 text-xs rounded-md transition-colors whitespace-nowrap ${
                     sortBy === key
                       ? 'bg-blue-600 text-white'
                       : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
@@ -365,8 +364,8 @@ export default function EventCalendarPage({ stockSymbols, stockData }: EventCale
               ))}
             </div>
 
-            {/* イベント一覧 */}
-            <div className="bg-gray-800 rounded-lg overflow-hidden">
+            {/* イベント一覧 - デスクトップ: テーブル */}
+            <div className="hidden md:block bg-gray-800 rounded-lg overflow-hidden">
               <table className="w-full">
                 <thead className="bg-gray-700">
                   <tr>
@@ -410,27 +409,56 @@ export default function EventCalendarPage({ stockSymbols, stockData }: EventCale
               </table>
             </div>
 
+            {/* イベント一覧 - モバイル: カードレイアウト */}
+            <div className="md:hidden space-y-2">
+              {sortedEvents.map((event, index) => (
+                <div key={`mobile-${event.symbol}-${event.eventType}-${index}`} className="bg-gray-800 rounded-lg p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs ${event.colorClass}`}>
+                      <span>{event.icon}</span>
+                      <span className="font-medium">{event.description}</span>
+                    </div>
+                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                      event.daysUntil <= 0 ? 'bg-red-600 text-white' :
+                      event.daysUntil <= 3 ? 'bg-yellow-600 text-white' :
+                      event.daysUntil <= 7 ? 'bg-blue-600 text-white' :
+                      'bg-gray-600 text-gray-300'
+                    }`}>
+                      {getDaysUntilDisplay(event.daysUntil)}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-white">{event.symbol}</span>
+                      <span className="text-xs text-gray-400 truncate max-w-[150px]">{event.companyName}</span>
+                    </div>
+                    <span className="text-sm text-gray-300">{formatDate(event.date)}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
             {/* サマリー */}
-            <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-gray-800 rounded-lg p-4">
-                <div className="text-sm text-gray-400 mb-1">総イベント数</div>
-                <div className="text-2xl font-bold text-white">{sortedEvents.length}</div>
+            <div className="mt-4 sm:mt-6 grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4">
+              <div className="bg-gray-800 rounded-lg p-3 sm:p-4">
+                <div className="text-xs sm:text-sm text-gray-400 mb-1">総イベント数</div>
+                <div className="text-xl sm:text-2xl font-bold text-white">{sortedEvents.length}</div>
               </div>
-              <div className="bg-gray-800 rounded-lg p-4">
-                <div className="text-sm text-gray-400 mb-1">今週以内</div>
-                <div className="text-2xl font-bold text-yellow-400">
+              <div className="bg-gray-800 rounded-lg p-3 sm:p-4">
+                <div className="text-xs sm:text-sm text-gray-400 mb-1">今週以内</div>
+                <div className="text-xl sm:text-2xl font-bold text-yellow-400">
                   {sortedEvents.filter(e => e.daysUntil >= 0 && e.daysUntil <= 7).length}
                 </div>
               </div>
-              <div className="bg-gray-800 rounded-lg p-4">
-                <div className="text-sm text-gray-400 mb-1">決算発表</div>
-                <div className="text-2xl font-bold text-blue-400">
+              <div className="bg-gray-800 rounded-lg p-3 sm:p-4">
+                <div className="text-xs sm:text-sm text-gray-400 mb-1">決算発表</div>
+                <div className="text-xl sm:text-2xl font-bold text-blue-400">
                   {sortedEvents.filter(e => e.eventType === 'earnings').length}
                 </div>
               </div>
-              <div className="bg-gray-800 rounded-lg p-4">
-                <div className="text-sm text-gray-400 mb-1">権利確定</div>
-                <div className="text-2xl font-bold text-green-400">
+              <div className="bg-gray-800 rounded-lg p-3 sm:p-4">
+                <div className="text-xs sm:text-sm text-gray-400 mb-1">権利確定</div>
+                <div className="text-xl sm:text-2xl font-bold text-green-400">
                   {sortedEvents.filter(e => e.eventType.includes('rights')).length}
                 </div>
               </div>

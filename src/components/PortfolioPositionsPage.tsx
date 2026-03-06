@@ -215,7 +215,6 @@ export default function PortfolioPositionsPage({ stockData = [], isLoggedIn = fa
     return (
       <div className="min-h-screen bg-gray-900 text-white p-3 sm:p-6">
         <div className="max-w-6xl mx-auto">
-          <h1 className="text-lg sm:text-2xl font-bold mb-6">💼 保有ポジション一覧</h1>
           <div className="text-center py-12">
             <div className="text-gray-400 text-lg mb-4">📊 保有ポジションがありません</div>
             <div className="text-sm text-gray-500">銘柄カードの「💼 管理」タブでポジションを登録してください</div>
@@ -228,8 +227,7 @@ export default function PortfolioPositionsPage({ stockData = [], isLoggedIn = fa
   return (
     <div className="min-h-screen bg-gray-900 text-white p-3 sm:p-6">
       <div className="max-w-6xl mx-auto">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-6">
-          <h1 className="text-lg sm:text-2xl font-bold">💼 保有ポジション一覧</h1>
+        <div className="flex justify-end mb-6">
           <div className="text-xs sm:text-sm text-gray-400">
             {positionsData.length}銘柄のポジション
           </div>

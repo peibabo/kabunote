@@ -284,7 +284,6 @@ export default function AlertSummaryPage({ stockData = [], isLoggedIn = false }:
     return (
       <div className="min-h-screen bg-gray-900 text-white p-6">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-2xl font-bold mb-6">🚨 アラート一覧</h1>
           <div className="text-center py-12">
             <div className="text-gray-400 text-lg mb-4">📊 データを読み込み中...</div>
           </div>
@@ -297,7 +296,6 @@ export default function AlertSummaryPage({ stockData = [], isLoggedIn = false }:
     return (
       <div className="min-h-screen bg-gray-900 text-white p-6">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-2xl font-bold mb-6">🚨 アラート一覧</h1>
           <div className="text-center py-12">
             <div className="text-gray-400 text-lg mb-4">✅ 現在アラートはありません</div>
             <div className="text-sm text-gray-500">
@@ -316,7 +314,6 @@ export default function AlertSummaryPage({ stockData = [], isLoggedIn = false }:
     <div className="min-h-screen bg-gray-900 text-white p-3 sm:p-6">
       <div className="max-w-6xl mx-auto">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
-          <h1 className="text-lg sm:text-2xl font-bold">🚨 アラート一覧</h1>
           <div className="flex items-center gap-3">
             <button
               onClick={() => setShowSnoozed(!showSnoozed)}
