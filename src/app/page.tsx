@@ -976,93 +976,86 @@ export default function Home() {
     let totalAlerts = 0;
     let urgentAlerts = 0;
 
-    stocks.forEach(symbol => {
-      // 現在価格チェック（NextActionPlanの有無に関係なく）
-      const currentPriceStr = typeof window !== 'undefined' ? localStorage.getItem(`kabunote-current-price-${symbol}`) || '0' : '0';
-      const targetPriceStr = typeof window !== 'undefined' ? localStorage.getItem(`kabunote-target-price-${symbol}`) || '0' : '0';
-      const stopLossStr = typeof window !== 'undefined' ? localStorage.getItem(`kabunote-stop-loss-${symbol}`) || '0' : '0';
-      const currentPrice = parseFloat(currentPriceStr);
-
-      if (currentPrice <= 0) return; // 現在価格未設定はスキップ
-
+    // スヌーズ判定用の共通処理
+    const checkSnooze = (symbol: string, alertType: string): boolean => {
+      const snoozedAlertsStr = typeof window !== 'undefined' ? localStorage.getItem('kabunote-snoozed-alerts') : null;
+      if (!snoozedAlertsStr) return false;
       try {
-        // NextActionPlanを取得（なくても投資規律アラートはチェック）
-        const planData = typeof window !== 'undefined' ? localStorage.getItem(`kabunote-next-action-plan-${symbol}`) : null;
-        let plan: NextActionPlan;
+        const snoozedAlerts = JSON.parse(snoozedAlertsStr);
+        const alertKey = `${symbol}-${alertType}`;
+        return snoozedAlerts.some((s: SnoozedAlert) => s.alertKey === alertKey && s.snoozeUntil > Date.now());
+      } catch { return false; }
+    };
 
-        if (planData) {
-          plan = JSON.parse(planData);
-        } else {
-          // NextActionPlanがない場合はデフォルトプラン作成
-          plan = {
-            id: '',
-            targetPrice: 0,
-            targetQuantity: 0,
-            memo: '',
-            actionType: 'buy',
-            priority: 'medium',
-            updatedAt: ''
-          };
-        }
+    // アラートカウント共通処理
+    const countAlerts = (symbol: string, currentPrice: number, targetPrice: number, stopLossPrice: number, plan: NextActionPlan, positionSummary: ReturnType<typeof calculatePositionSummary> | null) => {
+      const alerts = getAllActiveAlerts(
+        plan, currentPrice, targetPrice, stopLossPrice.toString(),
+        positionSummary && positionSummary.totalShares > 0 ? positionSummary : undefined,
+        availableCash
+      );
 
-        // ポジション情報取得
-        const positionsData = typeof window !== 'undefined' ? localStorage.getItem(`kabunote-positions-${symbol}`) : null;
-        let positionSummary = null;
-        if (positionsData) {
-          try {
-            const positions = JSON.parse(positionsData);
-            positionSummary = calculatePositionSummary(positions);
-          } catch (e) {
-            // Ignore parsing errors
+      alerts.forEach(alert => {
+        if (!checkSnooze(symbol, alert.type)) {
+          totalAlerts++;
+          if (alert.type === 'insufficient-funds' || alert.type === 'stop-loss-exceeded' || alert.type === 'nextaction-approaching') {
+            urgentAlerts++;
           }
         }
+      });
+    };
 
-        const alerts = getAllActiveAlerts(
-          plan,
-          currentPrice,
-          parseFloat(targetPriceStr) || 0,
-          stopLossStr,
-          positionSummary && positionSummary.totalShares > 0 ? positionSummary : undefined,
-          availableCash
-        );
+    if (isLoggedIn && stockData.length > 0) {
+      // 認証済み: DBデータを使用
+      stockData.forEach(stock => {
+        const currentPrice = stock.currentPrice ?? 0;
+        if (currentPrice <= 0) return;
 
-        // 各アラートをカウント（スヌーズ除外）
-        alerts.forEach(alert => {
-          // スヌーズ判定（useSnoozeフックが使えないので直接localStorage確認）
-          const snoozedAlertsStr = typeof window !== 'undefined' ? localStorage.getItem('kabunote-snoozed-alerts') : null;
-          let isAlertSnoozed = false;
+        const targetPrice = stock.targetPrice ?? 0;
+        const stopLossPrice = stock.stopLossPrice ?? 0;
 
-          if (snoozedAlertsStr) {
-            try {
-              const snoozedAlerts = JSON.parse(snoozedAlertsStr);
-              const alertKey = `${symbol}-${alert.type}`;
-              const snoozedAlert = snoozedAlerts.find((s: SnoozedAlert) =>
-                s.alertKey === alertKey && s.snoozeUntil > Date.now()
-              );
-              isAlertSnoozed = !!snoozedAlert;
-            } catch (e) {
-              // スヌーズデータの解析に失敗した場合は無視
-            }
-          }
+        const nap = stock.nextActionPlan;
+        const plan: NextActionPlan = nap ? {
+          id: 'db',
+          actionType: nap.actionType as 'buy' | 'sell' | 'hold',
+          priority: nap.priority as 'high' | 'medium' | 'low',
+          targetPrice: nap.targetPrice ?? 0,
+          targetQuantity: nap.targetShares ?? 0,
+          memo: nap.strategyMemo,
+          updatedAt: '',
+        } : { id: '', targetPrice: 0, targetQuantity: 0, memo: '', actionType: 'buy', priority: 'medium', updatedAt: '' };
 
-          // スヌーズされていないアラートのみカウント
-          if (!isAlertSnoozed) {
-            totalAlerts++;
-            // 緊急アラート判定（資金不足・損切り超過・次の一手緊急）
-            if (alert.type === 'insufficient-funds' ||
-                alert.type === 'stop-loss-exceeded' ||
-                alert.type === 'nextaction-approaching') {
-              urgentAlerts++;
-            }
-          }
-        });
-      } catch (e) {
-        // Ignore parsing errors
-      }
-    });
+        const positionSummary = stock.positions.length > 0 ? calculatePositionSummary(stock.positions) : null;
+
+        countAlerts(stock.symbol, currentPrice, targetPrice, stopLossPrice, plan, positionSummary);
+      });
+    } else {
+      // 未認証: localStorage
+      stocks.forEach(symbol => {
+        const currentPriceStr = typeof window !== 'undefined' ? localStorage.getItem(`kabunote-current-price-${symbol}`) || '0' : '0';
+        const targetPriceStr = typeof window !== 'undefined' ? localStorage.getItem(`kabunote-target-price-${symbol}`) || '0' : '0';
+        const stopLossStr = typeof window !== 'undefined' ? localStorage.getItem(`kabunote-stop-loss-${symbol}`) || '0' : '0';
+        const currentPrice = parseFloat(currentPriceStr);
+
+        if (currentPrice <= 0) return;
+
+        try {
+          const planData = typeof window !== 'undefined' ? localStorage.getItem(`kabunote-next-action-plan-${symbol}`) : null;
+          let plan: NextActionPlan;
+          if (planData) { plan = JSON.parse(planData); }
+          else { plan = { id: '', targetPrice: 0, targetQuantity: 0, memo: '', actionType: 'buy', priority: 'medium', updatedAt: '' }; }
+
+          const positionsData = typeof window !== 'undefined' ? localStorage.getItem(`kabunote-positions-${symbol}`) : null;
+          let positionSummary = null;
+          if (positionsData) { try { positionSummary = calculatePositionSummary(JSON.parse(positionsData)); } catch { /* ignore */ } }
+
+          countAlerts(symbol, currentPrice, parseFloat(targetPriceStr) || 0, parseFloat(stopLossStr) || 0, plan, positionSummary);
+        } catch { /* ignore */ }
+      });
+    }
 
     return { total: totalAlerts, urgent: urgentAlerts };
-  }, [stocks, isInitialized]);
+  }, [stocks, isInitialized, isLoggedIn, stockData]);
 
   // 初期アラート件数計算 & stocks/isInitialized変更時の再計算
   useEffect(() => {
@@ -1474,7 +1467,7 @@ export default function Home() {
                 </button>
               </div>
               <div className="overflow-auto max-h-[calc(90vh-8rem)]">
-                <AlertSummaryPage />
+                <AlertSummaryPage stockData={stockData} isLoggedIn={isLoggedIn} />
               </div>
             </div>
           </div>
