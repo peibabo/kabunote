@@ -512,6 +512,7 @@ export default function Home() {
                         onRemove={() => handleRemoveStock(stock)}
                         favoriteGroups={favoriteGroups}
                         onFavoriteGroupsChange={setFavoriteGroups}
+                        initialStockData={stockData.find(s => s.symbol === stock)}
                       />
                     </div>
                   ))}

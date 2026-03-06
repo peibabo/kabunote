@@ -11,6 +11,16 @@ interface BenefitState {
   rightsSettings: ShareholderRightsSettings
 }
 
+interface UseStockBenefitOptions {
+  initialData?: {
+    description: string | null
+    minimumShares: number | null
+    estimatedValue: number | null
+    rightsMonth: number | null
+    rightsDay: number | null
+  }
+}
+
 interface UseStockBenefitReturn {
   description: string
   minimumShares: string
@@ -24,14 +34,28 @@ interface UseStockBenefitReturn {
   updateRightsSettings: (settings: ShareholderRightsSettings) => void
 }
 
-export function useStockBenefit(stockId: string): UseStockBenefitReturn {
-  const [state, setState] = useState<BenefitState>({
-    description: '',
-    minimumShares: '',
-    estimatedValue: '',
-    rightsSettings: createDefaultRightsSettings(),
-  })
-  const { isLoading, isSaving, withLoading, withSaving } = useAsyncState()
+function parseInitialBenefit(data: NonNullable<UseStockBenefitOptions['initialData']>): BenefitState {
+  return {
+    description: data.description ?? '',
+    minimumShares: data.minimumShares != null ? String(data.minimumShares) : '',
+    estimatedValue: data.estimatedValue != null ? String(data.estimatedValue) : '',
+    rightsSettings: data.rightsMonth != null && data.rightsDay != null
+      ? { month: data.rightsMonth, day: data.rightsDay, isRecurring: true, isActive: true }
+      : createDefaultRightsSettings(),
+  }
+}
+
+export function useStockBenefit(stockId: string, options?: UseStockBenefitOptions): UseStockBenefitReturn {
+  const hasInitialData = options?.initialData !== undefined
+  const [state, setState] = useState<BenefitState>(() =>
+    options?.initialData ? parseInitialBenefit(options.initialData) : {
+      description: '',
+      minimumShares: '',
+      estimatedValue: '',
+      rightsSettings: createDefaultRightsSettings(),
+    }
+  )
+  const { isLoading, isSaving, withLoading, withSaving } = useAsyncState(!hasInitialData)
 
   const loadData = useCallback(() => withLoading(async () => {
     const data = await apiFetch<{
@@ -50,7 +74,7 @@ export function useStockBenefit(stockId: string): UseStockBenefitReturn {
     }
   }), [stockId, withLoading])
 
-  useEffect(() => { loadData() }, [loadData])
+  useEffect(() => { if (!hasInitialData) loadData() }, [loadData, hasInitialData])
 
   const { markDirty } = useAutoSave({
     value: state,

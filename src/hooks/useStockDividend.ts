@@ -10,6 +10,15 @@ interface DividendState {
   dividendRightsSettings: DividendRightsSettings
 }
 
+interface UseStockDividendOptions {
+  initialData?: {
+    dividendPerShare: number | null
+    frequency: number
+    rightsMonth: number | null
+    rightsDay: number | null
+  }
+}
+
 interface UseStockDividendReturn {
   dividendPerShare: string
   dividendFrequency: 1 | 2 | 4
@@ -21,13 +30,27 @@ interface UseStockDividendReturn {
   updateDividendRightsSettings: (settings: DividendRightsSettings) => void
 }
 
-export function useStockDividend(stockId: string): UseStockDividendReturn {
-  const [state, setState] = useState<DividendState>({
-    dividendPerShare: '',
-    dividendFrequency: 1,
-    dividendRightsSettings: createDefaultRightsSettings(),
-  })
-  const { isLoading, isSaving, withLoading, withSaving } = useAsyncState()
+function parseInitialDividend(data: NonNullable<UseStockDividendOptions['initialData']>): DividendState {
+  const freq = (data.frequency === 2 || data.frequency === 4) ? data.frequency : 1
+  return {
+    dividendPerShare: data.dividendPerShare != null ? String(data.dividendPerShare) : '',
+    dividendFrequency: freq as 1 | 2 | 4,
+    dividendRightsSettings: data.rightsMonth != null && data.rightsDay != null
+      ? { month: data.rightsMonth, day: data.rightsDay, isRecurring: true, isActive: true }
+      : createDefaultRightsSettings(),
+  }
+}
+
+export function useStockDividend(stockId: string, options?: UseStockDividendOptions): UseStockDividendReturn {
+  const hasInitialData = options?.initialData !== undefined
+  const [state, setState] = useState<DividendState>(() =>
+    options?.initialData ? parseInitialDividend(options.initialData) : {
+      dividendPerShare: '',
+      dividendFrequency: 1,
+      dividendRightsSettings: createDefaultRightsSettings(),
+    }
+  )
+  const { isLoading, isSaving, withLoading, withSaving } = useAsyncState(!hasInitialData)
 
   const loadData = useCallback(() => withLoading(async () => {
     const data = await apiFetch<{
@@ -45,7 +68,7 @@ export function useStockDividend(stockId: string): UseStockDividendReturn {
     }
   }), [stockId, withLoading])
 
-  useEffect(() => { loadData() }, [loadData])
+  useEffect(() => { if (!hasInitialData) loadData() }, [loadData, hasInitialData])
 
   const { markDirty } = useAutoSave({
     value: state,

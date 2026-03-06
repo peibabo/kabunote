@@ -8,6 +8,7 @@ interface PositionsManagementProps {
   symbol: string;
   stockId: string;
   onPositionManagerOpen: () => void;
+  initialPositions?: Position[];
 }
 
 interface PositionForm {
@@ -27,8 +28,9 @@ const emptyForm: PositionForm = {
 export default function PositionsManagement({
   symbol,
   stockId,
+  initialPositions,
 }: PositionsManagementProps) {
-  const { positions, isLoading, isSaving, error, addPosition, updatePosition, deletePosition } = useStockPosition(stockId);
+  const { positions, isLoading, isSaving, error, addPosition, updatePosition, deletePosition } = useStockPosition(stockId, initialPositions ? { initialData: initialPositions } : undefined);
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<PositionForm>(emptyForm);

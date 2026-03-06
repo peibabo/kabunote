@@ -14,10 +14,15 @@ interface UseStockPositionReturn {
   refetch: () => Promise<Position[]>
 }
 
-export function useStockPosition(stockId: string): UseStockPositionReturn {
-  const [positions, setPositions] = useState<Position[]>([])
+interface UseStockPositionOptions {
+  initialData?: Position[]
+}
+
+export function useStockPosition(stockId: string, options?: UseStockPositionOptions): UseStockPositionReturn {
+  const hasInitialData = options?.initialData !== undefined
+  const [positions, setPositions] = useState<Position[]>(options?.initialData ?? [])
   const symbol = stockId.replace('stock-', '')
-  const { isLoading, isSaving, error, withLoading, withSaving } = useAsyncState()
+  const { isLoading, isSaving, error, withLoading, withSaving } = useAsyncState(!hasInitialData)
 
   const loadFromDB = useCallback(async (): Promise<Position[]> => {
     const result = await withLoading(async () => {
@@ -28,7 +33,7 @@ export function useStockPosition(stockId: string): UseStockPositionReturn {
     return result ?? []
   }, [stockId, withLoading])
 
-  useEffect(() => { loadFromDB() }, [loadFromDB])
+  useEffect(() => { if (!hasInitialData) loadFromDB() }, [loadFromDB, hasInitialData])
 
   const dispatchUpdate = useCallback((newPositions: Position[]) => {
     window.dispatchEvent(new CustomEvent('kabunote-db-position-update', {

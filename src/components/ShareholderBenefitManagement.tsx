@@ -13,6 +13,13 @@ interface EarningsCountdown {
 interface ShareholderBenefitManagementProps {
   symbol: string;
   positionSummary: PositionSummary;
+  initialBenefit?: {
+    description: string | null;
+    minimumShares: number | null;
+    estimatedValue: number | null;
+    rightsMonth: number | null;
+    rightsDay: number | null;
+  };
 }
 
 // 土日を除いた営業日前を計算する関数
@@ -106,6 +113,7 @@ const getStatusColor = (status: string) => {
 export default function ShareholderBenefitManagement({
   symbol,
   positionSummary,
+  initialBenefit,
 }: ShareholderBenefitManagementProps) {
   const {
     description: benefitDescription,
@@ -116,7 +124,7 @@ export default function ShareholderBenefitManagement({
     updateMinimumShares: setMinimumShares,
     updateEstimatedValue: setEstimatedValue,
     updateRightsSettings: onShareholderRightsSettingsChange,
-  } = useStockBenefit(`stock-${symbol}`)
+  } = useStockBenefit(`stock-${symbol}`, initialBenefit ? { initialData: initialBenefit } : undefined)
 
   // 株主優待計算
   const shareholderBenefitCalculation = (() => {

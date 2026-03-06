@@ -10,10 +10,15 @@ interface UseStockTagReturn {
   setTags: (tags: CustomTag[]) => void
 }
 
-export function useStockTag(stockId: string): UseStockTagReturn {
+interface UseStockTagOptions {
+  initialData?: CustomTag[]
+}
+
+export function useStockTag(stockId: string, options?: UseStockTagOptions): UseStockTagReturn {
+  const hasInitialData = options?.initialData !== undefined
   const symbol = stockId.replace('stock-', '')
-  const [tags, setTagsState] = useState<CustomTag[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const [tags, setTagsState] = useState<CustomTag[]>(options?.initialData ?? [])
+  const [isLoading, setIsLoading] = useState(!hasInitialData)
 
   const loadFromDatabase = useCallback(async () => {
     try {
@@ -26,7 +31,7 @@ export function useStockTag(stockId: string): UseStockTagReturn {
     }
   }, [stockId])
 
-  useEffect(() => { loadFromDatabase() }, [loadFromDatabase])
+  useEffect(() => { if (!hasInitialData) loadFromDatabase() }, [loadFromDatabase, hasInitialData])
 
   const addTag = useCallback(async (label: string, color: TagColor) => {
     const tempId = `temp-${Date.now()}`
