@@ -313,25 +313,25 @@ export default function AlertSummaryPage({ stockData = [], isLoggedIn = false }:
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-6">
+    <div className="min-h-screen bg-gray-900 text-white p-3 sm:p-6">
       <div className="max-w-6xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold">🚨 アラート一覧</h1>
-          <div className="flex items-center gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+          <h1 className="text-lg sm:text-2xl font-bold">🚨 アラート一覧</h1>
+          <div className="flex items-center gap-3">
             <button
               onClick={() => setShowSnoozed(!showSnoozed)}
-              className={`cursor-pointer px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`cursor-pointer px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${
                 showSnoozed
                   ? 'bg-blue-600 text-white'
                   : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
               }`}
             >
-              {showSnoozed ? '💤 スヌーズ履歴表示中' : '🔔 アクティブのみ'}
+              {showSnoozed ? '💤 スヌーズ履歴' : '🔔 アクティブのみ'}
             </button>
-            <div className="text-sm text-gray-400">
+            <div className="text-xs sm:text-sm text-gray-400 whitespace-nowrap">
               {showSnoozed
                 ? `${stats.total}件のスヌーズ履歴`
-                : `${stats.total}件のアラート（緊急: ${stats.urgent}件）`
+                : `${stats.total}件（緊急: ${stats.urgent}件）`
               }
             </div>
           </div>
@@ -361,8 +361,8 @@ export default function AlertSummaryPage({ stockData = [], isLoggedIn = false }:
           </div>
         </div>
 
-        {/* アラート一覧テーブル */}
-        <div className="bg-gray-800 rounded-lg overflow-hidden">
+        {/* アラート一覧テーブル（デスクトップ） */}
+        <div className="hidden md:block bg-gray-800 rounded-lg overflow-hidden">
           <table className="w-full">
             <thead className="bg-gray-700">
               <tr>
@@ -465,12 +465,98 @@ export default function AlertSummaryPage({ stockData = [], isLoggedIn = false }:
           </table>
         </div>
 
+        {/* アラート一覧カード（モバイル） */}
+        <div className="md:hidden space-y-3">
+          {alertsData.map((alert, index) => (
+            <div key={`mobile-${alert.symbol}-${index}`} className="bg-gray-800 rounded-lg p-3">
+              <div className="flex items-center justify-between mb-2">
+                <div>
+                  <span className="font-medium text-white text-sm">{alert.symbol}</span>
+                  <span className="text-xs text-gray-400 ml-2 truncate">{alert.companyName}</span>
+                </div>
+              </div>
+              <div className={`px-3 py-1.5 rounded-lg border text-xs mb-2 ${getAlertStyles(alert.alertType)}`}>
+                {alert.alertMessage}
+                {alert.alertDetail && (
+                  <span className="ml-2 text-gray-300">({alert.alertDetail})</span>
+                )}
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div>
+                  <span className="text-gray-400">現在価格: </span>
+                  <span className="text-white">{formatPrice(alert.currentPrice)}円</span>
+                </div>
+                <div>
+                  <span className="text-gray-400">対象価格: </span>
+                  <span className="text-white">
+                    {alert.targetPrice ? `${formatPrice(alert.targetPrice)}円` :
+                     alert.stopLossPrice ? `${formatPrice(alert.stopLossPrice)}円` : '-'}
+                  </span>
+                </div>
+              </div>
+              <div className="mt-2 pt-2 border-t border-gray-700">
+                {!showSnoozed && (
+                  <select
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        const duration = parseInt(e.target.value) as SnoozeDuration;
+                        snoozeAlert(
+                          alert.symbol,
+                          alert.alertType,
+                          duration,
+                          {
+                            companyName: alert.companyName,
+                            alertMessage: alert.alertMessage,
+                            alertDetail: alert.alertDetail,
+                            currentPrice: alert.currentPrice,
+                            targetPrice: alert.targetPrice,
+                            stopLossPrice: alert.stopLossPrice
+                          }
+                        );
+                        e.target.value = '';
+                      }
+                    }}
+                    className="w-full bg-gray-700 text-gray-300 text-xs px-2 py-1.5 rounded border border-gray-600 focus:outline-none focus:border-blue-500"
+                    defaultValue=""
+                  >
+                    <option value="" disabled>💤 スヌーズ</option>
+                    {SNOOZE_DURATIONS.map(({ value, label, icon }) => (
+                      <option key={value} value={value}>
+                        {icon} {label}
+                      </option>
+                    ))}
+                  </select>
+                )}
+                {showSnoozed && (() => {
+                  const snoozedAlert = snoozedAlerts.find(
+                    s => s.symbol === alert.symbol && s.alertType === alert.alertType
+                  );
+                  if (!snoozedAlert) return <span className="text-xs text-gray-500">-</span>;
+                  return (
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-blue-400">
+                        {getTimeUntilUnsnooze(snoozedAlert.snoozeUntil)}
+                      </span>
+                      <button
+                        onClick={() => unsnoozeAlert(generateAlertKey(alert.symbol, alert.alertType))}
+                        className="cursor-pointer text-xs text-red-400 hover:text-red-300 underline"
+                      >
+                        解除
+                      </button>
+                    </div>
+                  );
+                })()}
+              </div>
+            </div>
+          ))}
+        </div>
+
         {/* 操作ガイド */}
         <div className="mt-6 bg-blue-900/20 border border-blue-700/30 rounded-lg p-4">
           <div className="flex items-center gap-2 mb-2">
-            <span className="text-blue-300 text-sm font-medium">💡 アラート対応のヒント</span>
+            <span className="text-blue-300 text-xs sm:text-sm font-medium">💡 アラート対応のヒント</span>
           </div>
-          <div className="text-blue-200 text-sm space-y-1">
+          <div className="text-blue-200 text-xs sm:text-sm space-y-1">
             <div>• 緊急度の高いアラート（赤色）から優先的に確認してください</div>
             <div>• 各銘柄のカードで詳細な戦略設定・価格調整が可能です</div>
             <div>• 資金不足の場合は投資余力現金の追加を検討してください</div>
