@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from 'react';
-import { createClient } from '@/lib/supabase-client';
 import { useDebouncedCallback } from './useDebounce';
 
 interface CashData {
@@ -22,25 +21,12 @@ export function useCash(): UseCashResult {
   const [nextActionMemo, setNextActionMemo] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [userId, setUserId] = useState<string>('');
-
-  useEffect(() => {
-    const getUser = async () => {
-      const supabase = createClient();
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user?.id) {
-        setUserId(session.user.id);
-      }
-    };
-    getUser();
-  }, []);
 
   const fetchCashData = useCallback(async () => {
-    if (!userId) return;
     try {
       setIsLoading(true);
       setError(null);
-      const response = await fetch(`/api/cash?userId=${userId}`);
+      const response = await fetch('/api/cash');
       if (!response.ok) throw new Error('現金残高の取得に失敗しました');
       const data: CashData = await response.json();
       setCashAmount(data.cashAmount);
@@ -51,17 +37,16 @@ export function useCash(): UseCashResult {
     } finally {
       setIsLoading(false);
     }
-  }, [userId]);
+  }, []);
 
   useEffect(() => { fetchCashData(); }, [fetchCashData]);
 
   const debouncedSaveToApi = useDebouncedCallback(async (data: Partial<CashData>) => {
-    if (!userId) return;
     try {
       const response = await fetch('/api/cash', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, ...data }),
+        body: JSON.stringify(data),
       });
       if (!response.ok) throw new Error('データの更新に失敗しました');
     } catch (err) {

@@ -1,194 +1,66 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase-server'
+import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { resolveStockId } from '@/lib/resolveStockId'
+import { withStock } from '@/lib/apiHandler'
+
+const memoOptions = { createIfNotFound: true }
 
 // GET: 株ノオト取得
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ stockId: string }> }
-) {
-  try {
-    // 認証確認
-    const supabase = await createClient()
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+export const GET = withStock(async ({ stockId }) => {
+  let memo = await prisma.stockMemo.findUnique({ where: { stockId } })
 
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized', message: '認証が必要です' },
-        { status: 401 }
-      )
-    }
-
-    const { stockId: rawStockId } = await params
-    const stockId = await resolveStockId(rawStockId, user.id, true)
-    if (!stockId) {
-      return NextResponse.json({ error: 'Not Found', message: '銘柄が見つかりません' }, { status: 404 })
-    }
-
-    // 株ノオト取得（存在しない場合は自動作成）
-    let memo = await prisma.stockMemo.findUnique({
-      where: { stockId }
-    })
-
-    // 株ノオトが存在しない場合は空の内容で作成
-    if (!memo) {
-      memo = await prisma.stockMemo.create({
-        data: {
-          stockId,
-          content: ''
-        }
-      })
-    }
-
-    return NextResponse.json({
-      success: true,
-      data: {
-        id: memo.id,
-        content: memo.content,
-        updatedAt: memo.updatedAt.toISOString()
-      }
-    })
-
-  } catch (error) {
-    console.error('❌ 株ノオト取得エラー:', error)
-    return NextResponse.json(
-      {
-        error: 'Internal Server Error',
-        message: '株ノオトの取得に失敗しました',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      },
-      { status: 500 }
-    )
+  if (!memo) {
+    memo = await prisma.stockMemo.create({ data: { stockId, content: '' } })
   }
-}
+
+  return NextResponse.json({
+    success: true,
+    data: {
+      id: memo.id,
+      content: memo.content,
+      updatedAt: memo.updatedAt.toISOString()
+    }
+  })
+}, '株ノオトの取得', memoOptions)
 
 // PUT: 株ノオト更新
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ stockId: string }> }
-) {
-  try {
-    // 認証確認
-    const supabase = await createClient()
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+export const PUT = withStock(async ({ stockId, request }) => {
+  const { content } = await request.json()
 
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized', message: '認証が必要です' },
-        { status: 401 }
-      )
-    }
-
-    const { stockId: rawStockId } = await params
-    const stockId = await resolveStockId(rawStockId, user.id, true)
-    if (!stockId) {
-      return NextResponse.json({ error: 'Not Found', message: '銘柄が見つかりません' }, { status: 404 })
-    }
-    const { content } = await request.json()
-
-    // 入力検証
-    if (typeof content !== 'string') {
-      return NextResponse.json(
-        { error: 'Bad Request', message: 'contentは文字列である必要があります' },
-        { status: 400 }
-      )
-    }
-
-    // 株ノオト更新（手動でupsert: 存在しない場合は作成）
-    let memo = await prisma.stockMemo.findUnique({
-      where: { stockId }
-    })
-
-    if (memo) {
-      // 既存レコードの更新
-      memo = await prisma.stockMemo.update({
-        where: { stockId },
-        data: { content }
-      })
-    } else {
-      // 新規レコードの作成
-      memo = await prisma.stockMemo.create({
-        data: {
-          stockId,
-          content
-        }
-      })
-    }
-
-    return NextResponse.json({
-      success: true,
-      data: {
-        id: memo.id,
-        content: memo.content,
-        updatedAt: memo.updatedAt.toISOString()
-      }
-    })
-
-  } catch (error) {
-    console.error('❌ 株ノオト更新エラー:', error)
+  if (typeof content !== 'string') {
     return NextResponse.json(
-      {
-        error: 'Internal Server Error',
-        message: '株ノオトの更新に失敗しました',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      },
-      { status: 500 }
+      { error: 'Bad Request', message: 'contentは文字列である必要があります' },
+      { status: 400 }
     )
   }
-}
+
+  let memo = await prisma.stockMemo.findUnique({ where: { stockId } })
+
+  if (memo) {
+    memo = await prisma.stockMemo.update({ where: { stockId }, data: { content } })
+  } else {
+    memo = await prisma.stockMemo.create({ data: { stockId, content } })
+  }
+
+  return NextResponse.json({
+    success: true,
+    data: {
+      id: memo.id,
+      content: memo.content,
+      updatedAt: memo.updatedAt.toISOString()
+    }
+  })
+}, '株ノオトの更新', memoOptions)
 
 // DELETE: 株ノオト削除
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ stockId: string }> }
-) {
+export const DELETE = withStock(async ({ stockId }) => {
   try {
-    // 認証確認
-    const supabase = await createClient()
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized', message: '認証が必要です' },
-        { status: 401 }
-      )
-    }
-
-    const { stockId: rawStockId } = await params
-    const stockId = await resolveStockId(rawStockId, user.id, true)
-    if (!stockId) {
-      return NextResponse.json({ error: 'Not Found', message: '銘柄が見つかりません' }, { status: 404 })
-    }
-
-    // 株ノオト削除
-    await prisma.stockMemo.delete({
-      where: { stockId }
-    })
-
-    return NextResponse.json({
-      success: true,
-      message: '株ノオトを削除しました'
-    })
-
+    await prisma.stockMemo.delete({ where: { stockId } })
   } catch (error) {
-    console.error('❌ 株ノオト削除エラー:', error)
-
-    // 存在しないレコードの削除試行の場合
     if (error instanceof Error && error.message.includes('Record to delete does not exist')) {
-      return NextResponse.json({
-        success: true,
-        message: '株ノオトは既に削除されています'
-      })
+      return NextResponse.json({ success: true, message: '株ノオトは既に削除されています' })
     }
-
-    return NextResponse.json(
-      {
-        error: 'Internal Server Error',
-        message: '株ノオトの削除に失敗しました',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      },
-      { status: 500 }
-    )
+    throw error
   }
-}
+
+  return NextResponse.json({ success: true, message: '株ノオトを削除しました' })
+}, '株ノオトの削除', memoOptions)
