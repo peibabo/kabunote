@@ -5,9 +5,7 @@ import {
   DividendRightsSettings,
   ShareholderRightsSettings,
   ShareholderMeetingSettings,
-  createDefaultDividendRightsSettings,
-  createDefaultShareholderRightsSettings,
-  createDefaultShareholderMeetingSettings,
+  createDefaultRightsSettings,
 } from '@/types/rightsDate';
 
 export type CalendarDataMap = {
@@ -54,17 +52,17 @@ export function useCalendarData(
         const dividendRightsSettings: DividendRightsSettings =
           dbStock?.dividend?.rightsMonth && dbStock.dividend.rightsDay
             ? { month: dbStock.dividend.rightsMonth, day: dbStock.dividend.rightsDay, isRecurring: true, isActive: true }
-            : createDefaultDividendRightsSettings();
+            : createDefaultRightsSettings();
 
         const shareholderRightsSettings: ShareholderRightsSettings =
           dbStock?.benefit?.rightsMonth && dbStock.benefit.rightsDay
             ? { month: dbStock.benefit.rightsMonth, day: dbStock.benefit.rightsDay, isRecurring: true, isActive: true }
-            : createDefaultShareholderRightsSettings();
+            : createDefaultRightsSettings();
 
         const meetingEvent = dbStock?.events?.find(e => e.eventType === 'SHAREHOLDER_MEETING');
         const shareholderMeetingSettings: ShareholderMeetingSettings = meetingEvent
           ? { month: meetingEvent.eventMonth, day: meetingEvent.eventDay, isRecurring: meetingEvent.isRecurring, isActive: meetingEvent.isActive }
-          : createDefaultShareholderMeetingSettings();
+          : createDefaultRightsSettings();
 
         calendarData[symbol] = {
           name: dbStock?.name || stockInfo?.name || symbol,

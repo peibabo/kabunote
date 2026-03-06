@@ -1,7 +1,7 @@
 'use client';
 
 import { PositionSummary, formatPrice, formatShares } from '@/types/positions';
-import { DividendRightsSettings, calculateDividendRightsDateFromSettings } from '@/types/rightsDate';
+import { DividendRightsSettings, calculateRightsDateFromSettings } from '@/types/rightsDate';
 import { calculateDividendInfo, formatDividendAmount, formatDividendYield } from '@/types/dividend';
 import { useStockDividend } from '@/hooks/useStockDividend';
 
@@ -134,7 +134,7 @@ export default function DividendManagement({
   })();
 
   // 配当権利確定日の取得
-  const dividendRightsDate = calculateDividendRightsDateFromSettings(dividendRightsSettings);
+  const dividendRightsDate = calculateRightsDateFromSettings(dividendRightsSettings);
   const rightsCountdown = getRightsCountdown(dividendRightsDate);
 
   // 月/日の変更ハンドラー

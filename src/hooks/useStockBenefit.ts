@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { apiFetch } from '@/lib/apiClient'
 import { useAsyncState } from './useAsyncState'
 import { useAutoSave } from './useAutoSave'
-import { ShareholderRightsSettings, createDefaultShareholderRightsSettings } from '@/types/rightsDate'
+import { ShareholderRightsSettings, createDefaultRightsSettings } from '@/types/rightsDate'
 
 interface BenefitState {
   description: string
@@ -29,7 +29,7 @@ export function useStockBenefit(stockId: string): UseStockBenefitReturn {
     description: '',
     minimumShares: '',
     estimatedValue: '',
-    rightsSettings: createDefaultShareholderRightsSettings(),
+    rightsSettings: createDefaultRightsSettings(),
   })
   const { isLoading, isSaving, withLoading, withSaving } = useAsyncState()
 
@@ -45,7 +45,7 @@ export function useStockBenefit(stockId: string): UseStockBenefitReturn {
         estimatedValue: data.estimatedValue != null ? String(data.estimatedValue) : '',
         rightsSettings: data.rightsMonth != null && data.rightsDay != null
           ? { month: data.rightsMonth, day: data.rightsDay, isRecurring: true, isActive: true }
-          : createDefaultShareholderRightsSettings(),
+          : createDefaultRightsSettings(),
       })
     }
   }), [stockId, withLoading])
