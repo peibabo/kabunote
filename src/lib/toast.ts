@@ -6,8 +6,9 @@ interface ToastItem {
   message: string
 }
 
+const EMPTY: ToastItem[] = []
 let nextId = 0
-let items: ToastItem[] = []
+let items: ToastItem[] = EMPTY
 const listeners = new Set<() => void>()
 
 function emit() {
@@ -36,6 +37,7 @@ export const toast = {
 
 export const toastStore = {
   getSnapshot: () => items,
+  getServerSnapshot: () => EMPTY,
   subscribe: (listener: () => void) => {
     listeners.add(listener)
     return () => listeners.delete(listener)

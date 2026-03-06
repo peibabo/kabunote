@@ -16,7 +16,7 @@ const typeIcons = {
 } as const
 
 export default function ToastContainer() {
-  const items = useSyncExternalStore(toastStore.subscribe, toastStore.getSnapshot, () => [])
+  const items = useSyncExternalStore(toastStore.subscribe, toastStore.getSnapshot, toastStore.getServerSnapshot)
 
   if (items.length === 0) return null
 
