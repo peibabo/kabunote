@@ -5,19 +5,20 @@ import { stockKey } from '@/lib/storageKeys';
 
 type TabOption = {
   label: string;
+  icon: string;
   mainTab: string;
   investmentSubTab?: string;
   managementSubTab?: string;
 };
 
 const TAB_OPTIONS: TabOption[] = [
-  { label: '📝 基本', mainTab: 'basic' },
-  { label: '📊 分析', mainTab: 'analysis', investmentSubTab: 'analysis' },
-  { label: '🎯 次の一手', mainTab: 'analysis', investmentSubTab: 'nextaction' },
-  { label: '💼 保有状況', mainTab: 'management', managementSubTab: 'positions' },
-  { label: '📅 イベント', mainTab: 'management', managementSubTab: 'events' },
-  { label: '💰 配当', mainTab: 'management', managementSubTab: 'dividend' },
-  { label: '🎁 優待', mainTab: 'management', managementSubTab: 'shareholder' },
+  { label: '基本', icon: '📝', mainTab: 'basic' },
+  { label: '分析', icon: '📊', mainTab: 'analysis', investmentSubTab: 'analysis' },
+  { label: '次の一手', icon: '🎯', mainTab: 'analysis', investmentSubTab: 'nextaction' },
+  { label: '保有状況', icon: '💼', mainTab: 'management', managementSubTab: 'positions' },
+  { label: 'イベント', icon: '📅', mainTab: 'management', managementSubTab: 'events' },
+  { label: '配当', icon: '💰', mainTab: 'management', managementSubTab: 'dividend' },
+  { label: '優待', icon: '🎁', mainTab: 'management', managementSubTab: 'shareholder' },
 ];
 
 type Props = {
@@ -97,21 +98,22 @@ export default function BulkTabSwitcher({ stockSymbols }: Props) {
 
   return (
     <div className="bg-slate-800 border-b border-gray-700 px-4 py-2 rounded-lg mb-2">
-      <div className="container mx-auto flex flex-wrap items-center gap-1">
-        <span className="text-gray-400 text-xs mr-2 whitespace-nowrap">全カード切り替え:</span>
+      <div className="container mx-auto flex items-center gap-1 overflow-x-auto scrollbar-hide">
+        <span className="text-gray-400 text-xs mr-2 whitespace-nowrap shrink-0">全カード切替:</span>
         {TAB_OPTIONS.map(option => {
           const isActive = activeOption?.label === option.label;
           return (
             <button
               key={option.label}
               onClick={() => handleClick(option)}
-              className={`cursor-pointer text-xs px-3 py-1 rounded transition-all duration-150 whitespace-nowrap ${
+              title={option.label}
+              className={`cursor-pointer text-xs px-3 py-1 md:px-3 md:py-1 rounded transition-all duration-150 whitespace-nowrap ${
                 isActive
                   ? 'bg-blue-600 text-white font-medium shadow-sm'
                   : 'bg-slate-700 text-gray-300 hover:bg-slate-600 hover:text-white'
               }`}
             >
-              {option.label}
+              {option.icon}<span className="hidden md:inline"> {option.label}</span>
             </button>
           );
         })}
