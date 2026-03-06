@@ -213,9 +213,9 @@ export default function PortfolioPositionsPage({ stockData = [], isLoggedIn = fa
 
   if (positionsData.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-900 text-white p-6">
+      <div className="min-h-screen bg-gray-900 text-white p-3 sm:p-6">
         <div className="max-w-6xl mx-auto">
-          <h1 className="text-2xl font-bold mb-6">💼 保有ポジション一覧</h1>
+          <h1 className="text-lg sm:text-2xl font-bold mb-6">💼 保有ポジション一覧</h1>
           <div className="text-center py-12">
             <div className="text-gray-400 text-lg mb-4">📊 保有ポジションがありません</div>
             <div className="text-sm text-gray-500">銘柄カードの「💼 管理」タブでポジションを登録してください</div>
@@ -226,38 +226,44 @@ export default function PortfolioPositionsPage({ stockData = [], isLoggedIn = fa
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-6">
+    <div className="min-h-screen bg-gray-900 text-white p-3 sm:p-6">
       <div className="max-w-6xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold">💼 保有ポジション一覧</h1>
-
-          {/* ソート設定 */}
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-400 self-center mr-2">並び替え:</span>
-            {[
-              { key: 'profitLoss' as SortKey, label: '損益額' },
-              { key: 'profitLossRate' as SortKey, label: '損益率' },
-              { key: 'totalCost' as SortKey, label: '投資額' },
-              { key: 'currentValue' as SortKey, label: '評価額' },
-              { key: 'symbol' as SortKey, label: '銘柄コード' }
-            ].map(({ key, label }) => (
-              <button
-                key={key}
-                onClick={() => handleSort(key)}
-                className={`cursor-pointer px-3 py-1 text-xs rounded-md transition-colors ${
-                  sortBy === key
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                }`}
-              >
-                {label} {sortBy === key && (sortOrder === 'desc' ? '↓' : '↑')}
-              </button>
-            ))}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-6">
+          <h1 className="text-lg sm:text-2xl font-bold">💼 保有ポジション一覧</h1>
+          <div className="text-xs sm:text-sm text-gray-400">
+            {positionsData.length}銘柄のポジション
           </div>
         </div>
 
+        {/* ソートコントロール */}
+        <div className="flex flex-wrap gap-2 mb-6">
+          <span className="text-sm text-gray-400 self-center mr-2">並び替え:</span>
+          {[
+            { key: 'profitLoss' as SortKey, label: '損益額' },
+            { key: 'profitLossRate' as SortKey, label: '損益率' },
+            { key: 'totalCost' as SortKey, label: '投資額' },
+            { key: 'currentValue' as SortKey, label: '評価額' },
+            { key: 'symbol' as SortKey, label: '銘柄コード' }
+          ].map(({ key, label }) => (
+            <button
+              key={key}
+              onClick={() => handleSort(key)}
+              className={`cursor-pointer px-2.5 py-1.5 sm:px-3 sm:py-1 text-xs rounded-md transition-colors ${
+                sortBy === key
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+              }`}
+            >
+              {label}
+              {sortBy === key && (
+                <span className="ml-1">{sortOrder === 'desc' ? '↓' : '↑'}</span>
+              )}
+            </button>
+          ))}
+        </div>
+
         {/* 統計サマリー */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6">
           <div className="bg-gray-800 rounded-lg p-4">
             <div className="text-sm text-gray-400 mb-1">保有銘柄数</div>
             <div className="text-lg font-bold text-white">
@@ -305,8 +311,80 @@ export default function PortfolioPositionsPage({ stockData = [], isLoggedIn = fa
           </div>
         </div>
 
-        {/* ポジション一覧テーブル */}
-        <div className="bg-gray-800 rounded-lg overflow-hidden">
+        {/* モバイルカードレイアウト */}
+        <div className="md:hidden space-y-3">
+          {sortedData.map((row) => (
+            <div key={row.symbol} className="bg-gray-800 rounded-lg p-3">
+              {/* 1行目: 銘柄コード + 会社名 */}
+              <div className="flex items-center gap-2 mb-2">
+                <span className="font-medium text-white text-sm">{row.symbol}</span>
+                <span className="text-xs text-gray-400 truncate">{row.companyName}</span>
+              </div>
+              {/* 2行目: 保有株数 + 平均取得価額 */}
+              <div className="grid grid-cols-2 gap-2 text-xs mb-1.5">
+                <div>
+                  <span className="text-gray-400">保有: </span>
+                  <span className="text-white">{formatShares(row.totalShares)}株</span>
+                </div>
+                <div>
+                  <span className="text-gray-400">平均: </span>
+                  <span className="text-white">{formatPriceValue(row.averagePrice)}円</span>
+                </div>
+              </div>
+              {/* 3行目: 投資額 + 評価額 */}
+              <div className="grid grid-cols-2 gap-2 text-xs mb-1.5">
+                <div>
+                  <span className="text-gray-400">投資額: </span>
+                  <span className="text-white">{formatPriceValue(row.totalCost)}円</span>
+                </div>
+                <div>
+                  <span className="text-gray-400">評価額: </span>
+                  <span className="text-white">{row.currentValue > 0 ? `${formatPriceValue(row.currentValue)}円` : '算出不可'}</span>
+                </div>
+              </div>
+              {/* 4行目: 損益額 + 損益率 */}
+              <div className="grid grid-cols-2 gap-2 text-xs mb-1.5">
+                <div>
+                  <span className="text-gray-400">損益: </span>
+                  {row.currentPrice > 0 ? (
+                    <span className={`font-medium ${getProfitLossColor(row.profitLoss)}`}>
+                      {row.profitLoss >= 0 ? '+' : ''}{formatPriceValue(row.profitLoss)}円
+                    </span>
+                  ) : (
+                    <span className="text-gray-500">算出不可</span>
+                  )}
+                  {row.profitLoss > 0 && (
+                    <div className="text-blue-300 mt-0.5">税引後 +{formatPriceValue(row.profitLossAfterTax)}円</div>
+                  )}
+                </div>
+                <div>
+                  <span className="text-gray-400">損益率: </span>
+                  {row.currentPrice > 0 ? (
+                    <span className={`font-medium ${getProfitLossColor(row.profitLoss)}`}>
+                      {row.profitLossRate >= 0 ? '+' : ''}{row.profitLossRate.toFixed(2)}%
+                    </span>
+                  ) : (
+                    <span className="text-gray-500">算出不可</span>
+                  )}
+                </div>
+              </div>
+              {/* 5行目: 構成比プログレスバー */}
+              <div className="flex items-center gap-2 text-xs">
+                <span className="text-gray-400">構成比:</span>
+                <span className="text-white">{row.portfolioWeight.toFixed(1)}%</span>
+                <div className="flex-1 bg-gray-600 rounded-full h-1.5">
+                  <div
+                    className="bg-blue-500 h-1.5 rounded-full"
+                    style={{ width: `${Math.min(row.portfolioWeight, 100)}%` }}
+                  ></div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* デスクトップテーブル */}
+        <div className="hidden md:block bg-gray-800 rounded-lg overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-700">
               <tr>
