@@ -1,13 +1,13 @@
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { useNextActionPlan } from '@/hooks/useNextActionPlan';
 import { NextActionPlan, hasNextActionPlan } from '@/types/nextActionPlan';
 import { getIntegratedAlert, getAllActiveAlerts, AlertType } from '@/utils/alertSystem';
 import { getCompanyNameSync } from '@/data/stockNames';
 import { calculatePositionSummary } from '@/types/positions';
 import { useSnooze } from '@/hooks/useSnooze';
 import { useCash } from '@/hooks/useCash';
+import { StockData } from '@/hooks/useStockData';
 import { SNOOZE_DURATIONS, SnoozeDuration, getTimeUntilUnsnooze, generateAlertKey } from '@/types/snooze';
 
 interface AlertRowData {
@@ -73,7 +73,12 @@ const getAlertDisplayInfo = (alert: { type: AlertType; gapPercentage?: number; a
   }
 };
 
-export default function AlertSummaryPage() {
+interface AlertSummaryPageProps {
+  stockData?: StockData[];
+  isLoggedIn?: boolean;
+}
+
+export default function AlertSummaryPage({ stockData = [], isLoggedIn = false }: AlertSummaryPageProps) {
   const [stocks, setStocks] = useState<string[]>([]);
   const { cashAmount } = useCash();
   const availableCash = parseFloat(cashAmount) || 0;
@@ -107,118 +112,112 @@ export default function AlertSummaryPage() {
     }
   }, []);
 
+  // 銘柄のアラートを収集する共通処理
+  const collectAlerts = (
+    symbol: string,
+    companyName: string,
+    currentPrice: number,
+    targetPrice: number,
+    stopLossPrice: number,
+    plan: NextActionPlan,
+    positionSummary: ReturnType<typeof calculatePositionSummary> | null,
+    alerts: AlertRowData[]
+  ) => {
+    const alertList = getAllActiveAlerts(
+      plan,
+      currentPrice,
+      targetPrice,
+      stopLossPrice.toString(),
+      positionSummary && positionSummary.totalShares > 0 ? positionSummary : undefined,
+      availableCash
+    );
+
+    alertList.forEach(alert => {
+      const { message, detail, priority } = getAlertDisplayInfo(alert);
+
+      if (!showSnoozed && !isAlertSnoozed(symbol, alert.type)) {
+        alerts.push({
+          symbol, companyName, alertType: alert.type, alertMessage: message,
+          alertDetail: detail, priority, gapPercentage: alert.gapPercentage,
+          currentPrice, targetPrice: alert.targetPrice, stopLossPrice: alert.stopLossPrice
+        });
+      } else if (showSnoozed && isAlertSnoozed(symbol, alert.type)) {
+        alerts.push({
+          symbol, companyName, alertType: alert.type, alertMessage: message,
+          alertDetail: detail, priority, gapPercentage: alert.gapPercentage,
+          currentPrice, targetPrice: alert.targetPrice, stopLossPrice: alert.stopLossPrice
+        });
+      }
+    });
+  };
+
   // アラートデータを収集（スヌーズ済みを除外）
   const alertsData = useMemo(() => {
-    if (!isLoaded || stocks.length === 0 || !snoozeLoaded) {
-      return [];
-    }
+    if (!snoozeLoaded) return [];
 
     const alerts: AlertRowData[] = [];
 
-    stocks.forEach(symbol => {
-      // 現在価格・投資規律設定を取得
-      const currentPriceStr = localStorage.getItem(`kabunote-current-price-${symbol}`) || '0';
-      const targetPriceStr = localStorage.getItem(`kabunote-target-price-${symbol}`) || '0';
-      const stopLossStr = localStorage.getItem(`kabunote-stop-loss-${symbol}`) || '0';
-      const currentPrice = parseFloat(currentPriceStr);
+    if (isLoggedIn && stockData.length > 0) {
+      // 認証済み: DBデータを使用
+      stockData.forEach(stock => {
+        const currentPrice = stock.currentPrice ?? 0;
+        if (currentPrice <= 0) return;
 
-      if (currentPrice <= 0) {
-        return; // 現在価格が未設定の場合はスキップ
-      }
+        const targetPrice = stock.targetPrice ?? 0;
+        const stopLossPrice = stock.stopLossPrice ?? 0;
+        const companyName = stock.name || getCompanyNameSync(stock.symbol);
 
-      // NextActionPlanを取得（なくても投資規律アラートはチェック）
-      const planData = localStorage.getItem(`kabunote-next-action-plan-${symbol}`);
-      let plan: NextActionPlan | null = null;
-      let hasValidPlan = false;
-
-      if (planData) {
-        try {
-          plan = JSON.parse(planData);
-          hasValidPlan = plan ? hasNextActionPlan(plan) : false;
-        } catch (e) {
-          console.warn(`Failed to parse NextActionPlan for ${symbol}:`, e);
-        }
-      }
-
-      // NextActionPlanがない場合はデフォルトプランを作成（投資規律アラート用）
-      if (!plan) {
-        plan = {
-          id: '',
-          targetPrice: 0,
-          targetQuantity: 0,
-          memo: '',
-          actionType: 'buy',
-          priority: 'medium',
-          updatedAt: ''
+        const nap = stock.nextActionPlan;
+        const plan: NextActionPlan = nap ? {
+          id: 'db',
+          actionType: nap.actionType as 'buy' | 'sell' | 'hold',
+          priority: nap.priority as 'high' | 'medium' | 'low',
+          targetPrice: nap.targetPrice ?? 0,
+          targetQuantity: nap.targetShares ?? 0,
+          memo: nap.strategyMemo,
+          updatedAt: '',
+        } : {
+          id: '', targetPrice: 0, targetQuantity: 0, memo: '',
+          actionType: 'buy', priority: 'medium', updatedAt: ''
         };
-      }
 
-      try {
+        const positionSummary = stock.positions.length > 0
+          ? calculatePositionSummary(stock.positions)
+          : null;
+
+        collectAlerts(stock.symbol, companyName, currentPrice, targetPrice, stopLossPrice, plan, positionSummary, alerts);
+      });
+    } else if (isLoaded && stocks.length > 0) {
+      // 未認証: localStorageフォールバック
+      stocks.forEach(symbol => {
+        const currentPriceStr = localStorage.getItem(`kabunote-current-price-${symbol}`) || '0';
+        const targetPriceStr = localStorage.getItem(`kabunote-target-price-${symbol}`) || '0';
+        const stopLossStr = localStorage.getItem(`kabunote-stop-loss-${symbol}`) || '0';
+        const currentPrice = parseFloat(currentPriceStr);
+
+        if (currentPrice <= 0) return;
+
+        const planData = localStorage.getItem(`kabunote-next-action-plan-${symbol}`);
+        let plan: NextActionPlan;
+        if (planData) {
+          try { plan = JSON.parse(planData); } catch { plan = { id: '', targetPrice: 0, targetQuantity: 0, memo: '', actionType: 'buy', priority: 'medium', updatedAt: '' }; }
+        } else {
+          plan = { id: '', targetPrice: 0, targetQuantity: 0, memo: '', actionType: 'buy', priority: 'medium', updatedAt: '' };
+        }
+
         const companyName = getCompanyNameSync(symbol);
-
-        // ポジション情報取得
         const positionsData = localStorage.getItem(`kabunote-positions-${symbol}`);
         let positionSummary = null;
         if (positionsData) {
-          try {
-            const positions = JSON.parse(positionsData);
-            positionSummary = calculatePositionSummary(positions);
-          } catch (e) {
-            console.warn('Failed to parse positions:', e);
-          }
+          try { positionSummary = calculatePositionSummary(JSON.parse(positionsData)); } catch { /* ignore */ }
         }
 
-        // アラート判定（複数アラート対応）
-        const alertList = getAllActiveAlerts(
-          plan,
-          currentPrice,
-          parseFloat(targetPriceStr) || 0,
-          stopLossStr,
-          positionSummary && positionSummary.totalShares > 0 ? positionSummary : undefined,
-          availableCash
-        );
-
-        // 各アラートを処理（複数アラート対応）
-        alertList.forEach(alert => {
-          const { message, detail, priority } = getAlertDisplayInfo(alert);
-
-          // スヌーズ中でない場合のみ表示
-          if (!showSnoozed && !isAlertSnoozed(symbol, alert.type)) {
-            alerts.push({
-              symbol,
-              companyName,
-              alertType: alert.type,
-              alertMessage: message,
-              alertDetail: detail,
-              priority,
-              gapPercentage: alert.gapPercentage,
-              currentPrice,
-              targetPrice: alert.targetPrice,
-              stopLossPrice: alert.stopLossPrice
-            });
-          } else if (showSnoozed && isAlertSnoozed(symbol, alert.type)) {
-            // スヌーズ済みアラートを表示する場合
-            alerts.push({
-              symbol,
-              companyName,
-              alertType: alert.type,
-              alertMessage: message,
-              alertDetail: detail,
-              priority,
-              gapPercentage: alert.gapPercentage,
-              currentPrice,
-              targetPrice: alert.targetPrice,
-              stopLossPrice: alert.stopLossPrice
-            });
-          }
-        });
-      } catch (e) {
-        console.warn(`Failed to parse alert data for ${symbol}:`, e);
-      }
-    });
+        collectAlerts(symbol, companyName, currentPrice, parseFloat(targetPriceStr) || 0, parseFloat(stopLossStr) || 0, plan, positionSummary, alerts);
+      });
+    }
 
     return alerts.sort((a, b) => a.priority - b.priority);
-  }, [stocks, availableCash, isLoaded, snoozeLoaded, showSnoozed, isAlertSnoozed]);
+  }, [stocks, stockData, isLoggedIn, availableCash, isLoaded, snoozeLoaded, showSnoozed, isAlertSnoozed]);
 
   // localStorage変更監視でアラートデータをリアルタイム更新
   useEffect(() => {
