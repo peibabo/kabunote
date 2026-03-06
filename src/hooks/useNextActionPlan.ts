@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useDebounce } from './useDebounce'
+import { apiFetch, apiPut, apiDelete } from '@/lib/apiClient'
+import { useAsyncState } from './useAsyncState'
+import { useAutoSave } from './useAutoSave'
 import { NextActionPlan } from '@/types/nextActionPlan'
 
 interface UseNextActionPlanReturn {
@@ -25,130 +27,54 @@ const DEFAULT_PLAN: NextActionPlan = {
 
 export function useNextActionPlan(stockId: string): UseNextActionPlanReturn {
   const [nextActionPlan, setNextActionPlan] = useState<NextActionPlan | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [isSaving, setIsSaving] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
-  const [hasUserInput, setHasUserInput] = useState(false)
+  const { isLoading, isSaving, error, withLoading, withSaving } = useAsyncState()
 
-  const debouncedNextActionPlan = useDebounce(nextActionPlan, 300)
-
-  // データベースからデータを取得
-  const loadDataFromDatabase = useCallback(async () => {
+  const loadData = useCallback(() => withLoading(async () => {
     try {
-      setError(null)
-      const response = await fetch(`/api/stocks/${stockId}/next-action-plan`)
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'JSONパース失敗' }))
-        throw new Error(errorData.message || 'Next Action Planの読み込みに失敗しました')
-      }
-
-      const result = await response.json()
-
-      if (result.success) {
-        setNextActionPlan(result.data)
-        setLastSaved(new Date(result.data.updatedAt))
-      } else {
-        throw new Error('APIレスポンスが無効です')
-      }
-    } catch (err) {
-      console.error('❌ Next Action Plan読み込みエラー:', err)
+      const data = await apiFetch<NextActionPlan>(`/api/stocks/${stockId}/next-action-plan`)
+      setNextActionPlan(data)
+      setLastSaved(new Date(data.updatedAt))
+    } catch {
       setNextActionPlan(DEFAULT_PLAN)
-      setError(null)
-    } finally {
-      setIsLoading(false)
     }
-  }, [stockId])
+  }), [stockId, withLoading])
 
-  // Next Action Plan保存
-  const saveNextActionPlan = useCallback(async () => {
-    if (!nextActionPlan) return
+  useEffect(() => { loadData() }, [loadData])
 
-    try {
-      setIsSaving(true)
-      setError(null)
-
-      const response = await fetch(`/api/stocks/${stockId}/next-action-plan`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          actionType: nextActionPlan.actionType,
-          priority: nextActionPlan.priority,
-          targetPrice: nextActionPlan.targetPrice,
-          targetQuantity: nextActionPlan.targetQuantity,
-          memo: nextActionPlan.memo
-        }),
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'JSONパース失敗' }))
-        throw new Error(errorData.message || 'Next Action Planの保存に失敗しました')
-      }
-
-      const result = await response.json()
-
-      if (result.success) {
-        setLastSaved(new Date(result.data.updatedAt))
-        setHasUserInput(false)
-        window.dispatchEvent(new CustomEvent('kabunote-db-strategy-update', {
-          detail: {
-            symbol: stockId.replace('stock-', ''),
-            nextActionPlan: {
-              actionType: result.data.actionType,
-              priority: result.data.priority,
-              targetPrice: result.data.targetPrice,
-              targetShares: result.data.targetQuantity,
-              strategyMemo: result.data.memo,
+  const { markDirty } = useAutoSave({
+    value: nextActionPlan,
+    delay: 300,
+    isLoading,
+    onSave: async (plan) => {
+      if (!plan) return
+      await withSaving(async () => {
+        const data = await apiPut<NextActionPlan>(`/api/stocks/${stockId}/next-action-plan`, {
+          actionType: plan.actionType,
+          priority: plan.priority,
+          targetPrice: plan.targetPrice,
+          targetQuantity: plan.targetQuantity,
+          memo: plan.memo
+        })
+        if (data) {
+          setLastSaved(new Date(data.updatedAt))
+          window.dispatchEvent(new CustomEvent('kabunote-db-strategy-update', {
+            detail: {
+              symbol: stockId.replace('stock-', ''),
+              nextActionPlan: {
+                actionType: data.actionType,
+                priority: data.priority,
+                targetPrice: data.targetPrice,
+                targetShares: data.targetQuantity,
+                strategyMemo: data.memo,
+              }
             }
-          }
-        }))
-      } else {
-        throw new Error('APIレスポンスが無効です')
-      }
-    } catch (err) {
-      console.error('❌ Next Action Plan保存エラー:', err)
-      setError(err instanceof Error ? err.message : '保存エラー')
-    } finally {
-      setIsSaving(false)
-    }
-  }, [stockId, nextActionPlan])
-
-  // Next Action Plan削除
-  const deleteNextActionPlan = useCallback(async () => {
-    try {
-      setIsSaving(true)
-      setError(null)
-
-      const response = await fetch(`/api/stocks/${stockId}/next-action-plan`, {
-        method: 'DELETE',
+          }))
+        }
       })
+    },
+  })
 
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.message || 'Next Action Planの削除に失敗しました')
-      }
-
-      const result = await response.json()
-
-      if (result.success) {
-        setNextActionPlan(DEFAULT_PLAN)
-        setLastSaved(null)
-        window.dispatchEvent(new CustomEvent('kabunote-db-strategy-update', {
-          detail: { symbol: stockId.replace('stock-', ''), nextActionPlan: null }
-        }))
-      } else {
-        throw new Error('APIレスポンスが無効です')
-      }
-    } catch (err) {
-      console.error('❌ Next Action Plan削除エラー:', err)
-      setError(err instanceof Error ? err.message : '削除エラー')
-    } finally {
-      setIsSaving(false)
-    }
-  }, [stockId])
-
-  // Next Action Plan更新（楽観的更新）
   const updateNextActionPlan = useCallback((data: Partial<Omit<NextActionPlan, 'id' | 'updatedAt'>>) => {
     setNextActionPlan(prev => prev ? {
       ...prev,
@@ -163,20 +89,17 @@ export function useNextActionPlan(stockId: string): UseNextActionPlanReturn {
       memo: data.memo || '',
       updatedAt: new Date().toISOString()
     })
-    setHasUserInput(true)
-  }, [])
+    markDirty()
+  }, [markDirty])
 
-  // 初回読み込み
-  useEffect(() => {
-    loadDataFromDatabase()
-  }, [loadDataFromDatabase])
-
-  // デバウンス後の自動保存（ユーザー入力があった場合のみ）
-  useEffect(() => {
-    if (hasUserInput && !isLoading && nextActionPlan) {
-      saveNextActionPlan()
-    }
-  }, [debouncedNextActionPlan, hasUserInput, isLoading, saveNextActionPlan])
+  const deleteNextActionPlan = useCallback(() => withSaving(async () => {
+    await apiDelete(`/api/stocks/${stockId}/next-action-plan`)
+    setNextActionPlan(DEFAULT_PLAN)
+    setLastSaved(null)
+    window.dispatchEvent(new CustomEvent('kabunote-db-strategy-update', {
+      detail: { symbol: stockId.replace('stock-', ''), nextActionPlan: null }
+    }))
+  }) as Promise<void>, [stockId, withSaving])
 
   return {
     nextActionPlan,
@@ -185,7 +108,7 @@ export function useNextActionPlan(stockId: string): UseNextActionPlanReturn {
     error,
     lastSaved,
     updateNextActionPlan,
-    saveNextActionPlan,
+    saveNextActionPlan: () => Promise.resolve(),
     deleteNextActionPlan
   }
 }

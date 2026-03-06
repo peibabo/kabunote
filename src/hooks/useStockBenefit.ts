@@ -1,6 +1,15 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useDebounce } from './useDebounce'
+import { apiFetch } from '@/lib/apiClient'
+import { useAsyncState } from './useAsyncState'
+import { useAutoSave } from './useAutoSave'
 import { ShareholderRightsSettings, createDefaultShareholderRightsSettings } from '@/types/rightsDate'
+
+interface BenefitState {
+  description: string
+  minimumShares: string
+  estimatedValue: string
+  rightsSettings: ShareholderRightsSettings
+}
 
 interface UseStockBenefitReturn {
   description: string
@@ -16,146 +25,93 @@ interface UseStockBenefitReturn {
 }
 
 export function useStockBenefit(stockId: string): UseStockBenefitReturn {
-  const [description, setDescription] = useState<string>('')
-  const [minimumShares, setMinimumShares] = useState<string>('')
-  const [estimatedValue, setEstimatedValue] = useState<string>('')
-  const [rightsSettings, setRightsSettings] = useState<ShareholderRightsSettings>(
-    createDefaultShareholderRightsSettings()
-  )
+  const [state, setState] = useState<BenefitState>({
+    description: '',
+    minimumShares: '',
+    estimatedValue: '',
+    rightsSettings: createDefaultShareholderRightsSettings(),
+  })
+  const { isLoading, isSaving, withLoading, withSaving } = useAsyncState()
 
-  const [isLoading, setIsLoading] = useState(true)
-  const [isSaving, setIsSaving] = useState(false)
-  const [hasBenefitInput, setHasBenefitInput] = useState(false)
-
-  const debouncedDescription = useDebounce(description, 500)
-  const debouncedMinimumShares = useDebounce(minimumShares, 500)
-  const debouncedEstimatedValue = useDebounce(estimatedValue, 500)
-  const debouncedRightsSettings = useDebounce(rightsSettings, 500)
-
-  // DB からの読み込み
-  const loadFromDatabase = useCallback(async () => {
-    try {
-      const response = await fetch(`/api/stocks/${stockId}/benefit`)
-
-      if (!response.ok) {
-        throw new Error('優待情報の読み込みに失敗しました')
-      }
-
-      const result = await response.json()
-
-      if (result.success && result.data) {
-        const { description: dbDesc, minimumShares: dbMin, estimatedValue: dbEst, rightsMonth, rightsDay } = result.data
-
-        setDescription(dbDesc ?? '')
-        setMinimumShares(dbMin != null ? String(dbMin) : '')
-        setEstimatedValue(dbEst != null ? String(dbEst) : '')
-        setRightsSettings(
-          rightsMonth != null && rightsDay != null
-            ? { month: rightsMonth, day: rightsDay, isRecurring: true, isActive: true }
-            : createDefaultShareholderRightsSettings()
-        )
-      }
-    } catch (err) {
-      console.error('❌ 優待情報読み込みエラー:', err)
-    } finally {
-      setIsLoading(false)
-    }
-  }, [stockId])
-
-  // 初回読み込み
-  useEffect(() => {
-    loadFromDatabase()
-  }, [loadFromDatabase])
-
-  // DB 保存
-  const saveToDatabaseWithValues = useCallback(async (
-    desc: string,
-    min: string,
-    est: string,
-    rights: ShareholderRightsSettings
-  ) => {
-    try {
-      setIsSaving(true)
-      const response = await fetch(`/api/stocks/${stockId}/benefit`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          description: desc || null,
-          minimumShares: min ? parseInt(min) : null,
-          estimatedValue: est ? parseFloat(est) : null,
-          rightsMonth: rights.month,
-          rightsDay: rights.day,
-        }),
+  const loadData = useCallback(() => withLoading(async () => {
+    const data = await apiFetch<{
+      description: string | null; minimumShares: number | null; estimatedValue: number | null
+      rightsMonth: number | null; rightsDay: number | null
+    }>(`/api/stocks/${stockId}/benefit`)
+    if (data) {
+      setState({
+        description: data.description ?? '',
+        minimumShares: data.minimumShares != null ? String(data.minimumShares) : '',
+        estimatedValue: data.estimatedValue != null ? String(data.estimatedValue) : '',
+        rightsSettings: data.rightsMonth != null && data.rightsDay != null
+          ? { month: data.rightsMonth, day: data.rightsDay, isRecurring: true, isActive: true }
+          : createDefaultShareholderRightsSettings(),
       })
+    }
+  }), [stockId, withLoading])
 
-      if (!response.ok) {
-        throw new Error('優待情報の保存に失敗しました')
-      }
+  useEffect(() => { loadData() }, [loadData])
 
-      if (typeof window !== 'undefined') {
+  const { markDirty } = useAutoSave({
+    value: state,
+    delay: 500,
+    isLoading,
+    onSave: async (val) => {
+      await withSaving(async () => {
+        const response = await fetch(`/api/stocks/${stockId}/benefit`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            description: val.description || null,
+            minimumShares: val.minimumShares ? parseInt(val.minimumShares) : null,
+            estimatedValue: val.estimatedValue ? parseFloat(val.estimatedValue) : null,
+            rightsMonth: val.rightsSettings.month,
+            rightsDay: val.rightsSettings.day,
+          }),
+        })
+        if (!response.ok) throw new Error('優待情報の保存に失敗しました')
         window.dispatchEvent(new CustomEvent('kabunote-db-calendar-update', {
           detail: {
             type: 'benefit' as const,
             symbol: stockId.replace('stock-', ''),
             benefit: {
-              description: desc || null,
-              minimumShares: min ? parseInt(min) : null,
-              estimatedValue: est ? parseFloat(est) : null,
-              rightsMonth: rights.month,
-              rightsDay: rights.day,
+              description: val.description || null,
+              minimumShares: val.minimumShares ? parseInt(val.minimumShares) : null,
+              estimatedValue: val.estimatedValue ? parseFloat(val.estimatedValue) : null,
+              rightsMonth: val.rightsSettings.month,
+              rightsDay: val.rightsSettings.day,
             }
           }
         }))
-      }
-    } catch (err) {
-      console.error('❌ 優待情報保存エラー:', err)
-    } finally {
-      setIsSaving(false)
-      setHasBenefitInput(false)
-    }
-  }, [stockId])
-
-  // 自動保存（デバウンス後）
-  useEffect(() => {
-    if (!hasBenefitInput || isLoading) return
-
-    saveToDatabaseWithValues(
-      debouncedDescription,
-      debouncedMinimumShares,
-      debouncedEstimatedValue,
-      debouncedRightsSettings
-    )
-  }, [
-    debouncedDescription, debouncedMinimumShares, debouncedEstimatedValue, debouncedRightsSettings,
-    hasBenefitInput, isLoading,
-    saveToDatabaseWithValues,
-  ])
+      })
+    },
+  })
 
   const updateDescription = useCallback((value: string) => {
-    setDescription(value)
-    setHasBenefitInput(true)
-  }, [])
+    setState(prev => ({ ...prev, description: value }))
+    markDirty()
+  }, [markDirty])
 
   const updateMinimumShares = useCallback((value: string) => {
-    setMinimumShares(value)
-    setHasBenefitInput(true)
-  }, [])
+    setState(prev => ({ ...prev, minimumShares: value }))
+    markDirty()
+  }, [markDirty])
 
   const updateEstimatedValue = useCallback((value: string) => {
-    setEstimatedValue(value)
-    setHasBenefitInput(true)
-  }, [])
+    setState(prev => ({ ...prev, estimatedValue: value }))
+    markDirty()
+  }, [markDirty])
 
   const updateRightsSettings = useCallback((settings: ShareholderRightsSettings) => {
-    setRightsSettings(settings)
-    setHasBenefitInput(true)
-  }, [])
+    setState(prev => ({ ...prev, rightsSettings: settings }))
+    markDirty()
+  }, [markDirty])
 
   return {
-    description,
-    minimumShares,
-    estimatedValue,
-    rightsSettings,
+    description: state.description,
+    minimumShares: state.minimumShares,
+    estimatedValue: state.estimatedValue,
+    rightsSettings: state.rightsSettings,
     isLoading,
     isSaving,
     updateDescription,
