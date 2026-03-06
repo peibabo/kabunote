@@ -209,9 +209,9 @@ export default function StrategySummaryPage({ stockData = [], isLoggedIn = false
 
   if (strategiesData.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-900 text-white p-6">
+      <div className="min-h-screen bg-gray-900 text-white p-3 sm:p-6">
         <div className="max-w-6xl mx-auto">
-          <h1 className="text-2xl font-bold mb-6">🎯 戦略一覧ダッシュボード</h1>
+          <h1 className="text-lg sm:text-2xl font-bold mb-6">🎯 戦略一覧ダッシュボード</h1>
           <div className="text-center py-12">
             <div className="text-gray-400 text-lg mb-4">📊 設定済みの戦略がありません</div>
             <div className="text-sm text-gray-500">銘柄カードの「🎯 次の一手」タブで戦略を設定してください</div>
@@ -222,17 +222,17 @@ export default function StrategySummaryPage({ stockData = [], isLoggedIn = false
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-6">
+    <div className="min-h-screen bg-gray-900 text-white p-3 sm:p-6">
       <div className="max-w-6xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold">🎯 戦略一覧ダッシュボード</h1>
-          <div className="text-sm text-gray-400">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-6">
+          <h1 className="text-lg sm:text-2xl font-bold">🎯 戦略一覧ダッシュボード</h1>
+          <div className="text-xs sm:text-sm text-gray-400">
             {strategiesData.length}件の戦略設定
           </div>
         </div>
 
         {/* ソートコントロール */}
-        <div className="flex gap-2 mb-6">
+        <div className="flex flex-wrap gap-2 mb-6">
           <span className="text-sm text-gray-400 self-center mr-2">並び替え:</span>
           {[
             { key: 'priority' as SortKey, label: '優先度' },
@@ -243,7 +243,7 @@ export default function StrategySummaryPage({ stockData = [], isLoggedIn = false
             <button
               key={key}
               onClick={() => handleSort(key)}
-              className={`cursor-pointer px-3 py-1 text-xs rounded-md transition-colors ${
+              className={`cursor-pointer px-2.5 py-1.5 sm:px-3 sm:py-1 text-xs rounded-md transition-colors ${
                 sortBy === key
                   ? 'bg-blue-600 text-white'
                   : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
@@ -257,8 +257,76 @@ export default function StrategySummaryPage({ stockData = [], isLoggedIn = false
           ))}
         </div>
 
-        {/* 戦略一覧テーブル */}
-        <div className="bg-gray-800 rounded-lg overflow-hidden">
+        {/* モバイルカードレイアウト */}
+        <div className="md:hidden space-y-3">
+          {sortedData.map((row) => {
+            const alertDisplay = getAlertDisplay(row.alertType);
+            return (
+              <div key={row.symbol} className="bg-gray-800 rounded-lg p-3">
+                {/* 1行目: 銘柄 + アクション + 優先度 */}
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="font-medium text-white text-sm">{row.symbol}</span>
+                    <span className="text-xs text-gray-400 truncate">{row.companyName}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                    <span className={`px-1.5 py-0.5 rounded text-xs ${
+                      row.plan.actionType === 'buy' ? 'bg-green-900/30 text-green-400' :
+                      row.plan.actionType === 'sell' ? 'bg-red-900/30 text-red-400' :
+                      'bg-yellow-900/30 text-yellow-400'
+                    }`}>
+                      {row.plan.actionType === 'buy' ? '📈 買い' :
+                       row.plan.actionType === 'sell' ? '📉 売り' : '🔄 様子見'}
+                    </span>
+                    <span className={`px-1.5 py-0.5 rounded text-xs ${
+                      row.plan.priority === 'high' ? 'bg-red-900/30 text-red-400' :
+                      row.plan.priority === 'medium' ? 'bg-yellow-900/30 text-yellow-400' :
+                      'bg-green-900/30 text-green-400'
+                    }`}>
+                      {row.plan.priority === 'high' ? '🔴高' :
+                       row.plan.priority === 'medium' ? '🟡中' : '🟢低'}
+                    </span>
+                  </div>
+                </div>
+                {/* 2行目: 目標価格・現在株価 */}
+                <div className="grid grid-cols-2 gap-2 text-xs mb-1.5">
+                  <div>
+                    <span className="text-gray-400">目標: </span>
+                    <span className="text-white">{(row.plan.targetPrice ?? 0) > 0 ? `${formatPrice(row.plan.targetPrice!)}円` : '-'}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-400">現在: </span>
+                    <span className="text-white">{row.currentPrice > 0 ? `${formatPrice(row.currentPrice)}円` : '未設定'}</span>
+                  </div>
+                </div>
+                {/* 3行目: 株数・必要資金 */}
+                <div className="grid grid-cols-2 gap-2 text-xs mb-1.5">
+                  <div>
+                    <span className="text-gray-400">株数: </span>
+                    <span className="text-white">{(row.plan.targetQuantity ?? 0) > 0 ? `${Math.floor(row.plan.targetQuantity! / 100)}単位` : '-'}</span>
+                  </div>
+                  {row.plan.actionType === 'buy' && row.analysis && (
+                    <div>
+                      <span className="text-gray-400">必要: </span>
+                      <span className="text-white">{formatPrice(row.analysis.requiredInvestment)}円</span>
+                      {!row.analysis.canExecute && <span className="text-red-400 ml-1">⚠</span>}
+                    </div>
+                  )}
+                </div>
+                {/* 4行目: ステータス */}
+                {row.alertType !== 'none' && (
+                  <div className={`flex items-center gap-1 text-xs ${alertDisplay.color}`}>
+                    <span>{alertDisplay.icon}</span>
+                    <span>{alertDisplay.text}</span>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* 戦略一覧テーブル（デスクトップ） */}
+        <div className="hidden md:block bg-gray-800 rounded-lg overflow-hidden">
           <table className="w-full">
             <thead className="bg-gray-700">
               <tr>
@@ -342,27 +410,27 @@ export default function StrategySummaryPage({ stockData = [], isLoggedIn = false
         </div>
 
         {/* サマリー情報 */}
-        <div className="mt-6 grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-gray-800 rounded-lg p-4">
+        <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="bg-gray-800 rounded-lg p-3 sm:p-4">
             <div className="text-sm text-gray-400 mb-1">総戦略数</div>
-            <div className="text-2xl font-bold text-white">{strategiesData.length}</div>
+            <div className="text-xl sm:text-2xl font-bold text-white">{strategiesData.length}</div>
           </div>
 
-          <div className="bg-gray-800 rounded-lg p-4">
+          <div className="bg-gray-800 rounded-lg p-3 sm:p-4">
             <div className="text-sm text-gray-400 mb-1">高優先度</div>
-            <div className="text-2xl font-bold text-red-400">
+            <div className="text-xl sm:text-2xl font-bold text-red-400">
               {strategiesData.filter(s => s.plan.priority === 'high').length}
             </div>
           </div>
 
-          <div className="bg-gray-800 rounded-lg p-4">
+          <div className="bg-gray-800 rounded-lg p-3 sm:p-4">
             <div className="text-sm text-gray-400 mb-1">アラート発生</div>
-            <div className="text-2xl font-bold text-yellow-400">
+            <div className="text-xl sm:text-2xl font-bold text-yellow-400">
               {strategiesData.filter(s => s.alertType !== 'none').length}
             </div>
           </div>
 
-          <div className="bg-gray-800 rounded-lg p-4">
+          <div className="bg-gray-800 rounded-lg p-3 sm:p-4">
             <div className="text-sm text-gray-400 mb-1">必要資金合計</div>
             <div className="text-lg font-bold text-white">
               {formatPrice(
