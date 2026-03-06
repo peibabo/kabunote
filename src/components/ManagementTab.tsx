@@ -2,12 +2,12 @@
 
 import { RightsDateSettings, ShareholderMeetingSettings, createDefaultRightsSettings } from '@/types/rightsDate';
 import { useManagementTabState } from '@/hooks/useManagementTabState';
-import { useStockPosition } from '@/hooks/useStockPosition';
-import { calculatePositionSummary } from '@/types/positions';
+import { PositionSummary } from '@/types/positions';
 import EventManagement from '@/components/EventManagement';
 import DividendManagement from '@/components/DividendManagement';
 import ShareholderBenefitManagement from '@/components/ShareholderBenefitManagement';
 import PositionsManagement from '@/components/PositionsManagement';
+import { Position } from '@/types/positions';
 
 interface ManagementTabProps {
   symbol: string;
@@ -19,6 +19,21 @@ interface ManagementTabProps {
   onPositionManagerOpen: () => void;
   shareholderMeetingSettings: ShareholderMeetingSettings;
   onShareholderMeetingSettingsChange: (settings: ShareholderMeetingSettings) => void;
+  positionSummary: PositionSummary;
+  initialPositions?: Position[];
+  initialDividend?: {
+    dividendPerShare: number | null;
+    frequency: number;
+    rightsMonth: number | null;
+    rightsDay: number | null;
+  };
+  initialBenefit?: {
+    description: string | null;
+    minimumShares: number | null;
+    estimatedValue: number | null;
+    rightsMonth: number | null;
+    rightsDay: number | null;
+  };
 }
 
 
@@ -31,13 +46,13 @@ export default function ManagementTab({
   onRightsSettingsChange,
   onPositionManagerOpen,
   shareholderMeetingSettings,
-  onShareholderMeetingSettingsChange
+  onShareholderMeetingSettingsChange,
+  positionSummary,
+  initialPositions,
+  initialDividend,
+  initialBenefit,
 }: ManagementTabProps) {
   const { activeTab, setActiveTab, tabs, isLoading } = useManagementTabState(symbol, 'positions');
-
-  // ポジションサマリーを内部で取得（DividendManagement/ShareholderBenefitManagementに渡すため）
-  const { positions } = useStockPosition(`stock-${symbol}`);
-  const positionSummary = calculatePositionSummary(positions);
 
   if (isLoading) {
     return <div className="text-center text-gray-400">読み込み中...</div>;
@@ -70,6 +85,7 @@ export default function ManagementTab({
             symbol={symbol}
             stockId={`stock-${symbol}`}
             onPositionManagerOpen={onPositionManagerOpen}
+            initialPositions={initialPositions}
           />
         </div>
 
@@ -87,6 +103,7 @@ export default function ManagementTab({
           <DividendManagement
             symbol={symbol}
             positionSummary={positionSummary}
+            initialDividend={initialDividend}
           />
         </div>
 
@@ -94,6 +111,7 @@ export default function ManagementTab({
           <ShareholderBenefitManagement
             symbol={symbol}
             positionSummary={positionSummary}
+            initialBenefit={initialBenefit}
           />
         </div>
       </div>

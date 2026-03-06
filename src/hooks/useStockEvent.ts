@@ -16,14 +16,31 @@ interface UseStockEventReturn {
   updateShareholderMeetingSettings: (settings: ShareholderMeetingSettings) => void
 }
 
-export function useStockEvent(stockId: string): UseStockEventReturn {
+interface UseStockEventOptions {
+  initialData?: {
+    earnings: { eventDate: string | null } | null
+    shareholderMeeting: { eventMonth: number | null; eventDay: number | null; isRecurring: boolean; isActive: boolean } | null
+  }
+}
+
+export function useStockEvent(stockId: string, options?: UseStockEventOptions): UseStockEventReturn {
+  const hasInitialData = options?.initialData !== undefined
   const symbol = stockId.replace('stock-', '')
 
-  const [earningsDate, setEarningsDate] = useState<string>('')
+  const [earningsDate, setEarningsDate] = useState<string>(() => {
+    if (options?.initialData) return options.initialData.earnings?.eventDate ?? ''
+    return ''
+  })
   const [meetingSettings, setMeetingSettings] =
-    useState<ShareholderMeetingSettings>(createDefaultRightsSettings())
+    useState<ShareholderMeetingSettings>(() => {
+      if (options?.initialData?.shareholderMeeting) {
+        const m = options.initialData.shareholderMeeting
+        return { month: m.eventMonth ?? null, day: m.eventDay ?? null, isRecurring: m.isRecurring ?? true, isActive: m.isActive ?? false }
+      }
+      return createDefaultRightsSettings()
+    })
 
-  const { isLoading, isSaving, withLoading, withSaving } = useAsyncState()
+  const { isLoading, isSaving, withLoading, withSaving } = useAsyncState(!hasInitialData)
 
   const loadData = useCallback(() => withLoading(async () => {
     const data = await apiFetch<{
@@ -43,7 +60,7 @@ export function useStockEvent(stockId: string): UseStockEventReturn {
     }
   }), [stockId, withLoading])
 
-  useEffect(() => { loadData() }, [loadData])
+  useEffect(() => { if (!hasInitialData) loadData() }, [loadData, hasInitialData])
 
   // 決算日の自動保存
   const { markDirty: markEarningsDirty } = useAutoSave({

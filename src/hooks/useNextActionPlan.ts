@@ -25,10 +25,15 @@ const DEFAULT_PLAN: NextActionPlan = {
   updatedAt: new Date().toISOString()
 }
 
-export function useNextActionPlan(stockId: string): UseNextActionPlanReturn {
-  const [nextActionPlan, setNextActionPlan] = useState<NextActionPlan | null>(null)
+interface UseNextActionPlanOptions {
+  initialData?: NextActionPlan | null
+}
+
+export function useNextActionPlan(stockId: string, options?: UseNextActionPlanOptions): UseNextActionPlanReturn {
+  const hasInitialData = options?.initialData !== undefined
+  const [nextActionPlan, setNextActionPlan] = useState<NextActionPlan | null>(options?.initialData ?? null)
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
-  const { isLoading, isSaving, error, withLoading, withSaving } = useAsyncState()
+  const { isLoading, isSaving, error, withLoading, withSaving } = useAsyncState(!hasInitialData)
 
   const loadData = useCallback(() => withLoading(async () => {
     try {
@@ -40,7 +45,7 @@ export function useNextActionPlan(stockId: string): UseNextActionPlanReturn {
     }
   }), [stockId, withLoading])
 
-  useEffect(() => { loadData() }, [loadData])
+  useEffect(() => { if (!hasInitialData) loadData() }, [loadData, hasInitialData])
 
   const { markDirty } = useAutoSave({
     value: nextActionPlan,

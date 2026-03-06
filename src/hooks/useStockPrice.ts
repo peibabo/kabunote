@@ -20,10 +20,25 @@ interface UseStockPriceReturn {
   setStopLoss: (value: string) => void
 }
 
-export function useStockPrice(stockId: string): UseStockPriceReturn {
+interface UseStockPriceOptions {
+  initialData?: { currentPrice: number | null; targetPrice: number | null; stopLossPrice: number | null }
+}
+
+export function useStockPrice(stockId: string, options?: UseStockPriceOptions): UseStockPriceReturn {
+  const hasInitialData = options?.initialData !== undefined
   const symbol = stockId.replace('stock-', '')
-  const [prices, setPrices] = useState<PriceState>({ currentPrice: '', targetPrice: '', stopLoss: '' })
-  const { isLoading, isSaving, withLoading, withSaving } = useAsyncState()
+  const [prices, setPrices] = useState<PriceState>(() => {
+    if (options?.initialData) {
+      const d = options.initialData
+      return {
+        currentPrice: d.currentPrice != null ? String(d.currentPrice) : '',
+        targetPrice: d.targetPrice != null ? String(d.targetPrice) : '',
+        stopLoss: d.stopLossPrice != null ? String(d.stopLossPrice) : '',
+      }
+    }
+    return { currentPrice: '', targetPrice: '', stopLoss: '' }
+  })
+  const { isLoading, isSaving, withLoading, withSaving } = useAsyncState(!hasInitialData)
 
   const loadPrices = useCallback(() => withLoading(async () => {
     const data = await apiFetch<{ currentPrice: number | null; targetPrice: number | null; stopLossPrice: number | null }>(`/api/stocks/${stockId}/price`)
@@ -34,7 +49,7 @@ export function useStockPrice(stockId: string): UseStockPriceReturn {
     })
   }), [stockId, withLoading])
 
-  useEffect(() => { loadPrices() }, [loadPrices])
+  useEffect(() => { if (!hasInitialData) loadPrices() }, [loadPrices, hasInitialData])
 
   const { markDirty } = useAutoSave({
     value: prices,

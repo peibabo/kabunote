@@ -3,6 +3,8 @@
 import { useState, useEffect, memo } from 'react';
 import { loadStockData, getCompanyNameSync, isKnownStockSync, StockData } from '@/data/stockNames';
 import { FavoriteGroup } from '@/types/favorites';
+import { StockData as DBStockData } from '@/hooks/useStockData';
+import { CustomTag } from '@/types/tags';
 import { ProfitLossInfo, calculateProfitLoss, calculatePositionSummary } from '@/types/positions';
 import { RightsDateSettings, createDefaultRightsSettings, calculateRightsDateFromSettings, shouldDeactivateRights } from '@/types/rightsDate';
 import { useSortable } from '@dnd-kit/sortable';
@@ -33,9 +35,10 @@ interface StockCardProps {
   onRemove: () => void;
   favoriteGroups: FavoriteGroup[];
   onFavoriteGroupsChange: (groups: FavoriteGroup[]) => void;
+  initialStockData?: DBStockData;
 }
 
-function StockCard({ symbol, onRemove, favoriteGroups, onFavoriteGroupsChange }: StockCardProps) {
+function StockCard({ symbol, onRemove, favoriteGroups, onFavoriteGroupsChange, initialStockData }: StockCardProps) {
   // ドラッグ&ドロップ機能
   const {
     attributes,
@@ -70,15 +73,15 @@ function StockCard({ symbol, onRemove, favoriteGroups, onFavoriteGroupsChange }:
     isSaving: isMemoSaving,
     error: memoError,
     lastSaved: memoLastSaved
-  } = useStockMemo(`stock-${symbol}`);
+  } = useStockMemo(`stock-${symbol}`, initialStockData ? { initialData: initialStockData.memo } : undefined);
 
   // 株式ポジション機能（複数ロット管理）
   const {
     positions,
     isLoading: isPositionLoading,
-  } = useStockPosition(`stock-${symbol}`);
+  } = useStockPosition(`stock-${symbol}`, initialStockData ? { initialData: initialStockData.positions } : undefined);
 
-  const { tags: customTags, addTag, removeTag: removeTagFromDB } = useStockTag(`stock-${symbol}`);
+  const { tags: customTags, addTag, removeTag: removeTagFromDB } = useStockTag(`stock-${symbol}`, initialStockData ? { initialData: initialStockData.tags as CustomTag[] } : undefined);
 
   // 投資規律設定（価格情報）はDB管理（未認証時はlocalStorageフォールバック）
   const {
@@ -88,14 +91,31 @@ function StockCard({ symbol, onRemove, favoriteGroups, onFavoriteGroupsChange }:
     setCurrentPrice,
     setTargetPrice,
     setStopLoss,
-  } = useStockPrice(`stock-${symbol}`);
+  } = useStockPrice(`stock-${symbol}`, initialStockData ? {
+    initialData: {
+      currentPrice: initialStockData.currentPrice,
+      targetPrice: initialStockData.targetPrice,
+      stopLossPrice: initialStockData.stopLossPrice,
+    }
+  } : undefined);
   const [rightsSettings, setRightsSettings] = useStringLocalStorage(`kabunote-rights-settings-${symbol}`, JSON.stringify(createDefaultRightsSettings()), 400);
   const {
     earningsDate,
     shareholderMeetingSettings,
     updateEarningsDate,
     updateShareholderMeetingSettings,
-  } = useStockEvent(`stock-${symbol}`);
+  } = useStockEvent(`stock-${symbol}`, initialStockData ? {
+    initialData: {
+      earnings: (() => {
+        const e = initialStockData.events.find(ev => ev.eventType === 'EARNINGS');
+        return e ? { eventDate: e.eventDate } : null;
+      })(),
+      shareholderMeeting: (() => {
+        const m = initialStockData.events.find(ev => ev.eventType === 'SHAREHOLDER_MEETING');
+        return m ? { eventMonth: m.eventMonth, eventDay: m.eventDay, isRecurring: m.isRecurring, isActive: m.isActive } : null;
+      })(),
+    }
+  } : undefined);
 
   // NextActionPlan の状態を取得（StockCard で一元管理し、子コンポーネントに props で渡す）
   const {
@@ -104,7 +124,17 @@ function StockCard({ symbol, onRemove, favoriteGroups, onFavoriteGroupsChange }:
     deleteNextActionPlan: deleteNap,
     isLoading: isNapLoading,
     isSaving: isNapSaving,
-  } = useNextActionPlan(`stock-${symbol}`);
+  } = useNextActionPlan(`stock-${symbol}`, initialStockData?.nextActionPlan ? {
+    initialData: {
+      id: 'db',
+      actionType: initialStockData.nextActionPlan.actionType as 'buy' | 'sell' | 'hold',
+      priority: initialStockData.nextActionPlan.priority as 'high' | 'medium' | 'low',
+      targetPrice: initialStockData.nextActionPlan.targetPrice,
+      targetQuantity: initialStockData.nextActionPlan.targetShares,
+      memo: initialStockData.nextActionPlan.strategyMemo,
+      updatedAt: new Date().toISOString(),
+    }
+  } : undefined);
 
   // 権利確定日設定をパース
   const parsedRightsSettings: RightsDateSettings = (() => {
@@ -386,6 +416,10 @@ function StockCard({ symbol, onRemove, favoriteGroups, onFavoriteGroupsChange }:
             }}
             shareholderMeetingSettings={shareholderMeetingSettings}
             onShareholderMeetingSettingsChange={updateShareholderMeetingSettings}
+            positionSummary={positionSummary}
+            initialPositions={initialStockData?.positions}
+            initialDividend={initialStockData?.dividend ?? undefined}
+            initialBenefit={initialStockData?.benefit ?? undefined}
           />
         )}
       </div>

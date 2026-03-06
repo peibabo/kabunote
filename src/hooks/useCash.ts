@@ -16,30 +16,71 @@ interface UseCashResult {
   updateBoth: (cashAmount: string, memo: string) => void;
 }
 
-export function useCash(): UseCashResult {
-  const [cashAmount, setCashAmount] = useState<string>('0');
-  const [nextActionMemo, setNextActionMemo] = useState<string>('');
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
+// Module-level cache shared across all useCash() instances
+let cachedData: CashData | null = null;
+let fetchPromise: Promise<CashData | null> | null = null;
 
-  const fetchCashData = useCallback(async () => {
+const CASH_UPDATE_EVENT = 'kabunote-cash-update';
+
+async function fetchCashOnce(): Promise<CashData | null> {
+  if (cachedData) return cachedData;
+  if (fetchPromise) return fetchPromise;
+
+  fetchPromise = (async () => {
     try {
-      setIsLoading(true);
-      setError(null);
       const response = await fetch('/api/cash');
       if (!response.ok) throw new Error('現金残高の取得に失敗しました');
       const data: CashData = await response.json();
-      setCashAmount(data.cashAmount);
-      setNextActionMemo(data.nextActionMemo);
-    } catch (err) {
-      console.error('現金データ取得エラー:', err);
-      setError(err instanceof Error ? err.message : '不明なエラーが発生しました');
+      cachedData = data;
+      return data;
+    } catch {
+      return null;
     } finally {
-      setIsLoading(false);
+      fetchPromise = null;
     }
+  })();
+
+  return fetchPromise;
+}
+
+export function useCash(): UseCashResult {
+  const [cashAmount, setCashAmount] = useState<string>(cachedData?.cashAmount ?? '0');
+  const [nextActionMemo, setNextActionMemo] = useState<string>(cachedData?.nextActionMemo ?? '');
+  const [isLoading, setIsLoading] = useState<boolean>(cachedData === null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (cachedData) {
+      setCashAmount(cachedData.cashAmount);
+      setNextActionMemo(cachedData.nextActionMemo);
+      setIsLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    fetchCashOnce().then(data => {
+      if (cancelled) return;
+      if (data) {
+        setCashAmount(data.cashAmount);
+        setNextActionMemo(data.nextActionMemo);
+      } else {
+        setError('現金残高の取得に失敗しました');
+      }
+      setIsLoading(false);
+    });
+    return () => { cancelled = true; };
   }, []);
 
-  useEffect(() => { fetchCashData(); }, [fetchCashData]);
+  // Listen for updates from other instances
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent<CashData>).detail;
+      setCashAmount(detail.cashAmount);
+      setNextActionMemo(detail.nextActionMemo);
+    };
+    window.addEventListener(CASH_UPDATE_EVENT, handler);
+    return () => window.removeEventListener(CASH_UPDATE_EVENT, handler);
+  }, []);
 
   const debouncedSaveToApi = useDebouncedCallback(async (data: Partial<CashData>) => {
     try {
@@ -55,21 +96,29 @@ export function useCash(): UseCashResult {
     }
   }, 300);
 
+  const broadcastUpdate = useCallback((newCash: string, newMemo: string) => {
+    cachedData = { cashAmount: newCash, nextActionMemo: newMemo };
+    window.dispatchEvent(new CustomEvent(CASH_UPDATE_EVENT, { detail: cachedData }));
+  }, []);
+
   const updateCash = useCallback((newCashAmount: string) => {
     setCashAmount(newCashAmount);
+    broadcastUpdate(newCashAmount, nextActionMemo);
     debouncedSaveToApi({ cashAmount: newCashAmount });
-  }, [debouncedSaveToApi]);
+  }, [debouncedSaveToApi, broadcastUpdate, nextActionMemo]);
 
   const updateNextActionMemo = useCallback((memo: string) => {
     setNextActionMemo(memo);
+    broadcastUpdate(cashAmount, memo);
     debouncedSaveToApi({ nextActionMemo: memo });
-  }, [debouncedSaveToApi]);
+  }, [debouncedSaveToApi, broadcastUpdate, cashAmount]);
 
   const updateBoth = useCallback((newCashAmount: string, memo: string) => {
     setCashAmount(newCashAmount);
     setNextActionMemo(memo);
+    broadcastUpdate(newCashAmount, memo);
     debouncedSaveToApi({ cashAmount: newCashAmount, nextActionMemo: memo });
-  }, [debouncedSaveToApi]);
+  }, [debouncedSaveToApi, broadcastUpdate]);
 
   return { cashAmount, nextActionMemo, isLoading, error, updateCash, updateNextActionMemo, updateBoth };
 }

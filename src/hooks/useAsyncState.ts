@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react'
 
-export function useAsyncState() {
-  const [isLoading, setIsLoading] = useState(true)
+export function useAsyncState(initialLoading = true) {
+  const [isLoading, setIsLoading] = useState(initialLoading)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 

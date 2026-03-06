@@ -13,6 +13,12 @@ interface EarningsCountdown {
 interface DividendManagementProps {
   symbol: string;
   positionSummary: PositionSummary;
+  initialDividend?: {
+    dividendPerShare: number | null;
+    frequency: number;
+    rightsMonth: number | null;
+    rightsDay: number | null;
+  };
 }
 
 // 土日を除いた営業日前を計算する関数
@@ -106,6 +112,7 @@ const getStatusColor = (status: string) => {
 export default function DividendManagement({
   symbol,
   positionSummary,
+  initialDividend,
 }: DividendManagementProps) {
   const {
     dividendPerShare,
@@ -114,7 +121,7 @@ export default function DividendManagement({
     updateDividendPerShare,
     updateDividendFrequency,
     updateDividendRightsSettings,
-  } = useStockDividend(`stock-${symbol}`);
+  } = useStockDividend(`stock-${symbol}`, initialDividend ? { initialData: initialDividend } : undefined);
 
   // 配当計算
   const dividendCalculation = (() => {

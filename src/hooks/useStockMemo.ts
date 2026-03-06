@@ -14,10 +14,15 @@ interface UseStockMemoReturn {
   deleteMemo: () => Promise<void>
 }
 
-export function useStockMemo(stockId: string): UseStockMemoReturn {
-  const [memo, setMemo] = useState('')
+interface UseStockMemoOptions {
+  initialData?: string
+}
+
+export function useStockMemo(stockId: string, options?: UseStockMemoOptions): UseStockMemoReturn {
+  const hasInitialData = options?.initialData !== undefined
+  const [memo, setMemo] = useState(options?.initialData ?? '')
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
-  const { isLoading, isSaving, error, withLoading, withSaving } = useAsyncState()
+  const { isLoading, isSaving, error, withLoading, withSaving } = useAsyncState(!hasInitialData)
 
   const loadMemo = useCallback(() => withLoading(async () => {
     const data = await apiFetch<{ content: string; updatedAt: string }>(`/api/stocks/${stockId}/memo`)
@@ -25,7 +30,7 @@ export function useStockMemo(stockId: string): UseStockMemoReturn {
     setLastSaved(new Date(data.updatedAt))
   }), [stockId, withLoading])
 
-  useEffect(() => { loadMemo() }, [loadMemo])
+  useEffect(() => { if (!hasInitialData) loadMemo() }, [loadMemo, hasInitialData])
 
   const { markDirty } = useAutoSave({
     value: memo,
