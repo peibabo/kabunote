@@ -9,13 +9,17 @@ import {
   isCompleteNextActionPlan
 } from '@/types/nextActionPlan';
 import { PositionSummary } from '@/types/positions';
-import { useNextActionPlan } from '@/hooks/useNextActionPlan';
 import { useCash } from '@/hooks/useCash';
 
 interface NextActionSubTabProps {
   symbol: string;
   currentPrice?: number;
   positionSummary?: PositionSummary;
+  nextActionPlan: NextActionPlanType | null;
+  updateNextActionPlan: (data: Partial<Omit<NextActionPlanType, 'id' | 'updatedAt'>>) => void;
+  deleteNextActionPlan: () => Promise<void>;
+  isNapLoading: boolean;
+  isNapSaving: boolean;
 }
 
 const ACTION_TYPE_LABELS: Record<ActionType, string> = {
@@ -36,14 +40,16 @@ const PRIORITY_COLORS: Record<Priority, string> = {
   low: 'text-green-400 bg-green-900/20 border-green-500/30'
 };
 
-export default function NextActionSubTab({ symbol, currentPrice = 0, positionSummary }: NextActionSubTabProps) {
-  const {
-    nextActionPlan,
-    updateNextActionPlan,
-    deleteNextActionPlan: resetNextActionPlan,
-    isLoading,
-    isSaving
-  } = useNextActionPlan(`stock-${symbol}`);
+export default function NextActionSubTab({
+  symbol,
+  currentPrice = 0,
+  positionSummary,
+  nextActionPlan,
+  updateNextActionPlan,
+  deleteNextActionPlan: resetNextActionPlan,
+  isNapLoading: isLoading,
+  isNapSaving: isSaving,
+}: NextActionSubTabProps) {
 
   // 投資余力現金を取得
   const { cashAmount } = useCash();

@@ -1,6 +1,7 @@
 'use client';
 
 import { Position, PositionSummary, ProfitLossInfo } from '@/types/positions';
+import { NextActionPlan } from '@/types/nextActionPlan';
 import { useInvestmentTabState } from '@/hooks/useInvestmentTabState';
 import AnalysisSubTab from '@/components/AnalysisSubTab';
 import NextActionSubTab from '@/components/NextActionSubTab';
@@ -15,6 +16,11 @@ interface InvestmentStrategyTabProps {
   onCurrentPriceChange: (value: string) => void;
   positionSummary: PositionSummary;
   profitLossInfo: ProfitLossInfo | null;
+  nextActionPlan: NextActionPlan | null;
+  updateNextActionPlan: (data: Partial<Omit<NextActionPlan, 'id' | 'updatedAt'>>) => void;
+  deleteNextActionPlan: () => Promise<void>;
+  isNapLoading: boolean;
+  isNapSaving: boolean;
 }
 
 export default function InvestmentStrategyTab({
@@ -26,7 +32,12 @@ export default function InvestmentStrategyTab({
   onStopLossChange,
   onCurrentPriceChange,
   positionSummary,
-  profitLossInfo
+  profitLossInfo,
+  nextActionPlan,
+  updateNextActionPlan,
+  deleteNextActionPlan,
+  isNapLoading,
+  isNapSaving,
 }: InvestmentStrategyTabProps) {
   const { activeTab, setActiveTab, tabs, isLoading } = useInvestmentTabState(symbol, 'analysis');
 
@@ -75,6 +86,11 @@ export default function InvestmentStrategyTab({
             symbol={symbol}
             currentPrice={parseFloat(currentPrice) || 0}
             positionSummary={positionSummary}
+            nextActionPlan={nextActionPlan}
+            updateNextActionPlan={updateNextActionPlan}
+            deleteNextActionPlan={deleteNextActionPlan}
+            isNapLoading={isNapLoading}
+            isNapSaving={isNapSaving}
           />
         )}
       </div>
