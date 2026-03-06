@@ -141,9 +141,9 @@ export default function AnalysisSubTab({
 
         {/* ネオンライト株価プログレスバーゲージ・損益分析統合セクション */}
         {progressData && targetPrice && stopLoss && currentPrice && (
-          <div className="mt-4 p-4 bg-gray-900 border border-gray-700 rounded-lg">
-            <div className="flex items-center justify-between mb-4">
-              <h5 className="text-sm font-medium text-gray-200">⚡ 株価ポジション・損益分析</h5>
+          <div className="mt-2 p-2 md:mt-4 md:p-4 bg-gray-900 border border-gray-700 rounded-lg">
+            <div className="flex items-center justify-between mb-2 md:mb-4">
+              <h5 className="text-xs md:text-sm font-medium text-gray-200 whitespace-nowrap">⚡ 株価ポジション・損益分析</h5>
               <span className="text-xs text-gray-400">
                 {progressData.isOverTarget
                   ? '🎯 利確目標達成!'
@@ -166,7 +166,7 @@ export default function AnalysisSubTab({
                 </div>
 
                 <div className="text-blue-300 font-medium flex flex-col items-center">
-                  <span className="text-blue-400 mb-2 font-bold text-2xl">{formatPrice(parseFloat(currentPrice))}円</span>
+                  <span className="text-blue-400 mb-2 font-bold text-lg md:text-2xl">{formatPrice(parseFloat(currentPrice))}円</span>
                 </div>
 
                 <div className="text-green-300 font-medium flex flex-col items-center">
@@ -249,7 +249,7 @@ export default function AnalysisSubTab({
               </div>
               {/* 取得単価の詳細表示と現在の損益 */}
               {positionSummary.averagePrice > 0 && (
-                <div className="mt-3 text-center">
+                <div className="mt-1 md:mt-3 text-center">
                   {/* 現在の損益表示 */}
                   {(() => {
                     const current = parseFloat(currentPrice);
@@ -258,7 +258,7 @@ export default function AnalysisSubTab({
                       const currentProfitLoss = currentValue - positionSummary.totalCost;
 
                       return (
-                        <div className={`text-2xl mt-1 ${currentProfitLoss >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                        <div className={`text-lg md:text-2xl mt-1 ${currentProfitLoss >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                           <span className='font-bold'>{formatProfitLoss(currentProfitLoss)}</span><span className='text-xs'> 円</span>
                         </div>
                       );
@@ -294,9 +294,9 @@ export default function AnalysisSubTab({
 
             {/* 損益シミュレーション - 統合部分 */}
             {profitLossInfo && positionSummary.totalShares > 0 && (
-              <div className="mt-6 pt-4 border-t border-gray-700">
-                <h6 className="text-sm font-bold text-gray-300 mb-3 text-center">📊 損益シミュレーション</h6>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="mt-3 pt-2 md:mt-6 md:pt-4 border-t border-gray-700">
+                <h6 className="text-sm font-bold text-gray-300 mb-2 md:mb-3 text-center">📊 損益シミュレーション</h6>
+                <div className="grid grid-cols-2 gap-2 md:gap-4">
                   {/* 損切ラインでの損失 */}
                   {(() => {
                     const stopLossNum = parseFloat(stopLoss);
@@ -365,7 +365,7 @@ export default function AnalysisSubTab({
                     );
                   })()}
                 </div>
-                <div className="mt-3 space-y-2">
+                <div className="mt-2 md:mt-3 space-y-2">
                   {/* リスクリワード比の表示 */}
                   {riskRewardRatio !== null && (
                     <div className="text-center">
