@@ -58,7 +58,7 @@ export default function StockCardHeader({
       <div className="flex items-start justify-between">
         <div className="flex-1 min-w-0 max-w-[calc(100%-80px)]">
           <div className="flex items-center gap-2 mb-1">
-            <h3 className="text-lg font-bold text-white">{symbol}</h3>
+            <h3 className="text-base md:text-lg font-bold text-white">{symbol}</h3>
             {isLoading ? (
               <span className="text-xs bg-gray-600 text-gray-300 px-2 py-0.5 rounded-full">
                 読込中
@@ -166,7 +166,7 @@ export default function StockCardHeader({
 
       {/* 会社名（独立した行） */}
       <div className="mt-2 w-full">
-        <p className="text-base text-gray-100 font-bold leading-tight break-words" title={companyName}>
+        <p className="text-sm md:text-base text-gray-100 font-bold leading-tight break-words" title={companyName}>
           {companyName}
         </p>
       </div>
