@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { useArrayLocalStorage } from '@/hooks/useLocalStorage';
 import { Position, calculatePositionSummary, formatShares } from '@/types/positions';
 import { getCompanyNameSync } from '@/data/stockNames';
 import { StockData } from '@/hooks/useStockData';
@@ -24,11 +23,9 @@ type SortKey = 'symbol' | 'totalShares' | 'averagePrice' | 'totalCost' | 'curren
 
 interface PortfolioPositionsPageProps {
   stockData?: StockData[];
-  isLoggedIn?: boolean;
 }
 
-export default function PortfolioPositionsPage({ stockData = [], isLoggedIn = false }: PortfolioPositionsPageProps) {
-  const [localStocks] = useArrayLocalStorage<string>('kabunote-stocks', []);
+export default function PortfolioPositionsPage({ stockData = [] }: PortfolioPositionsPageProps) {
   const [sortBy, setSortBy] = useState<SortKey>('profitLoss');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
@@ -37,88 +34,44 @@ export default function PortfolioPositionsPage({ stockData = [], isLoggedIn = fa
     const data: PositionRowData[] = [];
     let totalPortfolioValue = 0;
 
-    if (isLoggedIn && stockData.length > 0) {
-      // DBデータを使用
-      stockData.forEach(stock => {
-        if (!stock.positions || stock.positions.length === 0) return;
+    stockData.forEach(stock => {
+      if (!stock.positions || stock.positions.length === 0) return;
 
-        const positions: Position[] = stock.positions.map(p => ({
-          id: p.id,
-          shares: p.shares,
-          purchasePrice: p.purchasePrice,
-          purchaseDate: p.purchaseDate,
-          memo: p.memo,
-          createdAt: p.createdAt,
-        }));
+      const positions: Position[] = stock.positions.map(p => ({
+        id: p.id,
+        shares: p.shares,
+        purchasePrice: p.purchasePrice,
+        purchaseDate: p.purchaseDate,
+        memo: p.memo,
+        createdAt: p.createdAt,
+      }));
 
-        const positionSummary = calculatePositionSummary(positions);
-        if (positionSummary.totalShares === 0) return;
+      const positionSummary = calculatePositionSummary(positions);
+      if (positionSummary.totalShares === 0) return;
 
-        const currentPrice = stock.currentPrice ?? 0;
-        const companyName = stock.name || getCompanyNameSync(stock.symbol);
-        const currentValue = currentPrice > 0 ? currentPrice * positionSummary.totalShares : 0;
-        const profitLoss = currentValue - positionSummary.totalCost;
-        const profitLossRate = positionSummary.totalCost > 0 ? (profitLoss / positionSummary.totalCost) * 100 : 0;
-        const profitLossAfterTax = profitLoss > 0 ? profitLoss * 0.79685 : profitLoss;
+      const currentPrice = stock.currentPrice ?? 0;
+      const companyName = stock.name || getCompanyNameSync(stock.symbol);
+      const currentValue = currentPrice > 0 ? currentPrice * positionSummary.totalShares : 0;
+      const profitLoss = currentValue - positionSummary.totalCost;
+      const profitLossRate = positionSummary.totalCost > 0 ? (profitLoss / positionSummary.totalCost) * 100 : 0;
+      const profitLossAfterTax = profitLoss > 0 ? profitLoss * 0.79685 : profitLoss;
 
-        data.push({
-          symbol: stock.symbol,
-          companyName,
-          totalShares: positionSummary.totalShares,
-          averagePrice: positionSummary.averagePrice,
-          totalCost: positionSummary.totalCost,
-          currentPrice,
-          currentValue,
-          profitLoss,
-          profitLossRate,
-          profitLossAfterTax,
-          portfolioWeight: 0
-        });
-
-        totalPortfolioValue += currentValue > 0 ? currentValue : positionSummary.totalCost;
+      data.push({
+        symbol: stock.symbol,
+        companyName,
+        totalShares: positionSummary.totalShares,
+        averagePrice: positionSummary.averagePrice,
+        totalCost: positionSummary.totalCost,
+        currentPrice,
+        currentValue,
+        profitLoss,
+        profitLossRate,
+        profitLossAfterTax,
+        portfolioWeight: 0
       });
-    } else {
-      // localStorageフォールバック
-      localStocks.forEach(symbol => {
-        const positionsJson = localStorage.getItem(`kabunote-positions-${symbol}`);
-        if (!positionsJson) return;
 
-        try {
-          const positions: Position[] = JSON.parse(positionsJson);
-          if (positions.length === 0) return;
-
-          const positionSummary = calculatePositionSummary(positions);
-          if (positionSummary.totalShares === 0) return;
-
-          const currentPriceStr = localStorage.getItem(`kabunote-current-price-${symbol}`) || '0';
-          const currentPrice = parseFloat(currentPriceStr);
-
-          const companyName = getCompanyNameSync(symbol);
-          const currentValue = currentPrice > 0 ? currentPrice * positionSummary.totalShares : 0;
-          const profitLoss = currentValue - positionSummary.totalCost;
-          const profitLossRate = positionSummary.totalCost > 0 ? (profitLoss / positionSummary.totalCost) * 100 : 0;
-          const profitLossAfterTax = profitLoss > 0 ? profitLoss * 0.79685 : profitLoss;
-
-          data.push({
-            symbol,
-            companyName,
-            totalShares: positionSummary.totalShares,
-            averagePrice: positionSummary.averagePrice,
-            totalCost: positionSummary.totalCost,
-            currentPrice,
-            currentValue,
-            profitLoss,
-            profitLossRate,
-            profitLossAfterTax,
-            portfolioWeight: 0
-          });
-
-          totalPortfolioValue += currentValue > 0 ? currentValue : positionSummary.totalCost;
-        } catch (e) {
-          console.warn(`Failed to parse positions for ${symbol}:`, e);
-        }
-      });
-    }
+      totalPortfolioValue += currentValue > 0 ? currentValue : positionSummary.totalCost;
+    });
 
     // ポートフォリオ比率を計算
     data.forEach(row => {
@@ -127,7 +80,7 @@ export default function PortfolioPositionsPage({ stockData = [], isLoggedIn = fa
     });
 
     return data;
-  }, [isLoggedIn, stockData, localStocks]);
+  }, [stockData]);
 
   // ソート処理
   const sortedData = useMemo(() => {

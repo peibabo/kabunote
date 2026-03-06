@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
-import { NextActionPlan, hasNextActionPlan } from '@/types/nextActionPlan';
-import { getIntegratedAlert, getAllActiveAlerts, AlertType } from '@/utils/alertSystem';
+import React, { useState, useMemo } from 'react';
+import { NextActionPlan } from '@/types/nextActionPlan';
+import { getAllActiveAlerts, AlertType } from '@/utils/alertSystem';
 import { getCompanyNameSync } from '@/data/stockNames';
 import { calculatePositionSummary } from '@/types/positions';
 import { useSnooze } from '@/hooks/useSnooze';
@@ -75,14 +75,11 @@ const getAlertDisplayInfo = (alert: { type: AlertType; gapPercentage?: number; a
 
 interface AlertSummaryPageProps {
   stockData?: StockData[];
-  isLoggedIn?: boolean;
 }
 
-export default function AlertSummaryPage({ stockData = [], isLoggedIn = false }: AlertSummaryPageProps) {
-  const [stocks, setStocks] = useState<string[]>([]);
+export default function AlertSummaryPage({ stockData = [] }: AlertSummaryPageProps) {
   const { cashAmount } = useCash();
   const availableCash = parseFloat(cashAmount) || 0;
-  const [isLoaded, setIsLoaded] = useState(false);
   const [showSnoozed, setShowSnoozed] = useState(false);
 
   // スヌーズ機能フック
@@ -93,24 +90,6 @@ export default function AlertSummaryPage({ stockData = [], isLoggedIn = false }:
     unsnoozeAlert,
     isAlertSnoozed
   } = useSnooze();
-
-  // ブラウザサイドでlocalStorageから直接データを読み込み
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedStocks = localStorage.getItem('kabunote-stocks');
-
-      if (savedStocks) {
-        try {
-          setStocks(JSON.parse(savedStocks));
-        } catch (e) {
-          console.error('Failed to parse stocks:', e);
-          setStocks([]);
-        }
-      }
-
-      setIsLoaded(true);
-    }
-  }, []);
 
   // 銘柄のアラートを収集する共通処理
   const collectAlerts = (
@@ -157,96 +136,37 @@ export default function AlertSummaryPage({ stockData = [], isLoggedIn = false }:
 
     const alerts: AlertRowData[] = [];
 
-    if (isLoggedIn && stockData.length > 0) {
-      // 認証済み: DBデータを使用
-      stockData.forEach(stock => {
-        const currentPrice = stock.currentPrice ?? 0;
-        if (currentPrice <= 0) return;
+    stockData.forEach(stock => {
+      const currentPrice = stock.currentPrice ?? 0;
+      if (currentPrice <= 0) return;
 
-        const targetPrice = stock.targetPrice ?? 0;
-        const stopLossPrice = stock.stopLossPrice ?? 0;
-        const companyName = stock.name || getCompanyNameSync(stock.symbol);
+      const targetPrice = stock.targetPrice ?? 0;
+      const stopLossPrice = stock.stopLossPrice ?? 0;
+      const companyName = stock.name || getCompanyNameSync(stock.symbol);
 
-        const nap = stock.nextActionPlan;
-        const plan: NextActionPlan = nap ? {
-          id: 'db',
-          actionType: nap.actionType as 'buy' | 'sell' | 'hold',
-          priority: nap.priority as 'high' | 'medium' | 'low',
-          targetPrice: nap.targetPrice ?? 0,
-          targetQuantity: nap.targetShares ?? 0,
-          memo: nap.strategyMemo,
-          updatedAt: '',
-        } : {
-          id: '', targetPrice: 0, targetQuantity: 0, memo: '',
-          actionType: 'buy', priority: 'medium', updatedAt: ''
-        };
+      const nap = stock.nextActionPlan;
+      const plan: NextActionPlan = nap ? {
+        id: 'db',
+        actionType: nap.actionType as 'buy' | 'sell' | 'hold',
+        priority: nap.priority as 'high' | 'medium' | 'low',
+        targetPrice: nap.targetPrice ?? 0,
+        targetQuantity: nap.targetShares ?? 0,
+        memo: nap.strategyMemo,
+        updatedAt: '',
+      } : {
+        id: '', targetPrice: 0, targetQuantity: 0, memo: '',
+        actionType: 'buy', priority: 'medium', updatedAt: ''
+      };
 
-        const positionSummary = stock.positions.length > 0
-          ? calculatePositionSummary(stock.positions)
-          : null;
+      const positionSummary = stock.positions.length > 0
+        ? calculatePositionSummary(stock.positions)
+        : null;
 
-        collectAlerts(stock.symbol, companyName, currentPrice, targetPrice, stopLossPrice, plan, positionSummary, alerts);
-      });
-    } else if (isLoaded && stocks.length > 0) {
-      // 未認証: localStorageフォールバック
-      stocks.forEach(symbol => {
-        const currentPriceStr = localStorage.getItem(`kabunote-current-price-${symbol}`) || '0';
-        const targetPriceStr = localStorage.getItem(`kabunote-target-price-${symbol}`) || '0';
-        const stopLossStr = localStorage.getItem(`kabunote-stop-loss-${symbol}`) || '0';
-        const currentPrice = parseFloat(currentPriceStr);
-
-        if (currentPrice <= 0) return;
-
-        const planData = localStorage.getItem(`kabunote-next-action-plan-${symbol}`);
-        let plan: NextActionPlan;
-        if (planData) {
-          try { plan = JSON.parse(planData); } catch { plan = { id: '', targetPrice: 0, targetQuantity: 0, memo: '', actionType: 'buy', priority: 'medium', updatedAt: '' }; }
-        } else {
-          plan = { id: '', targetPrice: 0, targetQuantity: 0, memo: '', actionType: 'buy', priority: 'medium', updatedAt: '' };
-        }
-
-        const companyName = getCompanyNameSync(symbol);
-        const positionsData = localStorage.getItem(`kabunote-positions-${symbol}`);
-        let positionSummary = null;
-        if (positionsData) {
-          try { positionSummary = calculatePositionSummary(JSON.parse(positionsData)); } catch { /* ignore */ }
-        }
-
-        collectAlerts(symbol, companyName, currentPrice, parseFloat(targetPriceStr) || 0, parseFloat(stopLossStr) || 0, plan, positionSummary, alerts);
-      });
-    }
+      collectAlerts(stock.symbol, companyName, currentPrice, targetPrice, stopLossPrice, plan, positionSummary, alerts);
+    });
 
     return alerts.sort((a, b) => a.priority - b.priority);
-  }, [stocks, stockData, isLoggedIn, availableCash, isLoaded, snoozeLoaded, showSnoozed, isAlertSnoozed]);
-
-  // localStorage変更監視でアラートデータをリアルタイム更新
-  useEffect(() => {
-    if (!isLoaded) return;
-
-    const handleStorageChange = (event: CustomEvent) => {
-      const { key } = event.detail;
-
-      // アラートに影響するキーの変更を検知
-      if (key.includes('current-price-') ||
-          key.includes('target-price-') ||
-          key.includes('stop-loss-') ||
-          key.includes('next-action-plan-') ||
-          key.includes('positions-') ||
-          key === 'kabunote-cash-amount' ||
-          key === 'kabunote-snoozed-alerts') {
-
-        // アラートデータの再計算をトリガー
-        // 依存配列の値を強制更新するためのダミー更新
-        setShowSnoozed(prev => prev);
-      }
-    };
-
-    window.addEventListener('localStorageChange', handleStorageChange as EventListener);
-
-    return () => {
-      window.removeEventListener('localStorageChange', handleStorageChange as EventListener);
-    };
-  }, [isLoaded]);
+  }, [stockData, availableCash, snoozeLoaded, showSnoozed, isAlertSnoozed]);
 
   // アラート種別に応じたスタイル取得
   const getAlertStyles = (alertType: AlertType) => {
@@ -280,7 +200,7 @@ export default function AlertSummaryPage({ stockData = [], isLoggedIn = false }:
     return { total, urgent, byType };
   }, [alertsData]);
 
-  if (!isLoaded) {
+  if (!snoozeLoaded) {
     return (
       <div className="min-h-screen bg-gray-900 text-white p-6">
         <div className="max-w-4xl mx-auto">
@@ -302,7 +222,7 @@ export default function AlertSummaryPage({ stockData = [], isLoggedIn = false }:
               すべての銘柄が正常な状態です。投資戦略に応じて価格が変動したらアラートが表示されます。
             </div>
             <div className="text-xs text-gray-600 mt-4">
-              対象銘柄数: {stocks.length}件 | 投資余力現金: {new Intl.NumberFormat('ja-JP').format(availableCash)}円
+              対象銘柄数: {stockData.length}件 | 投資余力現金: {new Intl.NumberFormat('ja-JP').format(availableCash)}円
             </div>
           </div>
         </div>

@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { useArrayLocalStorage } from '@/hooks/useLocalStorage';
 import { useCash } from '@/hooks/useCash';
 import { StockData } from '@/hooks/useStockData';
 import { NextActionPlan, analyzeNextActionPlan, hasNextActionPlan } from '@/types/nextActionPlan';
@@ -22,11 +21,9 @@ type SortKey = 'priority' | 'action' | 'alert' | 'symbol';
 
 interface StrategySummaryPageProps {
   stockData?: StockData[];
-  isLoggedIn?: boolean;
 }
 
-export default function StrategySummaryPage({ stockData = [], isLoggedIn = false }: StrategySummaryPageProps) {
-  const [localStocks] = useArrayLocalStorage<string>('kabunote-stocks', []);
+export default function StrategySummaryPage({ stockData = [] }: StrategySummaryPageProps) {
   const { cashAmount } = useCash();
   const availableCash = parseFloat(cashAmount) || 0;
 
@@ -37,116 +34,62 @@ export default function StrategySummaryPage({ stockData = [], isLoggedIn = false
   const strategiesData = useMemo(() => {
     const data: StrategyRowData[] = [];
 
-    if (isLoggedIn && stockData.length > 0) {
-      // DBデータを使用
-      stockData.forEach(stock => {
-        const nap = stock.nextActionPlan;
-        if (!nap) return;
+    stockData.forEach(stock => {
+      const nap = stock.nextActionPlan;
+      if (!nap) return;
 
-        const plan: NextActionPlan = {
-          id: 'db',
-          actionType: nap.actionType as 'buy' | 'sell' | 'hold',
-          priority: nap.priority as 'high' | 'medium' | 'low',
-          targetPrice: nap.targetPrice,
-          targetQuantity: nap.targetShares,
-          memo: nap.strategyMemo,
-          updatedAt: '',
-        };
+      const plan: NextActionPlan = {
+        id: 'db',
+        actionType: nap.actionType as 'buy' | 'sell' | 'hold',
+        priority: nap.priority as 'high' | 'medium' | 'low',
+        targetPrice: nap.targetPrice,
+        targetQuantity: nap.targetShares,
+        memo: nap.strategyMemo,
+        updatedAt: '',
+      };
 
-        if (!hasNextActionPlan(plan)) return;
+      if (!hasNextActionPlan(plan)) return;
 
-        const companyName = stock.name || getCompanyNameSync(stock.symbol);
-        const currentPrice = stock.currentPrice ?? 0;
-        const targetPrice = stock.targetPrice ?? 0;
-        const stopLossPrice = stock.stopLossPrice ?? 0;
+      const companyName = stock.name || getCompanyNameSync(stock.symbol);
+      const currentPrice = stock.currentPrice ?? 0;
+      const targetPrice = stock.targetPrice ?? 0;
+      const stopLossPrice = stock.stopLossPrice ?? 0;
 
-        const positionSummary = stock.positions.length > 0
-          ? calculatePositionSummary(stock.positions)
-          : null;
+      const positionSummary = stock.positions.length > 0
+        ? calculatePositionSummary(stock.positions)
+        : null;
 
-        const alert = getIntegratedAlert(
+      const alert = getIntegratedAlert(
+        plan,
+        currentPrice,
+        targetPrice,
+        stopLossPrice.toString(),
+        positionSummary && positionSummary.totalShares > 0 ? positionSummary : undefined,
+        availableCash
+      );
+
+      let analysis = null;
+      if (currentPrice > 0) {
+        analysis = analyzeNextActionPlan(
           plan,
           currentPrice,
-          targetPrice,
-          stopLossPrice.toString(),
-          positionSummary && positionSummary.totalShares > 0 ? positionSummary : undefined,
+          positionSummary && positionSummary.totalShares > 0 ? positionSummary : null,
           availableCash
         );
+      }
 
-        let analysis = null;
-        if (currentPrice > 0) {
-          analysis = analyzeNextActionPlan(
-            plan,
-            currentPrice,
-            positionSummary && positionSummary.totalShares > 0 ? positionSummary : null,
-            availableCash
-          );
-        }
-
-        data.push({
-          symbol: stock.symbol,
-          companyName,
-          plan,
-          alertType: alert.type,
-          currentPrice,
-          analysis,
-        });
+      data.push({
+        symbol: stock.symbol,
+        companyName,
+        plan,
+        alertType: alert.type,
+        currentPrice,
+        analysis,
       });
-    } else {
-      // localStorage フォールバック（未ログイン時）
-      localStocks.forEach(symbol => {
-        const planData = localStorage.getItem(`kabunote-next-action-plan-${symbol}`);
-        if (!planData) return;
-
-        try {
-          const plan: NextActionPlan = JSON.parse(planData);
-          if (!hasNextActionPlan(plan)) return;
-
-          const companyName = getCompanyNameSync(symbol);
-          const currentPriceStr = localStorage.getItem(`kabunote-current-price-${symbol}`) || '0';
-          const targetPriceStr = localStorage.getItem(`kabunote-target-price-${symbol}`) || '0';
-          const stopLossStr = localStorage.getItem(`kabunote-stop-loss-${symbol}`) || '0';
-          const currentPrice = parseFloat(currentPriceStr);
-
-          const positionsData = localStorage.getItem(`kabunote-positions-${symbol}`);
-          let positionSummary = null;
-          if (positionsData) {
-            try {
-              const positions = JSON.parse(positionsData);
-              positionSummary = calculatePositionSummary(positions);
-            } catch (e) {
-              console.warn('Failed to parse positions:', e);
-            }
-          }
-
-          const alert = getIntegratedAlert(
-            plan,
-            currentPrice,
-            parseFloat(targetPriceStr) || 0,
-            stopLossStr,
-            positionSummary && positionSummary.totalShares > 0 ? positionSummary : undefined,
-            availableCash
-          );
-
-          let analysis = null;
-          if (currentPrice > 0) {
-            analysis = analyzeNextActionPlan(
-              plan,
-              currentPrice,
-              positionSummary && positionSummary.totalShares > 0 ? positionSummary : null,
-              availableCash
-            );
-          }
-
-          data.push({ symbol, companyName, plan, alertType: alert.type, currentPrice, analysis });
-        } catch (e) {
-          console.warn(`Failed to parse plan for ${symbol}:`, e);
-        }
-      });
-    }
+    });
 
     return data;
-  }, [isLoggedIn, stockData, localStocks, availableCash]);
+  }, [stockData, availableCash]);
 
   // ソート処理
   const sortedData = useMemo(() => {

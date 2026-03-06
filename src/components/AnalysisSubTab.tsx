@@ -157,7 +157,7 @@ export default function AnalysisSubTab({
             {/* ネオンライトプログレスバー */}
             <div className="relative">
               <div className="text-center text-sm mt-1 text-white font-medium">
-                取得単価 : {formatPrice(positionSummary.averagePrice)} 円 ({formatShares(positionSummary.totalShares)}株)
+                平均取得価額 : {formatPrice(positionSummary.averagePrice)} 円 <span className="text-xs text-gray-400">({formatShares(positionSummary.totalShares)}株)</span>
               </div>
               {/* 価格ラベル */}
               <div className="flex justify-between items-center mt-2 text-xs">
