@@ -392,7 +392,7 @@ export default function DividendBenefitListPage({ stockSymbols, stockData, onSto
         </div>
 
         {/* デスクトップ用テーブル */}
-        <div className="hidden md:block bg-gray-800 rounded-lg overflow-hidden">
+        <div className="hidden md:block bg-gray-800 rounded-lg overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-700">
               <tr>

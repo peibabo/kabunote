@@ -51,7 +51,7 @@ export default function ManagementTab({
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`px-2 sm:px-3 py-1.5 text-xs font-medium rounded-full transition-all duration-200 cursor-pointer whitespace-nowrap ${
+            className={`px-2 sm:px-3 py-2.5 sm:py-1.5 text-xs font-medium rounded-full transition-all duration-200 cursor-pointer whitespace-nowrap ${
               activeTab === tab.id
                 ? 'text-white bg-gray-600 shadow-md'
                 : 'text-gray-400 bg-gray-800 hover:text-gray-200 hover:bg-gray-700'

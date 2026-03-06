@@ -138,7 +138,7 @@ export default function PositionsManagement({
           {positions.length > 0 && (
             <div className="bg-gray-700 rounded-lg p-3 space-y-2">
               <div className="text-xs text-gray-400 font-medium">合計（{summary.positionCount}ロット）</div>
-              <div className="grid grid-cols-3 gap-2 text-sm">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm">
                 <div>
                   <div className="text-xs text-gray-400">保有株数</div>
                   <div className="text-white font-medium">{formatShares(summary.totalShares)}株</div>
@@ -202,7 +202,7 @@ export default function PositionsManagement({
                       削除
                     </button>
                   </div>
-                  <div className="grid grid-cols-3 gap-2 text-sm">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm">
                     <div>
                       <div className="text-gray-400 text-xs">株数</div>
                       <div className="text-white">{pos.shares.toLocaleString()}株</div>

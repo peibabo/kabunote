@@ -118,7 +118,7 @@ export default function InvestmentTimeline({ events, onStockClick, stockSymbols,
       : rect.bottom + 10;
 
     // X位置を画面端に合わせて調整
-    const tooltipWidth = 280;
+    const tooltipWidth = Math.min(280, window.innerWidth - 32);
     const xPosition = Math.max(10, Math.min(
       window.innerWidth - tooltipWidth - 10,
       rect.left + rect.width / 2 - tooltipWidth / 2
@@ -571,7 +571,7 @@ export default function InvestmentTimeline({ events, onStockClick, stockSymbols,
         >
           <div
             className="pointer-events-auto bg-gray-900 border border-gray-600 rounded-lg p-3 shadow-xl"
-            style={{ width: '280px' }}
+            style={{ width: '280px', maxWidth: 'calc(100vw - 2rem)' }}
             onMouseEnter={handleTooltipEnter}
             onMouseLeave={handleTooltipLeave}
           >

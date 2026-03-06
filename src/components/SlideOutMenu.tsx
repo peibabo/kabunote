@@ -38,7 +38,7 @@ export default function SlideOutMenu({ isOpen, onClose, alertCounts, onMenuItemC
       />
 
       {/* メニュー本体 */}
-      <div className="fixed top-0 right-0 h-full w-80 bg-gray-800 shadow-xl z-50 transform transition-transform duration-300 ease-in-out">
+      <div className="fixed top-0 right-0 h-full w-[85vw] max-w-80 bg-gray-800 shadow-xl z-50 transform transition-transform duration-300 ease-in-out">
         {/* ヘッダー */}
         <div className="flex items-center justify-between p-4 border-b border-gray-700">
           <h2 className="text-lg font-semibold text-white">メニュー</h2>

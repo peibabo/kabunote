@@ -324,7 +324,7 @@ export default function StrategySummaryPage({ stockData = [], isLoggedIn = false
         </div>
 
         {/* 戦略一覧テーブル（デスクトップ） */}
-        <div className="hidden md:block bg-gray-800 rounded-lg overflow-hidden">
+        <div className="hidden md:block bg-gray-800 rounded-lg overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-700">
               <tr>

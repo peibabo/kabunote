@@ -96,7 +96,7 @@ export default function AnalysisSubTab({
                 value={stopLoss}
                 onChange={(e) => onStopLossChange(e.target.value)}
                 placeholder="0"
-                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-red-500 focus:outline-none text-sm pr-8"
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-red-500 focus:outline-none text-base md:text-sm pr-8"
               />
               <span className="absolute right-3 top-2 text-xs text-gray-400">円</span>
             </div>
@@ -114,7 +114,7 @@ export default function AnalysisSubTab({
                 value={currentPrice}
                 onChange={(e) => onCurrentPriceChange(e.target.value)}
                 placeholder="0"
-                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none text-sm pr-8"
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none text-base md:text-sm pr-8"
               />
               <span className="absolute right-3 top-2 text-xs text-gray-400">円</span>
             </div>
@@ -132,7 +132,7 @@ export default function AnalysisSubTab({
                 value={targetPrice}
                 onChange={(e) => onTargetPriceChange(e.target.value)}
                 placeholder="0"
-                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-green-500 focus:outline-none text-sm pr-8"
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-green-500 focus:outline-none text-base md:text-sm pr-8"
               />
               <span className="absolute right-3 top-2 text-xs text-gray-400">円</span>
             </div>
