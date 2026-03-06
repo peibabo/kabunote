@@ -206,7 +206,7 @@ export default function NextActionSubTab({
             </div>
           ) : analysis && (
             <>
-              <div className="grid grid-cols-2 gap-4 text-sm">
+              <div className="grid grid-cols-2 gap-2 sm:gap-4 text-sm">
             <div>
               <span className="text-gray-400">価格差：</span>
               <span className={`ml-2 ${analysis.priceGap >= 0 ? 'text-green-400' : 'text-red-400'}`}>
@@ -220,7 +220,9 @@ export default function NextActionSubTab({
                 {analysis.gapPercentage.toFixed(1)}%
               </span>
             </div>
+          </div>
 
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 text-sm">
             <div className="whitespace-nowrap">
               <span className="text-gray-400">必要投資額：</span>
               <span className="ml-2 text-white">
@@ -249,7 +251,7 @@ export default function NextActionSubTab({
                   </span>
                 )}
               </h5>
-              <div className="grid grid-cols-2 gap-4 text-sm">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 text-sm">
                 <div className="space-y-1">
                   <div className="text-gray-400">利用可能現金：</div>
                   <div className="text-white pl-2">
