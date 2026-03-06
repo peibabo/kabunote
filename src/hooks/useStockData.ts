@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase-client';
+import { toast } from '@/lib/toast';
 
 export interface StockData {
   id: string;
@@ -201,6 +202,7 @@ export function useStockData(): UseStockDataReturn {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'データの取得に失敗しました';
       setError(errorMessage);
+      toast.error(errorMessage);
       console.error('💥 データ取得失敗:', errorMessage);
     } finally {
       setIsLoading(false);

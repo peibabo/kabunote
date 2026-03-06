@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { apiFetch, apiPost, apiDelete } from '@/lib/apiClient'
 import { CustomTag, TagColor } from '@/types/tags'
+import { toast } from '@/lib/toast'
 
 interface UseStockTagReturn {
   tags: CustomTag[]
@@ -26,6 +27,7 @@ export function useStockTag(stockId: string, options?: UseStockTagOptions): UseS
       setTagsState(data)
     } catch (err) {
       console.error('❌ タグ読み込みエラー:', err)
+      toast.error('タグの読み込みに失敗しました')
     } finally {
       setIsLoading(false)
     }
@@ -49,6 +51,7 @@ export function useStockTag(stockId: string, options?: UseStockTagOptions): UseS
       })
     } catch (err) {
       console.error('❌ タグ追加エラー:', err)
+      toast.error('タグの追加に失敗しました')
       setTagsState(prev => prev.filter(t => t.id !== tempId))
     }
   }, [stockId, symbol])
@@ -66,6 +69,7 @@ export function useStockTag(stockId: string, options?: UseStockTagOptions): UseS
       })
     } catch (err) {
       console.error('❌ タグ削除エラー:', err)
+      toast.error('タグの削除に失敗しました')
       await loadFromDatabase()
     }
   }, [stockId, symbol, loadFromDatabase])

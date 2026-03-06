@@ -40,22 +40,16 @@ export const PUT = withStock(async ({ stockId, request }) => {
   }
 
   let event
-  const existing = await prisma.stockEvent.findFirst({ where: { stockId, eventType } })
 
   if (eventType === 'EARNINGS') {
     const { eventDate } = body
     const eventDateObj = eventDate ? new Date(eventDate) : null
 
-    if (existing) {
-      event = await prisma.stockEvent.update({
-        where: { id: existing.id },
-        data: { eventDate: eventDateObj }
-      })
-    } else {
-      event = await prisma.stockEvent.create({
-        data: { stockId, eventType, eventDate: eventDateObj }
-      })
-    }
+    event = await prisma.stockEvent.upsert({
+      where: { stockId_eventType: { stockId, eventType } },
+      update: { eventDate: eventDateObj },
+      create: { stockId, eventType, eventDate: eventDateObj },
+    })
 
     return NextResponse.json({
       success: true,
@@ -67,16 +61,11 @@ export const PUT = withStock(async ({ stockId, request }) => {
   } else {
     const { eventMonth, eventDay, isRecurring, isActive } = body
 
-    if (existing) {
-      event = await prisma.stockEvent.update({
-        where: { id: existing.id },
-        data: { eventMonth, eventDay, isRecurring, isActive }
-      })
-    } else {
-      event = await prisma.stockEvent.create({
-        data: { stockId, eventType, eventMonth, eventDay, isRecurring: isRecurring ?? false, isActive: isActive ?? true }
-      })
-    }
+    event = await prisma.stockEvent.upsert({
+      where: { stockId_eventType: { stockId, eventType } },
+      update: { eventMonth, eventDay, isRecurring, isActive },
+      create: { stockId, eventType, eventMonth, eventDay, isRecurring: isRecurring ?? false, isActive: isActive ?? true },
+    })
 
     return NextResponse.json({
       success: true,

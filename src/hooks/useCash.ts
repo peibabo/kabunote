@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useDebouncedCallback } from './useDebounce';
+import { toast } from '@/lib/toast';
 
 interface CashData {
   cashAmount: string;
@@ -91,8 +92,10 @@ export function useCash(): UseCashResult {
       });
       if (!response.ok) throw new Error('データの更新に失敗しました');
     } catch (err) {
+      const msg = err instanceof Error ? err.message : '更新に失敗しました';
       console.error('データ更新エラー:', err);
-      setError(err instanceof Error ? err.message : '更新に失敗しました');
+      setError(msg);
+      toast.error(msg);
     }
   }, 300);
 
