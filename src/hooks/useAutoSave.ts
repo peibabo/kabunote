@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useEffect, useCallback, useRef } from 'react'
 import { useDebounce } from './useDebounce'
 
 interface UseAutoSaveOptions<T> {
@@ -9,18 +9,19 @@ interface UseAutoSaveOptions<T> {
 }
 
 export function useAutoSave<T>({ value, delay, isLoading, onSave }: UseAutoSaveOptions<T>) {
-  const [hasUserInput, setHasUserInput] = useState(false)
+  const hasUserInputRef = useRef(false)
   const debouncedValue = useDebounce(value, delay)
   const onSaveRef = useRef(onSave)
   onSaveRef.current = onSave
 
   useEffect(() => {
-    if (hasUserInput && !isLoading) {
-      onSaveRef.current(debouncedValue).then(() => setHasUserInput(false))
+    if (hasUserInputRef.current && !isLoading) {
+      hasUserInputRef.current = false
+      onSaveRef.current(debouncedValue)
     }
-  }, [debouncedValue, hasUserInput, isLoading])
+  }, [debouncedValue, isLoading])
 
-  const markDirty = useCallback(() => setHasUserInput(true), [])
+  const markDirty = useCallback(() => { hasUserInputRef.current = true }, [])
 
   return { markDirty }
 }
