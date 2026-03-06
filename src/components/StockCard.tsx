@@ -97,8 +97,14 @@ function StockCard({ symbol, onRemove, favoriteGroups, onFavoriteGroupsChange }:
     updateShareholderMeetingSettings,
   } = useStockEvent(`stock-${symbol}`);
 
-  // NextActionPlan の状態を取得
-  const { nextActionPlan } = useNextActionPlan(`stock-${symbol}`);
+  // NextActionPlan の状態を取得（StockCard で一元管理し、子コンポーネントに props で渡す）
+  const {
+    nextActionPlan,
+    updateNextActionPlan: updateNap,
+    deleteNextActionPlan: deleteNap,
+    isLoading: isNapLoading,
+    isSaving: isNapSaving,
+  } = useNextActionPlan(`stock-${symbol}`);
 
   // 権利確定日設定をパース
   const parsedRightsSettings: RightsDateSettings = (() => {
@@ -359,6 +365,11 @@ function StockCard({ symbol, onRemove, favoriteGroups, onFavoriteGroupsChange }:
             onCurrentPriceChange={setCurrentPrice}
             positionSummary={positionSummary}
             profitLossInfo={profitLossInfo}
+            nextActionPlan={nextActionPlan}
+            updateNextActionPlan={updateNap}
+            deleteNextActionPlan={deleteNap}
+            isNapLoading={isNapLoading}
+            isNapSaving={isNapSaving}
           />
         )}
 
