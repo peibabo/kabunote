@@ -186,30 +186,8 @@ export default function PositionsManagement({
                 />
               ) : (
                 // 表示モード
-                <div className="flex items-start justify-between">
-                  <div className="space-y-1 flex-1">
-                    <div className="flex gap-4 text-sm">
-                      <span>
-                        <span className="text-gray-400">株数: </span>
-                        <span className="text-white">{pos.shares.toLocaleString()}株</span>
-                      </span>
-                      <span>
-                        <span className="text-gray-400">単価: </span>
-                        <span className="text-green-300">{formatPrice(pos.purchasePrice)}円</span>
-                      </span>
-                      <span>
-                        <span className="text-gray-400">計: </span>
-                        <span className="text-blue-300">{formatPrice(pos.shares * pos.purchasePrice)}円</span>
-                      </span>
-                    </div>
-                    {pos.purchaseDate && (
-                      <div className="text-xs text-gray-400">取得日: {pos.purchaseDate}</div>
-                    )}
-                    {pos.memo && (
-                      <div className="text-xs text-gray-400 truncate">メモ: {pos.memo}</div>
-                    )}
-                  </div>
-                  <div className="flex gap-2 ml-2 shrink-0">
+                <div className="space-y-2">
+                  <div className="flex justify-end gap-2">
                     <button
                       onClick={() => handleEditClick(pos)}
                       className="cursor-pointer text-xs text-blue-400 hover:text-blue-300 transition-colors"
@@ -224,6 +202,26 @@ export default function PositionsManagement({
                       削除
                     </button>
                   </div>
+                  <div className="grid grid-cols-3 gap-2 text-sm">
+                    <div>
+                      <div className="text-gray-400 text-xs">株数</div>
+                      <div className="text-white">{pos.shares.toLocaleString()}株</div>
+                    </div>
+                    <div>
+                      <div className="text-gray-400 text-xs">単価</div>
+                      <div className="text-green-300">{formatPrice(pos.purchasePrice)}円</div>
+                    </div>
+                    <div>
+                      <div className="text-gray-400 text-xs">計</div>
+                      <div className="text-blue-300">{formatPrice(pos.shares * pos.purchasePrice)}円</div>
+                    </div>
+                  </div>
+                  {pos.purchaseDate && (
+                    <div className="text-xs text-gray-400">取得日: {pos.purchaseDate}</div>
+                  )}
+                  {pos.memo && (
+                    <div className="text-xs text-gray-400 truncate">メモ: {pos.memo}</div>
+                  )}
                 </div>
               )}
             </div>

@@ -150,8 +150,9 @@ export default function NextActionSubTab({ symbol, currentPrice = 0, positionSum
         </div>
 
         <div>
-          <label className="block text-sm text-gray-300 mb-2">
-            {plan.actionType === 'buy' ? '追加株数（単位：100株）' : plan.actionType === 'sell' ? '売却株数（単位：100株）' : '対象株数（単位：100株）'}
+          <label className="block text-sm text-gray-300 mb-2 whitespace-nowrap">
+            {plan.actionType === 'buy' ? '追加株数' : plan.actionType === 'sell' ? '売却株数' : '対象株数'}
+            <span className="text-xs text-gray-500 ml-1">(100株単位)</span>
           </label>
           <div className="relative">
             <input

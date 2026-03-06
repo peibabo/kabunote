@@ -46,12 +46,12 @@ export default function ManagementTab({
   return (
     <div className="space-y-4">
       {/* サブタブナビゲーション */}
-      <div className="flex justify-center gap-2 mb-4">
+      <div className="flex justify-center gap-1.5 sm:gap-2 mb-4">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`px-3 py-1.5 text-xs font-medium rounded-full transition-all duration-200 cursor-pointer ${
+            className={`px-2 sm:px-3 py-1.5 text-xs font-medium rounded-full transition-all duration-200 cursor-pointer whitespace-nowrap ${
               activeTab === tab.id
                 ? 'text-white bg-gray-600 shadow-md'
                 : 'text-gray-400 bg-gray-800 hover:text-gray-200 hover:bg-gray-700'
