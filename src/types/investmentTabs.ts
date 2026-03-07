@@ -13,7 +13,7 @@ export interface InvestmentTab {
 export const INVESTMENT_TABS: InvestmentTab[] = [
   {
     id: 'analysis',
-    label: '分析',
+    label: 'シナリオ',
     icon: '📊'
   },
   {
