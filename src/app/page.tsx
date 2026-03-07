@@ -231,60 +231,27 @@ export default function Home() {
             </div>
           </div>
 
-          {/* 外部分析リンク：モバイル用（横スクロール・アイコン+小テキスト） */}
-          <div className="flex overflow-x-auto gap-3 mb-4 md:hidden" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          {/* 外部分析リンク */}
+          <div className="flex overflow-x-auto gap-3 mb-4 pt-1 -mt-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             {[
               { href: 'https://kabutan.jp/warning/record_w52_high_price&dispmode=normal', icon: '📈', label: '52週高値', gradient: 'from-green-600 to-blue-600' },
               { href: 'https://sekai-kabuka.com/', icon: '🌍', label: '世界の株価', gradient: 'from-purple-600 to-pink-600' },
               { href: 'https://www.release.tdnet.info/inbs/I_main_00.html', icon: '📋', label: '適時開示', gradient: 'from-orange-600 to-red-600' },
+              { href: 'https://kabutan.jp/warning/pts_night_price_increase', icon: '🌙', label: 'PTS夜間', gradient: 'from-indigo-600 to-violet-600' },
             ].map((link) => (
               <a
                 key={link.label}
                 href={link.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`flex-shrink-0 flex flex-col items-center gap-1`}
+                className={`flex-shrink-0 flex flex-col items-center gap-1 group transition-transform duration-300 ease-out hover:-translate-y-1`}
               >
-                <span className={`w-11 h-11 rounded-full bg-gradient-to-r ${link.gradient} flex items-center justify-center text-lg shadow-lg`}>
+                <span className={`w-11 h-11 rounded-full bg-gradient-to-r ${link.gradient} flex items-center justify-center text-lg shadow-lg transition-shadow duration-300 group-hover:shadow-xl group-hover:shadow-white/20`}>
                   {link.icon}
                 </span>
-                <span className="text-[10px] text-gray-400 whitespace-nowrap">{link.label}</span>
+                <span className="text-[10px] text-gray-400 whitespace-nowrap transition-colors duration-300 group-hover:text-gray-200">{link.label}</span>
               </a>
             ))}
-          </div>
-
-          {/* 外部分析リンク：デスクトップ用 */}
-          <div className="hidden md:flex flex-wrap gap-3 mb-4">
-            <a
-              href="https://kabutan.jp/warning/record_w52_high_price&dispmode=normal"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white font-medium px-4 py-2 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
-            >
-              <span className="text-lg">📈</span>
-              <span>本日、52週高値を更新した銘柄</span>
-              <span className="text-xs opacity-80">（株探）</span>
-            </a>
-
-            <a
-              href="https://sekai-kabuka.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-medium px-4 py-2 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
-            >
-              <span className="text-lg">🌍</span>
-              <span>世界の株価</span>
-            </a>
-
-            <a
-              href="https://www.release.tdnet.info/inbs/I_main_00.html"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white font-medium px-4 py-2 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
-            >
-              <span className="text-lg">📋</span>
-              <span>適時開示情報</span>
-            </a>
           </div>
 
           {/* 検索結果表示 */}
