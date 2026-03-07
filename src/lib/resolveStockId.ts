@@ -22,6 +22,12 @@ export async function resolveStockId(
 
     // lazy 登録（銘柄が未登録の場合は末尾順で新規作成）
     try {
+      // ユーザーが app_users に存在しなければ作成（外部キー制約対策）
+      await prisma.user.upsert({
+        where: { id: userId },
+        update: {},
+        create: { id: userId, email: `temp_${userId}@example.com`, authProvider: 'unknown' },
+      })
       const maxOrder = await prisma.stock.aggregate({
         where: { userId },
         _max: { order: true },

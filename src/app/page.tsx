@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import StockCard from '@/components/StockCard';
 import FavoriteGroupManager from '@/components/FavoriteGroupManager';
 import TagManager from '@/components/TagManager';
@@ -17,7 +17,7 @@ import EventCalendarPage from '@/components/EventCalendarPage';
 import DividendBenefitListPage from '@/components/DividendBenefitListPage';
 import AuthButton from '@/components/AuthButton';
 import BulkTabSwitcher from '@/components/BulkTabSwitcher';
-import { loadStockData } from '@/data/stockNames';
+import { loadStockData, getStockData } from '@/data/stockNames';
 import { GROUP_COLORS } from '@/types/favorites';
 import { useStockData } from '@/hooks/useStockData';
 import { useFavoriteGroups } from '@/hooks/useFavoriteGroups';
@@ -48,8 +48,8 @@ const MAX_STOCKS = 30;
 
 export default function Home() {
   const {
-    stockData, stockSymbols, isLoading: isStockDataLoading,
-    error: stockDataError, refreshData, reorderStocks, addLocalStock,
+    stockData, stockDataMap, stockSymbols, isLoading: isStockDataLoading,
+    error: stockDataError, refreshData, reorderStocks, addStock,
     updateStockPrice, updateStockData, updateStockEvent,
   } = useStockData();
 
@@ -69,15 +69,15 @@ export default function Home() {
   // Custom hooks
   const modals = useModals(refreshData);
   const { searchQuery, setSearchQuery, isSearching, filteredStocks } = useStockSearch(
-    stockSymbols, stockData, selectedGroupFilter, favoriteGroups
+    stockSymbols, stockDataMap, selectedGroupFilter, favoriteGroups
   );
   const { alertCounts } = useAlertCounts(stockSymbols, stockData, isInitialized, cashAmount);
   const { stockCalendarData, hasCalendarData } = useCalendarData(
-    stockSymbols, stockData, isInitialized, updateStockPrice, updateStockData, updateStockEvent
+    stockSymbols, stockDataMap, isInitialized, updateStockPrice, updateStockData, updateStockEvent
   );
   const { hasPortfolioData } = usePortfolioData(stockData, isInitialized);
   const { dividendBenefitData } = useDividendBenefitData(
-    stockSymbols, stockData, modals.isDividendBenefitListOpen, isInitialized
+    stockSymbols, stockDataMap, modals.isDividendBenefitListOpen, isInitialized
   );
 
   // ドラッグ&ドロップセンサー
@@ -121,7 +121,7 @@ export default function Home() {
     initializeApp();
   }, []);
 
-  const handleAddStock = (code: string) => {
+  const handleAddStock = async (code: string) => {
     if (stockSymbols.length >= MAX_STOCKS) {
       setError(`最大${MAX_STOCKS}銘柄まで表示できます`);
       return;
@@ -131,7 +131,10 @@ export default function Home() {
       return;
     }
     setError('');
-    addLocalStock(code);
+
+    // CSVデータから銘柄名・業種・市場を取得
+    const stockInfo = await getStockData(code);
+    await addStock(code, stockInfo?.name, stockInfo?.sector, stockInfo?.market);
 
     if (selectedGroupFilter) {
       const updatedGroups = favoriteGroups.map(group => {
@@ -144,23 +147,24 @@ export default function Home() {
     }
   };
 
-  const handleRemoveStock = (code: string) => {
+  const handleRemoveStock = useCallback((code: string) => {
     const newStocks = stockSymbols.filter(stock => stock !== code);
     reorderStocks(newStocks);
     setError('');
 
-    fetch('/api/stocks/reorder', {
-      method: 'PATCH',
+    // DBから銘柄を削除（カスケードで関連データも削除）
+    fetch('/api/stocks', {
+      method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ symbols: newStocks }),
-    }).catch(err => console.error('並び順の保存に失敗:', err));
+      body: JSON.stringify({ symbol: code }),
+    }).catch(err => console.error('銘柄の削除に失敗:', err));
 
     const updatedGroups = favoriteGroups.map(group => ({
       ...group,
       stocks: group.stocks.filter(s => s !== code)
     }));
     setFavoriteGroups(updatedGroups);
-  };
+  }, [stockSymbols, reorderStocks, favoriteGroups, setFavoriteGroups]);
 
   const handleStockClick = (symbol: string) => {
     const element = document.getElementById(`stock-card-${symbol}`);
@@ -481,10 +485,10 @@ export default function Home() {
                     <div key={stock} id={`stock-card-${stock}`} className="h-full">
                       <StockCard
                         symbol={stock}
-                        onRemove={() => handleRemoveStock(stock)}
+                        onRemove={handleRemoveStock}
                         favoriteGroups={favoriteGroups}
                         onFavoriteGroupsChange={setFavoriteGroups}
-                        initialStockData={stockData.find(s => s.symbol === stock)}
+                        initialStockData={stockDataMap.get(stock)}
                       />
                     </div>
                   ))}
