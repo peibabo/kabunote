@@ -24,7 +24,7 @@ interface UseDividendBenefitDataReturn {
 
 export function useDividendBenefitData(
   stocks: string[],
-  stockData: StockData[],
+  stockDataMap: Map<string, StockData>,
   isOpen: boolean,
   isInitialized: boolean
 ): UseDividendBenefitDataReturn {
@@ -38,7 +38,7 @@ export function useDividendBenefitData(
 
       for (const symbol of stocks) {
         const stockInfo = await getStockData(symbol);
-        const dbStock = stockData.find(s => s.symbol === symbol);
+        const dbStock = stockDataMap.get(symbol);
 
         const dividendInfo = dbStock?.dividend?.dividendPerShare != null
           ? {
@@ -96,7 +96,7 @@ export function useDividendBenefitData(
     };
 
     loadData();
-  }, [isOpen, isInitialized, stocks, stockData]);
+  }, [isOpen, isInitialized, stocks, stockDataMap]);
 
   return { dividendBenefitData };
 }

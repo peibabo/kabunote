@@ -32,7 +32,7 @@ import FavoriteGroupSelector from './FavoriteGroupSelector';
 
 interface StockCardProps {
   symbol: string;
-  onRemove: () => void;
+  onRemove: (symbol: string) => void;
   favoriteGroups: FavoriteGroup[];
   onFavoriteGroupsChange: (groups: FavoriteGroup[]) => void;
   initialStockData?: DBStockData;
@@ -310,7 +310,7 @@ function StockCard({ symbol, onRemove, favoriteGroups, onFavoriteGroupsChange, i
         onTagEditorOpen={() => setIsTagEditorOpen(true)}
         onFavoriteGroupSelectorOpen={() => setIsFavoriteGroupSelectorOpen(true)}
         onTagRemove={handleTagRemove}
-        onRemove={onRemove}
+        onRemove={() => onRemove(symbol)}
         listeners={listeners}
         isDragging={isDragging}
       />
@@ -497,4 +497,39 @@ function StockCard({ symbol, onRemove, favoriteGroups, onFavoriteGroupsChange, i
   );
 }
 
-export default memo(StockCard);
+function arePropsEqual(prevProps: StockCardProps, nextProps: StockCardProps): boolean {
+  if (prevProps.symbol !== nextProps.symbol) return false;
+  if (prevProps.onRemove !== nextProps.onRemove) return false;
+  if (prevProps.onFavoriteGroupsChange !== nextProps.onFavoriteGroupsChange) return false;
+  if (prevProps.initialStockData !== nextProps.initialStockData) return false;
+
+  // favoriteGroups: この銘柄が属するグループだけ比較
+  const prevBelonging = prevProps.favoriteGroups
+    .filter(g => g.stocks.includes(prevProps.symbol))
+    .map(g => g.id)
+    .sort()
+    .join(',');
+  const nextBelonging = nextProps.favoriteGroups
+    .filter(g => g.stocks.includes(nextProps.symbol))
+    .map(g => g.id)
+    .sort()
+    .join(',');
+  if (prevBelonging !== nextBelonging) return false;
+
+  // グループ名・色の変更も検知
+  const prevGroupData = prevProps.favoriteGroups
+    .filter(g => g.stocks.includes(prevProps.symbol))
+    .map(g => `${g.id}:${g.name}:${g.color}`)
+    .sort()
+    .join('|');
+  const nextGroupData = nextProps.favoriteGroups
+    .filter(g => g.stocks.includes(nextProps.symbol))
+    .map(g => `${g.id}:${g.name}:${g.color}`)
+    .sort()
+    .join('|');
+  if (prevGroupData !== nextGroupData) return false;
+
+  return true;
+}
+
+export default memo(StockCard, arePropsEqual);
