@@ -12,13 +12,23 @@ interface UseStockSearchReturn {
 
 export function useStockSearch(
   stocks: string[],
-  stockData: StockData[],
+  stockDataMap: Map<string, StockData>,
   selectedGroupFilter: string | null,
   favoriteGroups: FavoriteGroup[]
 ): UseStockSearchReturn {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<string[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+
+  // 検索に関係するフィールドのみの安定キー（price変更では再検索しない）
+  const searchRelevantKey = useMemo(() => {
+    return stocks.map(symbol => {
+      const s = stockDataMap.get(symbol);
+      if (!s) return symbol;
+      const tags = s.tags.map(t => t.label).join(',');
+      return `${symbol}|${s.memo}|${tags}`;
+    }).join('||');
+  }, [stocks, stockDataMap]);
 
   const searchStocks = async (targetStocks: string[], query: string): Promise<string[]> => {
     if (!query || query.length < 2) return targetStocks;
@@ -40,7 +50,7 @@ export function useStockSearch(
 
     for (const stockCode of targetStocks) {
       const stockInfo = await getStockData(stockCode);
-      const dbStock = stockData.find(s => s.symbol === stockCode);
+      const dbStock = stockDataMap.get(stockCode);
 
       const searchData = {
         code: stockCode,
@@ -112,7 +122,7 @@ export function useStockSearch(
 
     const timeoutId = setTimeout(performSearch, 300);
     return () => clearTimeout(timeoutId);
-  }, [searchQuery, stocks, selectedGroupFilter, favoriteGroups, stockData]);
+  }, [searchQuery, stocks, selectedGroupFilter, favoriteGroups, searchRelevantKey, stockDataMap]);
 
   const filteredStocks = useMemo(() => {
     if (searchQuery.trim()) {

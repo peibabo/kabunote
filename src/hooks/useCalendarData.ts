@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { loadStockData, getStockData } from '@/data/stockNames';
 import { StockData } from '@/hooks/useStockData';
 import {
@@ -25,13 +25,25 @@ interface UseCalendarDataReturn {
 
 export function useCalendarData(
   stocks: string[],
-  stockData: StockData[],
+  stockDataMap: Map<string, StockData>,
   isInitialized: boolean,
   updateStockPrice: (symbol: string, priceData: { currentPrice: number | null; targetPrice: number | null; stopLossPrice: number | null }) => void,
   updateStockData: (symbol: string, updates: Partial<StockData>) => void,
   updateStockEvent: (symbol: string, eventType: string, eventData: StockData['events'][0] | null) => void
 ): UseCalendarDataReturn {
   const [stockCalendarData, setStockCalendarData] = useState<CalendarDataMap>({});
+
+  // カレンダーに関係するフィールドのみの安定キー（price変更では再計算しない）
+  const calendarRelevantKey = useMemo(() => {
+    return stocks.map(symbol => {
+      const s = stockDataMap.get(symbol);
+      if (!s) return symbol;
+      const events = s.events.map(e => `${e.eventType}:${e.eventDate}:${e.eventMonth}:${e.eventDay}:${e.isRecurring}:${e.isActive}`).join(';');
+      const div = s.dividend ? `${s.dividend.rightsMonth}:${s.dividend.rightsDay}` : '';
+      const ben = s.benefit ? `${s.benefit.rightsMonth}:${s.benefit.rightsDay}` : '';
+      return `${symbol}|${s.name}|${events}|${div}|${ben}`;
+    }).join('||');
+  }, [stocks, stockDataMap]);
 
   // カレンダー用データの更新
   useEffect(() => {
@@ -44,7 +56,7 @@ export function useCalendarData(
 
       for (const symbol of stocks) {
         const stockInfo = await getStockData(symbol);
-        const dbStock = stockData.find(s => s.symbol === symbol);
+        const dbStock = stockDataMap.get(symbol);
 
         const earningsEvent = dbStock?.events?.find(e => e.eventType === 'EARNINGS');
         const earningsDate = earningsEvent?.eventDate || '';
@@ -77,7 +89,7 @@ export function useCalendarData(
     };
 
     updateCalendarData();
-  }, [stocks, isInitialized, stockData]);
+  }, [stocks, isInitialized, calendarRelevantKey, stockDataMap]);
 
   // DB カスタムイベントリスナー
   useEffect(() => {

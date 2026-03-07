@@ -72,15 +72,14 @@ export default function StockCardHeader({
                 {/* 業種・市場（上部） */}
                 {(stockData?.sector || stockData?.market) && (
                   <div className="flex flex-wrap gap-1 items-center">
-                    <span className="text-xs text-gray-400 font-medium">📊</span>
                     {stockData?.sector && (
                       <span className="text-xs bg-blue-600 text-blue-100 px-2 py-0.5 rounded-full">
-                        {stockData.sector}
+                        📊 {stockData.sector}
                       </span>
                     )}
                     {stockData?.market && (
                       <span className="text-xs bg-green-600 text-green-100 px-2 py-0.5 rounded-full">
-                        {stockData.market}
+                        🏛️ {stockData.market}
                       </span>
                     )}
                   </div>
