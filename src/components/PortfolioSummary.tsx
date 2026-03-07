@@ -370,7 +370,7 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
             <span>💡</span>
             <span>
               {overallSummary.stocksWithoutPrices}銘柄で現在の株価が未設定です。
-              「📊 分析」タブで現在の株価を設定すると損益が表示されます
+              「📊 シナリオ」タブで現在の株価を設定すると損益が表示されます
             </span>
           </div>
         </div>

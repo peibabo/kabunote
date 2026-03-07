@@ -82,7 +82,6 @@ export default function AnalysisSubTab({
     <div className="space-y-4">
       {/* 投資規律設定 */}
       <div className="space-y-3">
-        <h4 className="text-sm font-medium text-gray-300">投資規律設定</h4>
         <div className="grid grid-cols-3 gap-3">
           {/* 損切ライン */}
           <div className="space-y-1">
@@ -157,7 +156,7 @@ export default function AnalysisSubTab({
             {/* ネオンライトプログレスバー */}
             <div className="relative">
               <div className="text-center text-sm mt-1 text-white font-medium">
-                平均取得価額 : {formatPrice(positionSummary.averagePrice)} 円 <span className="text-xs text-gray-400">({formatShares(positionSummary.totalShares)}株)</span>
+                平均取得価額 : {formatPrice(positionSummary.averagePrice)} <span className='text-xs'> 円</span> <span className="text-xs text-gray-400">({formatShares(positionSummary.totalShares)}株)</span>
               </div>
               {/* 価格ラベル */}
               <div className="flex justify-between items-center mt-2 text-xs">

@@ -112,7 +112,7 @@ export default function SimplePortfolioSummary({ portfolioData }: SimplePortfoli
             <span>💡</span>
             <span>
               {summary.stocksWithoutPrices}銘柄で現在の株価が未設定です。
-              「📊 分析」タブで現在の株価を設定すると損益が表示されます
+              「📊 シナリオ」タブで現在の株価を設定すると損益が表示されます
             </span>
           </div>
         </div>

@@ -13,7 +13,7 @@ type TabOption = {
 
 const TAB_OPTIONS: TabOption[] = [
   { label: '基本', icon: '📝', mainTab: 'basic' },
-  { label: '分析', icon: '📊', mainTab: 'analysis', investmentSubTab: 'analysis' },
+  { label: 'シナリオ', icon: '📊', mainTab: 'analysis', investmentSubTab: 'analysis' },
   { label: '次の一手', icon: '🎯', mainTab: 'analysis', investmentSubTab: 'nextaction' },
   { label: '保有状況', icon: '💼', mainTab: 'management', managementSubTab: 'positions' },
   { label: 'イベント', icon: '📅', mainTab: 'management', managementSubTab: 'events' },
@@ -107,7 +107,7 @@ export default function BulkTabSwitcher({ stockSymbols }: Props) {
               key={option.label}
               onClick={() => handleClick(option)}
               title={option.label}
-              className={`cursor-pointer text-xs px-3 py-1 md:px-3 md:py-1 rounded transition-all duration-150 whitespace-nowrap ${
+              className={`cursor-pointer text-xs px-3 py-1 md:px-3 md:py-1 rounded transition-all duration-150 whitespace-nowrap md:flex-1 md:text-center ${
                 isActive
                   ? 'bg-blue-600 text-white font-medium shadow-sm'
                   : 'bg-slate-700 text-gray-300 hover:bg-slate-600 hover:text-white'
