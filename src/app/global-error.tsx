@@ -2,7 +2,23 @@
 
 import { useEffect, useState } from 'react'
 
-const AUTO_RETRY_SECONDS = 15
+const BASE_RETRY_SECONDS = 15
+const MAX_RETRY_SECONDS = 60
+const STORAGE_KEY = 'error-retry-attempt'
+
+function getRetrySeconds(attempt: number): number {
+  return Math.min(BASE_RETRY_SECONDS * Math.pow(2, attempt), MAX_RETRY_SECONDS)
+}
+
+function getAndIncrementAttempt(): number {
+  try {
+    const current = parseInt(sessionStorage.getItem(STORAGE_KEY) || '0', 10)
+    sessionStorage.setItem(STORAGE_KEY, String(current + 1))
+    return current
+  } catch {
+    return 0
+  }
+}
 
 export default function GlobalError({
   reset,
@@ -10,7 +26,9 @@ export default function GlobalError({
   error: Error & { digest?: string }
   reset: () => void
 }) {
-  const [countdown, setCountdown] = useState(AUTO_RETRY_SECONDS)
+  const [attempt] = useState(() => getAndIncrementAttempt())
+  const retrySeconds = getRetrySeconds(attempt)
+  const [countdown, setCountdown] = useState(retrySeconds)
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -39,7 +57,9 @@ export default function GlobalError({
               アプリケーションの読み込みに失敗しました。裏側で修復中です。
             </p>
             <p style={{ color: '#6b7280', fontSize: '0.875rem', marginBottom: '1rem' }}>
-              {countdown}秒後に自動で再試行します...
+              {attempt > 0
+                ? `${attempt + 1}回目の再試行（${countdown}秒後）...`
+                : `${countdown}秒後に自動で再試行します...`}
             </p>
             <div style={{ width: '100%', background: '#1f2937', borderRadius: '9999px', height: '4px', overflow: 'hidden', marginBottom: '1.5rem' }}>
               <div
@@ -48,7 +68,7 @@ export default function GlobalError({
                   background: '#3b82f6',
                   borderRadius: '9999px',
                   transition: 'width 1s linear',
-                  width: `${((AUTO_RETRY_SECONDS - countdown) / AUTO_RETRY_SECONDS) * 100}%`,
+                  width: `${((retrySeconds - countdown) / retrySeconds) * 100}%`,
                 }}
               />
             </div>
