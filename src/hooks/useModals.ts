@@ -15,6 +15,8 @@ interface UseModalsReturn {
   setIsEventCalendarOpen: (open: boolean) => void;
   isDividendBenefitListOpen: boolean;
   setIsDividendBenefitListOpen: (open: boolean) => void;
+  isDeleteAccountOpen: boolean;
+  setIsDeleteAccountOpen: (open: boolean) => void;
   isMenuOpen: boolean;
   setIsMenuOpen: (open: boolean) => void;
   handleMenuItemClick: (action: string) => void;
@@ -28,6 +30,7 @@ export function useModals(refreshData: () => Promise<void>): UseModalsReturn {
   const [isAlertSummaryOpen, setIsAlertSummaryOpen] = useState(false);
   const [isEventCalendarOpen, setIsEventCalendarOpen] = useState(false);
   const [isDividendBenefitListOpen, setIsDividendBenefitListOpen] = useState(false);
+  const [isDeleteAccountOpen, setIsDeleteAccountOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const handleMenuItemClick = useCallback((action: string) => {
@@ -60,6 +63,9 @@ export function useModals(refreshData: () => Promise<void>): UseModalsReturn {
       case 'tags':
         setIsTagManagerOpen(true);
         break;
+      case 'deleteAccount':
+        setIsDeleteAccountOpen(true);
+        break;
       case 'help':
         alert('ヘルプ機能は今後実装予定です');
         break;
@@ -76,6 +82,7 @@ export function useModals(refreshData: () => Promise<void>): UseModalsReturn {
     isAlertSummaryOpen, setIsAlertSummaryOpen,
     isEventCalendarOpen, setIsEventCalendarOpen,
     isDividendBenefitListOpen, setIsDividendBenefitListOpen,
+    isDeleteAccountOpen, setIsDeleteAccountOpen,
     isMenuOpen, setIsMenuOpen,
     handleMenuItemClick,
   };

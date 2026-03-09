@@ -15,6 +15,7 @@ import HamburgerMenuButton from '@/components/HamburgerMenuButton';
 import SlideOutMenu from '@/components/SlideOutMenu';
 import EventCalendarPage from '@/components/EventCalendarPage';
 import DividendBenefitListPage from '@/components/DividendBenefitListPage';
+import DeleteAccountModal from '@/components/DeleteAccountModal';
 import AuthButton from '@/components/AuthButton';
 import BulkTabSwitcher from '@/components/BulkTabSwitcher';
 import { loadStockData, getStockData } from '@/data/stockNames';
@@ -629,6 +630,12 @@ export default function Home() {
           </div>
         )}
       </main>
+
+      {/* アカウント削除モーダル */}
+      <DeleteAccountModal
+        isOpen={modals.isDeleteAccountOpen}
+        onClose={() => modals.setIsDeleteAccountOpen(false)}
+      />
 
       {/* スライドアウトメニュー */}
       <SlideOutMenu
