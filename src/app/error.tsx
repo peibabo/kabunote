@@ -10,7 +10,23 @@ const friendlyMessages = [
   { emoji: '🏖️', title: 'サーバーがお休みをいただいています', sub: 'リフレッシュ中です。すぐに元気に戻ります。' },
 ]
 
-const AUTO_RETRY_SECONDS = 15
+const BASE_RETRY_SECONDS = 15
+const MAX_RETRY_SECONDS = 60
+const STORAGE_KEY = 'error-retry-attempt'
+
+function getRetrySeconds(attempt: number): number {
+  return Math.min(BASE_RETRY_SECONDS * Math.pow(2, attempt), MAX_RETRY_SECONDS)
+}
+
+function getAndIncrementAttempt(): number {
+  try {
+    const current = parseInt(sessionStorage.getItem(STORAGE_KEY) || '0', 10)
+    sessionStorage.setItem(STORAGE_KEY, String(current + 1))
+    return current
+  } catch {
+    return 0
+  }
+}
 
 export default function Error({
   error,
@@ -20,7 +36,9 @@ export default function Error({
   reset: () => void
 }) {
   const [msgIndex] = useState(() => Math.floor(Math.random() * friendlyMessages.length))
-  const [countdown, setCountdown] = useState(AUTO_RETRY_SECONDS)
+  const [attempt] = useState(() => getAndIncrementAttempt())
+  const retrySeconds = getRetrySeconds(attempt)
+  const [countdown, setCountdown] = useState(retrySeconds)
 
   const msg = friendlyMessages[msgIndex]
 
@@ -48,13 +66,15 @@ export default function Error({
         <p className="text-gray-400 leading-relaxed">{msg.sub}</p>
 
         <div className="text-sm text-gray-500">
-          {countdown}秒後に自動で再試行します...
+          {attempt > 0
+            ? `${attempt + 1}回目の再試行（${countdown}秒後）...`
+            : `${countdown}秒後に自動で再試行します...`}
         </div>
 
         <div className="w-full bg-gray-800 rounded-full h-1 overflow-hidden">
           <div
             className="h-full bg-blue-500 rounded-full transition-all duration-1000 ease-linear"
-            style={{ width: `${((AUTO_RETRY_SECONDS - countdown) / AUTO_RETRY_SECONDS) * 100}%` }}
+            style={{ width: `${((retrySeconds - countdown) / retrySeconds) * 100}%` }}
           />
         </div>
 
