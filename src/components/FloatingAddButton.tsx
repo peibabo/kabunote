@@ -9,6 +9,8 @@ interface FloatingAddButtonProps {
   error: string;
   setError: (error: string) => void;
   disabled?: boolean;
+  currentCount: number;
+  maxCount: number;
   selectedGroupInfo?: {
     name: string;
     color: GroupColor;
@@ -21,6 +23,8 @@ export default function FloatingAddButton({
   error,
   setError,
   disabled = false,
+  currentCount,
+  maxCount,
   selectedGroupInfo = null,
   isFirstTime = false
 }: FloatingAddButtonProps) {
@@ -43,30 +47,48 @@ export default function FloatingAddButton({
     }
   };
 
+  // バッジの色を使用率に応じて決定
+  const usageRatio = currentCount / maxCount;
+  const getBadgeColor = () => {
+    if (usageRatio >= 1) return 'bg-red-500 text-white';
+    if (usageRatio >= 0.8) return 'bg-yellow-500 text-gray-900';
+    return 'bg-gray-600 text-gray-200';
+  };
+
   return (
     <>
       {/* フローティングボタン */}
-      <button
-        onClick={handleOpenModal}
-        disabled={disabled}
-        className={`
-          cursor-pointer fixed bottom-6 right-6 z-40
-          w-14 h-14 rounded-full shadow-lg
-          flex items-center justify-center
-          text-white text-2xl font-bold
-          transition-all duration-200
-          hover:scale-110 hover:shadow-xl
-          ${disabled
-            ? 'bg-gray-600 cursor-not-allowed'
-            : 'bg-blue-600 hover:bg-blue-700 active:scale-95'
-          }
-          ${isFirstTime ? 'animate-pulse ring-4 ring-blue-300 ring-opacity-50' : ''}
-        `}
-        title="銘柄を追加"
-        aria-label="銘柄を追加"
-      >
-        ＋
-      </button>
+      <div className="fixed bottom-6 right-6 z-40 flex flex-col items-center gap-1">
+        {/* カウンターバッジ */}
+        {currentCount > 0 && (
+          <span
+            className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${getBadgeColor()} shadow-md`}
+          >
+            {currentCount}/{maxCount}
+          </span>
+        )}
+        <button
+          onClick={handleOpenModal}
+          disabled={disabled}
+          className={`
+            cursor-pointer
+            w-14 h-14 rounded-full shadow-lg
+            flex items-center justify-center
+            text-white text-2xl font-bold
+            transition-all duration-200
+            hover:scale-110 hover:shadow-xl
+            ${disabled
+              ? 'bg-gray-600 cursor-not-allowed'
+              : 'bg-blue-600 hover:bg-blue-700 active:scale-95'
+            }
+            ${isFirstTime ? 'animate-pulse ring-4 ring-blue-300 ring-opacity-50' : ''}
+          `}
+          title="銘柄を追加"
+          aria-label="銘柄を追加"
+        >
+          ＋
+        </button>
+      </div>
 
       {/* モーダル */}
       {isModalOpen && (
@@ -83,6 +105,7 @@ export default function FloatingAddButton({
               <h2 className="text-lg font-bold text-white flex items-center gap-2">
                 <span>📈</span>
                 銘柄を追加
+                <span className="text-sm font-normal text-gray-400">({currentCount}/{maxCount})</span>
               </h2>
               <button
                 onClick={handleCloseModal}
