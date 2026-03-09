@@ -1,5 +1,7 @@
 日本語でやり取りをお願いします。
 git commitをする前に修正内容をもとに必要であればREADME及びCLAUDE.mdを修正してください。
+また、docs/配下のドキュメントに関する修正が行われた場合は、ドキュメントも更新してください。
+git commitをする前に必ず `npm run test:run` を実行し、全テストがパスすることを確認してください。テストが失敗した場合はコミットせず、修正してください。
 
 # Kabunote - 投資思考整理ダッシュボード
 
@@ -12,7 +14,13 @@ git commitをする前に修正内容をもとに必要であればREADME及びC
 
 ## 開発コマンド
 ```bash
-npm run dev  # localhost:3000
+npm run dev          # localhost:3000
+npm run test         # テスト（ウォッチモード）
+npm run test:run     # テスト（1回実行）
+npm run test:unit    # P0: 純粋関数ユニットテスト
+npm run test:api     # P1: APIルート統合テスト
+npm run test:hooks   # P2: カスタムフックテスト
+npm run test:components  # P3: コンポーネント描画テスト
 ```
 
 ## ドキュメント構成
@@ -69,7 +77,8 @@ app_users (ユーザー管理)
 - [x] モバイル・レスポンシブ対応確認（2026年3月完了）
 - [ ] 初回ユーザー向けオンボーディング
 - [x] エラーハンドリングの強化
-- [ ] テストコード
+- [x] テストコード（Vitest + RTL + MSW、303テスト）
+- [ ] 20銘柄制限
 - [ ] ユーザー問い合わせ機能
 
 ### 推奨改善項目
