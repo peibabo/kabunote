@@ -5,13 +5,13 @@ import { toastStore } from '@/lib/toast'
 
 const typeStyles = {
   success: 'bg-green-800 border-green-600 text-green-100',
-  error: 'bg-red-900 border-red-600 text-red-100',
+  error: 'bg-gray-800 border-gray-600 text-gray-100',
   warning: 'bg-yellow-900 border-yellow-600 text-yellow-100',
 } as const
 
 const typeIcons = {
   success: '\u2714',
-  error: '\u2716',
+  error: '\u{1F4AC}',
   warning: '\u26A0',
 } as const
 

@@ -46,7 +46,7 @@ export function useFavoriteGroups(): UseFavoriteGroupsReturn {
         }
       } catch (err) {
         console.error('❌ グループ取得エラー:', err)
-        toast.error('グループの取得に失敗しました')
+        toast.error('グループの読み込みに少し手間取っています。再度お試しください')
       } finally {
         setIsLoading(false)
       }
@@ -156,7 +156,7 @@ export function useFavoriteGroups(): UseFavoriteGroupsReturn {
       }
     } catch (err) {
       console.error('❌ グループ同期エラー:', err)
-      toast.error('グループの保存に失敗しました')
+      toast.error('グループの保存がうまくいきませんでした。再度お試しください')
     } finally {
       isSyncingRef.current = false
     }

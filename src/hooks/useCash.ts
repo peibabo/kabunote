@@ -95,7 +95,7 @@ export function useCash(): UseCashResult {
       const msg = err instanceof Error ? err.message : '更新に失敗しました';
       console.error('データ更新エラー:', err);
       setError(msg);
-      toast.error(msg);
+      toast.error('データの更新がうまくいきませんでした。再度お試しください');
     }
   }, 300);
 
