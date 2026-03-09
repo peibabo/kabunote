@@ -218,7 +218,7 @@ export function useStockData(): UseStockDataReturn {
       // ロールバック
       setStockData(prev => prev.filter(s => s.id !== tempId));
       setStockSymbols(prev => prev.filter(s => s !== symbol));
-      toast.error('銘柄の追加に失敗しました');
+      toast.error('銘柄の追加がうまくいきませんでした。再度お試しください');
     }
   };
 
@@ -232,7 +232,7 @@ export function useStockData(): UseStockDataReturn {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'データの取得に失敗しました';
       setError(errorMessage);
-      toast.error(errorMessage);
+      toast.error('データの取得に少し手間取っています。再度お試しください');
       console.error('💥 データ取得失敗:', errorMessage);
     } finally {
       setIsLoading(false);

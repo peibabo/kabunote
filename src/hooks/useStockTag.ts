@@ -27,7 +27,7 @@ export function useStockTag(stockId: string, options?: UseStockTagOptions): UseS
       setTagsState(data)
     } catch (err) {
       console.error('❌ タグ読み込みエラー:', err)
-      toast.error('タグの読み込みに失敗しました')
+      toast.error('タグの読み込みに少し手間取っています。再度お試しください')
     } finally {
       setIsLoading(false)
     }
@@ -51,7 +51,7 @@ export function useStockTag(stockId: string, options?: UseStockTagOptions): UseS
       })
     } catch (err) {
       console.error('❌ タグ追加エラー:', err)
-      toast.error('タグの追加に失敗しました')
+      toast.error('タグの追加がうまくいきませんでした。再度お試しください')
       setTagsState(prev => prev.filter(t => t.id !== tempId))
     }
   }, [stockId, symbol])
@@ -69,7 +69,7 @@ export function useStockTag(stockId: string, options?: UseStockTagOptions): UseS
       })
     } catch (err) {
       console.error('❌ タグ削除エラー:', err)
-      toast.error('タグの削除に失敗しました')
+      toast.error('タグの削除がうまくいきませんでした。再度お試しください')
       await loadFromDatabase()
     }
   }, [stockId, symbol, loadFromDatabase])
