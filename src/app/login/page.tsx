@@ -132,6 +132,17 @@ export default function LoginPage() {
             </div>
           )}
         </div>
+
+        <div className="text-center mt-4">
+          <a
+            href="/privacy"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-gray-400 text-xs underline hover:text-gray-300"
+          >
+            プライバシーポリシー
+          </a>
+        </div>
       </div>
     </div>
   )
