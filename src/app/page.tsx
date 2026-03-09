@@ -44,7 +44,7 @@ import {
   rectSortingStrategy,
 } from '@dnd-kit/sortable';
 
-const MAX_STOCKS = 30;
+const MAX_STOCKS = 20;
 
 export default function Home() {
   const {
@@ -123,7 +123,7 @@ export default function Home() {
 
   const handleAddStock = async (code: string) => {
     if (stockSymbols.length >= MAX_STOCKS) {
-      setError(`最大${MAX_STOCKS}銘柄まで表示できます`);
+      setError(`最大${MAX_STOCKS}銘柄まで登録できます。不要な銘柄を削除してから追加してください。`);
       return;
     }
     if (stockSymbols.includes(code)) {
@@ -341,6 +341,8 @@ export default function Home() {
         error={error}
         setError={setError}
         disabled={stockSymbols.length >= MAX_STOCKS}
+        currentCount={stockSymbols.length}
+        maxCount={MAX_STOCKS}
         selectedGroupInfo={
           selectedGroupFilter
             ? {
@@ -373,7 +375,7 @@ export default function Home() {
                     : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
                 }`}
               >
-                すべて ({stockSymbols.length})
+                すべて ({stockSymbols.length}/{MAX_STOCKS})
               </button>
               {favoriteGroups.map((group) => (
                 <button
