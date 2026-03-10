@@ -174,6 +174,17 @@ export default function SlideOutMenu({ isOpen, onClose, alertCounts, onMenuItemC
             <span className="text-white">ヘルプ・About</span>
           </button>
 
+          {/* 利用規約 */}
+          <a
+            href="/terms"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gray-700 rounded-lg transition-colors cursor-pointer"
+          >
+            <span className="text-xl">📄</span>
+            <span className="text-white">利用規約</span>
+          </a>
+
           {/* プライバシーポリシー */}
           <a
             href="/privacy"
