@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { apiFetch, apiPut, apiDelete } from '@/lib/apiClient'
 import { useAsyncState } from './useAsyncState'
 import { useAutoSave } from './useAutoSave'
+import { playSound } from '@/lib/sound'
 
 interface UseStockMemoReturn {
   memo: string
@@ -39,7 +40,10 @@ export function useStockMemo(stockId: string, options?: UseStockMemoOptions): Us
     onSave: async (val) => {
       await withSaving(async () => {
         const data = await apiPut<{ updatedAt: string }>(`/api/stocks/${stockId}/memo`, { content: val })
-        if (data) setLastSaved(new Date(data.updatedAt))
+        if (data) {
+          setLastSaved(new Date(data.updatedAt))
+          playSound('memoSave')
+        }
       })
     },
   })

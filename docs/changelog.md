@@ -1,5 +1,34 @@
 # Kabunote - プロジェクトマイルストーン
 
+## サウンドフィードバック機能（2026年3月10日）
+**Web Audio API シンセ音による操作フィードバック**
+
+### 技術的成果
+- Web Audio API でシンセ音を生成（外部ファイル不要・軽量）
+- 17種のサウンド定義（銘柄追加・自動保存・D&D・エラー・トースト等）
+- toast.ts と同じシングルトン Pub/Sub ストアパターンで設計
+- useSyncExternalStore によるリアクティブな設定管理
+- autoplay policy 対応（初回クリックで AudioContext を resume）
+- ON/OFF トグル・音量スライダー・プレビュー再生の設定UI
+- localStorage による設定永続化
+- 全テストでの Web Audio API 依存を排除するグローバルモック
+
+### 新規ファイル
+- `src/lib/sound.ts` - サウンドエンジン本体
+- `src/hooks/useSound.ts` - 設定管理フック
+- `src/components/SoundSettings.tsx` - 設定UI
+- `src/__tests__/unit/sound.test.ts` - エンジンテスト（12件）
+- `src/__tests__/hooks/useSound.test.ts` - フックテスト（5件）
+
+### 変更ファイル
+- 10個のフックにサウンド再生を統合
+- toast.ts にトースト種別ごとの音を統合
+- page.tsx に銘柄追加/削除/D&D音と autoplay 初期化を追加
+- SearchBar.tsx に検索クリア音を追加
+- SlideOutMenu.tsx にサウンド設定セクションを配置
+
+---
+
 ## Phase 1 完了（2026年2月28日達成）
 **localStorage → データベース統合 完全移行成功**
 
@@ -38,7 +67,7 @@
 - `StockPosition` の `@unique` 誤設定を複数レコード設計に修正
 - DB接続：Transaction Pooler(6543)はDDL不可、Session Pooler(5432)を使用
 - RLS ポリシー：`app_users.id` は `user_id` ではなく `id` でアクセス制御
-- Prisma `--force-reset` 後のRLSポリシー再設定（`setup_rls_policies.sql`）
+- Prisma `--force-reset` 後のRLSポリシー再設定（`docs/patterns.md` 参照）
 
 ### APIルート構成（`src/app/api/stocks/`）
 | ルート | メソッド | 説明 |
@@ -109,7 +138,7 @@
 - stocks/list API `tags: true` include追加、`tags: []` ハードコード削除
 - StockCard.tsx `useArrayLocalStorage` → `useStockTag` に切り替え
 - TagEditor.tsx `onTagsChange` → `onAddTag`/`onRemoveTag` 個別コールバックに変更
-- RLS ポリシー `add_rls_policy_stock_tags.sql`（Supabase Dashboard で実行が必要）
+- RLS ポリシー設定が必要（`docs/patterns.md` 参照）
 
 ### 解決した技術課題
 - `stock_tags` テーブルは既存だったが API・hook が未実装でタグが常に空だった問題を解消
@@ -184,4 +213,4 @@
 - page.tsx の `getDividendBenefitData`: 認証済み時は `stockData.dividend` を参照するよう修正
 
 ### 手動対応必要
-- Supabase Dashboard > SQL Editor で `add_rls_policy_stock_dividends.sql` を実行
+- Supabase Dashboard > SQL Editor でRLSポリシー設定（`docs/patterns.md` 参照）

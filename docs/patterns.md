@@ -109,23 +109,71 @@ export async function GET(
 
 ---
 
-## RLSポリシーテンプレート
+## RLSポリシー設定
 
-stock_id を持つテーブルの標準RLSパターン（stock_id → stocks.user_id チェーン）:
+`prisma db push --force-reset` 後はRLSポリシー再設定が必要。Supabase Dashboard > SQL Editor で以下を実行する。
+
+### パターン1: user_id 直接参照（app_users, stocks, favorite_groups, snoozed_alerts）
 
 ```sql
-ALTER TABLE public.xxx_table ENABLE ROW LEVEL SECURITY;
+-- app_users（idで制御）
+ALTER TABLE public.app_users ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can manage their own profile" ON public.app_users;
+CREATE POLICY "Users can manage their own profile"
+ON public.app_users FOR ALL
+USING (id::text = auth.uid()::text)
+WITH CHECK (id::text = auth.uid()::text);
 
-CREATE POLICY "Users can manage their own xxx"
-ON public.xxx_table FOR ALL
-USING (stock_id IN (SELECT s.id FROM stocks s WHERE s.user_id = auth.uid()::text))
-WITH CHECK (stock_id IN (SELECT s.id FROM stocks s WHERE s.user_id = auth.uid()::text));
+-- stocks
+ALTER TABLE public.stocks ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can manage their own stocks" ON public.stocks;
+CREATE POLICY "Users can manage their own stocks"
+ON public.stocks FOR ALL
+USING (user_id::text = auth.uid()::text)
+WITH CHECK (user_id::text = auth.uid()::text);
+
+-- favorite_groups
+ALTER TABLE public.favorite_groups ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can manage their own favorite groups" ON public.favorite_groups;
+CREATE POLICY "Users can manage their own favorite groups"
+ON public.favorite_groups FOR ALL
+USING (user_id::text = auth.uid()::text)
+WITH CHECK (user_id::text = auth.uid()::text);
+
+-- snoozed_alerts
+ALTER TABLE public.snoozed_alerts ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can manage their own snoozed alerts" ON public.snoozed_alerts;
+CREATE POLICY "Users can manage their own snoozed alerts"
+ON public.snoozed_alerts FOR ALL
+USING (user_id::text = auth.uid()::text)
+WITH CHECK (user_id::text = auth.uid()::text);
+```
+
+### パターン2: stock_id 経由チェーン（stock_id → stocks.user_id）
+
+対象テーブル: stock_memos, stock_prices, stock_positions, stock_events, stock_dividends, stock_benefits, stock_tags, next_action_plans, stock_tab_states
+
+```sql
+-- stock_memos（他テーブルも同パターン。テーブル名・ポリシー名を置換）
+ALTER TABLE public.stock_memos ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can manage their own stock memos" ON public.stock_memos;
+CREATE POLICY "Users can manage their own stock memos"
+ON public.stock_memos FOR ALL
+USING (stock_id IN (SELECT id FROM public.stocks WHERE user_id::text = auth.uid()::text))
+WITH CHECK (stock_id IN (SELECT id FROM public.stocks WHERE user_id::text = auth.uid()::text));
+```
+
+### 確認クエリ
+
+```sql
+SELECT tablename, policyname, cmd FROM pg_policies WHERE schemaname = 'public' ORDER BY tablename;
 ```
 
 ### 注意
 - `app_users.id` は `user_id` ではなく `id` でアクセス制御
 - RLSポリシーは Supabase Dashboard > SQL Editor で実行
 - `prisma db push --force-reset` 後はRLSポリシー再設定が必要
+- stock_favorite_groups テーブルは中間テーブルのため、stocks側のRLSで保護される
 
 ---
 
