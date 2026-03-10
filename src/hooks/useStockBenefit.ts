@@ -3,6 +3,7 @@ import { apiFetch } from '@/lib/apiClient'
 import { useAsyncState } from './useAsyncState'
 import { useAutoSave } from './useAutoSave'
 import { ShareholderRightsSettings, createDefaultRightsSettings } from '@/types/rightsDate'
+import { playSound } from '@/lib/sound'
 
 interface BenefitState {
   description: string
@@ -94,6 +95,7 @@ export function useStockBenefit(stockId: string, options?: UseStockBenefitOption
           }),
         })
         if (!response.ok) throw new Error('優待情報の保存に失敗しました')
+        playSound('dataSave')
         window.dispatchEvent(new CustomEvent('kabunote-db-calendar-update', {
           detail: {
             type: 'benefit' as const,

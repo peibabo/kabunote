@@ -73,7 +73,7 @@ app_users (ユーザー管理)
 
 ---
 
-## カスタムフック一覧（27フック）
+## カスタムフック一覧（28フック）
 
 ### データ管理（DB CRUD）
 | フック | 説明 |
@@ -117,6 +117,7 @@ app_users (ユーザー管理)
 | `useDebounce` | デバウンス汎用 |
 | `useAutoSave` | 自動保存ロジック |
 | `useAsyncState` | 非同期状態管理 |
+| `useSound` | サウンドフィードバック設定（useSyncExternalStore） |
 
 ---
 

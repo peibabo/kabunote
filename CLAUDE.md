@@ -68,6 +68,7 @@ app_users (ユーザー管理)
 - `SimplePortfolioSummary.tsx` / `InvestmentPieChart.tsx`: ポートフォリオ系
 - `StrategySummaryPage.tsx` / `AlertSummaryPage.tsx` / `DividendBenefitListPage.tsx`: ダッシュボード系
 - `InvestmentCalendar.tsx` / `InvestmentTimeline.tsx` / `TodayTomorrowEvents.tsx`: カレンダー系
+- `SoundSettings.tsx`: サウンドフィードバック設定（ON/OFF・音量・プレビュー）
 
 > フック・API・型定義の詳細は `docs/architecture.md` を参照
 > 実装パターンは `docs/patterns.md` を参照
@@ -78,7 +79,7 @@ app_users (ユーザー管理)
 - [x] モバイル・レスポンシブ対応確認（2026年3月完了）
 - [x] 初回ユーザー向けオンボーディング（5ステップウェルカムウィザード）
 - [x] エラーハンドリングの強化
-- [x] テストコード（Vitest + RTL + MSW、303テスト）
+- [x] テストコード（Vitest + RTL + MSW、361テスト）
 - [x] 20銘柄制限
 - [ ] ユーザー問い合わせ機能
 
@@ -90,7 +91,7 @@ app_users (ユーザー管理)
 1. ~~初回ユーザーガイド~~ 完了
 2. エラーハンドリング改善
 3. ~~簡単なヘルプページ~~ 完了（`/help`）
-4. UX（気持ち良い音）
+4. ~~UX（気持ち良い音）~~ 完了（Web Audio API シンセ音17種、ON/OFF・音量設定）
 5. ~~その他（ログアウトしたらログイン画面に遷移させる）~~ 完了
    - **TODO**: プライバシーポリシーの `[運営者名]` `[メールアドレス]` プレースホルダーを実際の情報に置き換える
 
@@ -99,6 +100,7 @@ app_users (ユーザー管理)
 ### Phase 1.1（ローンチ後すぐ）
 - [ ] 使いやすさ向上（問合せ機能・テンプレート・クイックタグ・決算日一括設定）
 - [ ] データ活用拡張（業種別グループ・決算統計・保有期間計算）
+- [x] ユーザー設定機能（サウンドON/OFF・音量設定 完了）
 
 ### Phase 2（大型機能追加）
 - [ ] 売買記録・投資日記（取引記録・判断記録・パフォーマンス分析・振り返り支援）

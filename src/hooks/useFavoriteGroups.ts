@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { FavoriteGroup } from '@/types/favorites'
 import { STORAGE_KEYS } from '@/lib/storageKeys'
 import { toast } from '@/lib/toast'
+import { playSound } from '@/lib/sound'
 
 const FILTER_STORAGE_KEY = STORAGE_KEYS.SELECTED_GROUP_FILTER
 
@@ -187,6 +188,7 @@ export function useFavoriteGroups(): UseFavoriteGroupsReturn {
   // フィルター変更（UIのみ localStorage で保持）
   const handleGroupFilterChange = useCallback((groupId: string | null) => {
     setSelectedGroupFilter(groupId)
+    playSound('toggle')
     if (typeof window !== 'undefined') {
       if (groupId) {
         localStorage.setItem(FILTER_STORAGE_KEY, groupId)

@@ -1,3 +1,5 @@
+import { playSound } from './sound'
+
 type ToastType = 'success' | 'error' | 'warning'
 
 interface ToastItem {
@@ -11,6 +13,12 @@ let nextId = 0
 let items: ToastItem[] = EMPTY
 const listeners = new Set<() => void>()
 
+const toastSoundMap = {
+  success: 'toastSuccess',
+  warning: 'toastWarning',
+  error: 'toastError',
+} as const
+
 function emit() {
   listeners.forEach(fn => fn())
 }
@@ -19,6 +27,7 @@ function add(type: ToastType, message: string) {
   const id = nextId++
   items = [...items, { id, type, message }]
   emit()
+  playSound(toastSoundMap[type])
 
   const duration = type === 'success' ? 3000 : type === 'warning' ? 4000 : 5000
   setTimeout(() => remove(id), duration)

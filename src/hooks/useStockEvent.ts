@@ -6,6 +6,7 @@ import {
   ShareholderMeetingSettings,
   createDefaultRightsSettings
 } from '@/types/rightsDate'
+import { playSound } from '@/lib/sound'
 
 interface UseStockEventReturn {
   earningsDate: string
@@ -77,6 +78,7 @@ export function useStockEvent(stockId: string, options?: UseStockEventOptions): 
         if (!response.ok) throw new Error('決算日の保存に失敗しました')
         const result = await response.json()
         if (result.success) {
+          playSound('dataSave')
           window.dispatchEvent(new CustomEvent('kabunote-db-calendar-update', {
             detail: {
               type: 'event' as const, symbol, eventType: 'EARNINGS',
@@ -112,6 +114,7 @@ export function useStockEvent(stockId: string, options?: UseStockEventOptions): 
         if (!response.ok) throw new Error('株主総会設定の保存に失敗しました')
         const result = await response.json()
         if (result.success) {
+          playSound('dataSave')
           window.dispatchEvent(new CustomEvent('kabunote-db-calendar-update', {
             detail: {
               type: 'event' as const, symbol, eventType: 'SHAREHOLDER_MEETING',
