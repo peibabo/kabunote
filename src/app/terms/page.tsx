@@ -261,7 +261,7 @@ export default function TermsPage() {
             <p>
               本規約に関するお問い合わせは、下記までご連絡ください。
             </p>
-            <p className="mt-2">連絡先: [メールアドレス]</p>
+            <p className="mt-2">連絡先: support@kabunote.jp</p>
           </section>
 
           {/* 制定日 */}
