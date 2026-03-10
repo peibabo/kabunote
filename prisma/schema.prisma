@@ -20,8 +20,9 @@ model User {
   updatedAt     DateTime  @updatedAt @map("updated_at")
 
   // ユーザー設定
-  cashAmount    Decimal?  @default(0) @map("cash_amount")
-  nextActionMemo String?  @map("next_action_memo")
+  cashAmount           Decimal?  @default(0) @map("cash_amount")
+  nextActionMemo       String?   @map("next_action_memo")
+  onboardingCompleted  Boolean   @default(false) @map("onboarding_completed")
 
   // リレーション
   stocks        Stock[]
