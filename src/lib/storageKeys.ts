@@ -17,6 +17,8 @@ export const STORAGE_KEYS = {
   TIMELINE_CALENDAR_EXPANDED: 'kabunote-timeline-calendar-expanded',
   /** 余力現金セクションのアコーディオン展開状態 */
   CASH_SECTION_EXPANDED: 'kabunote-cash-section-expanded',
+  /** オンボーディング完了フラグ */
+  ONBOARDING_COMPLETED: 'kabunote-onboarding-completed',
 } as const;
 
 // ─────────────────────────────────────────

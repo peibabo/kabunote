@@ -24,6 +24,8 @@ import { useStockData } from '@/hooks/useStockData';
 import { useFavoriteGroups } from '@/hooks/useFavoriteGroups';
 import { useCash } from '@/hooks/useCash';
 import { useModals } from '@/hooks/useModals';
+import { useOnboarding } from '@/hooks/useOnboarding';
+import OnboardingWizard from '@/components/OnboardingWizard';
 import { useStockSearch } from '@/hooks/useStockSearch';
 import { useAlertCounts } from '@/hooks/useAlertCounts';
 import { useCalendarData } from '@/hooks/useCalendarData';
@@ -66,9 +68,11 @@ export default function Home() {
   const { cashAmount } = useCash();
 
   const [isInitialized, setIsInitialized] = useState(false);
+  const [forceOpenAdd, setForceOpenAdd] = useState(false);
 
   // Custom hooks
-  const modals = useModals(refreshData);
+  const { showOnboarding, completeOnboarding, resetOnboarding } = useOnboarding();
+  const modals = useModals(refreshData, resetOnboarding);
   const { searchQuery, setSearchQuery, isSearching, filteredStocks } = useStockSearch(
     stockSymbols, stockDataMap, selectedGroupFilter, favoriteGroups
   );
@@ -353,6 +357,8 @@ export default function Home() {
             : null
         }
         isFirstTime={stockSymbols.length === 0}
+        forceOpen={forceOpenAdd}
+        onForceOpenHandled={() => setForceOpenAdd(false)}
       />
 
         {/* お気に入りグループフィルター */}
@@ -636,6 +642,17 @@ export default function Home() {
         isOpen={modals.isDeleteAccountOpen}
         onClose={() => modals.setIsDeleteAccountOpen(false)}
       />
+
+      {/* オンボーディングウィザード */}
+      {showOnboarding && (
+        <OnboardingWizard
+          onComplete={() => {
+            completeOnboarding();
+            setForceOpenAdd(true);
+          }}
+          onClose={completeOnboarding}
+        />
+      )}
 
       {/* スライドアウトメニュー */}
       <SlideOutMenu
