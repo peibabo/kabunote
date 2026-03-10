@@ -38,7 +38,7 @@
 - `StockPosition` の `@unique` 誤設定を複数レコード設計に修正
 - DB接続：Transaction Pooler(6543)はDDL不可、Session Pooler(5432)を使用
 - RLS ポリシー：`app_users.id` は `user_id` ではなく `id` でアクセス制御
-- Prisma `--force-reset` 後のRLSポリシー再設定（`setup_rls_policies.sql`）
+- Prisma `--force-reset` 後のRLSポリシー再設定（`docs/patterns.md` 参照）
 
 ### APIルート構成（`src/app/api/stocks/`）
 | ルート | メソッド | 説明 |
@@ -109,7 +109,7 @@
 - stocks/list API `tags: true` include追加、`tags: []` ハードコード削除
 - StockCard.tsx `useArrayLocalStorage` → `useStockTag` に切り替え
 - TagEditor.tsx `onTagsChange` → `onAddTag`/`onRemoveTag` 個別コールバックに変更
-- RLS ポリシー `add_rls_policy_stock_tags.sql`（Supabase Dashboard で実行が必要）
+- RLS ポリシー設定が必要（`docs/patterns.md` 参照）
 
 ### 解決した技術課題
 - `stock_tags` テーブルは既存だったが API・hook が未実装でタグが常に空だった問題を解消
@@ -184,4 +184,4 @@
 - page.tsx の `getDividendBenefitData`: 認証済み時は `stockData.dividend` を参照するよう修正
 
 ### 手動対応必要
-- Supabase Dashboard > SQL Editor で `add_rls_policy_stock_dividends.sql` を実行
+- Supabase Dashboard > SQL Editor でRLSポリシー設定（`docs/patterns.md` 参照）
