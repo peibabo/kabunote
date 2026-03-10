@@ -22,7 +22,7 @@ interface UseModalsReturn {
   handleMenuItemClick: (action: string) => void;
 }
 
-export function useModals(refreshData: () => Promise<void>): UseModalsReturn {
+export function useModals(refreshData: () => Promise<void>, onHelpClick?: () => void): UseModalsReturn {
   const [isGroupManagerOpen, setIsGroupManagerOpen] = useState(false);
   const [isTagManagerOpen, setIsTagManagerOpen] = useState(false);
   const [isStrategySummaryOpen, setIsStrategySummaryOpen] = useState(false);
@@ -67,12 +67,14 @@ export function useModals(refreshData: () => Promise<void>): UseModalsReturn {
         setIsDeleteAccountOpen(true);
         break;
       case 'help':
-        alert('ヘルプ機能は今後実装予定です');
+        if (onHelpClick) {
+          onHelpClick();
+        }
         break;
       default:
         break;
     }
-  }, [refreshData]);
+  }, [refreshData, onHelpClick]);
 
   return {
     isGroupManagerOpen, setIsGroupManagerOpen,

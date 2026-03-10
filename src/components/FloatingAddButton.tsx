@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import StockInput from '@/components/StockInput';
 import { GROUP_COLORS, GroupColor } from '@/types/favorites';
 
@@ -16,6 +16,8 @@ interface FloatingAddButtonProps {
     color: GroupColor;
   } | null;
   isFirstTime?: boolean;
+  forceOpen?: boolean;
+  onForceOpenHandled?: () => void;
 }
 
 export default function FloatingAddButton({
@@ -26,9 +28,20 @@ export default function FloatingAddButton({
   currentCount,
   maxCount,
   selectedGroupInfo = null,
-  isFirstTime = false
+  isFirstTime = false,
+  forceOpen = false,
+  onForceOpenHandled,
 }: FloatingAddButtonProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // 外部からモーダルを開く
+  useEffect(() => {
+    if (forceOpen) {
+      setIsModalOpen(true);
+      setError('');
+      onForceOpenHandled?.();
+    }
+  }, [forceOpen, setError, onForceOpenHandled]);
 
   const handleOpenModal = () => {
     setIsModalOpen(true);
@@ -79,10 +92,11 @@ export default function FloatingAddButton({
             hover:scale-110 hover:shadow-xl
             ${disabled
               ? 'bg-gray-600 cursor-not-allowed'
-              : 'bg-blue-600 hover:bg-blue-700 active:scale-95'
+              : 'hover:brightness-110 active:scale-95'
             }
-            ${isFirstTime ? 'animate-pulse ring-4 ring-blue-300 ring-opacity-50' : ''}
+            ${isFirstTime ? 'animate-pulse ring-4 ring-emerald-300 ring-opacity-50' : ''}
           `}
+          style={!disabled ? { backgroundColor: '#36B164' } : undefined}
           title="銘柄を追加"
           aria-label="銘柄を追加"
         >
