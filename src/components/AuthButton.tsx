@@ -62,14 +62,9 @@ export default function AuthButton() {
         type: 'error'
       })
     } else {
-      setNotification({
-        message: 'ログアウトしました',
-        type: 'info'
-      })
+      window.location.href = '/login'
+      return
     }
-
-    // 3秒後に通知を消去
-    setTimeout(() => setNotification(null), 3000)
   }
 
   // 通知を消去する関数
