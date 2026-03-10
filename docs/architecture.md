@@ -4,7 +4,7 @@
 
 ```
 app_users (ユーザー管理)
-  id, email, name, picture, auth_provider, cash_amount, next_action_memo
+  id, email, name, picture, auth_provider, cash_amount, next_action_memo, onboarding_completed
   ├── stocks (銘柄マスター)
   │     id, user_id, symbol, name, sector, market, order
   │     @@unique([userId, symbol])
@@ -40,6 +40,7 @@ app_users (ユーザー管理)
 |------|---------|------|
 | `/api/auth/sync-user` | POST | Supabase認証後のユーザー同期 |
 | `/api/cash` | GET/PUT | 投資余力現金・Next Actionメモの取得・更新 |
+| `/api/onboarding` | GET/POST | オンボーディング完了状態の取得・更新 |
 
 ### 銘柄
 | パス | メソッド | 説明 |
