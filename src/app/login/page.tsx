@@ -133,24 +133,19 @@ export default function LoginPage() {
           )}
         </div>
 
-        <div className="text-center mt-4 space-x-4">
-          <a
+        <p className="text-center mt-4 text-gray-400 text-xs">
+          ログインすることにより、<a
             href="/terms"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-gray-400 text-xs underline hover:text-gray-300"
-          >
-            利用規約
-          </a>
-          <a
+            className="text-gray-300 underline hover:text-white"
+          >利用規約</a> および <a
             href="/privacy"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-gray-400 text-xs underline hover:text-gray-300"
-          >
-            プライバシーポリシー
-          </a>
-        </div>
+            className="text-gray-300 underline hover:text-white"
+          >プライバシーポリシー</a>に同意したものとみなされます。
+        </p>
       </div>
     </div>
   )
