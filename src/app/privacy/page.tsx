@@ -32,8 +32,8 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-xl font-semibold text-white mb-3">2. 運営者情報</h2>
             <ul className="list-disc list-inside space-y-1">
-              <li>運営者名: [運営者名]</li>
-              <li>連絡先: [メールアドレス]</li>
+              <li>運営者名: カブノオト開発チーム</li>
+              <li>連絡先: support@kabunote.jp</li>
             </ul>
           </section>
 
@@ -151,7 +151,7 @@ export default function PrivacyPage() {
             <p>
               個人情報の取り扱いに関するお問い合わせは、下記までご連絡ください。
             </p>
-            <p className="mt-2">連絡先: [メールアドレス]</p>
+            <p className="mt-2">連絡先: support@kabunote.jp</p>
           </section>
 
           {/* 制定日 */}
