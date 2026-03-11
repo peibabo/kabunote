@@ -111,7 +111,7 @@ app_users (ユーザー管理)
 - [x] sitemap.xml 作成（公開ページのインデックス登録）
 - [x] OGP画像設定（SNSシェア時の表示改善）
 - [x] Google Analytics（GA4）導入（環境変数 `NEXT_PUBLIC_GA_ID` で設定）
-- [ ] セキュリティヘッダ設定（X-Frame-Options, CSP等 → next.config.ts）
+- [x] セキュリティヘッダ設定（X-Frame-Options, CSP等 → next.config.ts）
 
 ### ローンチ直後対応（P2）
 - [ ] エラー監視ツール導入（Sentry等）
