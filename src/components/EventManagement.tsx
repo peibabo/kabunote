@@ -1,6 +1,7 @@
 'use client';
 
 import { useStringLocalStorage } from '@/hooks/useLocalStorage';
+import { playSound } from '@/lib/sound';
 import { ShareholderMeetingSettings, createDefaultRightsSettings, calculateRightsDateFromSettings, shouldDeactivateRights } from '@/types/rightsDate';
 import { useEffect } from 'react';
 
@@ -154,7 +155,7 @@ export default function EventManagement({
           id={`earnings-date-${symbol}`}
           type="date"
           value={earningsDate}
-          onChange={(e) => onEarningsDateChange(e.target.value)}
+          onChange={(e) => { playSound('select'); onEarningsDateChange(e.target.value); }}
           className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none text-sm"
         />
       </div>
@@ -176,10 +177,10 @@ export default function EventManagement({
             <input
               type="checkbox"
               checked={shareholderMeetingSettings.isActive}
-              onChange={(e) => onShareholderMeetingSettingsChange({
+              onChange={(e) => { playSound('toggle'); onShareholderMeetingSettingsChange({
                 ...shareholderMeetingSettings,
                 isActive: e.target.checked
-              })}
+              }); }}
               className="rounded border-gray-600 text-blue-600 focus:ring-blue-500"
             />
             <span className="text-xs text-gray-400">設定を有効にする</span>
@@ -194,10 +195,10 @@ export default function EventManagement({
                 <label className="text-xs text-gray-400">月</label>
                 <select
                   value={shareholderMeetingSettings.month || ''}
-                  onChange={(e) => onShareholderMeetingSettingsChange({
+                  onChange={(e) => { playSound('select'); onShareholderMeetingSettingsChange({
                     ...shareholderMeetingSettings,
                     month: e.target.value ? parseInt(e.target.value) : null
-                  })}
+                  }); }}
                   className="w-full px-2 py-1.5 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:border-blue-500 focus:outline-none"
                 >
                   <option value="">選択</option>
@@ -211,10 +212,10 @@ export default function EventManagement({
                 <label className="text-xs text-gray-400">日</label>
                 <select
                   value={shareholderMeetingSettings.day || ''}
-                  onChange={(e) => onShareholderMeetingSettingsChange({
+                  onChange={(e) => { playSound('select'); onShareholderMeetingSettingsChange({
                     ...shareholderMeetingSettings,
                     day: e.target.value ? parseInt(e.target.value) : null
-                  })}
+                  }); }}
                   className="w-full px-2 py-1.5 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:border-blue-500 focus:outline-none"
                 >
                   <option value="">選択</option>
@@ -230,10 +231,10 @@ export default function EventManagement({
               <input
                 type="checkbox"
                 checked={shareholderMeetingSettings.isRecurring}
-                onChange={(e) => onShareholderMeetingSettingsChange({
+                onChange={(e) => { playSound('toggle'); onShareholderMeetingSettingsChange({
                   ...shareholderMeetingSettings,
                   isRecurring: e.target.checked
-                })}
+                }); }}
                 className="rounded border-gray-600 text-blue-600 focus:ring-blue-500"
               />
               <span className="text-xs text-gray-400">毎年繰り返し</span>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { playSound } from '@/lib/sound';
 import { CustomTag, TagColor, TAG_COLORS, PRESET_TAGS } from '@/types/tags';
 
 interface UserTag {
@@ -32,10 +33,12 @@ export default function TagEditor({ symbol: _symbol, currentTags, onAddTag, onRe
   }, []);
 
   const handleAddTag = (label: string, color: TagColor) => {
+    playSound('select');
     onAddTag(label, color);
   };
 
   const handleRemoveTag = (tagId: string) => {
+    playSound('buttonDelete');
     onRemoveTag(tagId);
   };
 
@@ -46,6 +49,7 @@ export default function TagEditor({ symbol: _symbol, currentTags, onAddTag, onRe
     const exists = currentTags.some(tag => tag.label === newTagLabel.trim());
     if (exists) return;
 
+    playSound('buttonAction');
     handleAddTag(newTagLabel.trim(), newTagColor);
     setNewTagLabel('');
     setNewTagColor('blue');

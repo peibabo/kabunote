@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { playSound } from '@/lib/sound';
 import { FavoriteGroup, GROUP_COLORS } from '@/types/favorites';
 
 interface FavoriteGroupSelectorProps {
@@ -21,6 +22,7 @@ export default function FavoriteGroupSelector({
   const [tempSelectedIds, setTempSelectedIds] = useState<string[]>(selectedGroupIds);
 
   const handleToggleGroup = (groupId: string) => {
+    playSound('toggle');
     setTempSelectedIds(prev =>
       prev.includes(groupId)
         ? prev.filter(id => id !== groupId)

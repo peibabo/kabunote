@@ -1,6 +1,8 @@
 'use client';
 
 import { PositionSummary } from '@/types/positions';
+import { playSound } from '@/lib/sound';
+import { useSoundOnChange } from '@/hooks/useSoundOnChange';
 import { calculateRightsDateFromSettings } from '@/types/rightsDate';
 import { calculateShareholderBenefit, formatBenefitValue, formatBenefitYield } from '@/types/shareholder';
 import { useStockBenefit } from '@/hooks/useStockBenefit';
@@ -148,7 +150,10 @@ export default function ShareholderBenefitManagement({
   const rightsCountdown = getRightsCountdown(shareholderRightsDate);
 
   // 月/日の変更ハンドラー
+  const onChangeSound = useSoundOnChange();
+
   const handleMonthChange = (value: string) => {
+    playSound('select');
     const month = value ? parseInt(value) : null;
     onShareholderRightsSettingsChange({
       ...shareholderRightsSettings,
@@ -158,6 +163,7 @@ export default function ShareholderBenefitManagement({
   };
 
   const handleDayChange = (value: string) => {
+    playSound('select');
     const day = value ? parseInt(value) : null;
     onShareholderRightsSettingsChange({
       ...shareholderRightsSettings,
@@ -167,6 +173,7 @@ export default function ShareholderBenefitManagement({
   };
 
   const handleRecurringChange = (isRecurring: boolean) => {
+    playSound('toggle');
     onShareholderRightsSettingsChange({
       ...shareholderRightsSettings,
       isRecurring
@@ -273,7 +280,7 @@ export default function ShareholderBenefitManagement({
                   id={`benefit-description-${symbol}`}
                   type="text"
                   value={benefitDescription}
-                  onChange={(e) => setBenefitDescription(e.target.value)}
+                  onChange={(e) => { setBenefitDescription(e.target.value); onChangeSound(); }}
                   placeholder="例：お米券1000円分"
                   className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-purple-500 focus:outline-none text-sm"
                 />
@@ -293,6 +300,7 @@ export default function ShareholderBenefitManagement({
                         const units = e.target.value;
                         const shares = units ? (parseInt(units) * 100).toString() : '';
                         setMinimumShares(shares);
+                        onChangeSound();
                       }}
                       placeholder="1"
                       title="100株単位で入力してください（例：1 = 100株、5 = 500株）"
@@ -312,7 +320,7 @@ export default function ShareholderBenefitManagement({
                       id={`estimated-value-${symbol}`}
                       type="number"
                       value={estimatedValue}
-                      onChange={(e) => setEstimatedValue(e.target.value)}
+                      onChange={(e) => { setEstimatedValue(e.target.value); onChangeSound(); }}
                       placeholder="1000"
                       className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-purple-500 focus:outline-none text-sm pr-8"
                     />

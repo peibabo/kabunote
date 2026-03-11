@@ -44,6 +44,7 @@ npm run update:stocks    # JPXデータからstocks.csv更新
 11. **保有ポジション一覧** - 損益分析・ポートフォリオ構成・多軸ソート
 12. **アラート一覧・スヌーズ** - 統合管理・6段階スヌーズ・リアルタイム更新
 13. **投資カレンダー・タイムライン** - 6種イベント・タイムライン・月間カレンダー・カウントダウン
+14. **サウンドフィードバック** - 6種操作音（Web Audio APIシンセ）・ON/OFF・音量調整
 
 ## アーキテクチャ
 
@@ -68,6 +69,7 @@ app_users (ユーザー管理)
 - `SimplePortfolioSummary.tsx` / `InvestmentPieChart.tsx`: ポートフォリオ系
 - `StrategySummaryPage.tsx` / `AlertSummaryPage.tsx` / `DividendBenefitListPage.tsx`: ダッシュボード系
 - `InvestmentCalendar.tsx` / `InvestmentTimeline.tsx` / `TodayTomorrowEvents.tsx`: カレンダー系
+- `SoundSettings.tsx`: サウンドフィードバック設定（ON/OFF・音量・試聴）
 > フック・API・型定義の詳細は `docs/architecture.md` を参照
 > 実装パターンは `docs/patterns.md` を参照
 
@@ -77,7 +79,7 @@ app_users (ユーザー管理)
 - [x] モバイル・レスポンシブ対応確認（2026年3月完了）
 - [x] 初回ユーザー向けオンボーディング（5ステップウェルカムウィザード）
 - [x] エラーハンドリングの強化
-- [x] テストコード（Vitest + RTL + MSW、344テスト）
+- [x] テストコード（Vitest + RTL + MSW、363テスト）
 - [x] 20銘柄制限
 - [x] favicon設定
 - [x] ドメイン設定（kabunote.jp）
@@ -93,7 +95,7 @@ app_users (ユーザー管理)
 1. ~~初回ユーザーガイド~~ 完了
 2. ~~エラーハンドリング改善~~ 完了（グローバルエラーバウンダリ・APIエラー一元化・トースト通知・404ページ）
 3. ~~簡単なヘルプページ~~ 完了（`/help`）
-4. ~~UX（気持ち良い音）~~ 廃止（タイムラグが著しく実用的でないため削除）
+4. ~~UX（気持ち良い音）~~ 完了（Web Audio APIシンセ、入力変更タイミングで即時発音、6種サウンド）
 5. ~~その他（ログアウトしたらログイン画面に遷移させる）~~ 完了
    - ~~**TODO**: プライバシーポリシーの `[運営者名]` `[メールアドレス]` プレースホルダーを実際の情報に置き換える~~ 完了（カブノオト開発チーム / support@kabunote.jp）
 

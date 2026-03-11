@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { playSound } from '@/lib/sound';
 import StockInput from '@/components/StockInput';
 import { GROUP_COLORS, GroupColor } from '@/types/favorites';
 
@@ -54,6 +55,7 @@ export default function FloatingAddButton({
   };
 
   const handleAddStock = (code: string) => {
+    playSound('buttonAction');
     onAddStock(code);
     if (!error) { // エラーがない場合のみモーダルを閉じる
       setIsModalOpen(false);

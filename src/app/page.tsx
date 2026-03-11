@@ -19,6 +19,7 @@ import DeleteAccountModal from '@/components/DeleteAccountModal';
 import AuthButton from '@/components/AuthButton';
 import BulkTabSwitcher from '@/components/BulkTabSwitcher';
 import { loadStockData, getStockData } from '@/data/stockNames';
+import { initSoundEngine } from '@/lib/sound';
 import { GROUP_COLORS } from '@/types/favorites';
 import { useStockData } from '@/hooks/useStockData';
 import { useFavoriteGroups } from '@/hooks/useFavoriteGroups';
@@ -194,7 +195,7 @@ export default function Home() {
   const shouldShowHints = stockSymbols.length > 0 && (!hasPortfolioData || !hasCalendarData);
 
   return (
-    <div className="min-h-screen bg-gray-900">
+    <div className="min-h-screen bg-gray-900" onClick={() => initSoundEngine()}>
       {/* Header with Logo */}
       <header className="bg-slate-900 border-b border-gray-700">
         <div className="container mx-auto px-4 py-4">
