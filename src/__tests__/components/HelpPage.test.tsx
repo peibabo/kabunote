@@ -21,11 +21,11 @@ describe('HelpPage', () => {
     expect(screen.getByRole('link', { name: 'About' })).toHaveAttribute('href', '#version')
   })
 
-  it('「ホームに戻る」リンクが / を指す', () => {
+  it('「ホームに戻る」リンクが /dashboard を指す', () => {
     render(<HelpPage />)
     const homeLinks = screen.getAllByText('← ホームに戻る')
     homeLinks.forEach(link => {
-      expect(link.closest('a')).toHaveAttribute('href', '/')
+      expect(link.closest('a')).toHaveAttribute('href', '/dashboard')
     })
   })
 

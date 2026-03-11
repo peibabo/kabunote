@@ -10,7 +10,7 @@ export default function PrivacyPage() {
     <div className="min-h-screen bg-gray-900 text-gray-200 py-12 px-4">
       <div className="max-w-3xl mx-auto">
         <Link
-          href="/"
+          href="/dashboard"
           className="text-blue-400 hover:text-blue-300 text-sm mb-8 inline-block"
         >
           ← ホームに戻る
@@ -161,7 +161,7 @@ export default function PrivacyPage() {
         </div>
 
         <Link
-          href="/"
+          href="/dashboard"
           className="text-blue-400 hover:text-blue-300 text-sm mt-8 inline-block"
         >
           ← ホームに戻る

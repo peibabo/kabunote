@@ -7,7 +7,7 @@ export async function GET(request: Request) {
   const code = requestUrl.searchParams.get('code')
   const origin = requestUrl.origin
 
-  const response = NextResponse.redirect(`${origin}/`)
+  const response = NextResponse.redirect(`${origin}/dashboard`)
 
   if (code) {
     const cookieStore = await cookies()

@@ -92,7 +92,7 @@ export default function Error({
             今すぐ再試行
           </button>
           <a
-            href="/"
+            href="/dashboard"
             className="px-5 py-2.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
           >
             トップに戻る

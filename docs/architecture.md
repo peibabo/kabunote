@@ -141,10 +141,10 @@ app_users (ユーザー管理)
 ## 認証フロー
 
 ```
-ユーザー → login/page.tsx (Google OAuth / Magic Link)
+ユーザー → / (LP) → /login (Google OAuth / Magic Link)
   → Supabase Auth → /auth/callback/route.ts
-  → exchangeCodeForSession() → セッション確立
-  → middleware.ts (未認証 → /login リダイレクト)
+  → exchangeCodeForSession() → セッション確立 → /dashboard にリダイレクト
+  → middleware.ts (/dashboard 未認証 → /login リダイレクト、/ 認証済み → /dashboard リダイレクト)
   → API呼び出し時: Supabase getSession() → userId取得
   → Prisma経由でPostgreSQL (RLS適用)
 ```
@@ -154,7 +154,8 @@ app_users (ユーザー管理)
 ## 主要コンポーネント構成
 
 ### メインページ
-- `page.tsx`: メインページ（D&D・銘柄一覧・カレンダー・ポートフォリオサマリー）
+- `page.tsx`: ランディングページ（LP、Server Component）
+- `dashboard/page.tsx`: メインダッシュボード（D&D・銘柄一覧・カレンダー・ポートフォリオサマリー）
 
 ### カード系
 - `StockCard.tsx`: 銘柄カード（タブ制御・統合アラート・スマートナビゲーション）
