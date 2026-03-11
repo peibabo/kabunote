@@ -1,6 +1,7 @@
 'use client';
 
 import { Position, PositionSummary, ProfitLossInfo, formatPrice, formatShares, formatProfitLoss } from '@/types/positions';
+import { useSoundOnChange } from '@/hooks/useSoundOnChange';
 
 interface ProgressData {
   percentage: number;
@@ -78,6 +79,8 @@ export default function AnalysisSubTab({
   const progressData = calculateProgress(targetPrice, stopLoss, currentPrice);
   const riskRewardRatio = calculateRiskRewardRatio(profitLossInfo);
 
+  const onChangeSound = useSoundOnChange();
+
   return (
     <div className="space-y-4">
       {/* 投資規律設定 */}
@@ -93,7 +96,7 @@ export default function AnalysisSubTab({
                 id={`stop-loss-${symbol}`}
                 type="number"
                 value={stopLoss}
-                onChange={(e) => onStopLossChange(e.target.value)}
+                onChange={(e) => { onStopLossChange(e.target.value); onChangeSound(); }}
                 placeholder="0"
                 className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-red-500 focus:outline-none text-base md:text-sm pr-8"
               />
@@ -111,7 +114,7 @@ export default function AnalysisSubTab({
                 id={`current-price-${symbol}`}
                 type="number"
                 value={currentPrice}
-                onChange={(e) => onCurrentPriceChange(e.target.value)}
+                onChange={(e) => { onCurrentPriceChange(e.target.value); onChangeSound(); }}
                 placeholder="0"
                 className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none text-base md:text-sm pr-8"
               />
@@ -129,7 +132,7 @@ export default function AnalysisSubTab({
                 id={`target-price-${symbol}`}
                 type="number"
                 value={targetPrice}
-                onChange={(e) => onTargetPriceChange(e.target.value)}
+                onChange={(e) => { onTargetPriceChange(e.target.value); onChangeSound(); }}
                 placeholder="0"
                 className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-green-500 focus:outline-none text-base md:text-sm pr-8"
               />

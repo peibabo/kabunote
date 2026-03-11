@@ -20,6 +20,7 @@ import { useStockTag } from '@/hooks/useStockTag';
 import { useStockAlerts } from '@/hooks/useStockAlerts';
 import { useCash } from '@/hooks/useCash';
 import { stockKey } from '@/lib/storageKeys';
+import { playSound } from '@/lib/sound';
 
 // Components
 import StockCardHeader from './StockCardHeader';
@@ -356,7 +357,7 @@ function StockCard({ symbol, onRemove, favoriteGroups, onFavoriteGroupsChange, i
         {tabs.map((tab) => (
           <button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
+            onClick={() => { playSound('toggle'); setActiveTab(tab.id); }}
             className={`cursor-pointer flex-1 py-2 px-3 text-sm font-medium transition-colors border-b-2 ${
               activeTab === tab.id
                 ? 'text-blue-400 border-blue-400'

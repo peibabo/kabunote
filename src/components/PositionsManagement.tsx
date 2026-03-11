@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { playSound } from '@/lib/sound';
 import { useStockPosition } from '@/hooks/useStockPosition';
 import { Position, calculatePositionSummary, formatPrice, formatShares } from '@/types/positions';
 
@@ -39,6 +40,7 @@ export default function PositionsManagement({
 
   // フォームを開いて追加モード
   const handleAddClick = () => {
+    playSound('buttonAction');
     setEditingId(null);
     setForm(emptyForm);
     setIsAdding(true);
@@ -69,6 +71,7 @@ export default function PositionsManagement({
     const purchasePrice = parseFloat(form.purchasePrice);
     if (!shares || shares <= 0 || !purchasePrice || purchasePrice <= 0) return;
 
+    playSound('buttonAction');
     await addPosition({
       shares,
       purchasePrice,
@@ -86,6 +89,7 @@ export default function PositionsManagement({
     const purchasePrice = parseFloat(form.purchasePrice);
     if (!shares || shares <= 0 || !purchasePrice || purchasePrice <= 0) return;
 
+    playSound('buttonAction');
     await updatePosition(editingId, {
       shares,
       purchasePrice,
@@ -99,6 +103,7 @@ export default function PositionsManagement({
   // 削除確認
   const handleDelete = async (id: string) => {
     if (!confirm('このポジションを削除しますか？')) return;
+    playSound('buttonDelete');
     await deletePosition(id);
   };
 

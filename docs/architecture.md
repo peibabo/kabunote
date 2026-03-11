@@ -183,6 +183,9 @@ app_users (ユーザー管理)
 - `InvestmentTimeline.tsx`: 投資タイムライン
 - `TodayTomorrowEvents.tsx`: 今日・明日の予定表示
 
+### 設定系
+- `SoundSettings.tsx`: サウンドフィードバック設定（ON/OFF・音量・試聴）
+
 ---
 
 ## ライブラリ（src/lib/）
@@ -198,6 +201,7 @@ app_users (ユーザー管理)
 | `apiClient.ts` | API呼び出しヘルパー |
 | `apiHandler.ts` | APIルート共通ハンドラー |
 | `toast.ts` | トースト通知 |
+| `sound.ts` | サウンドフィードバックエンジン（Web Audio API） |
 
 ## ユーティリティ（src/utils/）
 

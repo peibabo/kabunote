@@ -1,4 +1,6 @@
 import React from 'react';
+import { playSound } from '@/lib/sound';
+import { useSoundOnChange } from '@/hooks/useSoundOnChange';
 import {
   NextActionPlan as NextActionPlanType,
   NextActionPlanAnalysis,
@@ -74,6 +76,8 @@ export default function NextActionSubTab({
   const analysis: NextActionPlanAnalysis | null = currentPrice > 0 && nextActionPlan ?
     analyzeNextActionPlan(nextActionPlan, currentPrice, positionSummary || null, availableCash) : null;
 
+  const onChangeSound = useSoundOnChange();
+
   const hasPlan = nextActionPlan ? hasNextActionPlan(nextActionPlan) : false;
   const isComplete = nextActionPlan ? isCompleteNextActionPlan(nextActionPlan) : false;
 
@@ -101,7 +105,7 @@ export default function NextActionSubTab({
         </div>
         {hasPlan && (
           <button
-            onClick={resetNextActionPlan}
+            onClick={() => { playSound('buttonDelete'); resetNextActionPlan(); }}
             className="cursor-pointer text-xs text-gray-400 hover:text-white transition-colors"
           >
             リセット
@@ -116,7 +120,7 @@ export default function NextActionSubTab({
           <label className="block text-sm text-gray-300 mb-2">アクション</label>
           <select
             value={plan.actionType}
-            onChange={(e) => updateNextActionPlan({ actionType: e.target.value as ActionType })}
+            onChange={(e) => { playSound('select'); updateNextActionPlan({ actionType: e.target.value as ActionType }); }}
             className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
             {Object.entries(ACTION_TYPE_LABELS).map(([value, label]) => (
@@ -130,7 +134,7 @@ export default function NextActionSubTab({
           <label className="block text-sm text-gray-300 mb-2">優先度</label>
           <select
             value={plan.priority}
-            onChange={(e) => updateNextActionPlan({ priority: e.target.value as Priority })}
+            onChange={(e) => { playSound('select'); updateNextActionPlan({ priority: e.target.value as Priority }); }}
             className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
             {Object.entries(PRIORITY_LABELS).map(([value, label]) => (
@@ -147,7 +151,7 @@ export default function NextActionSubTab({
           <input
             type="number"
             value={plan.targetPrice || ''}
-            onChange={(e) => updateNextActionPlan({ targetPrice: parseFloat(e.target.value) || 0 })}
+            onChange={(e) => { updateNextActionPlan({ targetPrice: parseFloat(e.target.value) || 0 }); onChangeSound(); }}
             placeholder="0"
             min="0"
             step="1"
@@ -167,6 +171,7 @@ export default function NextActionSubTab({
               onChange={(e) => {
                 const units = parseInt(e.target.value) || 0;
                 updateNextActionPlan({ targetQuantity: units * 100 });
+                onChangeSound();
               }}
               placeholder="20"
               min="0"
@@ -383,7 +388,7 @@ export default function NextActionSubTab({
         <label className="block text-sm text-gray-300 mb-2">作戦理由・メモ</label>
         <textarea
           value={plan.memo || ''}
-          onChange={(e) => updateNextActionPlan({ memo: e.target.value })}
+          onChange={(e) => { updateNextActionPlan({ memo: e.target.value }); onChangeSound(); }}
           placeholder="投資の理由や条件を記録..."
           rows={3}
           className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"

@@ -1,6 +1,8 @@
 'use client';
 
 import { PositionSummary, formatPrice, formatShares } from '@/types/positions';
+import { playSound } from '@/lib/sound';
+import { useSoundOnChange } from '@/hooks/useSoundOnChange';
 import { DividendRightsSettings, calculateRightsDateFromSettings } from '@/types/rightsDate';
 import { calculateDividendInfo, formatDividendAmount, formatDividendYield } from '@/types/dividend';
 import { useStockDividend } from '@/hooks/useStockDividend';
@@ -145,7 +147,10 @@ export default function DividendManagement({
   const rightsCountdown = getRightsCountdown(dividendRightsDate);
 
   // 月/日の変更ハンドラー
+  const onChangeSound = useSoundOnChange();
+
   const handleMonthChange = (value: string) => {
+    playSound('select');
     const month = value ? parseInt(value) : null;
     updateDividendRightsSettings({
       ...dividendRightsSettings,
@@ -155,6 +160,7 @@ export default function DividendManagement({
   };
 
   const handleDayChange = (value: string) => {
+    playSound('select');
     const day = value ? parseInt(value) : null;
     updateDividendRightsSettings({
       ...dividendRightsSettings,
@@ -164,6 +170,7 @@ export default function DividendManagement({
   };
 
   const handleRecurringChange = (isRecurring: boolean) => {
+    playSound('toggle');
     updateDividendRightsSettings({
       ...dividendRightsSettings,
       isRecurring
@@ -271,7 +278,7 @@ export default function DividendManagement({
                     id={`dividend-per-share-${symbol}`}
                     type="number"
                     value={dividendPerShare}
-                    onChange={(e) => updateDividendPerShare(e.target.value)}
+                    onChange={(e) => { updateDividendPerShare(e.target.value); onChangeSound(); }}
                     placeholder="0"
                     className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-green-500 focus:outline-none text-sm pr-8"
                   />
@@ -286,7 +293,7 @@ export default function DividendManagement({
                 <select
                   id={`dividend-frequency-${symbol}`}
                   value={dividendFrequency}
-                  onChange={(e) => updateDividendFrequency(parseInt(e.target.value) as 1 | 2 | 4)}
+                  onChange={(e) => { playSound('select'); updateDividendFrequency(parseInt(e.target.value) as 1 | 2 | 4); }}
                   className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:border-green-500 focus:outline-none text-sm"
                 >
                   <option value="1">年1回</option>
