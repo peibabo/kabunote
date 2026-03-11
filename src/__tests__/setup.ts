@@ -17,6 +17,22 @@ class MockAudioContext {
     connect: vi.fn(),
     gain: { value: 1, setValueAtTime: vi.fn(), linearRampToValueAtTime: vi.fn() },
   }))
+  sampleRate = 44100
+  createBuffer = vi.fn(() => ({
+    getChannelData: vi.fn(() => new Float32Array(4410)),
+  }))
+  createBufferSource = vi.fn(() => ({
+    connect: vi.fn(),
+    start: vi.fn(),
+    stop: vi.fn(),
+    buffer: null,
+  }))
+  createBiquadFilter = vi.fn(() => ({
+    connect: vi.fn(),
+    type: 'bandpass' as BiquadFilterType,
+    frequency: { value: 440 },
+    Q: { value: 1 },
+  }))
 }
 
 global.AudioContext = MockAudioContext as unknown as typeof AudioContext
