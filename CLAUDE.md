@@ -110,7 +110,7 @@ app_users (ユーザー管理)
 - [x] robots.txt 作成（/dashboard等のDisallow設定）
 - [x] sitemap.xml 作成（公開ページのインデックス登録）
 - [x] OGP画像設定（SNSシェア時の表示改善）
-- [ ] Google Analytics（GA4）導入
+- [x] Google Analytics（GA4）導入（環境変数 `NEXT_PUBLIC_GA_ID` で設定）
 - [ ] セキュリティヘッダ設定（X-Frame-Options, CSP等 → next.config.ts）
 
 ### ローンチ直後対応（P2）
