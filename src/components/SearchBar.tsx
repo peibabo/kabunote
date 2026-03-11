@@ -40,7 +40,7 @@ export default function SearchBar({
   };
 
   return (
-    <div className="relative max-w-md mx-auto">
+    <div className="relative w-full">
       <div className="relative">
         {/* 検索アイコン */}
         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
