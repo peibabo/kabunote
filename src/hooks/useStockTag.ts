@@ -42,13 +42,14 @@ export function useStockTag(stockId: string, options?: UseStockTagOptions): UseS
 
     try {
       const data = await apiPost<CustomTag>(`/api/stocks/${stockId}/tag`, { label, color })
+      let updatedTags: CustomTag[] = []
       setTagsState(prev => {
-        const updatedTags = [...prev.filter(t => t.id !== tempId), data]
-        window.dispatchEvent(new CustomEvent('kabunote-db-tag-update', {
-          detail: { symbol, tags: updatedTags }
-        }))
+        updatedTags = [...prev.filter(t => t.id !== tempId), data]
         return updatedTags
       })
+      window.dispatchEvent(new CustomEvent('kabunote-db-tag-update', {
+        detail: { symbol, tags: updatedTags }
+      }))
     } catch (err) {
       console.error('❌ タグ追加エラー:', err)
       toast.error('タグの追加がうまくいきませんでした。再度お試しください')
@@ -61,12 +62,14 @@ export function useStockTag(stockId: string, options?: UseStockTagOptions): UseS
 
     try {
       await apiDelete(`/api/stocks/${stockId}/tag/${tagId}`)
+      let currentTags: CustomTag[] = []
       setTagsState(prev => {
-        window.dispatchEvent(new CustomEvent('kabunote-db-tag-update', {
-          detail: { symbol, tags: prev }
-        }))
+        currentTags = prev
         return prev
       })
+      window.dispatchEvent(new CustomEvent('kabunote-db-tag-update', {
+        detail: { symbol, tags: currentTags }
+      }))
     } catch (err) {
       console.error('❌ タグ削除エラー:', err)
       toast.error('タグの削除がうまくいきませんでした。再度お試しください')

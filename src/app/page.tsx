@@ -19,7 +19,7 @@ import DeleteAccountModal from '@/components/DeleteAccountModal';
 import AuthButton from '@/components/AuthButton';
 import BulkTabSwitcher from '@/components/BulkTabSwitcher';
 import { loadStockData, getStockData } from '@/data/stockNames';
-import { initSoundEngine } from '@/lib/sound';
+import { initSoundEngine, playSound } from '@/lib/sound';
 import { GROUP_COLORS } from '@/types/favorites';
 import { useStockData } from '@/hooks/useStockData';
 import { useFavoriteGroups } from '@/hooks/useFavoriteGroups';
@@ -345,7 +345,7 @@ export default function Home() {
             </div>
             <div className="flex gap-2 overflow-x-auto md:flex-wrap md:overflow-x-visible pb-2 md:pb-0 scrollbar-hide">
               <button
-                onClick={() => handleGroupFilterChange(null)}
+                onClick={() => { playSound('toggle'); handleGroupFilterChange(null); }}
                 className={`cursor-pointer text-sm px-3 py-2 rounded-full transition-colors whitespace-nowrap shrink-0 md:shrink ${
                   selectedGroupFilter === null
                     ? 'bg-white text-gray-900'
@@ -357,7 +357,7 @@ export default function Home() {
               {favoriteGroups.map((group) => (
                 <button
                   key={group.id}
-                  onClick={() => handleGroupFilterChange(group.id)}
+                  onClick={() => { playSound('toggle'); handleGroupFilterChange(group.id); }}
                   className={`cursor-pointer text-sm px-3 py-2 rounded-full transition-colors whitespace-nowrap shrink-0 md:shrink ${
                     selectedGroupFilter === group.id
                       ? `${GROUP_COLORS[group.color].bg} ${GROUP_COLORS[group.color].text}`

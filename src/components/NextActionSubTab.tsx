@@ -388,7 +388,7 @@ export default function NextActionSubTab({
         <label className="block text-sm text-gray-300 mb-2">作戦理由・メモ</label>
         <textarea
           value={plan.memo || ''}
-          onChange={(e) => { updateNextActionPlan({ memo: e.target.value }); onChangeSound(); }}
+          onChange={(e) => { updateNextActionPlan({ memo: e.target.value }); }}
           placeholder="投資の理由や条件を記録..."
           rows={3}
           className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
