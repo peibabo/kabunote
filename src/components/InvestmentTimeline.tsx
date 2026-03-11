@@ -5,6 +5,7 @@ import { InvestmentEvent, formatDateString, TimelineEvent, CalendarDay, EventSum
 import { DividendRightsSettings, ShareholderRightsSettings, ShareholderMeetingSettings } from '@/types/rightsDate';
 import { getEventStyle, shouldShowDateLabel, calculateBusinessDaysBefore, getEventDotColor } from '@/utils/timelineUtils';
 import { STORAGE_KEYS } from '@/lib/storageKeys';
+import { playSound } from '@/lib/sound';
 
 interface InvestmentTimelineProps {
   events: Record<string, InvestmentEvent[]>;
@@ -190,6 +191,7 @@ export default function InvestmentTimeline({ events, onStockClick, stockSymbols,
   // アコーディオンの切り替え
   const toggleCalendarExpanded = () => {
     const newState = !isCalendarExpanded;
+    playSound(newState ? 'accordionOpen' : 'accordionClose');
     setIsCalendarExpanded(newState);
     if (typeof window !== 'undefined') {
       localStorage.setItem(STORAGE_KEYS.TIMELINE_CALENDAR_EXPANDED, newState.toString());

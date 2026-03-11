@@ -15,7 +15,9 @@ export type SoundName =
   | 'buttonAction'
   | 'buttonDelete'
   | 'searchClear'
-  | 'noteSave';
+  | 'noteSave'
+  | 'accordionOpen'
+  | 'accordionClose';
 
 interface SoundDef {
   waveform: OscillatorType;
@@ -24,7 +26,7 @@ interface SoundDef {
   duration: number; // seconds
 }
 
-const SOUND_DEFS: Record<Exclude<SoundName, 'noteSave'>, SoundDef> = {
+const SOUND_DEFS: Record<Exclude<SoundName, 'noteSave' | 'accordionOpen' | 'accordionClose'>, SoundDef> = {
   textInput:    { waveform: 'sine', freqStart: 1047, freqEnd: 1047, duration: 0.05 },
   toggle:       { waveform: 'sine', freqStart: 700,  freqEnd: 900,  duration: 0.08 },
   select:       { waveform: 'sine', freqStart: 880,  freqEnd: 1100, duration: 0.06 },
@@ -119,6 +121,31 @@ function playPenWriteSound(): void {
   source.stop(audioCtx.currentTime + duration);
 }
 
+/** 柔らかいチャイム音を再生する（開閉で音程を変える） */
+function playChimeSound(open: boolean): void {
+  if (!audioCtx) return;
+  const t = audioCtx.currentTime;
+  const duration = 0.35;
+  // 開く: C6→E6（明るい上昇2音）、閉じる: E6→C6（柔らかい下降2音）
+  const notes = open ? [1047, 1319] : [1319, 1047];
+  const delay = 0.08; // 2音目のディレイ
+
+  for (let i = 0; i < notes.length; i++) {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = notes[i];
+    const start = t + i * delay;
+    // 瞬時に立ち上がり、余韻を持って減衰（チャイムらしさ）
+    gain.gain.setValueAtTime(volume * 0.25, start);
+    gain.gain.linearRampToValueAtTime(0, start + duration);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(start);
+    osc.stop(start + duration);
+  }
+}
+
 /** サウンドを再生する */
 export function playSound(name: SoundName): void {
   if (!enabled || !audioCtx) return;
@@ -126,6 +153,12 @@ export function playSound(name: SoundName): void {
   // noteSave はノイズベースのペン書き音
   if (name === 'noteSave') {
     playPenWriteSound();
+    return;
+  }
+
+  // アコーディオン開閉のチャイム音
+  if (name === 'accordionOpen' || name === 'accordionClose') {
+    playChimeSound(name === 'accordionOpen');
     return;
   }
 
