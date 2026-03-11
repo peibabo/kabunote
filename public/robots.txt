@@ -1,0 +1,12 @@
+# Kabunote - robots.txt
+
+User-agent: *
+Allow: /
+Allow: /help
+Allow: /privacy
+Allow: /terms
+Disallow: /dashboard
+Disallow: /login
+Disallow: /api/
+
+Sitemap: https://kabunote.jp/sitemap.xml

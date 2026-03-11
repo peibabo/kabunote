@@ -20,6 +20,7 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'ja_JP',
     siteName: 'カブノオト',
+    url: 'https://kabunote.jp',
   },
   twitter: {
     card: 'summary_large_image',
