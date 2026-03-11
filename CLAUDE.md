@@ -81,6 +81,7 @@ app_users (ユーザー管理)
 - `StrategySummaryPage.tsx` / `AlertSummaryPage.tsx` / `DividendBenefitListPage.tsx`: ダッシュボード系
 - `InvestmentCalendar.tsx` / `InvestmentTimeline.tsx` / `TodayTomorrowEvents.tsx`: カレンダー系
 - `SoundSettings.tsx`: サウンドフィードバック設定（ON/OFF・音量・試聴）
+- LP系: `LandingNavbar.tsx` / `HeroSection.tsx` / `ProblemSection.tsx` / `SolutionSection.tsx` / `FeaturesSection.tsx` / `HowItWorksSection.tsx` / `DifferentiationSection.tsx` / `FAQSection.tsx` / `FinalCTASection.tsx` / `LandingFooter.tsx` / `ScrollAnimationWrapper.tsx`
 > フック・API・型定義の詳細は `docs/architecture.md` を参照
 > 実装パターンは `docs/patterns.md` を参照
 
@@ -94,9 +95,9 @@ app_users (ユーザー管理)
 - [x] 20銘柄制限
 - [x] favicon設定
 - [x] ドメイン設定（kabunote.jp）
-- [ ] SEO対策
+- [x] SEO対策（OGP・Twitter Card・keywords対応）
 - [ ] ユーザー問い合わせ機能
-- [x] ランディングページ（`/` LP・`/dashboard` アプリ・middleware認証保護）
+- [x] ランディングページ（本番リニューアル済・10セクション・スクロールアニメーション・SEO）
 
 ### 推奨改善項目
 - [x] パフォーマンス最適化（20銘柄上限・カレンダー・検索）
