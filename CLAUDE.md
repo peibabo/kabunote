@@ -68,8 +68,6 @@ app_users (ユーザー管理)
 - `SimplePortfolioSummary.tsx` / `InvestmentPieChart.tsx`: ポートフォリオ系
 - `StrategySummaryPage.tsx` / `AlertSummaryPage.tsx` / `DividendBenefitListPage.tsx`: ダッシュボード系
 - `InvestmentCalendar.tsx` / `InvestmentTimeline.tsx` / `TodayTomorrowEvents.tsx`: カレンダー系
-- `SoundSettings.tsx`: サウンドフィードバック設定（ON/OFF・音量・プレビュー）
-
 > フック・API・型定義の詳細は `docs/architecture.md` を参照
 > 実装パターンは `docs/patterns.md` を参照
 
@@ -79,7 +77,7 @@ app_users (ユーザー管理)
 - [x] モバイル・レスポンシブ対応確認（2026年3月完了）
 - [x] 初回ユーザー向けオンボーディング（5ステップウェルカムウィザード）
 - [x] エラーハンドリングの強化
-- [x] テストコード（Vitest + RTL + MSW、361テスト）
+- [x] テストコード（Vitest + RTL + MSW、344テスト）
 - [x] 20銘柄制限
 - [x] favicon設定
 - [x] ドメイン設定（kabunote.jp）
@@ -95,7 +93,7 @@ app_users (ユーザー管理)
 1. ~~初回ユーザーガイド~~ 完了
 2. ~~エラーハンドリング改善~~ 完了（グローバルエラーバウンダリ・APIエラー一元化・トースト通知・404ページ）
 3. ~~簡単なヘルプページ~~ 完了（`/help`）
-4. ~~UX（気持ち良い音）~~ 完了（Web Audio API シンセ音17種、ON/OFF・音量設定）
+4. ~~UX（気持ち良い音）~~ 廃止（タイムラグが著しく実用的でないため削除）
 5. ~~その他（ログアウトしたらログイン画面に遷移させる）~~ 完了
    - ~~**TODO**: プライバシーポリシーの `[運営者名]` `[メールアドレス]` プレースホルダーを実際の情報に置き換える~~ 完了（カブノオト開発チーム / support@kabunote.jp）
 
@@ -104,7 +102,7 @@ app_users (ユーザー管理)
 ### Phase 1.1（ローンチ後すぐ）
 - [ ] 使いやすさ向上（問合せ機能・テンプレート・クイックタグ・決算日一括設定）
 - [ ] データ活用拡張（業種別グループ・決算統計・保有期間計算）
-- [x] ユーザー設定機能（サウンドON/OFF・音量設定 完了）
+- [ ] ユーザー設定機能
 - [ ] ゲーミフィケーション
 
 ### Phase 2（大型機能追加）

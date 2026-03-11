@@ -1,8 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { playSound } from '@/lib/sound';
-
 interface SearchBarProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
@@ -37,7 +35,6 @@ export default function SearchBar({
   const handleClear = () => {
     setLocalQuery('');
     onSearchChange('');
-    playSound('searchClear');
   };
 
   return (

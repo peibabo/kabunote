@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from 'react'
 import { apiFetch } from '@/lib/apiClient'
 import { useAsyncState } from './useAsyncState'
 import { useAutoSave } from './useAutoSave'
-import { playSound } from '@/lib/sound'
 
 interface PriceState {
   currentPrice: string
@@ -68,7 +67,6 @@ export function useStockPrice(stockId: string, options?: UseStockPriceOptions): 
           })
         })
         if (response.ok) {
-          playSound('autoSave')
           window.dispatchEvent(new CustomEvent('kabunote-db-price-update', {
             detail: {
               symbol,

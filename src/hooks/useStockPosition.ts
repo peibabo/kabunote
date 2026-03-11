@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from 'react'
 import { apiFetch, apiPost } from '@/lib/apiClient'
 import { useAsyncState } from './useAsyncState'
 import { Position } from '@/types/positions'
-import { playSound } from '@/lib/sound'
 
 interface UseStockPositionReturn {
   positions: Position[]
@@ -47,7 +46,6 @@ export function useStockPosition(stockId: string, options?: UseStockPositionOpti
       await apiPost(`/api/stocks/${stockId}/position`, data)
       const newPositions = await loadFromDB()
       dispatchUpdate(newPositions)
-      playSound('positionAdd')
     })
   }, [stockId, withSaving, loadFromDB, dispatchUpdate])
 
@@ -63,7 +61,6 @@ export function useStockPosition(stockId: string, options?: UseStockPositionOpti
       if (!result.success) throw new Error('APIレスポンスが無効です')
       const updatedPositions = await loadFromDB()
       dispatchUpdate(updatedPositions)
-      playSound('positionUpdate')
     })
   }, [stockId, withSaving, loadFromDB, dispatchUpdate])
 
@@ -73,7 +70,6 @@ export function useStockPosition(stockId: string, options?: UseStockPositionOpti
       if (!response.ok) throw new Error('削除に失敗しました')
       const remainingPositions = await loadFromDB()
       dispatchUpdate(remainingPositions)
-      playSound('delete')
     })
   }, [stockId, withSaving, loadFromDB, dispatchUpdate])
 

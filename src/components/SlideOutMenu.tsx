@@ -1,8 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import SoundSettings from './SoundSettings';
-
 interface SlideOutMenuProps {
   isOpen: boolean;
   onClose: () => void;
@@ -162,14 +160,6 @@ export default function SlideOutMenu({ isOpen, onClose, alertCounts, onMenuItemC
                   <span className="text-lg">🎓</span>
                   <span className="text-gray-300">チュートリアル再表示</span>
                 </button>
-                {/* サウンド設定 */}
-                <div className="border-t border-gray-700 mt-2 pt-1">
-                  <div className="flex items-center space-x-3 px-2 pt-1">
-                    <span className="text-lg">🔔</span>
-                    <span className="text-gray-300 text-sm">サウンド設定</span>
-                  </div>
-                  <SoundSettings />
-                </div>
                 <button
                   onClick={() => handleMenuClick('deleteAccount')}
                   className="w-full flex items-center space-x-3 p-2 text-left hover:bg-gray-700 rounded-lg transition-colors cursor-pointer"

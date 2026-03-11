@@ -117,7 +117,6 @@ app_users (ユーザー管理)
 | `useDebounce` | デバウンス汎用 |
 | `useAutoSave` | 自動保存ロジック |
 | `useAsyncState` | 非同期状態管理 |
-| `useSound` | サウンドフィードバック設定（useSyncExternalStore） |
 
 ---
 

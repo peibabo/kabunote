@@ -3,7 +3,6 @@ import { apiFetch } from '@/lib/apiClient'
 import { useAsyncState } from './useAsyncState'
 import { useAutoSave } from './useAutoSave'
 import { DividendRightsSettings, createDefaultRightsSettings } from '@/types/rightsDate'
-import { playSound } from '@/lib/sound'
 
 interface DividendState {
   dividendPerShare: string
@@ -88,7 +87,6 @@ export function useStockDividend(stockId: string, options?: UseStockDividendOpti
           }),
         })
         if (!response.ok) throw new Error('配当情報の保存に失敗しました')
-        playSound('dataSave')
         window.dispatchEvent(new CustomEvent('kabunote-db-calendar-update', {
           detail: {
             type: 'dividend' as const,

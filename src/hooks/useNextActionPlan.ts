@@ -3,7 +3,6 @@ import { apiFetch, apiPut, apiDelete } from '@/lib/apiClient'
 import { useAsyncState } from './useAsyncState'
 import { useAutoSave } from './useAutoSave'
 import { NextActionPlan } from '@/types/nextActionPlan'
-import { playSound } from '@/lib/sound'
 
 interface UseNextActionPlanReturn {
   nextActionPlan: NextActionPlan | null
@@ -64,7 +63,6 @@ export function useNextActionPlan(stockId: string, options?: UseNextActionPlanOp
         })
         if (data) {
           setLastSaved(new Date(data.updatedAt))
-          playSound('dataSave')
           window.dispatchEvent(new CustomEvent('kabunote-db-strategy-update', {
             detail: {
               symbol: stockId.replace('stock-', ''),

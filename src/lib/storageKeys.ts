@@ -17,10 +17,6 @@ export const STORAGE_KEYS = {
   TIMELINE_CALENDAR_EXPANDED: 'kabunote-timeline-calendar-expanded',
   /** 余力現金セクションのアコーディオン展開状態 */
   CASH_SECTION_EXPANDED: 'kabunote-cash-section-expanded',
-  /** サウンド ON/OFF */
-  SOUND_ENABLED: 'kabunote-sound-enabled',
-  /** サウンド音量 (0-1) */
-  SOUND_VOLUME: 'kabunote-sound-volume',
 } as const;
 
 // ─────────────────────────────────────────

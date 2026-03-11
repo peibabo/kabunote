@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { SnoozedAlert, SnoozeDuration, generateAlertKey } from '@/types/snooze';
 import { AlertType } from '@/utils/alertSystem';
 import { STORAGE_KEYS } from '@/lib/storageKeys';
-import { playSound } from '@/lib/sound';
 
 const STORAGE_KEY = STORAGE_KEYS.SNOOZED_ALERTS;
 
@@ -107,7 +106,6 @@ export const useSnooze = () => {
 
     setSnoozedAlerts(updatedAlerts);
     saveSnoozedAlerts(updatedAlerts);
-    playSound('snooze');
 
   }, [snoozedAlerts, saveSnoozedAlerts]);
 

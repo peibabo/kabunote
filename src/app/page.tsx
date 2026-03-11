@@ -31,7 +31,6 @@ import { useAlertCounts } from '@/hooks/useAlertCounts';
 import { useCalendarData } from '@/hooks/useCalendarData';
 import { usePortfolioData } from '@/hooks/usePortfolioData';
 import { useDividendBenefitData } from '@/hooks/useDividendBenefitData';
-import { playSound, initSoundEngine } from '@/lib/sound';
 import {
   DndContext,
   closestCenter,
@@ -97,7 +96,7 @@ export default function Home() {
 
   // ドラッグ開始ハンドラー
   const handleDragStart = (_event: DragStartEvent) => {
-    playSound('dragStart');
+    // no-op: ドラッグ開始時の処理
   };
 
   // ドラッグ終了ハンドラー
@@ -112,7 +111,6 @@ export default function Home() {
       const updatedStocks = [...otherStocks, ...newOrder];
 
       reorderStocks(updatedStocks);
-      playSound('dragEnd');
 
       fetch('/api/stocks/reorder', {
         method: 'PATCH',
@@ -132,14 +130,6 @@ export default function Home() {
       setIsInitialized(true);
     };
     initializeApp();
-
-    // autoplay policy対応: 初回クリックでAudioContextをresume
-    const handleFirstInteraction = () => {
-      initSoundEngine();
-      document.removeEventListener('click', handleFirstInteraction);
-    };
-    document.addEventListener('click', handleFirstInteraction);
-    return () => document.removeEventListener('click', handleFirstInteraction);
   }, []);
 
   const handleAddStock = async (code: string) => {
@@ -156,7 +146,6 @@ export default function Home() {
     // CSVデータから銘柄名・業種・市場を取得
     const stockInfo = await getStockData(code);
     await addStock(code, stockInfo?.name, stockInfo?.sector, stockInfo?.market);
-    playSound('stockAdd');
 
     if (selectedGroupFilter) {
       const updatedGroups = favoriteGroups.map(group => {
@@ -173,7 +162,6 @@ export default function Home() {
     const newStocks = stockSymbols.filter(stock => stock !== code);
     reorderStocks(newStocks);
     setError('');
-    playSound('delete');
 
     // DBから銘柄を削除（カスケードで関連データも削除）
     fetch('/api/stocks', {
