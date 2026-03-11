@@ -16,6 +16,7 @@ import SlideOutMenu from '@/components/SlideOutMenu';
 import EventCalendarPage from '@/components/EventCalendarPage';
 import DividendBenefitListPage from '@/components/DividendBenefitListPage';
 import DeleteAccountModal from '@/components/DeleteAccountModal';
+import FeedbackModal from '@/components/FeedbackModal';
 import AuthButton from '@/components/AuthButton';
 import BulkTabSwitcher from '@/components/BulkTabSwitcher';
 import { loadStockData, getStockData } from '@/data/stockNames';
@@ -642,6 +643,12 @@ export default function Home() {
       <DeleteAccountModal
         isOpen={modals.isDeleteAccountOpen}
         onClose={() => modals.setIsDeleteAccountOpen(false)}
+      />
+
+      {/* 目安箱モーダル */}
+      <FeedbackModal
+        isOpen={modals.isFeedbackOpen}
+        onClose={() => modals.setIsFeedbackOpen(false)}
       />
 
       {/* オンボーディングウィザード */}

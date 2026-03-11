@@ -29,6 +29,7 @@ export const prismaMock = {
   favoriteGroup: createMockModel(),
   stockFavoriteGroup: createMockModel(),
   snoozedAlert: createMockModel(),
+  feedback: createMockModel(),
   $transaction: vi.fn((arg: unknown) => {
     if (typeof arg === 'function') return arg(prismaMock)
     if (Array.isArray(arg)) return Promise.all(arg)

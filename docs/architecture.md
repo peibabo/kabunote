@@ -1,6 +1,6 @@
 # Kabunote - アーキテクチャリファレンス
 
-## データベーススキーマ（14テーブル）
+## データベーススキーマ（15テーブル）
 
 ```
 app_users (ユーザー管理)
@@ -21,8 +21,10 @@ app_users (ユーザー管理)
   │     └── stock_favorite_groups (中間テーブル)  @@unique([stockId, groupId])
   ├── favorite_groups (お気に入りグループ)
   │     id, user_id, name, color, order  @@unique([userId, name])
-  └── snoozed_alerts (アラートスヌーズ管理)
-        id, user_id, stock_symbol, alert_type(ENUM), snooze_until
+  ├── snoozed_alerts (アラートスヌーズ管理)
+  │     id, user_id, stock_symbol, alert_type(ENUM), snooze_until
+  └── feedbacks (フィードバック・目安箱)
+        id, user_id, category(ENUM), content, created_at
 ```
 
 ### Enum定義
@@ -30,6 +32,7 @@ app_users (ユーザー管理)
 - **ActionType**: `BUY`, `SELL`, `HOLD`
 - **Priority**: `HIGH`, `MEDIUM`, `LOW`
 - **AlertType**: `FUND_SHORTAGE`, `STOP_LOSS_EXCEEDED`, `NEXT_ACTION_URGENT`, `STOP_LOSS_APPROACHING`, `PROFIT_TARGET_APPROACHING`, `NEXT_ACTION_WARNING`
+- **FeedbackCategory**: `FEATURE_REQUEST`, `IMPROVEMENT`, `BUG_REPORT`, `OTHER`
 
 ---
 
@@ -58,6 +61,11 @@ app_users (ユーザー管理)
 | `/api/stocks/[stockId]/tag` | GET/POST | タグ一覧・追加 |
 | `/api/stocks/[stockId]/tag/[tagId]` | DELETE | タグ削除 |
 | `/api/stocks/[stockId]/next-action-plan` | GET/PUT/DELETE | 次の一手戦略 |
+
+### フィードバック
+| パス | メソッド | 説明 |
+|------|---------|------|
+| `/api/feedback` | POST | フィードバック（目安箱）送信 |
 
 ### お気に入りグループ
 | パス | メソッド | 説明 |

@@ -45,6 +45,7 @@ npm run update:stocks    # JPXデータからstocks.csv更新
 12. **アラート一覧・スヌーズ** - 統合管理・6段階スヌーズ・リアルタイム更新
 13. **投資カレンダー・タイムライン** - 6種イベント・タイムライン・月間カレンダー・カウントダウン
 14. **サウンドフィードバック** - 9種操作音（Web Audio APIシンセ）・ON/OFF・音量調整・メモ保存時ペン書き音・アコーディオン開閉音
+15. **目安箱（フィードバック）** - 機能要望・改善提案・不具合報告・その他の4カテゴリ・1000文字制限・DB保存
 
 ## アーキテクチャ
 
@@ -59,7 +60,7 @@ npm run update:stocks    # JPXデータからstocks.csv更新
 ```
 - 認証保護は `src/middleware.ts` で実装
 
-### データベーススキーマ（14テーブル）
+### データベーススキーマ（15テーブル）
 ```
 app_users (ユーザー管理)
 ├── stocks (銘柄マスター)
@@ -68,7 +69,8 @@ app_users (ユーザー管理)
 │   ├── stock_tags, next_action_plans, stock_tab_states
 │   └── stock_favorite_groups (中間テーブル)
 ├── favorite_groups (お気に入りグループ)
-└── snoozed_alerts (アラートスヌーズ管理)
+├── snoozed_alerts (アラートスヌーズ管理)
+└── feedbacks (フィードバック・目安箱)
 ```
 
 > 詳細は `docs/architecture.md` を参照
@@ -80,6 +82,7 @@ app_users (ユーザー管理)
 - `SimplePortfolioSummary.tsx` / `InvestmentPieChart.tsx`: ポートフォリオ系
 - `StrategySummaryPage.tsx` / `AlertSummaryPage.tsx` / `DividendBenefitListPage.tsx`: ダッシュボード系
 - `InvestmentCalendar.tsx` / `InvestmentTimeline.tsx` / `TodayTomorrowEvents.tsx`: カレンダー系
+- `FeedbackModal.tsx`: 目安箱モーダル（カテゴリ選択・1000文字制限・送信）
 - `SoundSettings.tsx`: サウンドフィードバック設定（ON/OFF・音量・試聴）
 - LP系: `LandingNavbar.tsx` / `HeroSection.tsx` / `ProblemSection.tsx` / `SolutionSection.tsx` / `FeaturesSection.tsx` / `HowItWorksSection.tsx` / `DifferentiationSection.tsx` / `FAQSection.tsx` / `FinalCTASection.tsx` / `LandingFooter.tsx` / `ScrollAnimationWrapper.tsx`
 > フック・API・型定義の詳細は `docs/architecture.md` を参照
@@ -91,12 +94,12 @@ app_users (ユーザー管理)
 - [x] モバイル・レスポンシブ対応確認（2026年3月完了）
 - [x] 初回ユーザー向けオンボーディング（5ステップウェルカムウィザード）
 - [x] エラーハンドリングの強化
-- [x] テストコード（Vitest + RTL + MSW、363テスト）
+- [x] テストコード（Vitest + RTL + MSW、380テスト）
 - [x] 20銘柄制限
 - [x] favicon設定
 - [x] ドメイン設定（kabunote.jp）
 - [x] SEO対策（OGP・Twitter Card・keywords対応）
-- [ ] ユーザー問い合わせ機能
+- [x] ユーザー問い合わせ機能（目安箱・フィードバック送信）
 - [x] ランディングページ（本番リニューアル済・10セクション・スクロールアニメーション・SEO）
 
 ### 推奨改善項目

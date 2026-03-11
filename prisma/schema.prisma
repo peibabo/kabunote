@@ -28,6 +28,7 @@ model User {
   stocks        Stock[]
   favoriteGroups FavoriteGroup[]
   snoozedAlerts SnoozedAlert[]
+  feedbacks     Feedback[]
 
   @@map("app_users")
 }
@@ -272,4 +273,24 @@ enum AlertType {
   STOP_LOSS_APPROACHING
   PROFIT_TARGET_APPROACHING
   NEXT_ACTION_WARNING
+}
+
+enum FeedbackCategory {
+  FEATURE_REQUEST
+  IMPROVEMENT
+  BUG_REPORT
+  OTHER
+}
+
+// フィードバック（目安箱）
+model Feedback {
+  id        String           @id @default(cuid())
+  userId    String           @map("user_id")
+  category  FeedbackCategory
+  content   String
+  createdAt DateTime         @default(now()) @map("created_at")
+
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("feedbacks")
 }

@@ -53,6 +53,15 @@ export default function SlideOutMenu({ isOpen, onClose, alertCounts, onMenuItemC
 
         {/* メニュー項目 */}
         <nav className="p-4 space-y-2">
+          {/* 開発者に機能要望を送る */}
+          <button
+            onClick={() => handleMenuClick('feedback')}
+            className="w-full flex items-center space-x-3 p-3 text-left bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 rounded-lg transition-all cursor-pointer shadow-lg"
+          >
+            <span className="text-xl">📮</span>
+            <span className="text-white font-medium">開発者に機能要望を送る</span>
+          </button>
+
           {/* アラート一覧 */}
           <button
             onClick={() => handleMenuClick('alerts')}
@@ -154,13 +163,6 @@ export default function SlideOutMenu({ isOpen, onClose, alertCounts, onMenuItemC
                 >
                   <span className="text-lg">🏷️</span>
                   <span className="text-gray-300">タグ管理</span>
-                </button>
-                <button
-                  onClick={() => handleMenuClick('tutorial')}
-                  className="w-full flex items-center space-x-3 p-2 text-left hover:bg-gray-700 rounded-lg transition-colors cursor-pointer"
-                >
-                  <span className="text-lg">🎓</span>
-                  <span className="text-gray-300">チュートリアル再表示</span>
                 </button>
                 <button
                   onClick={() => handleMenuClick('deleteAccount')}
