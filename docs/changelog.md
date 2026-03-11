@@ -1,5 +1,30 @@
 # Kabunote - プロジェクトマイルストーン
 
+## 目安箱（フィードバック）機能（2026年3月11日）
+**ユーザーが気軽に機能要望・改善提案をDB送信できる「目安箱」機能**
+
+### 技術的成果
+- Feedbackモデル + FeedbackCategory enum をPrismaスキーマに追加（15テーブル）
+- POST /api/feedback APIルート（withAuth認証・バリデーション）
+- FeedbackModalコンポーネント（4カテゴリ選択・1000文字制限・残文字数表示）
+- useModalsフックにfeedback状態を統合
+- SlideOutMenuに「目安箱」メニュー項目追加
+
+### 新規ファイル
+- `src/app/api/feedback/route.ts` - フィードバックAPI
+- `src/components/FeedbackModal.tsx` - 送信モーダル
+- `src/__tests__/api/feedback.test.ts` - APIテスト（7件）
+- `src/__tests__/components/FeedbackModal.test.tsx` - コンポーネントテスト（10件）
+
+### 変更ファイル
+- `prisma/schema.prisma` - Feedbackモデル・FeedbackCategory enum・Userリレーション追加
+- `src/hooks/useModals.ts` - isFeedbackOpen状態追加
+- `src/components/SlideOutMenu.tsx` - 目安箱ボタン追加
+- `src/app/dashboard/page.tsx` - FeedbackModalインポート・配置
+- `src/__tests__/mocks/prisma.ts` - feedbackモック追加
+
+---
+
 ## サウンドフィードバック機能（2026年3月10日）
 **Web Audio API シンセ音による操作フィードバック**
 

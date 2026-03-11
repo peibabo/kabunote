@@ -17,6 +17,8 @@ interface UseModalsReturn {
   setIsDividendBenefitListOpen: (open: boolean) => void;
   isDeleteAccountOpen: boolean;
   setIsDeleteAccountOpen: (open: boolean) => void;
+  isFeedbackOpen: boolean;
+  setIsFeedbackOpen: (open: boolean) => void;
   isMenuOpen: boolean;
   setIsMenuOpen: (open: boolean) => void;
   handleMenuItemClick: (action: string) => void;
@@ -31,6 +33,7 @@ export function useModals(refreshData: () => Promise<void>, onTutorialClick?: ()
   const [isEventCalendarOpen, setIsEventCalendarOpen] = useState(false);
   const [isDividendBenefitListOpen, setIsDividendBenefitListOpen] = useState(false);
   const [isDeleteAccountOpen, setIsDeleteAccountOpen] = useState(false);
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const handleMenuItemClick = useCallback((action: string) => {
@@ -66,6 +69,9 @@ export function useModals(refreshData: () => Promise<void>, onTutorialClick?: ()
       case 'deleteAccount':
         setIsDeleteAccountOpen(true);
         break;
+      case 'feedback':
+        setIsFeedbackOpen(true);
+        break;
       case 'tutorial':
         if (onTutorialClick) {
           onTutorialClick();
@@ -85,6 +91,7 @@ export function useModals(refreshData: () => Promise<void>, onTutorialClick?: ()
     isEventCalendarOpen, setIsEventCalendarOpen,
     isDividendBenefitListOpen, setIsDividendBenefitListOpen,
     isDeleteAccountOpen, setIsDeleteAccountOpen,
+    isFeedbackOpen, setIsFeedbackOpen,
     isMenuOpen, setIsMenuOpen,
     handleMenuItemClick,
   };
