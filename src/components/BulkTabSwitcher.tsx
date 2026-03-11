@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { stockKey } from '@/lib/storageKeys';
+import { playSound } from '@/lib/sound';
 
 type TabOption = {
   label: string;
@@ -105,7 +106,7 @@ export default function BulkTabSwitcher({ stockSymbols }: Props) {
           return (
             <button
               key={option.label}
-              onClick={() => handleClick(option)}
+              onClick={() => { playSound('toggle'); handleClick(option); }}
               title={option.label}
               className={`cursor-pointer text-xs px-3 py-1 md:px-3 md:py-1 rounded transition-all duration-150 whitespace-nowrap md:flex-1 md:text-center ${
                 isActive
