@@ -235,9 +235,8 @@ export default function Home() {
 
       <main className="container mx-auto px-4 py-4">
         <div className="mb-4">
-          {/* 外部リンク + 検索バー 1行 */}
-          <div className="flex items-center justify-between gap-4 mb-4">
-            {/* 左: 外部リンク */}
+          {/* 外部リンク */}
+          <div className="flex items-center gap-4 mb-4">
             <div className="flex overflow-x-auto gap-3 flex-shrink-0 pt-1 -mt-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
               {[
                 { href: 'https://kabutan.jp/warning/record_w52_high_price&dispmode=normal', icon: '📈', label: '52週高値', gradient: 'from-green-600 to-blue-600' },
@@ -259,43 +258,7 @@ export default function Home() {
                 </a>
               ))}
             </div>
-            {/* 右: 検索バー（PC） */}
-            <div className="w-80 flex-shrink-0 hidden md:block">
-              <SearchBar
-                searchQuery={searchQuery}
-                onSearchChange={setSearchQuery}
-              />
-            </div>
           </div>
-          {/* モバイル用検索バー */}
-          <div className="md:hidden mb-4">
-            <SearchBar
-              searchQuery={searchQuery}
-              onSearchChange={setSearchQuery}
-            />
-          </div>
-
-          {/* 検索結果表示 */}
-          {searchQuery.trim() && (
-            <div className="bg-gray-800 rounded-lg p-3 mb-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  {isSearching && (
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-400"></div>
-                  )}
-                  <p className="text-sm text-gray-300">
-                    「<span className="text-blue-400 font-medium">{searchQuery}</span>」の検索結果: {isSearching ? '検索中...' : `${filteredStocks.length}件`}
-                  </p>
-                </div>
-                <button
-                  onClick={() => setSearchQuery('')}
-                  className="cursor-pointer text-xs text-gray-400 hover:text-white transition-colors"
-                >
-                  検索をクリア
-                </button>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* ポートフォリオサマリー */}
@@ -370,7 +333,7 @@ export default function Home() {
 
         {/* お気に入りグループフィルター */}
         {favoriteGroups.length > 0 && stockSymbols.length > 0 && (
-          <div className="bg-gray-800 rounded-lg p-4 mb-6">
+          <div className="bg-gray-800 rounded-lg p-4 mb-2">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-lg font-semibold text-white">⭐ お気に入りグループ</h3>
               <button
@@ -422,6 +385,36 @@ export default function Home() {
         )}
 
         <BulkTabSwitcher stockSymbols={filteredStocks} />
+
+        {/* 検索バー */}
+        <div className="mb-2">
+          <SearchBar
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+          />
+        </div>
+
+        {/* 検索結果表示 */}
+        {searchQuery.trim() && (
+          <div className="bg-gray-800 rounded-lg p-3 mb-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                {isSearching && (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-400"></div>
+                )}
+                <p className="text-sm text-gray-300">
+                  「<span className="text-blue-400 font-medium">{searchQuery}</span>」の検索結果: {isSearching ? '検索中...' : `${filteredStocks.length}件`}
+                </p>
+              </div>
+              <button
+                onClick={() => setSearchQuery('')}
+                className="cursor-pointer text-xs text-gray-400 hover:text-white transition-colors"
+              >
+                検索をクリア
+              </button>
+            </div>
+          </div>
+        )}
 
         <div>
           {isStockDataLoading ? (
