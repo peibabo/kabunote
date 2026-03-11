@@ -9,6 +9,7 @@ import { useCash } from '@/hooks/useCash';
 import { STORAGE_KEYS } from '@/lib/storageKeys';
 import { CustomTag } from '@/types/tags';
 import { getCompanyNameSync, getSectorSync } from '@/data/stockNames';
+import { playSound } from '@/lib/sound';
 
 interface StockData {
   id: string;
@@ -511,6 +512,7 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
         <button
           onClick={() => {
             const next = !isCashSectionExpanded;
+            playSound(next ? 'accordionOpen' : 'accordionClose');
             setIsCashSectionExpanded(next);
             localStorage.setItem(STORAGE_KEYS.CASH_SECTION_EXPANDED, String(next));
           }}
@@ -628,7 +630,10 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
         <div className="mt-2">
           {/* アコーディオンヘッダー */}
           <button
-            onClick={() => setIsTargetSummaryExpanded(!isTargetSummaryExpanded)}
+            onClick={() => {
+              playSound(!isTargetSummaryExpanded ? 'accordionOpen' : 'accordionClose');
+              setIsTargetSummaryExpanded(!isTargetSummaryExpanded);
+            }}
             className="w-full flex items-center justify-between p-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors cursor-pointer mb-2"
           >
             <div className="flex items-center gap-2">
@@ -835,7 +840,10 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
         <div>
           {/* アコーディオンヘッダー */}
           <button
-            onClick={() => setIsChartsExpanded(!isChartsExpanded)}
+            onClick={() => {
+              playSound(!isChartsExpanded ? 'accordionOpen' : 'accordionClose');
+              setIsChartsExpanded(!isChartsExpanded);
+            }}
             className="w-full flex items-center justify-between p-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors cursor-pointer"
           >
             <div className="flex items-center gap-2">
