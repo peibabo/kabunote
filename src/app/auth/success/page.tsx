@@ -30,7 +30,7 @@ export default function AuthSuccess() {
           if (sessionData.session) {
             // 1秒後にホームページへリダイレクト
             setTimeout(() => {
-              router.push('/')
+              router.push('/dashboard')
             }, 1000)
             return true
           }
@@ -39,7 +39,7 @@ export default function AuthSuccess() {
           if (attempts < maxAttempts) {
             setTimeout(checkSession, 500) // 500ms後に再チェック
           } else {
-            router.push('/')
+            router.push('/dashboard')
           }
 
           return false
@@ -69,7 +69,7 @@ export default function AuthSuccess() {
           <h1 className="text-2xl font-bold text-white mb-2">認証エラー</h1>
           <p className="text-gray-300 mb-6">{error}</p>
           <a
-            href="/"
+            href="/dashboard"
             className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
           >
             ホームに戻る

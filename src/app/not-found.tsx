@@ -8,7 +8,7 @@ export default function NotFound() {
           お探しのページは存在しないか、移動した可能性があります。
         </p>
         <a
-          href="/"
+          href="/dashboard"
           className="inline-block px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
         >
           トップに戻る

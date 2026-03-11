@@ -48,6 +48,17 @@ npm run update:stocks    # JPXデータからstocks.csv更新
 
 ## アーキテクチャ
 
+### ルート構成
+```
+/           → ランディングページ（LP、公開、認証済みなら /dashboard にリダイレクト）
+/login      → ログイン画面（Google OAuth + Magic Link）
+/dashboard  → メインアプリ（認証必須、未認証なら /login にリダイレクト）
+/help       → ヘルプページ（公開）
+/privacy    → プライバシーポリシー（公開）
+/terms      → 利用規約（公開）
+```
+- 認証保護は `src/middleware.ts` で実装
+
 ### データベーススキーマ（14テーブル）
 ```
 app_users (ユーザー管理)
@@ -85,7 +96,7 @@ app_users (ユーザー管理)
 - [x] ドメイン設定（kabunote.jp）
 - [ ] SEO対策
 - [ ] ユーザー問い合わせ機能
-- [ ] ランディングページ
+- [x] ランディングページ（`/` LP・`/dashboard` アプリ・middleware認証保護）
 
 ### 推奨改善項目
 - [x] パフォーマンス最適化（20銘柄上限・カレンダー・検索）
