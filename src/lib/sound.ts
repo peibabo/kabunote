@@ -14,7 +14,8 @@ export type SoundName =
   | 'select'
   | 'buttonAction'
   | 'buttonDelete'
-  | 'searchClear';
+  | 'searchClear'
+  | 'noteSave';
 
 interface SoundDef {
   waveform: OscillatorType;
@@ -23,7 +24,7 @@ interface SoundDef {
   duration: number; // seconds
 }
 
-const SOUND_DEFS: Record<SoundName, SoundDef> = {
+const SOUND_DEFS: Record<Exclude<SoundName, 'noteSave'>, SoundDef> = {
   textInput:    { waveform: 'sine', freqStart: 1047, freqEnd: 1047, duration: 0.05 },
   toggle:       { waveform: 'sine', freqStart: 700,  freqEnd: 900,  duration: 0.08 },
   select:       { waveform: 'sine', freqStart: 880,  freqEnd: 1100, duration: 0.06 },
@@ -80,9 +81,54 @@ export function initSoundEngine(): void {
   audioCtx = new AudioContext();
 }
 
+/** ペンで書いているような摩擦音を再生する（ノイズ+バンドパスフィルター） */
+function playPenWriteSound(): void {
+  if (!audioCtx) return;
+  const duration = 0.18;
+  const sampleRate = audioCtx.sampleRate;
+  const length = Math.floor(sampleRate * duration);
+  const buffer = audioCtx.createBuffer(1, length, sampleRate);
+  const data = buffer.getChannelData(0);
+
+  // ホワイトノイズに振幅変調（カリカリ感）を加える
+  for (let i = 0; i < length; i++) {
+    const t = i / sampleRate;
+    // 3つの短いストローク（山）を作る振幅エンベロープ
+    const phase = (t / duration) * 3;
+    const stroke = Math.sin(phase * Math.PI) * 0.7 + 0.3;
+    data[i] = (Math.random() * 2 - 1) * stroke;
+  }
+
+  const source = audioCtx.createBufferSource();
+  source.buffer = buffer;
+
+  // バンドパスフィルターで「紙の上のペン」のような帯域に絞る
+  const filter = audioCtx.createBiquadFilter();
+  filter.type = 'bandpass';
+  filter.frequency.value = 4500;
+  filter.Q.value = 0.8;
+
+  const gain = audioCtx.createGain();
+  gain.gain.setValueAtTime(volume * 0.25, audioCtx.currentTime);
+  gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + duration);
+
+  source.connect(filter);
+  filter.connect(gain);
+  gain.connect(audioCtx.destination);
+  source.start(audioCtx.currentTime);
+  source.stop(audioCtx.currentTime + duration);
+}
+
 /** サウンドを再生する */
 export function playSound(name: SoundName): void {
   if (!enabled || !audioCtx) return;
+
+  // noteSave はノイズベースのペン書き音
+  if (name === 'noteSave') {
+    playPenWriteSound();
+    return;
+  }
+
   const def = SOUND_DEFS[name];
   if (!def) return;
 

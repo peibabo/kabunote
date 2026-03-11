@@ -16,6 +16,10 @@ vi.mock('@/lib/toast', () => ({
   toast: { success: vi.fn(), error: vi.fn(), warning: vi.fn() },
 }))
 
+vi.mock('@/lib/sound', () => ({
+  playSound: vi.fn(),
+}))
+
 describe('useStockMemo', () => {
   beforeEach(() => {
     mockApiFetch.mockReset()

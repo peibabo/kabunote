@@ -47,10 +47,10 @@ describe('sound engine', () => {
       expect(true).toBe(true);
     });
 
-    it('全6種のサウンドが再生可能', () => {
+    it('全7種のサウンドが再生可能', () => {
       soundModule.initSoundEngine();
       const names: Array<import('@/lib/sound').SoundName> = [
-        'textInput', 'toggle', 'select', 'buttonAction', 'buttonDelete', 'searchClear',
+        'textInput', 'toggle', 'select', 'buttonAction', 'buttonDelete', 'searchClear', 'noteSave',
       ];
       for (const name of names) {
         soundModule.playSound(name);
