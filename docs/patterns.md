@@ -109,6 +109,45 @@ export async function GET(
 
 ---
 
+## APIレート制限パターン
+
+全APIルートは `withAuth()` / `withStock()` 経由でインメモリのスライディングウィンドウ方式レート制限が自動適用される。
+
+### デフォルト制限
+- **一般API**: 1分間に60リクエスト（ユーザーID単位）
+
+### カスタム制限の適用
+```typescript
+import { withAuth } from '@/lib/apiHandler'
+import { FEEDBACK_LIMIT } from '@/lib/rateLimit'
+
+// 第3引数のoptionsでカスタムレート制限を指定
+export const POST = withAuth(async ({ user, request }) => {
+  // ...
+}, 'フィードバックの送信', { rateLimit: FEEDBACK_LIMIT })
+```
+
+### プリセット設定（`src/lib/rateLimit.ts`）
+| プリセット | 制限 | 用途 |
+|-----------|------|------|
+| デフォルト | 60回/分 | 一般API |
+| `WRITE_LIMIT` | 30回/分 | 書き込み系API |
+| `AUTH_LIMIT` | 10回/分 | 認証・アカウント系（sync-user, account/delete） |
+| `FEEDBACK_LIMIT` | 5回/時 | フィードバック送信 |
+
+### レスポンスヘッダー
+すべてのAPIレスポンスに以下のヘッダーが付与される：
+- `X-RateLimit-Limit`: ウィンドウ内の最大リクエスト数
+- `X-RateLimit-Remaining`: 残りリクエスト数
+- `X-RateLimit-Reset`: リセットまでの秒数
+
+制限超過時は `429 Too Many Requests` + `Retry-After` ヘッダーを返却。
+
+### テスト時の注意
+APIテストの `beforeEach` で `resetRateLimitStore()` を呼び出すこと（テスト間でレート制限状態が共有されるため）。
+
+---
+
 ## RLSポリシー設定
 
 `prisma db push --force-reset` 後はRLSポリシー再設定が必要。Supabase Dashboard > SQL Editor で以下を実行する。

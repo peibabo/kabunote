@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { prismaMock } from '../mocks/prisma'
 import '../mocks/supabase'
 import { createRequest, getJson } from '../helpers/apiTestHelper'
+import { resetRateLimitStore } from '@/lib/rateLimit'
 
 // supabaseAdmin モック（route.ts内でcreateClientを直接呼んでいる）
 const mockDeleteUser = vi.fn()
@@ -20,6 +21,7 @@ import { DELETE } from '@/app/api/account/delete/route'
 describe('DELETE /api/account/delete', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    resetRateLimitStore()
   })
 
   it('成功: DB削除+Auth削除 → 200', async () => {

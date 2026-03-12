@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withAuth } from '@/lib/apiHandler'
+import { FEEDBACK_LIMIT } from '@/lib/rateLimit'
 
 const VALID_CATEGORIES = ['FEATURE_REQUEST', 'IMPROVEMENT', 'BUG_REPORT', 'OTHER'] as const
 
@@ -37,4 +38,4 @@ export const POST = withAuth(async ({ user, request }) => {
   })
 
   return NextResponse.json({ success: true })
-}, 'フィードバックの送信')
+}, 'フィードバックの送信', { rateLimit: FEEDBACK_LIMIT })
