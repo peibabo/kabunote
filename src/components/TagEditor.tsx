@@ -18,7 +18,7 @@ interface TagEditorProps {
   onClose: () => void;
 }
 
-export default function TagEditor({ symbol: _symbol, currentTags, onAddTag, onRemoveTag, onClose }: TagEditorProps) {
+export default function TagEditor({ currentTags, onAddTag, onRemoveTag, onClose }: TagEditorProps) {
   const [newTagLabel, setNewTagLabel] = useState('');
   const [newTagColor, setNewTagColor] = useState<TagColor>('blue');
   const [userTags, setUserTags] = useState<UserTag[]>([]);

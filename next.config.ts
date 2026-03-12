@@ -29,7 +29,7 @@ const securityHeaders = [
       "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
-      "img-src 'self' data: blob: https://www.google-analytics.com",
+      "img-src 'self' data: blob: https://www.google-analytics.com https://lh3.googleusercontent.com",
       "worker-src 'self' blob:",
       "connect-src 'self' https://*.supabase.co https://www.google-analytics.com https://analytics.google.com https://*.sentry.io",
       "frame-ancestors 'none'",
@@ -38,6 +38,14 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+      },
+    ],
+  },
   async headers() {
     return [
       {

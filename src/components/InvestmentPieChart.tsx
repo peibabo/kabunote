@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { Position, calculatePositionSummary, formatPrice } from '@/types/positions';
-import { CustomTag, TAG_COLORS } from '@/types/tags';
+import { CustomTag } from '@/types/tags';
 import { calculateDividendInfo, formatDividendAmount, formatDividendYield } from '@/types/dividend';
 import { calculateShareholderBenefit, formatBenefitValue, formatBenefitYield } from '@/types/shareholder';
 
@@ -304,7 +304,6 @@ export default function InvestmentPieChart({ portfolioData, type }: InvestmentPi
                 strokeWidth="2"
                 className="hover:opacity-80 transition-opacity cursor-pointer"
                 onMouseEnter={(e) => {
-                  const rect = e.currentTarget.getBoundingClientRect();
                   const containerRect = e.currentTarget.closest('div')?.getBoundingClientRect();
                   setTooltip({
                     label: item.label,

@@ -1,25 +1,14 @@
 'use client';
 
 import { useMemo, useState, useRef, useEffect } from 'react';
-import { InvestmentEvent, formatDateString, TimelineEvent, CalendarDay, EventSummary, calculateFullDateFromMonthDay } from '@/types/investmentCalendar';
-import { DividendRightsSettings, ShareholderRightsSettings, ShareholderMeetingSettings } from '@/types/rightsDate';
-import { getEventStyle, shouldShowDateLabel, calculateBusinessDaysBefore, getEventDotColor } from '@/utils/timelineUtils';
+import { InvestmentEvent, formatDateString, TimelineEvent, CalendarDay } from '@/types/investmentCalendar';
+import { getEventStyle, shouldShowDateLabel, getEventDotColor } from '@/utils/timelineUtils';
 import { STORAGE_KEYS } from '@/lib/storageKeys';
 import { playSound } from '@/lib/sound';
 
 interface InvestmentTimelineProps {
   events: Record<string, InvestmentEvent[]>;
   onStockClick?: (symbol: string) => void;
-  stockSymbols: string[];
-  stockData: {
-    [symbol: string]: {
-      name: string;
-      earningsDate: string;
-      dividendRightsSettings: DividendRightsSettings;
-      shareholderRightsSettings: ShareholderRightsSettings;
-      shareholderMeetingSettings: ShareholderMeetingSettings;
-    }
-  };
 }
 
 interface TooltipState {
@@ -30,7 +19,7 @@ interface TooltipState {
 }
 
 
-export default function InvestmentTimeline({ events, onStockClick, stockSymbols, stockData }: InvestmentTimelineProps) {
+export default function InvestmentTimeline({ events, onStockClick }: InvestmentTimelineProps) {
   const [tooltip, setTooltip] = useState<TooltipState>({
     show: false,
     x: 0,
@@ -157,8 +146,6 @@ export default function InvestmentTimeline({ events, onStockClick, stockSymbols,
 
     // 月の最初と最後の日
     const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-
     // カレンダーの開始日（月曜日始まり）
     const startDate = new Date(firstDay);
     const dayOfWeek = firstDay.getDay();

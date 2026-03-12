@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 
 const navLinks = [
   { href: '#features', label: '機能紹介' },
@@ -31,9 +32,11 @@ export default function LandingNavbar() {
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3">
-            <img
+            <Image
               src="/kabunote-logo.png"
               alt="カブノオト"
+              width={150}
+              height={48}
               className="h-10 md:h-12 w-auto"
               style={{ filter: 'drop-shadow(0 0 8px rgba(255, 255, 255, 0.4))' }}
             />

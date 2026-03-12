@@ -58,6 +58,7 @@ export default async function Image() {
         {/* ロゴ画像 */}
         <img
           src={logoBase64}
+          alt=""
           width={400}
           height={120}
           style={{

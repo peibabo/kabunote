@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Image from 'next/image'
 import { createClient } from '@/lib/supabase-client'
 import type { User } from '@supabase/supabase-js'
 
@@ -86,9 +87,11 @@ export default function AuthButton() {
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-2">
           {user.user_metadata?.avatar_url && (
-            <img
+            <Image
               src={user.user_metadata.avatar_url}
               alt="Profile"
+              width={24}
+              height={24}
               className="w-6 h-6 rounded-full"
             />
           )}

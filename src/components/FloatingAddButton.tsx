@@ -38,6 +38,7 @@ export default function FloatingAddButton({
   // 外部からモーダルを開く
   useEffect(() => {
     if (forceOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsModalOpen(true);
       setError('');
       onForceOpenHandled?.();

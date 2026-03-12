@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase-client'
-import { prisma } from '@/lib/prisma'
 import type { User as SupabaseUser } from '@supabase/supabase-js'
 
 interface User extends SupabaseUser {

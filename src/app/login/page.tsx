@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import { createClient } from '@/lib/supabase-client'
 
 export default function LoginPage() {
@@ -48,9 +49,11 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gray-900 flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <img
+          <Image
             src="/kabunote-logo.png"
             alt="カブノオト - 投資思考整理ダッシュボード"
+            width={200}
+            height={64}
             className="h-16 w-auto mx-auto"
             style={{
               filter: 'drop-shadow(0 0 8px rgba(255, 255, 255, 0.4))'

@@ -36,7 +36,7 @@ describe('GET /api/stocks/[stockId]/next-action-plan', () => {
     prismaMock.nextActionPlan.create.mockResolvedValue(mockNAP as never)
 
     const req = createRequest('GET', 'http://localhost:3000/api/stocks/stock-7203/next-action-plan')
-    const res = await GET(req, createParams({ stockId: 'stock-7203' }))
+    await GET(req, createParams({ stockId: 'stock-7203' }))
     expect(prismaMock.nextActionPlan.create).toHaveBeenCalled()
   })
 })
@@ -88,7 +88,7 @@ describe('PUT /api/stocks/[stockId]/next-action-plan', () => {
       actionType: 'sell',
       priority: 'low',
     })
-    const res = await PUT(req, createParams({ stockId: 'stock-7203' }))
+    await PUT(req, createParams({ stockId: 'stock-7203' }))
     expect(prismaMock.nextActionPlan.create).toHaveBeenCalled()
   })
 })

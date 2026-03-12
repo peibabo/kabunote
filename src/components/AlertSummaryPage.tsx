@@ -166,7 +166,8 @@ export default function AlertSummaryPage({ stockData = [] }: AlertSummaryPagePro
     });
 
     return alerts.sort((a, b) => a.priority - b.priority);
-  }, [stockData, availableCash, snoozeLoaded, showSnoozed, isAlertSnoozed]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- collectAlerts は availableCash, showSnoozed, isAlertSnoozed に依存するクロージャ。個別に列挙済み
+  }, [stockData, availableCash, snoozeLoaded, showSnoozed, isAlertSnoozed, collectAlerts]);
 
   // アラート種別に応じたスタイル取得
   const getAlertStyles = (alertType: AlertType) => {

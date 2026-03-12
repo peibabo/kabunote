@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, M_PLUS_1p } from "next/font/google";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import "./globals.css";
 import ToastContainer from "@/components/ToastContainer";
@@ -12,6 +12,13 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+});
+
+const mPlus1p = M_PLUS_1p({
+  weight: "100",
+  subsets: ["latin"],
+  variable: "--font-mplus1p",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -27,13 +34,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja" className="dark">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=M+PLUS+1p:wght@100&display=swap" rel="stylesheet" />
-      </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-900 text-white`}
+        className={`${geistSans.variable} ${geistMono.variable} ${mPlus1p.variable} antialiased bg-gray-900 text-white`}
       >
         {children}
         <ToastContainer />

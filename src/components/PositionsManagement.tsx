@@ -27,7 +27,6 @@ const emptyForm: PositionForm = {
 };
 
 export default function PositionsManagement({
-  symbol,
   stockId,
   initialPositions,
 }: PositionsManagementProps) {

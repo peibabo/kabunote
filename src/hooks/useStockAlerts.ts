@@ -27,7 +27,6 @@ export function useStockAlerts(
   stopLoss: string,
   positionSummary: PositionSummary,
   availableCash: number,
-  isPositionLoading: boolean,
 ): UseStockAlertsReturn {
   const alerts = useMemo<AlertInfo[]>(() => {
     if (!nextActionPlan) return [];
@@ -41,18 +40,12 @@ export function useStockAlerts(
       availableCash
     );
   }, [
-    symbol,
-    nextActionPlan?.targetPrice,
-    nextActionPlan?.targetQuantity,
-    nextActionPlan?.actionType,
-    nextActionPlan?.priority,
-    nextActionPlan?.memo,
+    nextActionPlan,
     currentPrice,
     targetPrice,
     stopLoss,
     positionSummary,
     availableCash,
-    isPositionLoading,
   ]);
 
   const cardStyles = useMemo<CardStyles>(() => {

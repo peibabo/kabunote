@@ -7,7 +7,7 @@ import {
   getIntegratedAlert,
   getAllActiveAlerts,
 } from '@/utils/alertSystem'
-import { createNextActionPlan, createPositionSummary } from '../helpers/mockFactories'
+import { createNextActionPlan } from '../helpers/mockFactories'
 
 describe('calculateGapPercentage', () => {
   it('正常な乖離率を計算', () => {

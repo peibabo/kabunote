@@ -122,6 +122,7 @@ export function useStockSearch(
 
     const timeoutId = setTimeout(performSearch, 300);
     return () => clearTimeout(timeoutId);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- searchStocks はコンポーネント内関数で毎レンダー再生成される。実質的な依存は searchRelevantKey と stockDataMap で管理
   }, [searchQuery, stocks, selectedGroupFilter, favoriteGroups, searchRelevantKey, stockDataMap]);
 
   const filteredStocks = useMemo(() => {

@@ -1,9 +1,7 @@
 'use client';
 
-import { useStringLocalStorage } from '@/hooks/useLocalStorage';
 import { playSound } from '@/lib/sound';
-import { ShareholderMeetingSettings, createDefaultRightsSettings, calculateRightsDateFromSettings, shouldDeactivateRights } from '@/types/rightsDate';
-import { useEffect } from 'react';
+import { ShareholderMeetingSettings, calculateRightsDateFromSettings } from '@/types/rightsDate';
 
 interface EarningsCountdown {
   text: string;

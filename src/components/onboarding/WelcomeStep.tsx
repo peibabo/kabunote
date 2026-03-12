@@ -1,12 +1,16 @@
 'use client';
 
+import Image from 'next/image';
+
 export default function WelcomeStep() {
   return (
     <div className="text-center">
       <div className="mb-6" style={{ animation: 'neonPulse 2s ease-in-out infinite' }}>
-        <img
+        <Image
           src="/kabunote-logo.png"
           alt="カブノオト"
+          width={200}
+          height={80}
           className="h-16 md:h-20 w-auto mx-auto"
         />
       </div>

@@ -53,7 +53,8 @@ export function useLocalStorage<T>(
       }
     }
     setIsLoading(false);
-  }, [key]); // initialValue と parser を依存配列から除外
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- initialValue と parser は初期化時のみ使用。変更時の再読み込みは不要
+  }, [key]);
 
   // 外部からの localStorageChange イベントを受信して state を更新
   useEffect(() => {
@@ -75,7 +76,8 @@ export function useLocalStorage<T>(
 
     window.addEventListener('localStorageChange', handleExternalChange);
     return () => window.removeEventListener('localStorageChange', handleExternalChange);
-  }, [key]); // parser を意図的に除外（初期化時のみ参照）
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- parser は初期化時のみ参照。変更時の再登録は不要
+  }, [key]);
 
   // 値を設定する関数（即座にUI更新、デバウンスで保存）
   const setValue = useCallback((value: T | ((prev: T) => T)) => {

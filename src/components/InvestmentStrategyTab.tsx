@@ -1,6 +1,6 @@
 'use client';
 
-import { Position, PositionSummary, ProfitLossInfo } from '@/types/positions';
+import { PositionSummary, ProfitLossInfo } from '@/types/positions';
 import { NextActionPlan } from '@/types/nextActionPlan';
 import { useInvestmentTabState } from '@/hooks/useInvestmentTabState';
 import AnalysisSubTab from '@/components/AnalysisSubTab';

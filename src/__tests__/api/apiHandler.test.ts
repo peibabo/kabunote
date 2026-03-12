@@ -1,7 +1,7 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { prismaMock } from '../mocks/prisma'
 import { mockUser, mockSupabaseClient } from '../mocks/supabase'
-import { createRequest, getJson, createParams } from '../helpers/apiTestHelper'
+import { createRequest, createParams } from '../helpers/apiTestHelper'
 import { withAuth, withStock } from '@/lib/apiHandler'
 
 describe('withAuth', () => {

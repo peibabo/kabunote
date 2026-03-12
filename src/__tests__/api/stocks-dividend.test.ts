@@ -62,7 +62,7 @@ describe('PUT /api/stocks/[stockId]/dividend', () => {
     const req = createRequest('PUT', 'http://localhost:3000/api/stocks/stock-7203/dividend', {
       dividendPerShare: 50,
     })
-    const res = await PUT(req, createParams({ stockId: 'stock-7203' }))
+    await PUT(req, createParams({ stockId: 'stock-7203' }))
     expect(prismaMock.stockDividend.create).toHaveBeenCalled()
   })
 })
