@@ -58,7 +58,7 @@ npm run update:stocks    # JPXデータからstocks.csv更新
 /privacy    → プライバシーポリシー（公開）
 /terms      → 利用規約（公開）
 ```
-- 認証保護は `src/middleware.ts` で実装
+- 認証保護は `src/proxy.ts` で実装（Next.js 16 proxy規約）
 
 ### データベーススキーマ（15テーブル）
 ```

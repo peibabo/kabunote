@@ -15,6 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://kabunote.jp"),
   title: "カブノオト - 投資家の思考を整理するダッシュボード",
   description: "日本株の投資情報と投資メモを一元管理。思考の整理で賢い投資判断を。",
 };
