@@ -1,5 +1,6 @@
 'use client'
 
+import * as Sentry from '@sentry/nextjs'
 import { useEffect, useState } from 'react'
 
 const friendlyMessages = [
@@ -41,6 +42,10 @@ export default function Error({
   const [countdown, setCountdown] = useState(retrySeconds)
 
   const msg = friendlyMessages[msgIndex]
+
+  useEffect(() => {
+    Sentry.captureException(error)
+  }, [error])
 
   useEffect(() => {
     const timer = setInterval(() => {

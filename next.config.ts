@@ -1,3 +1,4 @@
+import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
 
 const securityHeaders = [
@@ -29,7 +30,7 @@ const securityHeaders = [
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' data: blob: https://www.google-analytics.com",
-      "connect-src 'self' https://*.supabase.co https://www.google-analytics.com https://analytics.google.com",
+      "connect-src 'self' https://*.supabase.co https://www.google-analytics.com https://analytics.google.com https://*.sentry.io",
       "frame-ancestors 'none'",
     ].join('; '),
   },
@@ -46,4 +47,10 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withSentryConfig(nextConfig, {
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  silent: !process.env.CI,
+  widenClientFileUpload: true,
+  disableLogger: true,
+});

@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs'
 import { NextRequest, NextResponse } from 'next/server'
 import { User } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase-server'
@@ -44,6 +45,7 @@ export function withAuth(handler: AuthHandler, errorLabel: string) {
       const params = context?.params ? await context.params : {}
       return await handler({ user: auth.user, request, params })
     } catch (error) {
+      Sentry.captureException(error)
       console.error(`❌ ${errorLabel}エラー:`, error)
       return NextResponse.json(
         { error: 'Internal Server Error', message: `${errorLabel}に失敗しました` },
