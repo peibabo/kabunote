@@ -28,13 +28,13 @@ export const useDebounce = <T>(value: T, delay: number): T => {
  * @param delay - 遅延時間（ミリ秒）
  * @returns デバウンスされたコールバック関数
  */
-export const useDebouncedCallback = (
-  callback: (...args: any[]) => void,
+export const useDebouncedCallback = <T extends unknown[]>(
+  callback: (...args: T) => void,
   delay: number
 ) => {
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
 
-  const debouncedCallback = useCallback((...args: any[]) => {
+  const debouncedCallback = useCallback((...args: T) => {
     if (debounceTimer.current) {
       clearTimeout(debounceTimer.current);
     }

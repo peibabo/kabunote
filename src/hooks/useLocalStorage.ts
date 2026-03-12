@@ -124,7 +124,7 @@ export function useArrayLocalStorage<T>(
 /**
  * オブジェクト専用localStorage管理フック
  */
-export function useObjectLocalStorage<T extends Record<string, any>>(
+export function useObjectLocalStorage<T extends Record<string, unknown>>(
   key: string,
   initialValue: T,
   debounceMs: number = 300

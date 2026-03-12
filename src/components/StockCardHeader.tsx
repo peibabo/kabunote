@@ -18,7 +18,8 @@ interface StockCardHeaderProps {
   onTagRemove: (tagId: string) => void;
   onRemove: () => void;
   // ドラッグ&ドロップ関連
-  listeners: any;
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+  listeners: Record<string, Function> | undefined;
   isDragging: boolean;
 }
 

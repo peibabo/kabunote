@@ -3,7 +3,7 @@
 import React, { useState, useMemo } from 'react';
 import { useCash } from '@/hooks/useCash';
 import { StockData } from '@/hooks/useStockData';
-import { NextActionPlan, analyzeNextActionPlan, hasNextActionPlan } from '@/types/nextActionPlan';
+import { NextActionPlan, NextActionPlanAnalysis, analyzeNextActionPlan, hasNextActionPlan } from '@/types/nextActionPlan';
 import { getIntegratedAlert, AlertType } from '@/utils/alertSystem';
 import { getCompanyNameSync } from '@/data/stockNames';
 import { calculatePositionSummary } from '@/types/positions';
@@ -14,7 +14,7 @@ interface StrategyRowData {
   plan: NextActionPlan;
   alertType: AlertType;
   currentPrice: number;
-  analysis?: any;
+  analysis?: NextActionPlanAnalysis;
 }
 
 type SortKey = 'priority' | 'action' | 'alert' | 'symbol';
@@ -68,15 +68,14 @@ export default function StrategySummaryPage({ stockData = [] }: StrategySummaryP
         availableCash
       );
 
-      let analysis = null;
-      if (currentPrice > 0) {
-        analysis = analyzeNextActionPlan(
-          plan,
-          currentPrice,
-          positionSummary && positionSummary.totalShares > 0 ? positionSummary : null,
-          availableCash
-        );
-      }
+      const analysis = currentPrice > 0
+        ? analyzeNextActionPlan(
+            plan,
+            currentPrice,
+            positionSummary && positionSummary.totalShares > 0 ? positionSummary : null,
+            availableCash
+          )
+        : undefined;
 
       data.push({
         symbol: stock.symbol,
