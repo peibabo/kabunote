@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   // Basic認証チェック（環境変数が設定されている場合のみ有効）
   const basicUser = process.env.BASIC_AUTH_USERNAME
   const basicPass = process.env.BASIC_AUTH_PASSWORD
