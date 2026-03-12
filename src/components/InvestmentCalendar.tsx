@@ -2,7 +2,6 @@
 
 import { useMemo } from 'react';
 import {
-  InvestmentEvent,
   EventSummary,
   formatDateString,
   calculateFullDateFromMonthDay
@@ -174,8 +173,6 @@ export default function InvestmentCalendar({ stockSymbols, stockData, onStockCli
         <InvestmentTimeline
           events={eventMap}
           onStockClick={onStockClick}
-          stockSymbols={stockSymbols}
-          stockData={stockData}
         />
       </div>
     </div>

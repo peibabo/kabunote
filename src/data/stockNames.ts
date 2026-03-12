@@ -43,8 +43,6 @@ export const loadStockData = async (): Promise<Map<string, StockData>> => {
     };
 
     const lines = csvText.trim().split('\n');
-    const headers = parseCSVLine(lines[0]);
-
     const stockMap = new Map<string, StockData>();
 
     // ヘッダー行をスキップして処理

@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { prismaMock } from '../mocks/prisma'
 import { mockUser, mockSupabaseClient } from '../mocks/supabase'
-import { createRequest, getJson, createParams } from '../helpers/apiTestHelper'
+import { createRequest, getJson } from '../helpers/apiTestHelper'
 import { POST } from '@/app/api/auth/sync-user/route'
 
 describe('POST /api/auth/sync-user', () => {

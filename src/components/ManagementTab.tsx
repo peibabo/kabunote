@@ -1,6 +1,6 @@
 'use client';
 
-import { RightsDateSettings, ShareholderMeetingSettings, createDefaultRightsSettings } from '@/types/rightsDate';
+import { ShareholderMeetingSettings } from '@/types/rightsDate';
 import { useManagementTabState } from '@/hooks/useManagementTabState';
 import { PositionSummary } from '@/types/positions';
 import EventManagement from '@/components/EventManagement';
@@ -13,9 +13,6 @@ interface ManagementTabProps {
   symbol: string;
   earningsDate: string;
   onEarningsDateChange: (value: string) => void;
-  rightsDate: string;
-  rightsSettings: RightsDateSettings;
-  onRightsSettingsChange: (settings: RightsDateSettings) => void;
   onPositionManagerOpen: () => void;
   shareholderMeetingSettings: ShareholderMeetingSettings;
   onShareholderMeetingSettingsChange: (settings: ShareholderMeetingSettings) => void;
@@ -41,9 +38,6 @@ export default function ManagementTab({
   symbol,
   earningsDate,
   onEarningsDateChange,
-  rightsDate,
-  rightsSettings,
-  onRightsSettingsChange,
   onPositionManagerOpen,
   shareholderMeetingSettings,
   onShareholderMeetingSettingsChange,

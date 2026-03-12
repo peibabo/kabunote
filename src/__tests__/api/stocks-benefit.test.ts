@@ -63,7 +63,7 @@ describe('PUT /api/stocks/[stockId]/benefit', () => {
     const req = createRequest('PUT', 'http://localhost:3000/api/stocks/stock-7203/benefit', {
       description: 'QUOカード',
     })
-    const res = await PUT(req, createParams({ stockId: 'stock-7203' }))
+    await PUT(req, createParams({ stockId: 'stock-7203' }))
     expect(prismaMock.stockBenefit.create).toHaveBeenCalled()
   })
 })

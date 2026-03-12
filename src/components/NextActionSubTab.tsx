@@ -43,14 +43,12 @@ const PRIORITY_COLORS: Record<Priority, string> = {
 };
 
 export default function NextActionSubTab({
-  symbol,
   currentPrice = 0,
   positionSummary,
   nextActionPlan,
   updateNextActionPlan,
   deleteNextActionPlan: resetNextActionPlan,
   isNapLoading: isLoading,
-  isNapSaving: isSaving,
 }: NextActionSubTabProps) {
 
   // 投資余力現金を取得

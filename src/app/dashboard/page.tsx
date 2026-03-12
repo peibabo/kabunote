@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import StockCard from '@/components/StockCard';
 import FavoriteGroupManager from '@/components/FavoriteGroupManager';
 import TagManager from '@/components/TagManager';
@@ -41,7 +42,6 @@ import {
   useSensor,
   useSensors,
   DragEndEvent,
-  DragStartEvent,
 } from '@dnd-kit/core';
 import {
   arrayMove,
@@ -97,7 +97,7 @@ export default function Home() {
   );
 
   // ドラッグ開始ハンドラー
-  const handleDragStart = (_event: DragStartEvent) => {
+  const handleDragStart = () => {
     // no-op: ドラッグ開始時の処理
   };
 
@@ -177,7 +177,7 @@ export default function Home() {
       stocks: group.stocks.filter(s => s !== code)
     }));
     setFavoriteGroups(updatedGroups);
-  }, [stockSymbols, reorderStocks, favoriteGroups, setFavoriteGroups]);
+  }, [stockSymbols, reorderStocks, favoriteGroups, setFavoriteGroups, setError]);
 
   const handleStockClick = (symbol: string) => {
     const element = document.getElementById(`stock-card-${symbol}`);
@@ -206,9 +206,11 @@ export default function Home() {
               className="flex items-center gap-4 group cursor-pointer transition-transform duration-200 hover:scale-105"
               title="カブノオト ホームページ"
             >
-            <img
+            <Image
               src="/kabunote-logo.png"
               alt="カブノオト - 投資思考整理ダッシュボード"
+              width={200}
+              height={64}
               className="h-12 md:h-16 w-auto transition-all duration-300"
               style={{
                 filter: 'drop-shadow(0 0 8px rgba(255, 255, 255, 0.4))'

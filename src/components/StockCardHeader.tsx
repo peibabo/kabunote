@@ -20,7 +20,6 @@ interface StockCardHeaderProps {
   // ドラッグ&ドロップ関連
   // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
   listeners: Record<string, Function> | undefined;
-  isDragging: boolean;
 }
 
 export default function StockCardHeader({
@@ -36,7 +35,6 @@ export default function StockCardHeader({
   onTagRemove,
   onRemove,
   listeners,
-  isDragging
 }: StockCardHeaderProps) {
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 

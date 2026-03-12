@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 
 export default function LandingFooter() {
   return (
@@ -7,9 +8,11 @@ export default function LandingFooter() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
           {/* Logo & tagline */}
           <div>
-            <img
+            <Image
               src="/kabunote-logo.png"
               alt="カブノオト"
+              width={120}
+              height={32}
               className="h-8 w-auto opacity-70 mb-3"
             />
             <p className="text-sm text-gray-500">

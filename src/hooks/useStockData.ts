@@ -265,6 +265,7 @@ export function useStockData(): UseStockDataReturn {
   // 初回データ取得
   useEffect(() => {
     refreshData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 初回マウント時のみ実行。refreshData は毎レンダーで再生成されるため依存に含めると無限ループ
   }, []);
 
   return {

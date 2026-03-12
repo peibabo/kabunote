@@ -43,6 +43,7 @@ export default function FavoriteGroupManager({ groups, onGroupsChange, onClose }
     const exists = groups.some(group => group.name === preset.name);
     if (exists) return;
 
+    // eslint-disable-next-line react-hooks/purity -- Date.now() はイベントハンドラ内でのみ呼ばれるため問題なし
     const groupId = `group-${Date.now()}`;
     const newGroup: FavoriteGroup = {
       id: groupId,
@@ -222,7 +223,7 @@ export default function FavoriteGroupManager({ groups, onGroupsChange, onClose }
                 onChange={(e) => setNewGroupColor(e.target.value as GroupColor)}
                 className="px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm focus:border-blue-500 focus:outline-none"
               >
-                {Object.entries(GROUP_COLORS).map(([color, styles]) => (
+                {Object.entries(GROUP_COLORS).map(([color]) => (
                   <option key={color} value={color}>
                     {color}
                   </option>

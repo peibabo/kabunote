@@ -63,22 +63,22 @@ export default function EventCalendarPage({ stockSymbols, stockData }: EventCale
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   };
 
-  // 日付形式を統一して解析する関数
-  const parseDate = (dateStr: string): Date => {
-    if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
-      // 完全な日付形式 (YYYY-MM-DD) の場合
-      return new Date(dateStr);
-    } else if (dateStr.match(/^\d{2}-\d{2}$/)) {
-      // 月日のみ形式 (MM-DD) の場合
-      return new Date(`${selectedYear}-${dateStr}`);
-    } else {
-      // その他の形式
-      return new Date(dateStr);
-    }
-  };
-
   // イベントデータを収集
   const eventsData = useMemo(() => {
+    // 日付形式を統一して解析する関数（useMemo内で定義して依存関係を明確化）
+    const parseDate = (dateStr: string): Date => {
+      if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        // 完全な日付形式 (YYYY-MM-DD) の場合
+        return new Date(dateStr);
+      } else if (dateStr.match(/^\d{2}-\d{2}$/)) {
+        // 月日のみ形式 (MM-DD) の場合
+        return new Date(`${selectedYear}-${dateStr}`);
+      } else {
+        // その他の形式
+        return new Date(dateStr);
+      }
+    };
+
     const events: EventData[] = [];
 
     stockSymbols.forEach(symbol => {

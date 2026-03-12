@@ -1,9 +1,9 @@
 'use client';
 
-import { PositionSummary, formatPrice, formatShares } from '@/types/positions';
+import { PositionSummary } from '@/types/positions';
 import { playSound } from '@/lib/sound';
 import { useSoundOnChange } from '@/hooks/useSoundOnChange';
-import { DividendRightsSettings, calculateRightsDateFromSettings } from '@/types/rightsDate';
+import { calculateRightsDateFromSettings } from '@/types/rightsDate';
 import { calculateDividendInfo, formatDividendAmount, formatDividendYield } from '@/types/dividend';
 import { useStockDividend } from '@/hooks/useStockDividend';
 

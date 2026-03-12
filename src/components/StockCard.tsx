@@ -6,7 +6,7 @@ import { FavoriteGroup } from '@/types/favorites';
 import { StockData as DBStockData } from '@/hooks/useStockData';
 import { CustomTag } from '@/types/tags';
 import { ProfitLossInfo, calculateProfitLoss, calculatePositionSummary } from '@/types/positions';
-import { RightsDateSettings, createDefaultRightsSettings, calculateRightsDateFromSettings, shouldDeactivateRights } from '@/types/rightsDate';
+import { RightsDateSettings, createDefaultRightsSettings, shouldDeactivateRights } from '@/types/rightsDate';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useStringLocalStorage } from '@/hooks/useLocalStorage';
@@ -64,7 +64,7 @@ function StockCard({ symbol, onRemove, favoriteGroups, onFavoriteGroupsChange, i
   const [isMemoModalOpen, setIsMemoModalOpen] = useState(false);
 
   // タブ状態管理
-  const { activeTab, setActiveTab, tabs, isLoading: isTabLoading } = useTabState(symbol);
+  const { activeTab, setActiveTab, tabs } = useTabState(symbol);
 
   // データ管理（ハイブリッドシステム：認証済み→DB、未認証→localStorage）
   const {
@@ -79,7 +79,6 @@ function StockCard({ symbol, onRemove, favoriteGroups, onFavoriteGroupsChange, i
   // 株式ポジション機能（複数ロット管理）
   const {
     positions,
-    isLoading: isPositionLoading,
   } = useStockPosition(`stock-${symbol}`, initialStockData ? { initialData: initialStockData.positions } : undefined);
 
   const { tags: customTags, addTag, removeTag: removeTagFromDB } = useStockTag(`stock-${symbol}`, initialStockData ? { initialData: initialStockData.tags as CustomTag[] } : undefined);
@@ -147,16 +146,21 @@ function StockCard({ symbol, onRemove, favoriteGroups, onFavoriteGroupsChange, i
   })();
 
   // 権利確定日の自動無効化チェック（単発イベントが過去になった場合）
+  const rightsIsActive = parsedRightsSettings.isActive;
+  const rightsIsRecurring = parsedRightsSettings.isRecurring;
+  const rightsMonth = parsedRightsSettings.month ?? 0;
+  const rightsDay = parsedRightsSettings.day ?? 0;
   useEffect(() => {
     if (parsedRightsSettings.isActive && shouldDeactivateRights(parsedRightsSettings)) {
       const updatedSettings = { ...parsedRightsSettings, isActive: false };
       setRightsSettings(JSON.stringify(updatedSettings));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- parsedRightsSettings はレンダー毎に新規オブジェクト。個別プロパティで依存管理
   }, [
-    parsedRightsSettings.isActive,
-    parsedRightsSettings.isRecurring,
-    parsedRightsSettings.month ?? 0,
-    parsedRightsSettings.day ?? 0,
+    rightsIsActive,
+    rightsIsRecurring,
+    rightsMonth,
+    rightsDay,
     setRightsSettings
   ]);
 
@@ -173,9 +177,6 @@ function StockCard({ symbol, onRemove, favoriteGroups, onFavoriteGroupsChange, i
   //   parsedShareholderMeetingSettings.day ?? 0,
   //   setShareholderMeetingSettings
   // ]);
-
-  // 権利確定日文字列を計算
-  const rightsDate = calculateRightsDateFromSettings(parsedRightsSettings);
 
   // 同期版を使って即座に表示（キャッシュがある場合）
   const companyName = stockData ? stockData.name : getCompanyNameSync(symbol);
@@ -275,7 +276,6 @@ function StockCard({ symbol, onRemove, favoriteGroups, onFavoriteGroupsChange, i
     stopLoss,
     positionSummary,
     availableCash,
-    isPositionLoading,
   );
 
   return (
@@ -313,7 +313,6 @@ function StockCard({ symbol, onRemove, favoriteGroups, onFavoriteGroupsChange, i
         onTagRemove={handleTagRemove}
         onRemove={() => onRemove(symbol)}
         listeners={listeners}
-        isDragging={isDragging}
       />
 
       {/* 統合アラート表示（NextActionPlan + 投資規律設定） */}
@@ -409,9 +408,6 @@ function StockCard({ symbol, onRemove, favoriteGroups, onFavoriteGroupsChange, i
             symbol={symbol}
             earningsDate={earningsDate}
             onEarningsDateChange={updateEarningsDate}
-            rightsDate={rightsDate}
-            rightsSettings={parsedRightsSettings}
-            onRightsSettingsChange={(newSettings) => setRightsSettings(JSON.stringify(newSettings))}
             onPositionManagerOpen={() => {
               // DB統合版では管理タブ内で直接編集するため、何もしない
             }}
