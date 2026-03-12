@@ -114,7 +114,7 @@ app_users (ユーザー管理)
 - [x] セキュリティヘッダ設定（X-Frame-Options, CSP等 → next.config.ts）
 
 ### ローンチ直後対応（P2）
-- [ ] エラー監視ツール導入（Sentry等）
+- [x] エラー監視ツール導入（Sentry — `@sentry/nextjs`）
 - [ ] APIレート制限の実装
 - [x] `.env.example` 作成（環境変数テンプレート）
 - [ ] データエクスポート機能（CSV/JSON）

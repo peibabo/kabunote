@@ -1,5 +1,6 @@
 'use client'
 
+import * as Sentry from '@sentry/nextjs'
 import { useEffect, useState } from 'react'
 
 const BASE_RETRY_SECONDS = 15
@@ -21,11 +22,16 @@ function getAndIncrementAttempt(): number {
 }
 
 export default function GlobalError({
+  error,
   reset,
 }: {
   error: Error & { digest?: string }
   reset: () => void
 }) {
+  useEffect(() => {
+    Sentry.captureException(error)
+  }, [error])
+
   const [attempt] = useState(() => getAndIncrementAttempt())
   const retrySeconds = getRetrySeconds(attempt)
   const [countdown, setCountdown] = useState(retrySeconds)
