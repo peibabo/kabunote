@@ -56,6 +56,7 @@ export default function NextActionSubTab({
   // 投資余力現金を取得
   const { cashAmount } = useCash();
   const availableCash = parseFloat(cashAmount) || 0;
+  const onChangeSound = useSoundOnChange();
 
   if (isLoading) {
     return <div className="text-gray-400">読み込み中...</div>;
@@ -75,8 +76,6 @@ export default function NextActionSubTab({
   // 分析情報を計算（投資余力現金も含める）
   const analysis: NextActionPlanAnalysis | null = currentPrice > 0 && nextActionPlan ?
     analyzeNextActionPlan(nextActionPlan, currentPrice, positionSummary || null, availableCash) : null;
-
-  const onChangeSound = useSoundOnChange();
 
   const hasPlan = nextActionPlan ? hasNextActionPlan(nextActionPlan) : false;
   const isComplete = nextActionPlan ? isCompleteNextActionPlan(nextActionPlan) : false;

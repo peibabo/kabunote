@@ -43,8 +43,9 @@ export default function FavoriteGroupManager({ groups, onGroupsChange, onClose }
     const exists = groups.some(group => group.name === preset.name);
     if (exists) return;
 
+    const groupId = `group-${Date.now()}`;
     const newGroup: FavoriteGroup = {
-      id: `group-${Date.now()}`,
+      id: groupId,
       name: preset.name,
       color: preset.color,
       createdAt: new Date().toISOString(),

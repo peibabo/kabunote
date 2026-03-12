@@ -12,7 +12,7 @@ export function useAutoSave<T>({ value, delay, isLoading, onSave }: UseAutoSaveO
   const hasUserInputRef = useRef(false)
   const debouncedValue = useDebounce(value, delay)
   const onSaveRef = useRef(onSave)
-  onSaveRef.current = onSave
+  useEffect(() => { onSaveRef.current = onSave }, [onSave])
 
   useEffect(() => {
     if (hasUserInputRef.current && !isLoading) {

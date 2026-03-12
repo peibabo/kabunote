@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { NextActionPlan } from '@/types/nextActionPlan';
+import { NextActionPlan, NextActionPlanAnalysis } from '@/types/nextActionPlan';
 import { getAllActiveAlerts, AlertType } from '@/utils/alertSystem';
 import { getCompanyNameSync } from '@/data/stockNames';
 import { calculatePositionSummary } from '@/types/positions';
@@ -24,7 +24,7 @@ interface AlertRowData {
 }
 
 // アラート表示情報を取得（hoisting対策で関数をコンポーネント外に移動）
-const getAlertDisplayInfo = (alert: { type: AlertType; gapPercentage?: number; analysis?: any; targetPrice?: number; stopLossPrice?: number }) => {
+const getAlertDisplayInfo = (alert: { type: AlertType; gapPercentage?: number; analysis?: NextActionPlanAnalysis; targetPrice?: number; stopLossPrice?: number }) => {
   switch (alert.type) {
     case 'insufficient-funds':
       return {
