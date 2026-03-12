@@ -3,9 +3,11 @@ import { prismaMock } from '../mocks/prisma'
 import '../mocks/supabase'
 import { createRequest, getJson } from '../helpers/apiTestHelper'
 import { POST } from '@/app/api/feedback/route'
+import { resetRateLimitStore } from '@/lib/rateLimit'
 
 beforeEach(() => {
   prismaMock.feedback.create.mockReset()
+  resetRateLimitStore()
 })
 
 describe('POST /api/feedback', () => {

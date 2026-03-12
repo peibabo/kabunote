@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { withAuth } from '@/lib/apiHandler'
 import { prisma } from '@/lib/prisma'
+import { AUTH_LIMIT } from '@/lib/rateLimit'
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -22,4 +23,4 @@ export const DELETE = withAuth(async ({ user }) => {
   }
 
   return NextResponse.json({ message: 'アカウントを削除しました' })
-}, 'アカウント削除')
+}, 'アカウント削除', { rateLimit: AUTH_LIMIT })

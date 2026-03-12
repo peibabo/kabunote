@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withAuth } from '@/lib/apiHandler'
+import { AUTH_LIMIT } from '@/lib/rateLimit'
 
 export const POST = withAuth(async ({ user, request }) => {
   const body = await request.json()
@@ -18,4 +19,4 @@ export const POST = withAuth(async ({ user, request }) => {
   })
 
   return NextResponse.json(result)
-}, 'ユーザー同期')
+}, 'ユーザー同期', { rateLimit: AUTH_LIMIT })

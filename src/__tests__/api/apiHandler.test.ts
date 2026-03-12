@@ -1,8 +1,13 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { prismaMock } from '../mocks/prisma'
 import { mockUser, mockSupabaseClient } from '../mocks/supabase'
 import { createRequest, createParams } from '../helpers/apiTestHelper'
 import { withAuth, withStock } from '@/lib/apiHandler'
+import { resetRateLimitStore } from '@/lib/rateLimit'
+
+beforeEach(() => {
+  resetRateLimitStore()
+})
 
 describe('withAuth', () => {
   it('成功: 認証済みでハンドラーを実行', async () => {

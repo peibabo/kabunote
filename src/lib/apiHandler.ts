@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { User } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase-server'
 import { resolveStockId } from '@/lib/resolveStockId'
+import { checkRateLimit, rateLimitHeaders } from '@/lib/rateLimit'
+import type { RateLimitConfig } from '@/lib/rateLimit'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type RouteParams = Record<string, any>
@@ -20,7 +22,12 @@ interface StockContext extends AuthContext {
 type AuthHandler = (ctx: AuthContext) => Promise<NextResponse>
 type StockHandler = (ctx: StockContext) => Promise<NextResponse>
 
-interface StockOptions {
+interface AuthOptions {
+  /** カスタムレート制限設定 */
+  rateLimit?: RateLimitConfig
+}
+
+interface StockOptions extends AuthOptions {
   createIfNotFound?: boolean
 }
 
@@ -36,14 +43,33 @@ async function authenticate(): Promise<{ user: User } | NextResponse> {
   return { user }
 }
 
-export function withAuth(handler: AuthHandler, errorLabel: string) {
+export function withAuth(handler: AuthHandler, errorLabel: string, options?: AuthOptions) {
   return async (request: NextRequest, context?: { params?: Promise<RouteParams> }) => {
     try {
       const auth = await authenticate()
       if (auth instanceof NextResponse) return auth
 
+      // レート制限チェック（ユーザーID単位）
+      const rateLimitKey = `user:${auth.user.id}`
+      const result = checkRateLimit(rateLimitKey, options?.rateLimit)
+      const headers = rateLimitHeaders(result, options?.rateLimit)
+
+      if (!result.allowed) {
+        return NextResponse.json(
+          { error: 'Too Many Requests', message: 'リクエスト数が上限に達しました。しばらくしてから再度お試しください。' },
+          { status: 429, headers: { ...headers, 'Retry-After': String(result.resetInSeconds) } }
+        )
+      }
+
       const params = context?.params ? await context.params : {}
-      return await handler({ user: auth.user, request, params })
+      const response = await handler({ user: auth.user, request, params })
+
+      // レート制限ヘッダーをレスポンスに付与
+      Object.entries(headers).forEach(([key, value]) => {
+        response.headers.set(key, value)
+      })
+
+      return response
     } catch (error) {
       Sentry.captureException(error)
       console.error(`❌ ${errorLabel}エラー:`, error)
@@ -66,5 +92,5 @@ export function withStock(handler: StockHandler, errorLabel: string, options?: S
       )
     }
     return await handler({ ...ctx, stockId })
-  }, errorLabel)
+  }, errorLabel, options)
 }
