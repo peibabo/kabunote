@@ -33,7 +33,8 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/api') ||
     pathname.startsWith('/privacy') ||
     pathname.startsWith('/terms') ||
-    pathname.startsWith('/help')
+    pathname.startsWith('/help') ||
+    pathname.startsWith('/monitoring')
   ) {
     return NextResponse.next()
   }
