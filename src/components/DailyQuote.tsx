@@ -29,9 +29,9 @@ export default function DailyQuote() {
         <div
           className="relative px-4 py-3 rounded-lg backdrop-blur-md text-gray-200 text-xs leading-relaxed"
           style={{
-            background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.35), rgba(139, 92, 246, 0.25))',
-            border: '1px solid rgba(59, 130, 246, 0.4)',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), 0 0 15px rgba(59, 130, 246, 0.15)',
+            background: 'linear-gradient(135deg, rgba(30, 58, 108, 0.9), rgba(55, 48, 107, 0.85))',
+            border: '1px solid rgba(59, 130, 246, 0.5)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5), 0 0 15px rgba(59, 130, 246, 0.2)',
           }}
         >
           {quote.meaning}
@@ -39,9 +39,9 @@ export default function DailyQuote() {
           <div
             className="absolute left-6 -bottom-1.5 w-3 h-3 rotate-45"
             style={{
-              background: 'linear-gradient(135deg, transparent 50%, rgba(59, 130, 246, 0.35) 50%)',
-              borderRight: '1px solid rgba(59, 130, 246, 0.4)',
-              borderBottom: '1px solid rgba(59, 130, 246, 0.4)',
+              background: 'linear-gradient(135deg, transparent 50%, rgba(30, 58, 108, 0.9) 50%)',
+              borderRight: '1px solid rgba(59, 130, 246, 0.5)',
+              borderBottom: '1px solid rgba(59, 130, 246, 0.5)',
             }}
           />
         </div>
