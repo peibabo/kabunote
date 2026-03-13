@@ -32,6 +32,7 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
     setCategory('');
     setContent('');
     setError('');
+    setIsSending(false);
     onClose();
   };
 
@@ -44,6 +45,7 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
     try {
       await apiPost('/api/feedback', { category, content: content.trim() });
       playSound('buttonAction');
+      setIsSending(false);
       handleClose();
       toast.success('ご意見ありがとうございます！今後の改善に活かしていきます 🙏');
     } catch (err) {

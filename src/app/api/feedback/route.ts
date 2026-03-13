@@ -38,7 +38,7 @@ export const POST = withAuth(async ({ user, request }) => {
     },
   })
 
-  notifyFeedback(category, content.trim())
+  await notifyFeedback(category, content.trim())
 
   return NextResponse.json({ success: true })
 }, 'フィードバックの送信', { rateLimit: FEEDBACK_LIMIT })
