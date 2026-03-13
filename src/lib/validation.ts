@@ -71,3 +71,35 @@ export function isValidCashAmount(value: string): boolean {
   const num = parseFloat(value);
   return !isNaN(num) && isFinite(num) && num >= 0 && num <= MAX_CASH;
 }
+
+// --- 外部リンクバリデーション ---
+const MAX_EXTERNAL_LINKS = 8;
+const MAX_LINK_LABEL_LENGTH = 30;
+const MAX_LINK_ICON_LENGTH = 4;
+const MAX_LINK_URL_LENGTH = 2000;
+
+/** 外部リンクURLバリデーション（http/httpsのみ） */
+export function isValidExternalLinkUrl(value: string): boolean {
+  if (typeof value !== 'string' || value.length === 0 || value.length > MAX_LINK_URL_LENGTH) return false;
+  try {
+    const url = new URL(value);
+    return url.protocol === 'http:' || url.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
+/** 外部リンクラベルバリデーション */
+export function isValidExternalLinkLabel(value: string): boolean {
+  return typeof value === 'string' && value.trim().length > 0 && value.length <= MAX_LINK_LABEL_LENGTH;
+}
+
+/** 外部リンクアイコンバリデーション */
+export function isValidExternalLinkIcon(value: string): boolean {
+  return typeof value === 'string' && value.trim().length > 0 && value.length <= MAX_LINK_ICON_LENGTH;
+}
+
+/** 外部リンク個数バリデーション */
+export function isValidExternalLinksCount(count: number): boolean {
+  return Number.isInteger(count) && count >= 0 && count <= MAX_EXTERNAL_LINKS;
+}

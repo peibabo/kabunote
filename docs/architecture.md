@@ -1,6 +1,6 @@
 # Kabunote - アーキテクチャリファレンス
 
-## データベーススキーマ（15テーブル）
+## データベーススキーマ（16テーブル）
 
 ```
 app_users (ユーザー管理)
@@ -23,8 +23,10 @@ app_users (ユーザー管理)
   │     id, user_id, name, color, order  @@unique([userId, name])
   ├── snoozed_alerts (アラートスヌーズ管理)
   │     id, user_id, stock_symbol, alert_type(ENUM), snooze_until
-  └── feedbacks (フィードバック・目安箱)
-        id, user_id, category(ENUM), content, created_at
+  ├── feedbacks (フィードバック・目安箱)
+  │     id, user_id, category(ENUM), content, created_at
+  └── user_external_links (外部リンク設定)
+        id, user_id, url, label, icon, gradient, order
 ```
 
 ### Enum定義
@@ -44,6 +46,7 @@ app_users (ユーザー管理)
 | `/api/auth/sync-user` | POST | Supabase認証後のユーザー同期 |
 | `/api/cash` | GET/PUT | 投資余力現金・Next Actionメモの取得・更新 |
 | `/api/onboarding` | GET/POST | オンボーディング完了状態の取得・更新 |
+| `/api/external-links` | GET/PUT | 外部リンク設定の取得・一括更新（最大8個） |
 
 ### 銘柄
 | パス | メソッド | 説明 |
@@ -97,6 +100,7 @@ app_users (ユーザー管理)
 | `useFavoriteGroups` | お気に入りグループ（楽観的更新・差分同期） |
 | `useCash` | 投資余力現金・Next Actionメモ（300msデバウンス） |
 | `useSnooze` | アラートスヌーズ管理 |
+| `useExternalLinks` | 外部リンク設定（モジュールキャッシュ・デフォルトフォールバック） |
 
 ### UI状態管理
 | フック | 説明 |
