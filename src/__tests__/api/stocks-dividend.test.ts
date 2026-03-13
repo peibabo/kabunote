@@ -42,9 +42,8 @@ describe('PUT /api/stocks/[stockId]/dividend', () => {
     prismaMock.stock.findFirst.mockResolvedValue({ id: 'stock-uuid-1' } as never)
   })
 
-  it('成功: 配当情報を更新', async () => {
-    prismaMock.stockDividend.findUnique.mockResolvedValue(mockDividend as never)
-    prismaMock.stockDividend.update.mockResolvedValue(mockDividend as never)
+  it('成功: 配当情報を更新（upsert）', async () => {
+    prismaMock.stockDividend.upsert.mockResolvedValue(mockDividend as never)
 
     const req = createRequest('PUT', 'http://localhost:3000/api/stocks/stock-7203/dividend', {
       dividendPerShare: 50,
@@ -53,17 +52,7 @@ describe('PUT /api/stocks/[stockId]/dividend', () => {
     const res = await PUT(req, createParams({ stockId: 'stock-7203' }))
     const json = await getJson(res)
     expect(json.success).toBe(true)
-  })
-
-  it('新規作成: 未設定時', async () => {
-    prismaMock.stockDividend.findUnique.mockResolvedValue(null)
-    prismaMock.stockDividend.create.mockResolvedValue(mockDividend as never)
-
-    const req = createRequest('PUT', 'http://localhost:3000/api/stocks/stock-7203/dividend', {
-      dividendPerShare: 50,
-    })
-    await PUT(req, createParams({ stockId: 'stock-7203' }))
-    expect(prismaMock.stockDividend.create).toHaveBeenCalled()
+    expect(prismaMock.stockDividend.upsert).toHaveBeenCalled()
   })
 })
 

@@ -64,31 +64,19 @@ export const PUT = withStock(async ({ stockId, request }) => {
   const dbActionType = actionType.toUpperCase() as 'BUY' | 'SELL' | 'HOLD'
   const dbPriority = priority.toUpperCase() as 'HIGH' | 'MEDIUM' | 'LOW'
 
-  let nextActionPlan = await prisma.nextActionPlan.findUnique({ where: { stockId } })
-
-  if (nextActionPlan) {
-    nextActionPlan = await prisma.nextActionPlan.update({
-      where: { stockId },
-      data: {
-        actionType: dbActionType,
-        priority: dbPriority,
-        targetPrice,
-        targetShares: targetQuantity,
-        strategyMemo: memo || null
-      }
-    })
-  } else {
-    nextActionPlan = await prisma.nextActionPlan.create({
-      data: {
-        stockId,
-        actionType: dbActionType,
-        priority: dbPriority,
-        targetPrice,
-        targetShares: targetQuantity,
-        strategyMemo: memo || null
-      }
-    })
+  const data = {
+    actionType: dbActionType,
+    priority: dbPriority,
+    targetPrice,
+    targetShares: targetQuantity,
+    strategyMemo: memo || null
   }
+
+  const nextActionPlan = await prisma.nextActionPlan.upsert({
+    where: { stockId },
+    update: data,
+    create: { stockId, ...data }
+  })
 
   return NextResponse.json({
     success: true,

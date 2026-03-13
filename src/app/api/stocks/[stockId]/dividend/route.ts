@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { withStock } from '@/lib/apiHandler'
+import { withStock, toNumber } from '@/lib/apiHandler'
 import { isValidPrice, isValidFrequency, isValidMonth, isValidDay } from '@/lib/validation'
 
 // GET: 配当情報取得
@@ -10,7 +10,7 @@ export const GET = withStock(async ({ stockId }) => {
   return NextResponse.json({
     success: true,
     data: dividend ? {
-      dividendPerShare: dividend.dividendPerShare != null ? Number(dividend.dividendPerShare) : null,
+      dividendPerShare: toNumber(dividend.dividendPerShare),
       frequency: dividend.frequency,
       rightsMonth: dividend.rightsMonth,
       rightsDay: dividend.rightsDay,
@@ -30,8 +30,6 @@ export const PUT = withStock(async ({ stockId, request }) => {
     )
   }
 
-  const existing = await prisma.stockDividend.findUnique({ where: { stockId } })
-
   const data = {
     dividendPerShare: dividendPerShare != null ? dividendPerShare : null,
     frequency: frequency ?? 1,
@@ -39,17 +37,16 @@ export const PUT = withStock(async ({ stockId, request }) => {
     rightsDay: rightsDay ?? null,
   }
 
-  let dividend
-  if (existing) {
-    dividend = await prisma.stockDividend.update({ where: { stockId }, data })
-  } else {
-    dividend = await prisma.stockDividend.create({ data: { stockId, ...data } })
-  }
+  const dividend = await prisma.stockDividend.upsert({
+    where: { stockId },
+    update: data,
+    create: { stockId, ...data }
+  })
 
   return NextResponse.json({
     success: true,
     data: {
-      dividendPerShare: dividend.dividendPerShare != null ? Number(dividend.dividendPerShare) : null,
+      dividendPerShare: toNumber(dividend.dividendPerShare),
       frequency: dividend.frequency,
       rightsMonth: dividend.rightsMonth,
       rightsDay: dividend.rightsDay,

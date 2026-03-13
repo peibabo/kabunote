@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { Position, calculatePositionSummary, formatShares } from '@/types/positions';
+import { Position } from '@/types/positions';
+import { calculatePositionSummary, formatShares } from '@/lib/positionCalc';
 import { getCompanyNameSync } from '@/data/stockNames';
 import { StockData } from '@/hooks/useStockData';
 

@@ -4,7 +4,8 @@
  * InvestmentTimeline コンポーネントから抽出した純粋関数群
  */
 
-import { InvestmentEvent, formatDateString } from '@/types/investmentCalendar';
+import { InvestmentEvent } from '@/types/investmentCalendar';
+import { formatDateString } from '@/lib/investmentCalendarCalc';
 
 // ─────────────────────────────────────────
 // イベントスタイル定義

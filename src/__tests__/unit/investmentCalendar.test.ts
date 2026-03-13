@@ -4,7 +4,7 @@ import {
   calculateRightsLastDate,
   formatDateString,
   calculateFullDateFromMonthDay,
-} from '@/types/investmentCalendar'
+} from '@/lib/investmentCalendarCalc'
 
 describe('calculateBusinessDaysBefore', () => {
   it('土日をスキップして営業日を計算（月曜から2日前は前週木曜）', () => {

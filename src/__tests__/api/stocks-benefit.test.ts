@@ -43,9 +43,8 @@ describe('PUT /api/stocks/[stockId]/benefit', () => {
     prismaMock.stock.findFirst.mockResolvedValue({ id: 'stock-uuid-1' } as never)
   })
 
-  it('成功: 優待情報を更新', async () => {
-    prismaMock.stockBenefit.findUnique.mockResolvedValue(mockBenefit as never)
-    prismaMock.stockBenefit.update.mockResolvedValue(mockBenefit as never)
+  it('成功: 優待情報を更新（upsert）', async () => {
+    prismaMock.stockBenefit.upsert.mockResolvedValue(mockBenefit as never)
 
     const req = createRequest('PUT', 'http://localhost:3000/api/stocks/stock-7203/benefit', {
       description: 'QUOカード1000円',
@@ -54,17 +53,7 @@ describe('PUT /api/stocks/[stockId]/benefit', () => {
     const res = await PUT(req, createParams({ stockId: 'stock-7203' }))
     const json = await getJson(res)
     expect(json.success).toBe(true)
-  })
-
-  it('新規作成: 未設定時', async () => {
-    prismaMock.stockBenefit.findUnique.mockResolvedValue(null)
-    prismaMock.stockBenefit.create.mockResolvedValue(mockBenefit as never)
-
-    const req = createRequest('PUT', 'http://localhost:3000/api/stocks/stock-7203/benefit', {
-      description: 'QUOカード',
-    })
-    await PUT(req, createParams({ stockId: 'stock-7203' }))
-    expect(prismaMock.stockBenefit.create).toHaveBeenCalled()
+    expect(prismaMock.stockBenefit.upsert).toHaveBeenCalled()
   })
 })
 

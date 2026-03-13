@@ -50,9 +50,8 @@ describe('PUT /api/stocks/[stockId]/price', () => {
     prismaMock.stock.findFirst.mockResolvedValue({ id: 'stock-uuid-1' } as never)
   })
 
-  it('成功: 既存価格を更新', async () => {
-    prismaMock.stockPrice.findUnique.mockResolvedValue(mockPrice as never)
-    prismaMock.stockPrice.update.mockResolvedValue({
+  it('成功: 価格を更新（upsert）', async () => {
+    prismaMock.stockPrice.upsert.mockResolvedValue({
       ...mockPrice,
       currentPrice: 2600,
     } as never)
@@ -63,35 +62,19 @@ describe('PUT /api/stocks/[stockId]/price', () => {
     const res = await PUT(req, createParams({ stockId: 'stock-7203' }))
     const json = await getJson(res)
     expect(json.success).toBe(true)
-  })
-
-  it('新規作成: 価格レコードがない場合', async () => {
-    prismaMock.stockPrice.findUnique.mockResolvedValue(null)
-    prismaMock.stockPrice.create.mockResolvedValue({
-      ...mockPrice,
-      currentPrice: 2500,
-    } as never)
-
-    const req = createRequest('PUT', 'http://localhost:3000/api/stocks/stock-7203/price', {
-      currentPrice: 2500,
-    })
-    const res = await PUT(req, createParams({ stockId: 'stock-7203' }))
-    const json = await getJson(res)
-    expect(json.success).toBe(true)
-    expect(prismaMock.stockPrice.create).toHaveBeenCalled()
+    expect(prismaMock.stockPrice.upsert).toHaveBeenCalled()
   })
 
   it('部分更新: 指定したフィールドのみ更新', async () => {
-    prismaMock.stockPrice.findUnique.mockResolvedValue(mockPrice as never)
-    prismaMock.stockPrice.update.mockResolvedValue(mockPrice as never)
+    prismaMock.stockPrice.upsert.mockResolvedValue(mockPrice as never)
 
     const req = createRequest('PUT', 'http://localhost:3000/api/stocks/stock-7203/price', {
       currentPrice: 2700,
     })
     await PUT(req, createParams({ stockId: 'stock-7203' }))
-    expect(prismaMock.stockPrice.update).toHaveBeenCalledWith(
+    expect(prismaMock.stockPrice.upsert).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({
+        update: expect.objectContaining({
           currentPrice: 2700,
         }),
       })

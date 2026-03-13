@@ -129,24 +129,28 @@ app_users (ユーザー管理)
 | `useDebounce` | デバウンス汎用 |
 | `useAutoSave` | 自動保存ロジック |
 | `useAsyncState` | 非同期状態管理 |
+| `useAccordionState` | アコーディオン開閉管理（playSound統合・localStorage対応） |
+| `useTooltipState` | ツールチップ表示/非表示管理（遅延非表示・クリーンアップ） |
 
 ---
 
 ## 型定義ファイル一覧（11ファイル）
+
+型定義のみ。計算ロジック・フォーマット関数は `src/lib/*Calc.ts` に分離済み。
 
 | ファイル | 内容 |
 |---------|------|
 | `positions.ts` | Position, PositionSummary（totalCost, positionCount等） |
 | `tags.ts` | CustomTag, プリセットタグ定義 |
 | `favorites.ts` | FavoriteGroup, お気に入りグループ |
-| `dividend.ts` | DividendSettings, DividendCalcResult |
-| `shareholder.ts` | ShareholderBenefitSettings |
+| `dividend.ts` | DividendInfo, DividendCalculation, PortfolioDividendSummary |
+| `shareholder.ts` | ShareholderBenefit, ShareholderBenefitInfo, PortfolioShareholderSummary |
 | `rightsDate.ts` | RightsDateSettings（権利確定日共通型） |
-| `nextActionPlan.ts` | NextActionPlan, AlertInfo |
+| `nextActionPlan.ts` | NextActionPlan, NextActionPlanAnalysis, ActionType, Priority |
 | `investmentTabs.ts` | InvestmentTabType |
 | `managementTabs.ts` | ManagementTabType |
-| `investmentCalendar.ts` | CalendarEvent, TimelineEvent |
-| `snooze.ts` | SnoozedAlertInfo, SnoozeOption |
+| `investmentCalendar.ts` | InvestmentEvent, CalendarDay, TimelineEvent, EventSummary |
+| `snooze.ts` | SnoozeDuration, SnoozedAlert |
 
 ---
 
@@ -218,6 +222,13 @@ app_users (ユーザー管理)
 | `toast.ts` | トースト通知 |
 | `sound.ts` | サウンドフィードバックエンジン（Web Audio API） |
 | `slack.ts` | Slack Webhook通知（フィードバック受信時） |
+| `positionCalc.ts` | ポジション計算・フォーマット関数 |
+| `dividendCalc.ts` | 配当計算・フォーマット関数 |
+| `shareholderCalc.ts` | 株主優待計算・フォーマット関数 |
+| `investmentCalendarCalc.ts` | 営業日計算・権利付最終日・日付フォーマット |
+| `snoozeCalc.ts` | スヌーズ期間定数・ラベル・残り時間計算 |
+| `nextActionPlanCalc.ts` | Next Action Plan分析・判定関数 |
+| `dateFormat.ts` | 日付フォーマット共通関数（ISO形式・M/D形式） |
 
 ## ユーティリティ（src/utils/）
 

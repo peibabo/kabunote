@@ -4,7 +4,7 @@ import { PositionSummary } from '@/types/positions';
 import { playSound } from '@/lib/sound';
 import { useSoundOnChange } from '@/hooks/useSoundOnChange';
 import { calculateRightsDateFromSettings } from '@/types/rightsDate';
-import { calculateDividendInfo, formatDividendAmount, formatDividendYield } from '@/types/dividend';
+import { calculateDividendInfo, formatDividendAmount, formatDividendYield } from '@/lib/dividendCalc';
 import { useStockDividend } from '@/hooks/useStockDividend';
 
 interface EarningsCountdown {

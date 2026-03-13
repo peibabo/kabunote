@@ -3,10 +3,11 @@
 import React, { useState, useMemo } from 'react';
 import { useCash } from '@/hooks/useCash';
 import { StockData } from '@/hooks/useStockData';
-import { NextActionPlan, NextActionPlanAnalysis, analyzeNextActionPlan, hasNextActionPlan } from '@/types/nextActionPlan';
+import { NextActionPlan, NextActionPlanAnalysis } from '@/types/nextActionPlan';
+import { analyzeNextActionPlan, hasNextActionPlan } from '@/lib/nextActionPlanCalc';
 import { getIntegratedAlert, AlertType } from '@/utils/alertSystem';
 import { getCompanyNameSync } from '@/data/stockNames';
-import { calculatePositionSummary } from '@/types/positions';
+import { calculatePositionSummary } from '@/lib/positionCalc';
 
 interface StrategyRowData {
   symbol: string;

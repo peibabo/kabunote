@@ -1,5 +1,34 @@
 # Kabunote - プロジェクトマイルストーン
 
+## リファクタリング Phase 2: ロジック分離・重複パターン共通化（2026年3月14日）
+**型ファイルからロジック完全分離、重複パターンのカスタムフック化、日付フォーマット統一、re-export完全削除**
+
+### 技術的成果
+- 残り3型ファイル（investmentCalendar/snooze/nextActionPlan）からロジックを `lib/*Calc.ts` に分離
+- Phase 0-1で作成した6型ファイルすべてのre-exportを削除し、全importを直接参照に統一
+- アコーディオン開閉パターンを `useAccordionState` フックに共通化（playSound統合・localStorage対応）
+- ツールチップ表示/非表示パターンを `useTooltipState` フックに共通化
+- 日付フォーマット関数を `dateFormat.ts` に統一（重複していた `formatDate` を `formatMonthDay` に集約）
+- テスト: 62→68ファイル、456→517テスト（+61テスト）
+
+### 新規ファイル
+- `src/lib/investmentCalendarCalc.ts` - 営業日計算・権利付最終日・日付フォーマット
+- `src/lib/snoozeCalc.ts` - スヌーズ期間定数・ラベル・残り時間計算
+- `src/lib/nextActionPlanCalc.ts` - Next Action Plan分析・判定関数
+- `src/lib/dateFormat.ts` - 日付フォーマット共通関数
+- `src/hooks/useAccordionState.ts` - アコーディオン状態管理フック
+- `src/hooks/useTooltipState.ts` - ツールチップ状態管理フック
+- テストファイル6個
+
+### 変更ファイル（30+ファイル）
+- 全型ファイル（6個）からre-export削除
+- 全コンポーネント・フック・ユーティリティのimportを直接参照に変更
+- `PortfolioSummary.tsx` - useAccordionState適用（3箇所）
+- `InvestmentTimeline.tsx` - useAccordionState + useTooltipState適用
+- `DividendBenefitListPage.tsx` / `EventCalendarPage.tsx` - formatMonthDay適用
+
+---
+
 ## 目安箱（フィードバック）機能（2026年3月11日）
 **ユーザーが気軽に機能要望・改善提案をDB送信できる「目安箱」機能**
 

@@ -6,7 +6,7 @@ import {
   formatPrice,
   formatShares,
   formatProfitLoss,
-} from '@/types/positions'
+} from '@/lib/positionCalc'
 import { createPosition, createPositionSummary, createStockTargetInfo, createProfitLossInfo } from '../helpers/mockFactories'
 
 describe('calculatePositionSummary', () => {

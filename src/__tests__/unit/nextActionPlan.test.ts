@@ -4,7 +4,7 @@ import {
   hasNextActionPlan,
   isCompleteNextActionPlan,
   createDefaultNextActionPlan,
-} from '@/types/nextActionPlan'
+} from '@/lib/nextActionPlanCalc'
 import { createNextActionPlan } from '../helpers/mockFactories'
 
 describe('analyzeNextActionPlan', () => {

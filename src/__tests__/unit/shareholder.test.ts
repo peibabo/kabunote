@@ -3,7 +3,7 @@ import {
   calculateShareholderBenefit,
   formatBenefitValue,
   formatBenefitYield,
-} from '@/types/shareholder'
+} from '@/lib/shareholderCalc'
 
 describe('calculateShareholderBenefit', () => {
   it('資格あり（十分な株数）', () => {

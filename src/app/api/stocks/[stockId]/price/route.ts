@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { withAuth, withStock } from '@/lib/apiHandler'
+import { withAuth, withStock, toNumber } from '@/lib/apiHandler'
 import { resolveStockId } from '@/lib/resolveStockId'
 import { isValidPrice } from '@/lib/validation'
 
@@ -20,9 +20,9 @@ export const GET = withAuth(async ({ user, params }) => {
   return NextResponse.json({
     success: true,
     data: {
-      currentPrice: price?.currentPrice != null ? Number(price.currentPrice) : null,
-      targetPrice: price?.targetPrice != null ? Number(price.targetPrice) : null,
-      stopLossPrice: price?.stopLossPrice != null ? Number(price.stopLossPrice) : null,
+      currentPrice: toNumber(price?.currentPrice),
+      targetPrice: toNumber(price?.targetPrice),
+      stopLossPrice: toNumber(price?.stopLossPrice),
       updatedAt: price?.updatedAt?.toISOString() ?? null
     }
   })
@@ -39,35 +39,27 @@ export const PUT = withStock(async ({ stockId, request }) => {
     )
   }
 
-  const existing = await prisma.stockPrice.findUnique({ where: { stockId } })
-  let price
-
-  if (existing) {
-    price = await prisma.stockPrice.update({
-      where: { stockId },
-      data: {
-        currentPrice: currentPrice !== undefined ? (currentPrice || null) : existing.currentPrice,
-        targetPrice: targetPrice !== undefined ? (targetPrice || null) : existing.targetPrice,
-        stopLossPrice: stopLossPrice !== undefined ? (stopLossPrice || null) : existing.stopLossPrice,
-      }
-    })
-  } else {
-    price = await prisma.stockPrice.create({
-      data: {
-        stockId,
-        currentPrice: currentPrice || null,
-        targetPrice: targetPrice || null,
-        stopLossPrice: stopLossPrice || null,
-      }
-    })
-  }
+  const price = await prisma.stockPrice.upsert({
+    where: { stockId },
+    update: {
+      currentPrice: currentPrice !== undefined ? (currentPrice || null) : undefined,
+      targetPrice: targetPrice !== undefined ? (targetPrice || null) : undefined,
+      stopLossPrice: stopLossPrice !== undefined ? (stopLossPrice || null) : undefined,
+    },
+    create: {
+      stockId,
+      currentPrice: currentPrice || null,
+      targetPrice: targetPrice || null,
+      stopLossPrice: stopLossPrice || null,
+    }
+  })
 
   return NextResponse.json({
     success: true,
     data: {
-      currentPrice: price.currentPrice != null ? Number(price.currentPrice) : null,
-      targetPrice: price.targetPrice != null ? Number(price.targetPrice) : null,
-      stopLossPrice: price.stopLossPrice != null ? Number(price.stopLossPrice) : null,
+      currentPrice: toNumber(price.currentPrice),
+      targetPrice: toNumber(price.targetPrice),
+      stopLossPrice: toNumber(price.stopLossPrice),
       updatedAt: price.updatedAt.toISOString()
     }
   })

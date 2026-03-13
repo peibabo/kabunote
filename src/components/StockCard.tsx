@@ -5,7 +5,8 @@ import { loadStockData, getCompanyNameSync, isKnownStockSync, StockData } from '
 import { FavoriteGroup } from '@/types/favorites';
 import { StockData as DBStockData } from '@/hooks/useStockData';
 import { CustomTag } from '@/types/tags';
-import { ProfitLossInfo, calculateProfitLoss, calculatePositionSummary } from '@/types/positions';
+import { ProfitLossInfo } from '@/types/positions';
+import { calculateProfitLoss, calculatePositionSummary } from '@/lib/positionCalc';
 import { RightsDateSettings, createDefaultRightsSettings, shouldDeactivateRights } from '@/types/rightsDate';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';

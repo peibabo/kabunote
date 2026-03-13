@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { playSound } from '@/lib/sound';
 import { useStockPosition } from '@/hooks/useStockPosition';
-import { Position, calculatePositionSummary, formatPrice, formatShares } from '@/types/positions';
+import { Position } from '@/types/positions';
+import { calculatePositionSummary, formatPrice, formatShares } from '@/lib/positionCalc';
 
 interface PositionsManagementProps {
   symbol: string;

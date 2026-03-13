@@ -33,13 +33,11 @@ export const PUT = withStock(async ({ stockId, request }) => {
     )
   }
 
-  let memo = await prisma.stockMemo.findUnique({ where: { stockId } })
-
-  if (memo) {
-    memo = await prisma.stockMemo.update({ where: { stockId }, data: { content } })
-  } else {
-    memo = await prisma.stockMemo.create({ data: { stockId, content } })
-  }
+  const memo = await prisma.stockMemo.upsert({
+    where: { stockId },
+    update: { content },
+    create: { stockId, content }
+  })
 
   return NextResponse.json({
     success: true,

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { SnoozedAlert, SnoozeDuration, generateAlertKey } from '@/types/snooze';
+import { SnoozedAlert, SnoozeDuration } from '@/types/snooze';
+import { generateAlertKey } from '@/lib/snoozeCalc';
 import { AlertType } from '@/utils/alertSystem';
 import { STORAGE_KEYS } from '@/lib/storageKeys';
 
