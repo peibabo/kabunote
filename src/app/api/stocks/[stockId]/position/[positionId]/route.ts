@@ -1,21 +1,22 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withAuth } from '@/lib/apiHandler'
+import { isValidRequiredShares, isValidRequiredPrice } from '@/lib/validation'
 
 // PUT: 特定ポジションの更新
 export const PUT = withAuth(async ({ user, request, params }) => {
   const { positionId } = params
   const { shares, purchasePrice, purchaseDate, memo } = await request.json()
 
-  if (typeof shares !== 'number' || shares <= 0) {
+  if (!isValidRequiredShares(shares)) {
     return NextResponse.json(
-      { error: 'Bad Request', message: 'sharesは1以上の数値である必要があります' },
+      { error: 'Bad Request', message: 'sharesは1以上の有効な数値である必要があります' },
       { status: 400 }
     )
   }
-  if (typeof purchasePrice !== 'number' || purchasePrice <= 0) {
+  if (!isValidRequiredPrice(purchasePrice)) {
     return NextResponse.json(
-      { error: 'Bad Request', message: 'purchasePriceは0より大きい数値である必要があります' },
+      { error: 'Bad Request', message: 'purchasePriceは0より大きい有効な数値である必要があります' },
       { status: 400 }
     )
   }

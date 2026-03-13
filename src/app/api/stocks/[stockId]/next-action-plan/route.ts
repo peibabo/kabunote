@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withStock } from '@/lib/apiHandler'
+import { isValidPrice, isValidOptionalShares } from '@/lib/validation'
 
 // GET: Next Action Plan取得
 export const GET = withStock(async ({ stockId }) => {
@@ -49,6 +50,13 @@ export const PUT = withStock(async ({ stockId, request }) => {
   if (!validPriorities.includes(priority)) {
     return NextResponse.json(
       { error: 'Bad Request', message: 'priorityは high, medium, low のいずれかである必要があります' },
+      { status: 400 }
+    )
+  }
+
+  if (!isValidPrice(targetPrice) || !isValidOptionalShares(targetQuantity)) {
+    return NextResponse.json(
+      { error: 'Bad Request', message: '目標株価または目標株数の値が無効です' },
       { status: 400 }
     )
   }
