@@ -107,9 +107,10 @@ export const INVESTMENT_QUOTES: InvestmentQuote[] = [
   { text: '優れた企業を適正な価格で買う方が、並の企業を安値で買うよりずっと良い', author: 'ウォーレン・バフェット', meaning: '質の高い資産を保有することの重要性' },
 ]
 
-/** 日付ベースで今日の格言を取得（全ユーザー共通） */
+/** 日付ベースで今日の格言を取得（JST基準・全ユーザー共通） */
 export function getTodayQuote(): InvestmentQuote {
   const today = new Date()
-  const dayIndex = Math.floor(today.getTime() / (1000 * 60 * 60 * 24))
+  const jstMs = today.getTime() + 9 * 60 * 60 * 1000
+  const dayIndex = Math.floor(jstMs / (1000 * 60 * 60 * 24))
   return INVESTMENT_QUOTES[dayIndex % INVESTMENT_QUOTES.length]
 }

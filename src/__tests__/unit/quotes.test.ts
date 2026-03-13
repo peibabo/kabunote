@@ -29,20 +29,24 @@ describe('quotes', () => {
       expect(quote.author.length).toBeGreaterThan(0)
     })
 
-    it('同じ日には同じ格言を返す', () => {
+    it('JST同日の朝と夜で同じ格言を返す', () => {
       vi.useFakeTimers()
-      vi.setSystemTime(new Date('2026-03-13T09:00:00'))
+      // JST 2026-03-13 09:00 = UTC 2026-03-13 00:00
+      vi.setSystemTime(new Date('2026-03-13T00:00:00Z'))
       const quote1 = getTodayQuote()
-      vi.setSystemTime(new Date('2026-03-13T23:59:59'))
+      // JST 2026-03-13 23:59 = UTC 2026-03-13 14:59
+      vi.setSystemTime(new Date('2026-03-13T14:59:59Z'))
       const quote2 = getTodayQuote()
       expect(quote1).toEqual(quote2)
     })
 
-    it('異なる日には異なる格言を返す', () => {
+    it('JST日付が変わると異なる格言を返す', () => {
       vi.useFakeTimers()
-      vi.setSystemTime(new Date('2026-03-13T12:00:00'))
+      // JST 2026-03-13 23:59 = UTC 2026-03-13 14:59
+      vi.setSystemTime(new Date('2026-03-13T14:59:59Z'))
       const quote1 = getTodayQuote()
-      vi.setSystemTime(new Date('2026-03-14T12:00:00'))
+      // JST 2026-03-14 00:00 = UTC 2026-03-13 15:00
+      vi.setSystemTime(new Date('2026-03-13T15:00:00Z'))
       const quote2 = getTodayQuote()
       expect(quote1).not.toEqual(quote2)
     })
