@@ -192,8 +192,10 @@ app_users (ユーザー管理)
 - `InvestmentTimeline.tsx`: 投資タイムライン
 - `TodayTomorrowEvents.tsx`: 今日・明日の予定表示
 
-### 設定系
+### 設定・同意系
 - `SoundSettings.tsx`: サウンドフィードバック設定（ON/OFF・音量・試聴）
+- `CookieConsentBanner.tsx`: Cookie同意バナー（GA4の同意管理・localStorage永続化）
+- `GoogleAnalyticsWrapper.tsx`: GA4条件付きロード（同意済みの場合のみ読み込み）
 
 ---
 
