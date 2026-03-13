@@ -41,13 +41,13 @@ export default function CookieConsentBanner() {
         <div className="flex gap-2 shrink-0">
           <button
             onClick={() => handleConsent('denied')}
-            className="px-4 py-2 text-sm rounded-lg bg-gray-700 hover:bg-gray-600 text-gray-300 transition-colors"
+            className="cursor-pointer px-4 py-2 text-sm rounded-lg bg-gray-700 hover:bg-gray-600 text-gray-300 transition-colors"
           >
             拒否する
           </button>
           <button
             onClick={() => handleConsent('granted')}
-            className="px-4 py-2 text-sm rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-colors"
+            className="cursor-pointer px-4 py-2 text-sm rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-colors"
           >
             同意する
           </button>
