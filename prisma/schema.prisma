@@ -29,6 +29,7 @@ model User {
   favoriteGroups FavoriteGroup[]
   snoozedAlerts SnoozedAlert[]
   feedbacks     Feedback[]
+  externalLinks UserExternalLink[]
 
   @@map("app_users")
 }
@@ -280,6 +281,23 @@ enum FeedbackCategory {
   IMPROVEMENT
   BUG_REPORT
   OTHER
+}
+
+// ユーザー外部リンク設定
+model UserExternalLink {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  url       String
+  label     String
+  icon      String
+  gradient  String
+  order     Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_external_links")
 }
 
 // フィードバック（目安箱）

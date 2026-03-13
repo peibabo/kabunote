@@ -47,6 +47,7 @@ npm run update:stocks    # JPXデータからstocks.csv更新
 13. **投資カレンダー・タイムライン** - 6種イベント・タイムライン・月間カレンダー・カウントダウン
 14. **サウンドフィードバック** - 9種操作音（Web Audio APIシンセ）・ON/OFF・音量調整・メモ保存時ペン書き音・アコーディオン開閉音
 15. **目安箱（フィードバック）** - 機能要望・改善提案・不具合報告・その他の4カテゴリ・1000文字制限・DB保存
+16. **外部リンクカスタマイズ** - ユーザーごとのリンク設定・最大8個・D&D並べ替え・8色グラデーション・デフォルト4リンク・モーダル管理
 
 ## アーキテクチャ
 
@@ -61,7 +62,7 @@ npm run update:stocks    # JPXデータからstocks.csv更新
 ```
 - 認証保護は `src/proxy.ts` で実装（Next.js 16 proxy規約）
 
-### データベーススキーマ（15テーブル）
+### データベーススキーマ（16テーブル）
 ```
 app_users (ユーザー管理)
 ├── stocks (銘柄マスター)
@@ -71,7 +72,8 @@ app_users (ユーザー管理)
 │   └── stock_favorite_groups (中間テーブル)
 ├── favorite_groups (お気に入りグループ)
 ├── snoozed_alerts (アラートスヌーズ管理)
-└── feedbacks (フィードバック・目安箱)
+├── feedbacks (フィードバック・目安箱)
+└── user_external_links (外部リンク設定)
 ```
 
 > 詳細は `docs/architecture.md` を参照
@@ -85,6 +87,7 @@ app_users (ユーザー管理)
 - `InvestmentCalendar.tsx` / `InvestmentTimeline.tsx` / `TodayTomorrowEvents.tsx`: カレンダー系
 - `FeedbackModal.tsx`: 目安箱モーダル（カテゴリ選択・1000文字制限・送信）
 - `SoundSettings.tsx`: サウンドフィードバック設定（ON/OFF・音量・試聴）
+- `ExternalLinksArea.tsx` / `ExternalLinksSettingsModal.tsx`: 外部リンクカスタマイズ（表示・設定モーダル）
 - `CookieConsentBanner.tsx`: Cookie同意バナー（GA4同意管理）
 - `GoogleAnalyticsWrapper.tsx`: GA4条件付きロード（同意時のみ読み込み）
 - LP系: `LandingNavbar.tsx` / `HeroSection.tsx` / `ProblemSection.tsx` / `SolutionSection.tsx` / `FeaturesSection.tsx` / `HowItWorksSection.tsx` / `DifferentiationSection.tsx` / `FAQSection.tsx` / `FinalCTASection.tsx` / `LandingFooter.tsx` / `ScrollAnimationWrapper.tsx`
@@ -97,7 +100,7 @@ app_users (ユーザー管理)
 - [x] モバイル・レスポンシブ対応確認（2026年3月完了）
 - [x] 初回ユーザー向けオンボーディング（5ステップウェルカムウィザード）
 - [x] エラーハンドリングの強化
-- [x] テストコード（Vitest + RTL + MSW、380テスト）
+- [x] テストコード（Vitest + RTL + MSW、447テスト）
 - [x] 20銘柄制限
 - [x] favicon設定
 - [x] ドメイン設定（kabunote.jp）

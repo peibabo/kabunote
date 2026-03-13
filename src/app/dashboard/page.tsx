@@ -29,6 +29,7 @@ import { useCash } from '@/hooks/useCash';
 import { useModals } from '@/hooks/useModals';
 import { useOnboarding } from '@/hooks/useOnboarding';
 import OnboardingWizard from '@/components/OnboardingWizard';
+import ExternalLinksArea from '@/components/ExternalLinksArea';
 import { useStockSearch } from '@/hooks/useStockSearch';
 import { useAlertCounts } from '@/hooks/useAlertCounts';
 import { useCalendarData } from '@/hooks/useCalendarData';
@@ -239,29 +240,7 @@ export default function Home() {
       <main className="container mx-auto px-4 py-4">
         <div className="mb-4">
           {/* 外部リンク */}
-          <div className="flex items-center gap-4 mb-4">
-            <div className="flex overflow-x-auto gap-3 flex-shrink-0 pt-1 -mt-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-              {[
-                { href: 'https://kabutan.jp/warning/record_w52_high_price&dispmode=normal', icon: '📈', label: '52週高値', gradient: 'from-green-600 to-blue-600' },
-                { href: 'https://sekai-kabuka.com/', icon: '🌍', label: '世界の株価', gradient: 'from-purple-600 to-pink-600' },
-                { href: 'https://www.release.tdnet.info/inbs/I_main_00.html', icon: '📋', label: '適時開示', gradient: 'from-orange-600 to-red-600' },
-                { href: 'https://kabutan.jp/warning/pts_night_price_increase', icon: '🌙', label: 'PTS夜間', gradient: 'from-indigo-600 to-violet-600' },
-              ].map((link) => (
-                <a
-                  key={link.label}
-                  href={link.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`flex-shrink-0 flex flex-col items-center gap-1 group transition-transform duration-300 ease-out hover:-translate-y-1`}
-                >
-                  <span className={`w-9 h-9 rounded-full bg-gradient-to-r ${link.gradient} flex items-center justify-center text-lg shadow-lg transition-shadow duration-300 group-hover:shadow-xl group-hover:shadow-white/20`}>
-                    {link.icon}
-                  </span>
-                  <span className="text-[10px] text-gray-400 whitespace-nowrap transition-colors duration-300 group-hover:text-gray-200">{link.label}</span>
-                </a>
-              ))}
-            </div>
-          </div>
+          <ExternalLinksArea />
         </div>
 
         {/* ポートフォリオサマリー */}
