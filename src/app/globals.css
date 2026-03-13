@@ -220,6 +220,17 @@ html {
   transform: translate(0, 0);
 }
 
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .scroll-hidden,
   .scroll-hidden-left,

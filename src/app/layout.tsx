@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, M_PLUS_1p } from "next/font/google";
-import { GoogleAnalytics } from "@next/third-parties/google";
 import "./globals.css";
 import ToastContainer from "@/components/ToastContainer";
+import CookieConsentBanner from "@/components/CookieConsentBanner";
+import GoogleAnalyticsWrapper from "@/components/GoogleAnalyticsWrapper";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -38,10 +39,11 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} ${mPlus1p.variable} antialiased bg-gray-900 text-white`}
       >
         {children}
+        <CookieConsentBanner />
         <ToastContainer />
       </body>
       {process.env.NEXT_PUBLIC_GA_ID && (
-        <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID} />
+        <GoogleAnalyticsWrapper gaId={process.env.NEXT_PUBLIC_GA_ID} />
       )}
     </html>
   );

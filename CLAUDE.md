@@ -85,6 +85,8 @@ app_users (ユーザー管理)
 - `InvestmentCalendar.tsx` / `InvestmentTimeline.tsx` / `TodayTomorrowEvents.tsx`: カレンダー系
 - `FeedbackModal.tsx`: 目安箱モーダル（カテゴリ選択・1000文字制限・送信）
 - `SoundSettings.tsx`: サウンドフィードバック設定（ON/OFF・音量・試聴）
+- `CookieConsentBanner.tsx`: Cookie同意バナー（GA4同意管理）
+- `GoogleAnalyticsWrapper.tsx`: GA4条件付きロード（同意時のみ読み込み）
 - LP系: `LandingNavbar.tsx` / `HeroSection.tsx` / `ProblemSection.tsx` / `SolutionSection.tsx` / `FeaturesSection.tsx` / `HowItWorksSection.tsx` / `DifferentiationSection.tsx` / `FAQSection.tsx` / `FinalCTASection.tsx` / `LandingFooter.tsx` / `ScrollAnimationWrapper.tsx`
 > フック・API・型定義の詳細は `docs/architecture.md` を参照
 > 実装パターンは `docs/patterns.md` を参照
@@ -118,6 +120,8 @@ app_users (ユーザー管理)
 - [x] エラー監視ツール導入（Sentry — `@sentry/nextjs`）
 - [x] APIレート制限の実装（インメモリ スライディングウィンドウ方式・ユーザーID単位・4段階プリセット）
 - [x] `.env.example` 作成（環境変数テンプレート）
+- [x] Cookie同意バナー（GA4同意管理・電気通信事業法対応）
+- [x] Sentry PII無効化（sendDefaultPii: false）
 - [ ] データエクスポート機能（CSV/JSON）
 
 ### 最優先項目

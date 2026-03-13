@@ -21,6 +21,8 @@ export const STORAGE_KEYS = {
   SOUND_ENABLED: 'kabunote-sound-enabled',
   /** サウンドフィードバック音量 */
   SOUND_VOLUME: 'kabunote-sound-volume',
+  /** Cookie同意状態（'granted' | 'denied' | 未設定） */
+  COOKIE_CONSENT: 'kabunote-cookie-consent',
 } as const;
 
 // ─────────────────────────────────────────
