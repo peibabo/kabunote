@@ -32,6 +32,7 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
     setCategory('');
     setContent('');
     setError('');
+    setIsSending(false);
     onClose();
   };
 
