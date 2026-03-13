@@ -25,6 +25,13 @@ export const DEFAULT_EXTERNAL_LINKS: ExternalLink[] = [
   { url: 'https://kabutan.jp/warning/pts_night_price_increase', icon: '🌙', label: 'PTS夜間', gradient: 'from-indigo-600 to-violet-600', order: 3 },
 ];
 
+export const ICON_PRESETS = [
+  '📈', '📉', '📊', '💹', '🌍', '🌏',
+  '📋', '📰', '💰', '💵', '🏦', '🔔',
+  '🌙', '⭐', '📌', '🔍', '💡', '📝',
+  '🗓️', '🏢',
+] as const;
+
 export const MAX_EXTERNAL_LINKS = 8;
 export const MAX_LINK_LABEL_LENGTH = 30;
 export const MAX_LINK_ICON_LENGTH = 4;

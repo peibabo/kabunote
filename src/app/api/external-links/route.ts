@@ -7,9 +7,10 @@ import {
   isValidExternalLinkIcon,
   isValidExternalLinksCount,
 } from '@/lib/validation'
-import { GRADIENT_PRESETS } from '@/lib/defaultExternalLinks'
+import { GRADIENT_PRESETS, ICON_PRESETS } from '@/lib/defaultExternalLinks'
 
 const validGradients = GRADIENT_PRESETS.map(p => p.value)
+const validIcons = ICON_PRESETS.map(i => i.normalize('NFC'))
 
 // GET: ユーザーの外部リンク一覧取得
 export const GET = withAuth(async ({ user }) => {
@@ -47,7 +48,7 @@ export const PUT = withAuth(async ({ user, request }) => {
     if (!isValidExternalLinkLabel(link.label)) {
       return NextResponse.json({ error: 'Bad Request', message: `無効なラベル: ${link.label}` }, { status: 400 })
     }
-    if (!isValidExternalLinkIcon(link.icon)) {
+    if (!isValidExternalLinkIcon(link.icon) || !validIcons.includes(link.icon.normalize('NFC'))) {
       return NextResponse.json({ error: 'Bad Request', message: '無効なアイコンです' }, { status: 400 })
     }
     if (!validGradients.includes(link.gradient)) {

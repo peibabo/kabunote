@@ -22,6 +22,7 @@ import { playSound } from '@/lib/sound';
 import {
   DEFAULT_EXTERNAL_LINKS,
   GRADIENT_PRESETS,
+  ICON_PRESETS,
   MAX_EXTERNAL_LINKS,
   MAX_LINK_LABEL_LENGTH,
   MAX_LINK_URL_LENGTH,
@@ -45,7 +46,7 @@ interface EditingLink {
 const EMPTY_LINK: EditingLink = {
   url: '',
   label: '',
-  icon: '',
+  icon: ICON_PRESETS[0],
   gradient: GRADIENT_PRESETS[0].value,
 };
 
@@ -334,14 +335,20 @@ export default function ExternalLinksSettingsModal({ isOpen, onClose, links, onS
                 />
               </div>
               <div>
-                <label className="block text-xs text-gray-400 mb-1">アイコン（絵文字）</label>
-                <input
-                  type="text"
-                  value={editForm.icon}
-                  onChange={(e) => setEditForm({ ...editForm, icon: e.target.value })}
-                  placeholder="例: 📊"
-                  className="w-20 bg-gray-600 text-white border border-gray-500 rounded px-3 py-2 text-sm text-center focus:outline-none focus:border-blue-500"
-                />
+                <label className="block text-xs text-gray-400 mb-1">アイコン</label>
+                <div className="flex flex-wrap gap-1.5">
+                  {ICON_PRESETS.map((icon) => (
+                    <button
+                      key={icon}
+                      onClick={() => setEditForm({ ...editForm, icon })}
+                      className={`cursor-pointer w-9 h-9 rounded-lg flex items-center justify-center text-lg transition-all ${
+                        editForm.icon === icon ? 'bg-gray-500 ring-2 ring-white scale-110' : 'bg-gray-600 hover:bg-gray-500 opacity-60 hover:opacity-100'
+                      }`}
+                    >
+                      {icon}
+                    </button>
+                  ))}
+                </div>
               </div>
               <div>
                 <label className="block text-xs text-gray-400 mb-1">カラー</label>
