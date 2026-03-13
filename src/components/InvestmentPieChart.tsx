@@ -1,10 +1,11 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Position, calculatePositionSummary, formatPrice } from '@/types/positions';
+import { Position } from '@/types/positions';
+import { calculatePositionSummary, formatPrice } from '@/lib/positionCalc';
 import { CustomTag } from '@/types/tags';
-import { calculateDividendInfo, formatDividendAmount, formatDividendYield } from '@/types/dividend';
-import { calculateShareholderBenefit, formatBenefitValue, formatBenefitYield } from '@/types/shareholder';
+import { calculateDividendInfo, formatDividendAmount, formatDividendYield } from '@/lib/dividendCalc';
+import { calculateShareholderBenefit, formatBenefitValue, formatBenefitYield } from '@/lib/shareholderCalc';
 
 interface PortfolioData {
   symbol: string;

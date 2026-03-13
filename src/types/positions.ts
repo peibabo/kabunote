@@ -42,13 +42,3 @@ export interface StockTargetInfo {
   stopLossPrice?: number;
   profitLossInfo: ProfitLossInfo | null;
 }
-
-// 後方互換: 計算・フォーマット関数はlib/positionCalc.tsに移動
-export {
-  calculatePositionSummary,
-  calculateProfitLoss,
-  calculatePortfolioTargetSummary,
-  formatPrice,
-  formatShares,
-  formatProfitLoss,
-} from '@/lib/positionCalc';

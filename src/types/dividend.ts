@@ -22,13 +22,3 @@ export interface PortfolioDividendSummary {
   stocksWithDividend: number;       // 配当設定済み銘柄数
   totalStocksWithPositions: number; // ポジションを持つ銘柄数
 }
-
-// 後方互換: 計算・フォーマット関数はlib/dividendCalc.tsに移動
-export {
-  calculateDividendYield,
-  calculateAnnualDividend,
-  calculateAfterTaxDividend,
-  calculateDividendInfo,
-  formatDividendAmount,
-  formatDividendYield,
-} from '@/lib/dividendCalc';

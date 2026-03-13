@@ -1,11 +1,8 @@
 'use client';
 
 import { useMemo } from 'react';
-import {
-  EventSummary,
-  formatDateString,
-  calculateFullDateFromMonthDay
-} from '@/types/investmentCalendar';
+import { EventSummary } from '@/types/investmentCalendar';
+import { formatDateString, calculateFullDateFromMonthDay } from '@/lib/investmentCalendarCalc';
 import { DividendRightsSettings, ShareholderRightsSettings, ShareholderMeetingSettings } from '@/types/rightsDate';
 import TodayTomorrowEvents from './TodayTomorrowEvents';
 import InvestmentTimeline from './InvestmentTimeline';

@@ -6,7 +6,7 @@ import {
   calculateDividendInfo,
   formatDividendAmount,
   formatDividendYield,
-} from '@/types/dividend'
+} from '@/lib/dividendCalc'
 
 describe('calculateDividendYield', () => {
   it('正常な配当利回り計算', () => {

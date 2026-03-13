@@ -1,4 +1,5 @@
-import { NextActionPlan, NextActionPlanAnalysis, analyzeNextActionPlan } from '@/types/nextActionPlan';
+import { NextActionPlan, NextActionPlanAnalysis } from '@/types/nextActionPlan';
+import { analyzeNextActionPlan } from '@/lib/nextActionPlanCalc';
 import { PositionSummary } from '@/types/positions';
 
 /**

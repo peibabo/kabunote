@@ -1,6 +1,7 @@
 'use client';
 
-import { PositionSummary, ProfitLossInfo, formatPrice, formatShares, formatProfitLoss } from '@/types/positions';
+import { PositionSummary, ProfitLossInfo } from '@/types/positions';
+import { formatPrice, formatShares, formatProfitLoss } from '@/lib/positionCalc';
 import { useSoundOnChange } from '@/hooks/useSoundOnChange';
 
 interface ProgressData {

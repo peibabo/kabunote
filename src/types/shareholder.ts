@@ -34,10 +34,3 @@ export interface PortfolioShareholderSummary {
   totalStocksWithPositions: number; // ポジションを持つ銘柄数
   averageYield: number;             // ポートフォリオ平均優待利回り
 }
-
-// 後方互換: 計算・フォーマット関数はlib/shareholderCalc.tsに移動
-export {
-  calculateShareholderBenefit,
-  formatBenefitValue,
-  formatBenefitYield,
-} from '@/lib/shareholderCalc';

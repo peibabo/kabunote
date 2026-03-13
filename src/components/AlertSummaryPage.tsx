@@ -4,11 +4,12 @@ import React, { useState, useMemo } from 'react';
 import { NextActionPlan, NextActionPlanAnalysis } from '@/types/nextActionPlan';
 import { getAllActiveAlerts, AlertType } from '@/utils/alertSystem';
 import { getCompanyNameSync } from '@/data/stockNames';
-import { calculatePositionSummary } from '@/types/positions';
+import { calculatePositionSummary } from '@/lib/positionCalc';
 import { useSnooze } from '@/hooks/useSnooze';
 import { useCash } from '@/hooks/useCash';
 import { StockData } from '@/hooks/useStockData';
-import { SNOOZE_DURATIONS, SnoozeDuration, getTimeUntilUnsnooze, generateAlertKey } from '@/types/snooze';
+import { SnoozeDuration } from '@/types/snooze';
+import { SNOOZE_DURATIONS, getTimeUntilUnsnooze, generateAlertKey } from '@/lib/snoozeCalc';
 
 interface AlertRowData {
   symbol: string;

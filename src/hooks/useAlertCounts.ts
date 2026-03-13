@@ -3,7 +3,7 @@ import { StockData } from '@/hooks/useStockData';
 import { NextActionPlan } from '@/types/nextActionPlan';
 import { SnoozedAlert } from '@/types/snooze';
 import { getAllActiveAlerts } from '@/utils/alertSystem';
-import { calculatePositionSummary } from '@/types/positions';
+import { calculatePositionSummary } from '@/lib/positionCalc';
 
 interface AlertCounts {
   total: number;

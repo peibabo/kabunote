@@ -6,10 +6,8 @@ import {
   NextActionPlanAnalysis,
   ActionType,
   Priority,
-  analyzeNextActionPlan,
-  hasNextActionPlan,
-  isCompleteNextActionPlan
 } from '@/types/nextActionPlan';
+import { analyzeNextActionPlan, hasNextActionPlan, isCompleteNextActionPlan } from '@/lib/nextActionPlanCalc';
 import { PositionSummary } from '@/types/positions';
 import { useCash } from '@/hooks/useCash';
 

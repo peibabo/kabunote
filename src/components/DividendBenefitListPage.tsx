@@ -1,10 +1,13 @@
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { DividendInfo, calculateDividendInfo, formatDividendAmount, formatDividendYield } from '@/types/dividend';
-import { ShareholderBenefitInfo, calculateShareholderBenefit, formatBenefitValue, formatBenefitYield } from '@/types/shareholder';
+import { DividendInfo } from '@/types/dividend';
+import { calculateDividendInfo, formatDividendAmount, formatDividendYield } from '@/lib/dividendCalc';
+import { ShareholderBenefitInfo } from '@/types/shareholder';
+import { calculateShareholderBenefit, formatBenefitValue, formatBenefitYield } from '@/lib/shareholderCalc';
 import { DividendRightsSettings, ShareholderRightsSettings } from '@/types/rightsDate';
 import { getStockData } from '@/data/stockNames';
+import { formatMonthDay } from '@/lib/dateFormat';
 
 // 統合されたポジション情報の型
 interface IntegratedPosition {
@@ -275,12 +278,6 @@ export default function DividendBenefitListPage({ stockSymbols, stockData, onSto
     return `${daysUntil}日後`;
   };
 
-  // 日付フォーマット
-  const formatDate = (dateStr: string) => {
-    if (!dateStr) return '-';
-    const date = new Date(dateStr);
-    return `${date.getMonth() + 1}/${date.getDate()}`;
-  };
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-4 md:p-6">
@@ -458,7 +455,7 @@ export default function DividendBenefitListPage({ stockSymbols, stockData, onSto
                     <div className="space-y-1">
                       {item.dividendRightsDate && (
                         <div className="text-xs">
-                          <div className="text-green-300">配当: {formatDate(item.dividendRightsDate)}</div>
+                          <div className="text-green-300">配当: {formatMonthDay(item.dividendRightsDate)}</div>
                           <div className="text-gray-500">
                             {getDaysUntilDisplay(calculateDaysUntil(item.dividendRightsDate))}
                           </div>
@@ -466,7 +463,7 @@ export default function DividendBenefitListPage({ stockSymbols, stockData, onSto
                       )}
                       {item.shareholderRightsDate && (
                         <div className="text-xs">
-                          <div className="text-purple-300">優待: {formatDate(item.shareholderRightsDate)}</div>
+                          <div className="text-purple-300">優待: {formatMonthDay(item.shareholderRightsDate)}</div>
                           <div className="text-gray-500">
                             {getDaysUntilDisplay(calculateDaysUntil(item.shareholderRightsDate))}
                           </div>
@@ -555,14 +552,14 @@ export default function DividendBenefitListPage({ stockSymbols, stockData, onSto
                   {item.dividendRightsDate && (
                     <div className="flex items-center gap-1">
                       <span className="text-green-300">配当権利日</span>
-                      <span className="text-white">{formatDate(item.dividendRightsDate)}</span>
+                      <span className="text-white">{formatMonthDay(item.dividendRightsDate)}</span>
                       <span className="text-gray-500">({getDaysUntilDisplay(calculateDaysUntil(item.dividendRightsDate))})</span>
                     </div>
                   )}
                   {item.shareholderRightsDate && (
                     <div className="flex items-center gap-1">
                       <span className="text-purple-300">優待権利日</span>
-                      <span className="text-white">{formatDate(item.shareholderRightsDate)}</span>
+                      <span className="text-white">{formatMonthDay(item.shareholderRightsDate)}</span>
                       <span className="text-gray-500">({getDaysUntilDisplay(calculateDaysUntil(item.shareholderRightsDate))})</span>
                     </div>
                   )}

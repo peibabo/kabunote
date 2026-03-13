@@ -2,15 +2,18 @@
 
 import { useMemo, useState } from 'react';
 import InvestmentPieChart from '@/components/InvestmentPieChart';
-import { formatPrice, formatShares, formatProfitLoss, PortfolioTargetSummary, calculatePortfolioTargetSummary, calculatePositionSummary, calculateProfitLoss, StockTargetInfo, Position } from '@/types/positions';
-import { PortfolioDividendSummary, calculateDividendInfo, formatDividendAmount, formatDividendYield } from '@/types/dividend';
-import { PortfolioShareholderSummary, calculateShareholderBenefit, formatBenefitValue, formatBenefitYield } from '@/types/shareholder';
+import { PortfolioTargetSummary, StockTargetInfo, Position } from '@/types/positions';
+import { formatPrice, formatShares, formatProfitLoss, calculatePortfolioTargetSummary, calculatePositionSummary, calculateProfitLoss } from '@/lib/positionCalc';
+import { PortfolioDividendSummary } from '@/types/dividend';
+import { calculateDividendInfo, formatDividendAmount, formatDividendYield } from '@/lib/dividendCalc';
+import { PortfolioShareholderSummary } from '@/types/shareholder';
+import { calculateShareholderBenefit, formatBenefitValue, formatBenefitYield } from '@/lib/shareholderCalc';
 import { evaluateCashRatio } from '@/lib/positionCalc';
 import { useCash } from '@/hooks/useCash';
 import { STORAGE_KEYS } from '@/lib/storageKeys';
 import { CustomTag } from '@/types/tags';
 import { getCompanyNameSync, getSectorSync } from '@/data/stockNames';
-import { playSound } from '@/lib/sound';
+import { useAccordionState } from '@/hooks/useAccordionState';
 
 interface StockData {
   id: string;
@@ -66,15 +69,12 @@ interface OverallSummary {
 }
 
 export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProps) {
-  const [isChartsExpanded, setIsChartsExpanded] = useState(false);
-  const [isTargetSummaryExpanded, setIsTargetSummaryExpanded] = useState(false);
+  const { isExpanded: isChartsExpanded, toggle: toggleCharts } = useAccordionState();
+  const { isExpanded: isTargetSummaryExpanded, toggle: toggleTargetSummary } = useAccordionState();
   const [isRiskRewardExpanded, setIsRiskRewardExpanded] = useState(false);
-  const [isCashSectionExpanded, setIsCashSectionExpanded] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem(STORAGE_KEYS.CASH_SECTION_EXPANDED);
-      return saved === null ? true : saved === 'true';
-    }
-    return true;
+  const { isExpanded: isCashSectionExpanded, toggle: toggleCashSection } = useAccordionState({
+    storageKey: STORAGE_KEYS.CASH_SECTION_EXPANDED,
+    defaultExpanded: true,
   });
   // 現金額・Next Actionメモ管理（DB永続化 + localStorageフォールバック）
   const { cashAmount, nextActionMemo, updateCash, updateNextActionMemo } = useCash();
@@ -446,12 +446,7 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
       <div className="mt-4">
         {/* アコーディオンヘッダー */}
         <button
-          onClick={() => {
-            const next = !isCashSectionExpanded;
-            playSound(next ? 'accordionOpen' : 'accordionClose');
-            setIsCashSectionExpanded(next);
-            localStorage.setItem(STORAGE_KEYS.CASH_SECTION_EXPANDED, String(next));
-          }}
+          onClick={toggleCashSection}
           className="w-full flex items-center justify-between p-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors cursor-pointer mb-2"
         >
           <div className="flex items-center gap-2">
@@ -566,10 +561,7 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
         <div className="mt-2">
           {/* アコーディオンヘッダー */}
           <button
-            onClick={() => {
-              playSound(!isTargetSummaryExpanded ? 'accordionOpen' : 'accordionClose');
-              setIsTargetSummaryExpanded(!isTargetSummaryExpanded);
-            }}
+            onClick={toggleTargetSummary}
             className="w-full flex items-center justify-between p-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors cursor-pointer mb-2"
           >
             <div className="flex items-center gap-2">
@@ -776,10 +768,7 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
         <div>
           {/* アコーディオンヘッダー */}
           <button
-            onClick={() => {
-              playSound(!isChartsExpanded ? 'accordionOpen' : 'accordionClose');
-              setIsChartsExpanded(!isChartsExpanded);
-            }}
+            onClick={toggleCharts}
             className="w-full flex items-center justify-between p-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors cursor-pointer"
           >
             <div className="flex items-center gap-2">
