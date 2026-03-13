@@ -1,53 +1,46 @@
 'use client';
 
-import { useMemo, useState, useRef, useEffect } from 'react';
-import { InvestmentEvent, formatDateString, TimelineEvent, CalendarDay } from '@/types/investmentCalendar';
+import { useMemo, useState } from 'react';
+import { InvestmentEvent, TimelineEvent, CalendarDay } from '@/types/investmentCalendar';
+import { formatDateString } from '@/lib/investmentCalendarCalc';
 import { getEventStyle, shouldShowDateLabel, getEventDotColor } from '@/utils/timelineUtils';
 import { STORAGE_KEYS } from '@/lib/storageKeys';
-import { playSound } from '@/lib/sound';
+import { useAccordionState } from '@/hooks/useAccordionState';
+import { useTooltipState } from '@/hooks/useTooltipState';
 
 interface InvestmentTimelineProps {
   events: Record<string, InvestmentEvent[]>;
   onStockClick?: (symbol: string) => void;
 }
 
-interface TooltipState {
-  show: boolean;
-  x: number;
-  y: number;
-  event: TimelineEvent | null;
-}
-
-
 export default function InvestmentTimeline({ events, onStockClick }: InvestmentTimelineProps) {
-  const [tooltip, setTooltip] = useState<TooltipState>({
-    show: false,
-    x: 0,
-    y: 0,
-    event: null
-  });
-  const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const {
+    tooltip: timelineTooltip,
+    show: showTooltip,
+    scheduleHide: scheduleTooltipHide,
+    clearHideTimeout: clearTooltipHideTimeout,
+    handleTooltipEnter,
+    handleTooltipLeave,
+  } = useTooltipState<TimelineEvent>(150);
 
   // 月間カレンダーのアコーディオン状態
-  const [isCalendarExpanded, setIsCalendarExpanded] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem(STORAGE_KEYS.TIMELINE_CALENDAR_EXPANDED);
-      return saved === 'true';
-    }
-    return false;
+  const { isExpanded: isCalendarExpanded, toggle: toggleCalendarExpanded } = useAccordionState({
+    storageKey: STORAGE_KEYS.TIMELINE_CALENDAR_EXPANDED,
   });
 
   // 月間カレンダーの現在月
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
   // カレンダーツールチップ用
-  const [calendarTooltip, setCalendarTooltip] = useState<{
-    show: boolean;
-    x: number;
-    y: number;
-    events: InvestmentEvent[];
-  }>({ show: false, x: 0, y: 0, events: [] });
-  const calendarHideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const {
+    tooltip: calendarTooltipState,
+    show: showCalendarTooltip,
+    hide: hideCalendarTooltip,
+    scheduleHide: scheduleCalendarTooltipHide,
+    clearHideTimeout: clearCalendarHideTimeout,
+    handleTooltipEnter: handleCalendarTooltipEnter,
+    handleTooltipLeave: handleCalendarTooltipLeave,
+  } = useTooltipState<InvestmentEvent[]>(100);
 
   // タイムラインデータの生成（過去60日 + 今日 + 未来59日 = 120日）
   const timelineData = useMemo<TimelineEvent[]>(() => {
@@ -78,19 +71,8 @@ export default function InvestmentTimeline({ events, onStockClick }: InvestmentT
   }, [events]);
 
   // ツールチップ管理
-  const clearHideTimeout = () => {
-    if (hideTimeoutRef.current) {
-      clearTimeout(hideTimeoutRef.current);
-      hideTimeoutRef.current = null;
-    }
-  };
-
-  const hideTooltip = () => {
-    setTooltip({ show: false, x: 0, y: 0, event: null });
-  };
-
   const handleEventHover = (e: React.MouseEvent, timelineEvent: TimelineEvent) => {
-    clearHideTimeout();
+    clearTooltipHideTimeout();
 
     const rect = e.currentTarget.getBoundingClientRect();
     const eventCount = timelineEvent.events.length;
@@ -114,27 +96,11 @@ export default function InvestmentTimeline({ events, onStockClick }: InvestmentT
       rect.left + rect.width / 2 - tooltipWidth / 2
     ));
 
-    setTooltip({
-      show: true,
-      x: xPosition,
-      y: yPosition,
-      event: timelineEvent
-    });
+    showTooltip({ x: xPosition, y: yPosition }, timelineEvent);
   };
 
   const handleEventLeave = () => {
-    hideTimeoutRef.current = setTimeout(() => {
-      hideTooltip();
-    }, 150);
-  };
-
-  const handleTooltipEnter = () => {
-    clearHideTimeout();
-  };
-
-  const handleTooltipLeave = () => {
-    clearHideTimeout();
-    hideTooltip();
+    scheduleTooltipHide();
   };
 
   // カレンダーデータの生成
@@ -175,57 +141,23 @@ export default function InvestmentTimeline({ events, onStockClick }: InvestmentT
     return days;
   }, [currentMonth, events]);
 
-  // アコーディオンの切り替え
-  const toggleCalendarExpanded = () => {
-    const newState = !isCalendarExpanded;
-    playSound(newState ? 'accordionOpen' : 'accordionClose');
-    setIsCalendarExpanded(newState);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(STORAGE_KEYS.TIMELINE_CALENDAR_EXPANDED, newState.toString());
-    }
-  };
-
   // カレンダーツールチップ管理
-  const clearCalendarHideTimeout = () => {
-    if (calendarHideTimeoutRef.current) {
-      clearTimeout(calendarHideTimeoutRef.current);
-      calendarHideTimeoutRef.current = null;
-    }
-  };
-
-  const hideCalendarTooltip = () => {
-    setCalendarTooltip({ show: false, x: 0, y: 0, events: [] });
-  };
-
   const handleCalendarDayHover = (event: React.MouseEvent, day: CalendarDay) => {
     clearCalendarHideTimeout();
 
     if (day.events.length > 0) {
       const rect = event.currentTarget.getBoundingClientRect();
-      setCalendarTooltip({
-        show: true,
-        x: rect.left + rect.width / 2,
-        y: rect.top - 20,
-        events: day.events
-      });
+      showCalendarTooltip(
+        { x: rect.left + rect.width / 2, y: rect.top - 20 },
+        day.events
+      );
     } else {
       hideCalendarTooltip();
     }
   };
 
   const handleCalendarDayLeave = () => {
-    calendarHideTimeoutRef.current = setTimeout(() => {
-      hideCalendarTooltip();
-    }, 100);
-  };
-
-  const handleCalendarTooltipEnter = () => {
-    clearCalendarHideTimeout();
-  };
-
-  const handleCalendarTooltipLeave = () => {
-    clearCalendarHideTimeout();
-    hideCalendarTooltip();
+    scheduleCalendarTooltipHide();
   };
 
   // 月移動ハンドラー
@@ -240,6 +172,7 @@ export default function InvestmentTimeline({ events, onStockClick }: InvestmentT
     hideCalendarTooltip();
     setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1));
   };
+
 
   // 今月のイベント数を計算
   const currentMonthEvents = useMemo(() => {
@@ -258,18 +191,6 @@ export default function InvestmentTimeline({ events, onStockClick }: InvestmentT
 
     return eventCount;
   }, [events, currentMonth]);
-
-  // クリーンアップ
-  useEffect(() => {
-    return () => {
-      if (hideTimeoutRef.current) {
-        clearTimeout(hideTimeoutRef.current);
-      }
-      if (calendarHideTimeoutRef.current) {
-        clearTimeout(calendarHideTimeoutRef.current);
-      }
-    };
-  }, []);
 
   // タイムラインが空の場合
   if (timelineData.length === 0) {
@@ -508,13 +429,13 @@ export default function InvestmentTimeline({ events, onStockClick }: InvestmentT
           </div>
 
           {/* カレンダーツールチップ（展開時のみ表示） */}
-          {isCalendarExpanded && calendarTooltip.show && (
+          {isCalendarExpanded && calendarTooltipState.show && calendarTooltipState.data && (
             <div
               data-tooltip="true"
               className="fixed z-50"
               style={{
-                left: calendarTooltip.x - 100,
-                top: calendarTooltip.y - 25,
+                left: calendarTooltipState.x - 100,
+                top: calendarTooltipState.y - 25,
               }}
               onMouseEnter={handleCalendarTooltipEnter}
               onMouseLeave={handleCalendarTooltipLeave}
@@ -526,7 +447,7 @@ export default function InvestmentTimeline({ events, onStockClick }: InvestmentT
                   onClick={(e) => e.stopPropagation()}
                 >
                   <div className="space-y-2">
-                    {calendarTooltip.events.map((event, index) => (
+                    {calendarTooltipState.data!.map((event, index) => (
                       <div
                         key={index}
                         className="text-xs cursor-pointer hover:text-blue-300 transition-colors"
@@ -550,12 +471,12 @@ export default function InvestmentTimeline({ events, onStockClick }: InvestmentT
       </div>
 
       {/* 動的ツールチップ */}
-      {tooltip.show && tooltip.event && (
+      {timelineTooltip.show && timelineTooltip.data && (
         <div
           className="fixed z-50 pointer-events-none"
           style={{
-            left: tooltip.x,
-            top: tooltip.y,
+            left: timelineTooltip.x,
+            top: timelineTooltip.y,
           }}
         >
           <div
@@ -566,23 +487,23 @@ export default function InvestmentTimeline({ events, onStockClick }: InvestmentT
           >
             {/* 日付ヘッダー */}
             <div className="text-sm font-medium text-white mb-2 border-b border-gray-700 pb-2">
-              {tooltip.event.dateObj.toLocaleDateString('ja-JP', {
+              {timelineTooltip.data!.dateObj.toLocaleDateString('ja-JP', {
                 month: 'long',
                 day: 'numeric'
               })}
-              {tooltip.event.isToday && (
+              {timelineTooltip.data!.isToday && (
                 <span className="text-blue-400 ml-2 text-xs">今日</span>
               )}
-              {!tooltip.event.isPast && !tooltip.event.isToday && (
+              {!timelineTooltip.data!.isPast && !timelineTooltip.data!.isToday && (
                 <span className="text-green-400 ml-2 text-xs">
-                  あと{tooltip.event.daysFromToday}日
+                  あと{timelineTooltip.data!.daysFromToday}日
                 </span>
               )}
             </div>
 
             {/* イベント一覧 */}
             <div className="space-y-2 max-h-64 overflow-y-auto">
-              {tooltip.event.events.map((event, index) => (
+              {timelineTooltip.data!.events.map((event, index) => (
                 <div
                   key={index}
                   className="text-xs cursor-pointer hover:text-blue-300 transition-colors p-2 rounded-md hover:bg-gray-800"

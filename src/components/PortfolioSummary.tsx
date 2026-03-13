@@ -3,12 +3,11 @@
 import { useMemo, useState } from 'react';
 import InvestmentPieChart from '@/components/InvestmentPieChart';
 import { PortfolioTargetSummary, StockTargetInfo, Position } from '@/types/positions';
-import { formatPrice, formatShares, formatProfitLoss, calculatePortfolioTargetSummary, calculatePositionSummary, calculateProfitLoss } from '@/lib/positionCalc';
+import { formatPrice, formatShares, formatProfitLoss, calculatePortfolioTargetSummary, calculatePositionSummary, calculateProfitLoss, evaluateCashRatio, type CashRatioEvaluation } from '@/lib/positionCalc';
 import { PortfolioDividendSummary } from '@/types/dividend';
 import { calculateDividendInfo, formatDividendAmount, formatDividendYield } from '@/lib/dividendCalc';
 import { PortfolioShareholderSummary } from '@/types/shareholder';
 import { calculateShareholderBenefit, formatBenefitValue, formatBenefitYield } from '@/lib/shareholderCalc';
-import { evaluateCashRatio } from '@/lib/positionCalc';
 import { useCash } from '@/hooks/useCash';
 import { STORAGE_KEYS } from '@/lib/storageKeys';
 import { CustomTag } from '@/types/tags';

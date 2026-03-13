@@ -1,3 +1,5 @@
+import { AlertType } from '@/utils/alertSystem';
+
 /**
  * スヌーズ期間（分単位）
  */

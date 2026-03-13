@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { DividendRightsSettings, ShareholderRightsSettings, ShareholderMeetingSettings } from '@/types/rightsDate';
+import { formatMonthDay } from '@/lib/dateFormat';
 
 interface EventData {
   symbol: string;
@@ -274,11 +275,6 @@ export default function EventCalendarPage({ stockSymbols, stockData }: EventCale
 
   const monthNames = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
 
-  // 日付フォーマット
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return `${date.getMonth() + 1}/${date.getDate()}`;
-  };
 
   // 日数表示
   const getDaysUntilDisplay = (daysUntil: number) => {
@@ -379,7 +375,7 @@ export default function EventCalendarPage({ stockSymbols, stockData }: EventCale
                   {sortedEvents.map((event, index) => (
                     <tr key={`${event.symbol}-${event.eventType}-${index}`} className="hover:bg-gray-750">
                       <td className="px-4 py-3 text-white font-medium">
-                        {formatDate(event.date)}
+                        {formatMonthDay(event.date)}
                       </td>
                       <td className="px-4 py-3">
                         <div className={`flex items-center space-x-2 px-3 py-1 rounded-lg ${event.colorClass}`}>
@@ -432,7 +428,7 @@ export default function EventCalendarPage({ stockSymbols, stockData }: EventCale
                       <span className="text-sm font-medium text-white">{event.symbol}</span>
                       <span className="text-xs text-gray-400 truncate max-w-[150px]">{event.companyName}</span>
                     </div>
-                    <span className="text-sm text-gray-300">{formatDate(event.date)}</span>
+                    <span className="text-sm text-gray-300">{formatMonthDay(event.date)}</span>
                   </div>
                 </div>
               ))}
