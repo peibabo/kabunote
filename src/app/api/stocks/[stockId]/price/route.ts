@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withAuth, withStock } from '@/lib/apiHandler'
 import { resolveStockId } from '@/lib/resolveStockId'
+import { isValidPrice } from '@/lib/validation'
 
 // GET: 株価情報取得（stockId未発見時はnullデータ返却、404ではない）
 export const GET = withAuth(async ({ user, params }) => {
@@ -30,6 +31,13 @@ export const GET = withAuth(async ({ user, params }) => {
 // PUT: 株価情報更新
 export const PUT = withStock(async ({ stockId, request }) => {
   const { currentPrice, targetPrice, stopLossPrice } = await request.json()
+
+  if (!isValidPrice(currentPrice) || !isValidPrice(targetPrice) || !isValidPrice(stopLossPrice)) {
+    return NextResponse.json(
+      { error: 'Bad Request', message: '株価は0以上の有効な数値である必要があります' },
+      { status: 400 }
+    )
+  }
 
   const existing = await prisma.stockPrice.findUnique({ where: { stockId } })
   let price

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withAuth } from '@/lib/apiHandler'
+import { isValidCashAmount } from '@/lib/validation'
 
 // GET: 現金残高と次の一手メモを取得
 export const GET = withAuth(async ({ user }) => {
@@ -24,8 +25,7 @@ export const POST = withAuth(async ({ user, request }) => {
   const { cashAmount, nextActionMemo } = await request.json()
 
   if (cashAmount !== undefined && cashAmount !== null) {
-    const numericAmount = parseFloat(cashAmount)
-    if (isNaN(numericAmount) || numericAmount < 0) {
+    if (!isValidCashAmount(cashAmount)) {
       return NextResponse.json({ error: '有効な現金残高を入力してください' }, { status: 400 })
     }
   }

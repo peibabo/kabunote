@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withStock } from '@/lib/apiHandler'
+import { isValidMonth, isValidDay } from '@/lib/validation'
 
 // GET: イベント情報取得（決算日・株主総会日）
 export const GET = withStock(async ({ stockId }) => {
@@ -60,6 +61,13 @@ export const PUT = withStock(async ({ stockId, request }) => {
     })
   } else {
     const { eventMonth, eventDay, isRecurring, isActive } = body
+
+    if (!isValidMonth(eventMonth) || !isValidDay(eventDay)) {
+      return NextResponse.json(
+        { error: 'Bad Request', message: '月（1〜12）または日（1〜31）の値が無効です' },
+        { status: 400 }
+      )
+    }
 
     event = await prisma.stockEvent.upsert({
       where: { stockId_eventType: { stockId, eventType } },

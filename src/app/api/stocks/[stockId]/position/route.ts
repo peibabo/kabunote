@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withAuth, withStock } from '@/lib/apiHandler'
 import { resolveStockId } from '@/lib/resolveStockId'
+import { isValidRequiredShares, isValidRequiredPrice } from '@/lib/validation'
 
 // GET: 銘柄の全ポジション一覧を取得（stockId未発見時は空配列返却）
 export const GET = withAuth(async ({ user, params }) => {
@@ -40,15 +41,15 @@ export const GET = withAuth(async ({ user, params }) => {
 export const POST = withStock(async ({ stockId, request }) => {
   const { shares, purchasePrice, purchaseDate, memo } = await request.json()
 
-  if (typeof shares !== 'number' || shares <= 0) {
+  if (!isValidRequiredShares(shares)) {
     return NextResponse.json(
-      { error: 'Bad Request', message: 'sharesは1以上の数値である必要があります' },
+      { error: 'Bad Request', message: 'sharesは1以上の有効な数値である必要があります' },
       { status: 400 }
     )
   }
-  if (typeof purchasePrice !== 'number' || purchasePrice <= 0) {
+  if (!isValidRequiredPrice(purchasePrice)) {
     return NextResponse.json(
-      { error: 'Bad Request', message: 'purchasePriceは0より大きい数値である必要があります' },
+      { error: 'Bad Request', message: 'purchasePriceは0より大きい有効な数値である必要があります' },
       { status: 400 }
     )
   }

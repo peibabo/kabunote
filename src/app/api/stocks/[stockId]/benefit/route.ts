@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withStock } from '@/lib/apiHandler'
+import { isValidOptionalShares, isValidPrice, isValidMonth, isValidDay } from '@/lib/validation'
 
 // GET: 優待情報取得
 export const GET = withStock(async ({ stockId }) => {
@@ -22,6 +23,13 @@ export const GET = withStock(async ({ stockId }) => {
 export const PUT = withStock(async ({ stockId, request }) => {
   const body = await request.json()
   const { description, minimumShares, estimatedValue, rightsMonth, rightsDay } = body
+
+  if (!isValidOptionalShares(minimumShares) || !isValidPrice(estimatedValue) || !isValidMonth(rightsMonth) || !isValidDay(rightsDay)) {
+    return NextResponse.json(
+      { error: 'Bad Request', message: '優待情報に無効な値が含まれています' },
+      { status: 400 }
+    )
+  }
 
   const existing = await prisma.stockBenefit.findUnique({ where: { stockId } })
 
