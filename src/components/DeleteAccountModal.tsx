@@ -1,12 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+import { createClient } from '@/lib/supabase-client';
 
 interface DeleteAccountModalProps {
   isOpen: boolean;
@@ -16,6 +11,7 @@ interface DeleteAccountModalProps {
 const CONFIRMATION_TEXT = 'アカウント削除';
 
 export default function DeleteAccountModal({ isOpen, onClose }: DeleteAccountModalProps) {
+  const supabase = createClient();
   const [confirmText, setConfirmText] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState('');
