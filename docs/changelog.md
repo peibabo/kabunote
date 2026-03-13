@@ -1,5 +1,28 @@
 # Kabunote - プロジェクトマイルストーン
 
+## Phase 1.5: デイリー投資ダイジェスト（2026年3月14日）
+**ダッシュボードに「今日のダイジェスト」セクションを追加。既存データを集約し、近日イベント・アラート・NextAction・ポートフォリオハイライトを一覧表示**
+
+### 技術的成果
+- 純粋関数による集約計算（`dailyDigestCalc.ts`）: イベント抽出・アラート集計・NextAction分析・ポートフォリオサマリー
+- `useDailyDigest` カスタムフック: `useMemo`でメモ化、スヌーズ状態の`localStorage`監視
+- `DailyDigest` コンポーネント: 4セクション構成、アコーディオン開閉永続化、レスポンシブ2列グリッド
+- 新規API呼び出しなし（既存データの再利用のみ）
+- データがないセクション/全体の自動非表示
+
+### 新規ファイル
+- `src/lib/dailyDigestCalc.ts` - ダイジェスト集約計算（純粋関数）
+- `src/hooks/useDailyDigest.ts` - ダイジェストカスタムフック
+- `src/components/DailyDigest.tsx` - ダイジェストUIコンポーネント
+- `src/__tests__/unit/dailyDigestCalc.test.ts` - ユニットテスト（19件）
+
+### 変更ファイル
+- `src/app/dashboard/page.tsx` - DailyDigest配置（DailyQuoteの下、PortfolioSummaryの上）
+- `docs/architecture.md` - DailyDigest追記
+- `docs/changelog.md` - 完了記録
+
+---
+
 ## リファクタリング Phase 2: ロジック分離・重複パターン共通化（2026年3月14日）
 **型ファイルからロジック完全分離、重複パターンのカスタムフック化、日付フォーマット統一、re-export完全削除**
 

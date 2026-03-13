@@ -84,7 +84,7 @@ app_users (ユーザー管理)
 
 ---
 
-## カスタムフック一覧（28フック）
+## カスタムフック一覧（29フック）
 
 ### データ管理（DB CRUD）
 | フック | 説明 |
@@ -121,6 +121,7 @@ app_users (ユーザー管理)
 | `useStockSearch` | 銘柄検索（オートコンプリート） |
 | `useStockAlerts` | アラート計算・カードスタイル |
 | `useAlertCounts` | ヘッダー用アラート集計 |
+| `useDailyDigest` | デイリーダイジェスト集約（イベント・アラート・NextAction・ポートフォリオ） |
 
 ### ユーティリティ
 | フック | 説明 |
@@ -195,6 +196,9 @@ app_users (ユーザー管理)
 - `DividendBenefitListPage.tsx`: 配当・優待一覧ダッシュボード
 - `PositionListPage.tsx`: 保有ポジション一覧
 
+### ダイジェスト
+- `DailyDigest.tsx`: デイリーダイジェスト（近日イベント・アラート・NextAction・ポートフォリオサマリー）
+
 ### カレンダー系
 - `InvestmentCalendar.tsx`: 投資カレンダー
 - `InvestmentTimeline.tsx`: 投資タイムライン
@@ -228,6 +232,7 @@ app_users (ユーザー管理)
 | `investmentCalendarCalc.ts` | 営業日計算・権利付最終日・日付フォーマット |
 | `snoozeCalc.ts` | スヌーズ期間定数・ラベル・残り時間計算 |
 | `nextActionPlanCalc.ts` | Next Action Plan分析・判定関数 |
+| `dailyDigestCalc.ts` | デイリーダイジェスト集約計算（イベント・アラート・NextAction・ポートフォリオ） |
 | `dateFormat.ts` | 日付フォーマット共通関数（ISO形式・M/D形式） |
 
 ## ユーティリティ（src/utils/）
