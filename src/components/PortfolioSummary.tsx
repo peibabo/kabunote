@@ -524,7 +524,7 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
               余力現金・キャッシュポジション
             </h3>
             {!isCashSectionExpanded && overallSummary.cashAmount > 0 && (
-              <span className="text-xs text-yellow-300 hidden sm:inline">
+              <span className="text-xs font-medium text-yellow-300 hidden sm:inline">
                 {formatPrice(overallSummary.cashAmount)}円（現金{overallSummary.cashRatio.toFixed(1)}%）
               </span>
             )}

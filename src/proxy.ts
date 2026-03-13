@@ -33,8 +33,7 @@ export async function proxy(request: NextRequest) {
     pathname.startsWith('/api') ||
     pathname.startsWith('/privacy') ||
     pathname.startsWith('/terms') ||
-    pathname.startsWith('/help') ||
-    pathname.startsWith('/monitoring')
+    pathname.startsWith('/help')
   ) {
     return NextResponse.next()
   }
