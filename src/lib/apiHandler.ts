@@ -49,8 +49,8 @@ export function withAuth(handler: AuthHandler, errorLabel: string, options?: Aut
       const auth = await authenticate()
       if (auth instanceof NextResponse) return auth
 
-      // レート制限チェック（ユーザーID単位）
-      const rateLimitKey = `user:${auth.user.id}`
+      // レート制限チェック（ユーザーID × エンドポイント単位）
+      const rateLimitKey = `user:${auth.user.id}:${errorLabel}`
       const result = checkRateLimit(rateLimitKey, options?.rateLimit)
       const headers = rateLimitHeaders(result, options?.rateLimit)
 
