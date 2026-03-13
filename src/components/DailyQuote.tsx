@@ -18,22 +18,41 @@ export default function DailyQuote() {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
+      {/* Tooltip - 上に表示 */}
+      <div
+        className={`
+          absolute left-4 right-4 bottom-full mb-2 z-50 pointer-events-none
+          transition-all duration-300 ease-out
+          ${isHovered ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}
+        `}
+      >
+        <div
+          className="relative px-4 py-3 rounded-lg backdrop-blur-md text-gray-200 text-xs leading-relaxed"
+          style={{
+            background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(139, 92, 246, 0.1))',
+            border: '1px solid rgba(59, 130, 246, 0.25)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 0 15px rgba(59, 130, 246, 0.1)',
+          }}
+        >
+          {quote.meaning}
+          {/* 下向き三角 */}
+          <div
+            className="absolute left-6 -bottom-1.5 w-3 h-3 rotate-45"
+            style={{
+              background: 'linear-gradient(135deg, transparent 50%, rgba(59, 130, 246, 0.15) 50%)',
+              borderRight: '1px solid rgba(59, 130, 246, 0.25)',
+              borderBottom: '1px solid rgba(59, 130, 246, 0.25)',
+            }}
+          />
+        </div>
+      </div>
+
       <p className="text-gray-300 italic text-sm leading-relaxed">
         &ldquo;{quote.text}&rdquo;
       </p>
       <p className="text-gray-500 text-xs mt-1.5 text-right">
         &mdash; {quote.author}
       </p>
-      {isHovered && (
-        <div
-          className="absolute left-0 right-0 top-full mt-1 mx-2 p-3 rounded-lg border bg-blue-900/95 border-blue-500/50 text-gray-200 text-xs leading-relaxed z-50 pointer-events-none"
-          style={{
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.4)',
-          }}
-        >
-          {quote.meaning}
-        </div>
-      )}
     </div>
   )
 }

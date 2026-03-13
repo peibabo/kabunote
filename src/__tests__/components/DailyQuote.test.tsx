@@ -17,13 +17,22 @@ describe('DailyQuote', () => {
     expect(screen.getByText(/日本相場格言/)).toBeInTheDocument()
   })
 
-  it('ホバー時に意味がツールチップで表示される', () => {
+  it('意味テキストが存在する', () => {
     render(<DailyQuote />)
-    const card = screen.getByText(/休むも相場/).closest('div')!
-    expect(screen.queryByText('無理に売買せず様子を見るのも立派な戦略')).not.toBeInTheDocument()
-    fireEvent.mouseEnter(card)
     expect(screen.getByText('無理に売買せず様子を見るのも立派な戦略')).toBeInTheDocument()
-    fireEvent.mouseLeave(card)
-    expect(screen.queryByText('無理に売買せず様子を見るのも立派な戦略')).not.toBeInTheDocument()
+  })
+
+  it('ホバー前はツールチップが非表示（opacity-0）', () => {
+    render(<DailyQuote />)
+    const tooltip = screen.getByText('無理に売買せず様子を見るのも立派な戦略').closest('div')!.parentElement!
+    expect(tooltip.className).toContain('opacity-0')
+  })
+
+  it('ホバー時にツールチップが表示（opacity-100）になる', () => {
+    render(<DailyQuote />)
+    const card = screen.getByText(/休むも相場/).closest('.relative')!
+    fireEvent.mouseEnter(card)
+    const tooltip = screen.getByText('無理に売買せず様子を見るのも立派な戦略').closest('div')!.parentElement!
+    expect(tooltip.className).toContain('opacity-100')
   })
 })
