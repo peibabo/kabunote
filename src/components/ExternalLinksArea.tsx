@@ -17,12 +17,12 @@ export default function ExternalLinksArea() {
             href={link.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex-shrink-0 flex flex-col items-center gap-1 group transition-transform duration-300 ease-out hover:-translate-y-1"
+            className="flex-shrink-0 w-16 flex flex-col items-center gap-1 group transition-transform duration-300 ease-out hover:-translate-y-1"
           >
             <span className={`w-9 h-9 rounded-full bg-gradient-to-r ${link.gradient} flex items-center justify-center text-lg shadow-lg transition-shadow duration-300 group-hover:shadow-xl group-hover:shadow-white/20`}>
               {link.icon}
             </span>
-            <span className="text-[10px] text-gray-400 whitespace-nowrap transition-colors duration-300 group-hover:text-gray-200">{link.label}</span>
+            <span className="text-[10px] text-gray-400 w-full text-center truncate transition-colors duration-300 group-hover:text-gray-200">{link.label}</span>
           </a>
         ))}
       </div>
