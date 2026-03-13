@@ -7,6 +7,7 @@ import FavoriteGroupManager from '@/components/FavoriteGroupManager';
 import TagManager from '@/components/TagManager';
 import SearchBar from '@/components/SearchBar';
 import InvestmentCalendar from '@/components/InvestmentCalendar';
+import DailyQuote from '@/components/DailyQuote';
 import PortfolioSummary from '@/components/PortfolioSummary';
 import FloatingAddButton from '@/components/FloatingAddButton';
 import StrategySummaryPage from '@/components/StrategySummaryPage';
@@ -241,6 +242,11 @@ export default function Home() {
         <div className="mb-4">
           {/* 外部リンク */}
           <ExternalLinksArea />
+        </div>
+
+        {/* 今日の格言 */}
+        <div className="mb-4">
+          <DailyQuote />
         </div>
 
         {/* ポートフォリオサマリー */}
