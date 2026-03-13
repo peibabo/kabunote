@@ -68,7 +68,7 @@ app_users (ユーザー管理)
 ### フィードバック
 | パス | メソッド | 説明 |
 |------|---------|------|
-| `/api/feedback` | POST | フィードバック（目安箱）送信 |
+| `/api/feedback` | POST | フィードバック（目安箱）送信（Slack通知付き） |
 
 ### お気に入りグループ
 | パス | メソッド | 説明 |
@@ -217,6 +217,7 @@ app_users (ユーザー管理)
 | `apiHandler.ts` | APIルート共通ハンドラー |
 | `toast.ts` | トースト通知 |
 | `sound.ts` | サウンドフィードバックエンジン（Web Audio API） |
+| `slack.ts` | Slack Webhook通知（フィードバック受信時） |
 
 ## ユーティリティ（src/utils/）
 

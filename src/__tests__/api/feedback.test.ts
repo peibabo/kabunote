@@ -1,12 +1,19 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { prismaMock } from '../mocks/prisma'
 import '../mocks/supabase'
 import { createRequest, getJson } from '../helpers/apiTestHelper'
 import { POST } from '@/app/api/feedback/route'
 import { resetRateLimitStore } from '@/lib/rateLimit'
 
+vi.mock('@/lib/slack', () => ({
+  notifyFeedback: vi.fn(),
+}))
+
+import { notifyFeedback } from '@/lib/slack'
+
 beforeEach(() => {
   prismaMock.feedback.create.mockReset()
+  vi.mocked(notifyFeedback).mockReset()
   resetRateLimitStore()
 })
 
@@ -35,6 +42,7 @@ describe('POST /api/feedback', () => {
         content: 'テスト内容',
       },
     })
+    expect(notifyFeedback).toHaveBeenCalledWith('FEATURE_REQUEST', 'テスト内容')
   })
 
   it('400: カテゴリなし', async () => {
