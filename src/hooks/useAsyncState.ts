@@ -15,7 +15,6 @@ export function useAsyncState(initialLoading = true) {
       const msg = err instanceof Error ? err.message : '読み込みエラー'
       setError(msg)
       toast.error('データの読み込みに少し手間取っています。再度お試しください')
-      console.error('❌', err)
       return undefined
     } finally {
       setIsLoading(false)
@@ -31,7 +30,6 @@ export function useAsyncState(initialLoading = true) {
       const msg = err instanceof Error ? err.message : '保存エラー'
       setError(msg)
       toast.error('保存がうまくいきませんでした。もう一度お試しください')
-      console.error('❌', err)
       return undefined
     } finally {
       setIsSaving(false)

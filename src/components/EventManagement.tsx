@@ -136,7 +136,6 @@ export default function EventManagement({
 
   //   // イベント日が今日より過去の場合のみ無効化
   //   if (eventDate < today) {
-  //     console.log('株主総会自動無効化:', { dateString, eventDate, today });
   //     const updatedSettings = { ...shareholderMeetingSettings, isActive: false };
   //     onShareholderMeetingSettingsChange(updatedSettings);
   //   }

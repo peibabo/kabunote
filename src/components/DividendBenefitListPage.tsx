@@ -154,13 +154,6 @@ export default function DividendBenefitListPage({ stockSymbols, stockData, onSto
       else if (hasDividend) type = 'dividend';
       else if (hasBenefit) type = 'benefit';
 
-      // デバッグログ（開発時のみ）
-      // console.log(`📋 ${symbol} データ確認:`, {
-      //   symbol,
-      //   name: data.name,
-      //   companyName: companyNames[symbol] || data.name,
-      //   companyNamesState: companyNames
-      // });
 
       return {
         symbol,
