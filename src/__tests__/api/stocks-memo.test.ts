@@ -46,9 +46,8 @@ describe('PUT /api/stocks/[stockId]/memo', () => {
     prismaMock.stock.findFirst.mockResolvedValue({ id: 'stock-uuid-1' } as never)
   })
 
-  it('成功: メモを更新', async () => {
-    prismaMock.stockMemo.findUnique.mockResolvedValue(mockMemo as never)
-    prismaMock.stockMemo.update.mockResolvedValue({
+  it('成功: メモを更新（upsert）', async () => {
+    prismaMock.stockMemo.upsert.mockResolvedValue({
       ...mockMemo,
       content: '更新メモ',
     } as never)

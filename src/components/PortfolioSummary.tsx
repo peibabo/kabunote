@@ -5,6 +5,7 @@ import InvestmentPieChart from '@/components/InvestmentPieChart';
 import { formatPrice, formatShares, formatProfitLoss, PortfolioTargetSummary, calculatePortfolioTargetSummary, calculatePositionSummary, calculateProfitLoss, StockTargetInfo, Position } from '@/types/positions';
 import { PortfolioDividendSummary, calculateDividendInfo, formatDividendAmount, formatDividendYield } from '@/types/dividend';
 import { PortfolioShareholderSummary, calculateShareholderBenefit, formatBenefitValue, formatBenefitYield } from '@/types/shareholder';
+import { evaluateCashRatio } from '@/lib/positionCalc';
 import { useCash } from '@/hooks/useCash';
 import { STORAGE_KEYS } from '@/lib/storageKeys';
 import { CustomTag } from '@/types/tags';
@@ -43,71 +44,6 @@ interface StockData {
 
 interface PortfolioSummaryProps {
   portfolioData: StockData[];
-}
-
-interface CashRatioEvaluation {
-  status: 'excellent' | 'good' | 'moderate' | 'risky' | 'dangerous';
-  message: string;
-  icon: string;
-  color: string;
-}
-
-// ─────────────────────────────────────────
-// 現金比率評価（純粋関数）
-// ─────────────────────────────────────────
-function evaluateCashRatio(cashRatio: number, cashAmount: number): CashRatioEvaluation {
-  if (cashAmount === 0) {
-    return {
-      status: 'moderate',
-      message: '余力現金を入力すると、より詳細なポートフォリオ分析が可能になります',
-      icon: '💡',
-      color: 'text-blue-400'
-    };
-  }
-
-  if (cashRatio >= 50) {
-    return {
-      status: 'dangerous',
-      message: '現金比率が高すぎます。投資機会を逃している可能性があります',
-      icon: '🔴',
-      color: 'text-red-400'
-    };
-  } else if (cashRatio >= 35) {
-    return {
-      status: 'risky',
-      message: '現金比率がやや高めです。投資バランスを見直しましょう',
-      icon: '🟡',
-      color: 'text-yellow-400'
-    };
-  } else if (cashRatio >= 20) {
-    return {
-      status: 'good',
-      message: '理想的な現金比率です。リスク管理と投資のバランスが取れています',
-      icon: '🟢',
-      color: 'text-green-400'
-    };
-  } else if (cashRatio >= 10) {
-    return {
-      status: 'moderate',
-      message: '適正な現金比率です。緊急時の備えを考慮しつつ積極的に投資中',
-      icon: '🔵',
-      color: 'text-blue-400'
-    };
-  } else if (cashRatio >= 5) {
-    return {
-      status: 'risky',
-      message: '現金比率が低めです。急な調整相場に備えて現金を確保しましょう',
-      icon: '🟡',
-      color: 'text-yellow-400'
-    };
-  } else {
-    return {
-      status: 'dangerous',
-      message: '現金不足の状態です。緊急時資金と投資資金の確保を検討してください',
-      icon: '🔴',
-      color: 'text-red-400'
-    };
-  }
 }
 
 interface OverallSummary {

@@ -46,9 +46,8 @@ describe('PUT /api/stocks/[stockId]/next-action-plan', () => {
     prismaMock.stock.findFirst.mockResolvedValue({ id: 'stock-uuid-1' } as never)
   })
 
-  it('成功: NAPを更新', async () => {
-    prismaMock.nextActionPlan.findUnique.mockResolvedValue(mockNAP as never)
-    prismaMock.nextActionPlan.update.mockResolvedValue(mockNAP as never)
+  it('成功: NAPを更新（upsert）', async () => {
+    prismaMock.nextActionPlan.upsert.mockResolvedValue(mockNAP as never)
 
     const req = createRequest('PUT', 'http://localhost:3000/api/stocks/stock-7203/next-action-plan', {
       actionType: 'buy',
@@ -60,6 +59,7 @@ describe('PUT /api/stocks/[stockId]/next-action-plan', () => {
     const res = await PUT(req, createParams({ stockId: 'stock-7203' }))
     const json = await getJson(res)
     expect(json.success).toBe(true)
+    expect(prismaMock.nextActionPlan.upsert).toHaveBeenCalled()
   })
 
   it('400: 不正なactionType', async () => {
@@ -80,16 +80,15 @@ describe('PUT /api/stocks/[stockId]/next-action-plan', () => {
     expect(res.status).toBe(400)
   })
 
-  it('新規作成: 未設定時', async () => {
-    prismaMock.nextActionPlan.findUnique.mockResolvedValue(null)
-    prismaMock.nextActionPlan.create.mockResolvedValue(mockNAP as never)
+  it('新規作成: 未設定時もupsertで処理', async () => {
+    prismaMock.nextActionPlan.upsert.mockResolvedValue(mockNAP as never)
 
     const req = createRequest('PUT', 'http://localhost:3000/api/stocks/stock-7203/next-action-plan', {
       actionType: 'sell',
       priority: 'low',
     })
     await PUT(req, createParams({ stockId: 'stock-7203' }))
-    expect(prismaMock.nextActionPlan.create).toHaveBeenCalled()
+    expect(prismaMock.nextActionPlan.upsert).toHaveBeenCalled()
   })
 })
 

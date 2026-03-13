@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { withStock } from '@/lib/apiHandler'
+import { withStock, toNumber } from '@/lib/apiHandler'
 import { isValidOptionalShares, isValidPrice, isValidMonth, isValidDay } from '@/lib/validation'
 
 // GET: 優待情報取得
@@ -12,7 +12,7 @@ export const GET = withStock(async ({ stockId }) => {
     data: benefit ? {
       description: benefit.description,
       minimumShares: benefit.minimumShares,
-      estimatedValue: benefit.estimatedValue != null ? Number(benefit.estimatedValue) : null,
+      estimatedValue: toNumber(benefit.estimatedValue),
       rightsMonth: benefit.rightsMonth,
       rightsDay: benefit.rightsDay,
     } : null
@@ -31,8 +31,6 @@ export const PUT = withStock(async ({ stockId, request }) => {
     )
   }
 
-  const existing = await prisma.stockBenefit.findUnique({ where: { stockId } })
-
   const data = {
     description: description ?? null,
     minimumShares: minimumShares ?? null,
@@ -41,19 +39,18 @@ export const PUT = withStock(async ({ stockId, request }) => {
     rightsDay: rightsDay ?? null,
   }
 
-  let benefit
-  if (existing) {
-    benefit = await prisma.stockBenefit.update({ where: { stockId }, data })
-  } else {
-    benefit = await prisma.stockBenefit.create({ data: { stockId, ...data } })
-  }
+  const benefit = await prisma.stockBenefit.upsert({
+    where: { stockId },
+    update: data,
+    create: { stockId, ...data }
+  })
 
   return NextResponse.json({
     success: true,
     data: {
       description: benefit.description,
       minimumShares: benefit.minimumShares,
-      estimatedValue: benefit.estimatedValue != null ? Number(benefit.estimatedValue) : null,
+      estimatedValue: toNumber(benefit.estimatedValue),
       rightsMonth: benefit.rightsMonth,
       rightsDay: benefit.rightsDay,
     }

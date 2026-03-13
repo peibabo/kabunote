@@ -81,6 +81,11 @@ export function withAuth(handler: AuthHandler, errorLabel: string, options?: Aut
   }
 }
 
+// Decimal型をnumber | nullに変換するヘルパー
+export function toNumber(value: unknown): number | null {
+  return value != null ? Number(value) : null
+}
+
 export function withStock(handler: StockHandler, errorLabel: string, options?: StockOptions) {
   return withAuth(async (ctx) => {
     const rawStockId = ctx.params.stockId
