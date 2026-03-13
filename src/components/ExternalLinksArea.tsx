@@ -9,8 +9,8 @@ export default function ExternalLinksArea() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
-    <div className="flex items-center gap-4 mb-4">
-      <div className="flex overflow-x-auto gap-3 flex-shrink-0 pt-1 -mt-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+    <div className="flex items-center gap-4 mb-4 min-w-0">
+      <div className="flex overflow-x-auto gap-3 min-w-0 pt-1 -mt-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
         {!isLoading && links.map((link) => (
           <a
             key={link.label + link.url}
