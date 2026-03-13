@@ -24,6 +24,7 @@ const eslintConfig = defineConfig([
       "react-hooks/preserve-manual-memoization": "warn",
       "react-hooks/set-state-in-effect": "warn",
       "react-hooks/purity": "warn",
+      "no-console": ["warn", { allow: ["warn", "error"] }],
     },
   },
 ]);
