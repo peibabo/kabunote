@@ -11,10 +11,11 @@ describe('quotes', () => {
       expect(INVESTMENT_QUOTES).toHaveLength(100)
     })
 
-    it('全ての格言にtextとauthorが存在する', () => {
+    it('全ての格言にtext, author, meaningが存在する', () => {
       for (const quote of INVESTMENT_QUOTES) {
         expect(quote.text).toBeTruthy()
         expect(quote.author).toBeTruthy()
+        expect(quote.meaning).toBeTruthy()
       }
     })
   })
