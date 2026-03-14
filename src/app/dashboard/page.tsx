@@ -8,7 +8,6 @@ import TagManager from '@/components/TagManager';
 import SearchBar from '@/components/SearchBar';
 import InvestmentCalendar from '@/components/InvestmentCalendar';
 import DailyQuote from '@/components/DailyQuote';
-import DailyDigest from '@/components/DailyDigest';
 import PortfolioSummary from '@/components/PortfolioSummary';
 import FloatingAddButton from '@/components/FloatingAddButton';
 import StrategySummaryPage from '@/components/StrategySummaryPage';
@@ -249,18 +248,6 @@ export default function Home() {
         <div className="mb-4">
           <DailyQuote />
         </div>
-
-        {/* デイリーダイジェスト */}
-        {stockSymbols.length > 0 && (
-          <DailyDigest
-            stockData={stockData}
-            stockCalendarData={stockCalendarData}
-            cashAmount={cashAmount}
-            isInitialized={isInitialized}
-            onStockClick={handleStockClick}
-            onOpenAlertSummary={() => modals.setIsAlertSummaryOpen(true)}
-          />
-        )}
 
         {/* ポートフォリオサマリー */}
         <div className="portfolio-summary">
