@@ -43,6 +43,9 @@ export function useStockMemo(stockId: string, options?: UseStockMemoOptions): Us
         if (data) {
           setLastSaved(new Date(data.updatedAt))
           playSound('noteSave')
+          window.dispatchEvent(new CustomEvent('kabunote-db-memo-update', {
+            detail: { stockId, content: val }
+          }))
         }
       })
     },

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useDebouncedCallback } from './useDebounce';
 import { getTodayDateString } from '@/lib/checklistCalc';
+import { playSound } from '@/lib/sound';
 import type { ChecklistStreakInfo } from '@/types/checklist';
 
 interface ChecklistData {
@@ -26,6 +27,14 @@ let cachedData: ChecklistData | null = null;
 let fetchPromise: Promise<ChecklistData | null> | null = null;
 
 const CHECKLIST_UPDATE_EVENT = 'kabunote-checklist-update';
+
+// 自動チェック: イベント名 → チェックリストindex のマッピング
+const AUTO_CHECK_EVENTS: Record<string, number> = {
+  'kabunote-db-price-update': 0,    // 株価を更新した
+  'kabunote-alert-reviewed': 1,     // アラートを確認した
+  'kabunote-db-strategy-update': 2, // Next Actionを見直した
+  'kabunote-db-memo-update': 3,     // 株ノオトを更新した
+};
 
 async function fetchChecklistOnce(): Promise<ChecklistData | null> {
   if (cachedData) return cachedData;
@@ -130,6 +139,40 @@ export function useChecklist(): UseChecklistResult {
       return newItems;
     });
   }, [debouncedSaveToApi]);
+
+  // 自動チェック: 各操作イベントをリッスンして未チェック項目を自動チェック
+  const autoCheck = useCallback((index: number) => {
+    // 初期データ未読み込み時はスキップ（API保存の競合を防ぐ）
+    if (!cachedData) return;
+
+    setCheckedItems(prev => {
+      if (prev.includes(index)) return prev; // 既にチェック済み
+      const newItems = [...prev, index].sort();
+
+      playSound('toggle');
+
+      const optimistic: ChecklistData = {
+        checkedItems: newItems,
+        streak: cachedData?.streak ?? DEFAULT_STREAK,
+      };
+      cachedData = optimistic;
+      window.dispatchEvent(new CustomEvent(CHECKLIST_UPDATE_EVENT, { detail: optimistic }));
+
+      debouncedSaveToApi(newItems);
+      return newItems;
+    });
+  }, [debouncedSaveToApi]);
+
+  useEffect(() => {
+    const handlers = Object.entries(AUTO_CHECK_EVENTS).map(([event, index]) => {
+      const handler = () => autoCheck(index);
+      window.addEventListener(event, handler);
+      return { event, handler };
+    });
+    return () => {
+      handlers.forEach(({ event, handler }) => window.removeEventListener(event, handler));
+    };
+  }, [autoCheck]);
 
   return { checkedItems, streak, isLoading, toggleItem };
 }
