@@ -37,6 +37,7 @@ export default function DailyChecklist() {
   }, [allComplete, completedCount])
 
   const handleToggle = (index: number) => {
+    if (isLoading) return
     playSound('toggle')
     toggleItem(index)
   }

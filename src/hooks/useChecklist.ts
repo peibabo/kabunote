@@ -122,6 +122,7 @@ export function useChecklist(): UseChecklistResult {
   }, 300);
 
   const toggleItem = useCallback((index: number) => {
+    if (!cachedData) return;
     setCheckedItems(prev => {
       const newItems = prev.includes(index)
         ? prev.filter(i => i !== index)
