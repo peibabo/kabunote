@@ -8,7 +8,6 @@ import TagManager from '@/components/TagManager';
 import SearchBar from '@/components/SearchBar';
 import InvestmentCalendar from '@/components/InvestmentCalendar';
 import DailyQuote from '@/components/DailyQuote';
-import DailyChecklist from '@/components/DailyChecklist';
 import PortfolioSummary from '@/components/PortfolioSummary';
 import FloatingAddButton from '@/components/FloatingAddButton';
 import StrategySummaryPage from '@/components/StrategySummaryPage';
@@ -248,11 +247,6 @@ export default function Home() {
         {/* 今日の格言 */}
         <div className="mb-4">
           <DailyQuote />
-        </div>
-
-        {/* 投資チェックリスト */}
-        <div className="mb-4">
-          <DailyChecklist />
         </div>
 
         {/* ポートフォリオサマリー */}
