@@ -525,10 +525,7 @@ export default function Home() {
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-bold text-white">🚨 アラート一覧</h2>
                 <button
-                  onClick={() => {
-                    modals.setIsAlertSummaryOpen(false)
-                    window.dispatchEvent(new CustomEvent('kabunote-alert-reviewed'))
-                  }}
+                  onClick={() => modals.setIsAlertSummaryOpen(false)}
                   className="cursor-pointer text-gray-400 hover:text-white transition-colors"
                 >
                   ✕

@@ -1,22 +1,5 @@
 # Kabunote - プロジェクトマイルストーン
 
-## Phase 1.5: 投資チェックリスト自動チェック化（2026年3月15日）
-**各操作完了時にチェックリストが自動でチェックされる仕組みを追加**
-
-### 機能概要
-- 株価更新・アラート確認・Next Action見直し・株ノオト更新の各操作完了時に自動チェック
-- 手動でのチェック/アンチェックも引き続き可能
-- 自動チェック時もサウンドフィードバックあり
-
-### 変更ファイル
-- `src/hooks/useStockMemo.ts` - `kabunote-db-memo-update`イベント追加
-- `src/app/dashboard/page.tsx` - アラートモーダル閉時に`kabunote-alert-reviewed`イベント発火
-- `src/hooks/useChecklist.ts` - 4つのカスタムイベントをリッスンし自動チェック
-- `docs/patterns.md` - チェックリスト自動チェックパターン追記
-- `docs/architecture.md` - useChecklistの説明更新
-
----
-
 ## Phase 1.5: 投資チェックリスト機能（2026年3月14日）
 **デイリーエンゲージメント強化 - 固定4項目のチェックリスト + 連続達成日数（ストリーク）カウント**
 

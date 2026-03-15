@@ -236,23 +236,6 @@ useEffect(() => {
 
 ---
 
-## チェックリスト自動チェックパターン
-
-各操作の完了時にカスタムイベントを発火し、`useChecklist`が自動でチェック:
-
-| イベント名 | チェック項目(index) | 発火元 |
-|-----------|-------------------|--------|
-| `kabunote-db-price-update` | 株価を更新した(0) | `useStockPrice` |
-| `kabunote-alert-reviewed` | アラートを確認した(1) | `page.tsx`（アラートモーダル閉時） |
-| `kabunote-db-strategy-update` | Next Actionを見直した(2) | `useNextActionPlan` |
-| `kabunote-db-memo-update` | 株ノオトを更新した(3) | `useStockMemo` |
-
-- 既にチェック済みの項目は無視（重複チェック防止）
-- 手動でのチェック/アンチェックも引き続き可能
-- 自動チェック時もサウンド(`toggle`)を再生
-
----
-
 ## localStorage キー管理
 
 - **管理ファイル**: `src/lib/storageKeys.ts`

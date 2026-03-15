@@ -103,7 +103,7 @@ app_users (ユーザー管理)
 | `useNextActionPlan` | 次の一手戦略 |
 | `useFavoriteGroups` | お気に入りグループ（楽観的更新・差分同期） |
 | `useCash` | 投資余力現金・Next Actionメモ（300msデバウンス） |
-| `useChecklist` | デイリーチェックリスト（楽観的更新・300msデバウンス・ストリーク管理・自動チェック） |
+| `useChecklist` | デイリーチェックリスト（楽観的更新・300msデバウンス・ストリーク管理） |
 | `useSnooze` | アラートスヌーズ管理 |
 | `useExternalLinks` | 外部リンク設定（モジュールキャッシュ・デフォルトフォールバック） |
 
