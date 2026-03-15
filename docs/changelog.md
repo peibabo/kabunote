@@ -1,5 +1,33 @@
 # Kabunote - プロジェクトマイルストーン
 
+## Phase 1.5: 投資チェックリスト機能（2026年3月14日）
+**デイリーエンゲージメント強化 - 固定4項目のチェックリスト + 連続達成日数（ストリーク）カウント**
+
+### 機能概要
+- 毎日の投資ルーティン4項目をチェック（株価更新・アラート確認・Next Action見直し・株ノオト更新）
+- 1つでもチェックすればその日は完了扱い（ハードル低く継続しやすい）
+- 連続達成日数（ストリーク）を自動カウント・バッジ表示（日数で色変化）
+- プログレスバーでX/4完了を可視化
+- 全完了時に祝福演出（サウンド + メッセージ）
+
+### 新規ファイル
+- `src/types/checklist.ts` - CHECKLIST_ITEMS定数・型定義
+- `src/lib/checklistCalc.ts` - ストリーク計算・日付ユーティリティ
+- `src/app/api/checklist/route.ts` - GET/PUT APIルート
+- `src/hooks/useChecklist.ts` - モジュールキャッシュ・楽観的更新・デバウンス
+- `src/components/DailyChecklist.tsx` - UIコンポーネント
+- `src/__tests__/unit/checklistCalc.test.ts` - ユニットテスト（11テスト）
+- `src/__tests__/api/checklist.test.ts` - APIテスト（7テスト）
+
+### 変更ファイル
+- `prisma/schema.prisma` - DailyChecklistモデル追加（17テーブルに）
+- `src/__tests__/mocks/prisma.ts` - dailyChecklistモック追加
+- `src/app/dashboard/page.tsx` - DailyChecklist配置（DailyQuote直下）
+- `docs/architecture.md` - テーブル・API・フック・型定義追記
+- テスト: 68→70ファイル、517→535テスト（+18テスト）
+
+---
+
 ## リファクタリング Phase 2: ロジック分離・重複パターン共通化（2026年3月14日）
 **型ファイルからロジック完全分離、重複パターンのカスタムフック化、日付フォーマット統一、re-export完全削除**
 

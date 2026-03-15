@@ -30,6 +30,7 @@ model User {
   snoozedAlerts SnoozedAlert[]
   feedbacks     Feedback[]
   externalLinks UserExternalLink[]
+  dailyChecklists DailyChecklist[]
 
   @@map("app_users")
 }
@@ -298,6 +299,21 @@ model UserExternalLink {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("user_external_links")
+}
+
+// デイリーチェックリスト
+model DailyChecklist {
+  id           String   @id @default(cuid())
+  userId       String   @map("user_id")
+  date         String   // "YYYY-MM-DD"（ローカル日付）
+  checkedItems Int[]    @default([]) @map("checked_items")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@map("daily_checklists")
 }
 
 // フィードバック（目安箱）

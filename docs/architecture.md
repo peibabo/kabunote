@@ -1,6 +1,6 @@
 # Kabunote - アーキテクチャリファレンス
 
-## データベーススキーマ（16テーブル）
+## データベーススキーマ（17テーブル）
 
 ```
 app_users (ユーザー管理)
@@ -23,6 +23,9 @@ app_users (ユーザー管理)
   │     id, user_id, name, color, order  @@unique([userId, name])
   ├── snoozed_alerts (アラートスヌーズ管理)
   │     id, user_id, stock_symbol, alert_type(ENUM), snooze_until
+  ├── daily_checklists (デイリーチェックリスト)
+  │     id, user_id, date(YYYY-MM-DD), checked_items(Int[])
+  │     @@unique([userId, date])
   ├── feedbacks (フィードバック・目安箱)
   │     id, user_id, category(ENUM), content, created_at
   └── user_external_links (外部リンク設定)
@@ -47,6 +50,7 @@ app_users (ユーザー管理)
 | `/api/cash` | GET/PUT | 投資余力現金・Next Actionメモの取得・更新 |
 | `/api/onboarding` | GET/POST | オンボーディング完了状態の取得・更新 |
 | `/api/external-links` | GET/PUT | 外部リンク設定の取得・一括更新（最大8個） |
+| `/api/checklist` | GET/PUT | デイリーチェックリスト・ストリーク取得・更新 |
 
 ### 銘柄
 | パス | メソッド | 説明 |
@@ -84,7 +88,7 @@ app_users (ユーザー管理)
 
 ---
 
-## カスタムフック一覧（28フック）
+## カスタムフック一覧（29フック）
 
 ### データ管理（DB CRUD）
 | フック | 説明 |
@@ -99,6 +103,7 @@ app_users (ユーザー管理)
 | `useNextActionPlan` | 次の一手戦略 |
 | `useFavoriteGroups` | お気に入りグループ（楽観的更新・差分同期） |
 | `useCash` | 投資余力現金・Next Actionメモ（300msデバウンス） |
+| `useChecklist` | デイリーチェックリスト（楽観的更新・300msデバウンス・ストリーク管理） |
 | `useSnooze` | アラートスヌーズ管理 |
 | `useExternalLinks` | 外部リンク設定（モジュールキャッシュ・デフォルトフォールバック） |
 
@@ -134,7 +139,7 @@ app_users (ユーザー管理)
 
 ---
 
-## 型定義ファイル一覧（11ファイル）
+## 型定義ファイル一覧（12ファイル）
 
 型定義のみ。計算ロジック・フォーマット関数は `src/lib/*Calc.ts` に分離済み。
 
@@ -151,6 +156,7 @@ app_users (ユーザー管理)
 | `managementTabs.ts` | ManagementTabType |
 | `investmentCalendar.ts` | InvestmentEvent, CalendarDay, TimelineEvent, EventSummary |
 | `snooze.ts` | SnoozeDuration, SnoozedAlert |
+| `checklist.ts` | CHECKLIST_ITEMS, DailyChecklistRecord, ChecklistStreakInfo |
 
 ---
 
