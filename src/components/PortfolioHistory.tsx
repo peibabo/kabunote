@@ -31,7 +31,7 @@ export default function PortfolioHistory() {
   const handleSnapshot = async () => {
     const success = await createSnapshot();
     if (success) {
-      playSound('save');
+      playSound('noteSave');
       window.dispatchEvent(new Event('kabunote-snapshot-created'));
     }
   };
