@@ -1,5 +1,30 @@
 # Kabunote - プロジェクトマイルストーン
 
+## ポートフォリオ日次スナップショット＆推移グラフ機能（2026年3月16日）
+**手動確定ボタンで日次のポートフォリオ状態を記録し、時系列グラフで推移を可視化**
+
+### 機能概要
+- 「今日の記録を確定」ボタンで1日1回ポートフォリオスナップショットを保存（同日2回目は上書き）
+- 記録内容: 各銘柄の株価・保有株数・評価額 + 総投資額・総評価額・損益・現金・純資産
+- 4種類のグラフ: 評価額推移（面グラフ）・純資産推移（面グラフ）・損益推移（折れ線）・個別株価推移（折れ線）
+- 期間切替: 1W / 1M / 3M / 6M / 1Y / ALL
+
+### 技術的成果
+- DBテーブル2個追加: `portfolio_snapshots`, `stock_price_snapshots`
+- Rechartsライブラリ導入（React 19対応）
+- テスト: 68→70ファイル、517→532テスト（+15テスト）
+
+### 新規ファイル
+- `src/types/portfolio.ts` - ポートフォリオスナップショット型定義
+- `src/lib/snapshotCalc.ts` - スナップショット計算ロジック
+- `src/app/api/portfolio/snapshot/route.ts` - POST: スナップショット作成API
+- `src/app/api/portfolio/history/route.ts` - GET: 履歴取得API
+- `src/hooks/usePortfolioHistory.ts` - ポートフォリオ履歴フック
+- `src/components/PortfolioHistory.tsx` - ポートフォリオ推移コンテナ
+- `src/components/PortfolioChart.tsx` - Rechartsグラフ描画
+
+---
+
 ## リファクタリング Phase 2: ロジック分離・重複パターン共通化（2026年3月14日）
 **型ファイルからロジック完全分離、重複パターンのカスタムフック化、日付フォーマット統一、re-export完全削除**
 

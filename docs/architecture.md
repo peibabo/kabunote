@@ -1,6 +1,6 @@
 # Kabunote - アーキテクチャリファレンス
 
-## データベーススキーマ（16テーブル）
+## データベーススキーマ（18テーブル）
 
 ```
 app_users (ユーザー管理)
@@ -25,8 +25,14 @@ app_users (ユーザー管理)
   │     id, user_id, stock_symbol, alert_type(ENUM), snooze_until
   ├── feedbacks (フィードバック・目安箱)
   │     id, user_id, category(ENUM), content, created_at
-  └── user_external_links (外部リンク設定)
-        id, user_id, url, label, icon, gradient, order
+  ├── user_external_links (外部リンク設定)
+  │     id, user_id, url, label, icon, gradient, order
+  └── portfolio_snapshots (ポートフォリオ日次スナップショット)
+        id, user_id, snapshot_date, total_investment, total_value, profit_loss, cash_amount, net_assets
+        @@unique([userId, snapshotDate])
+        └── stock_price_snapshots (銘柄別日次株価スナップショット)
+              id, snapshot_id, stock_id, symbol, current_price, shares, value, cost
+              @@unique([snapshotId, stockId])
 ```
 
 ### Enum定義
@@ -65,6 +71,12 @@ app_users (ユーザー管理)
 | `/api/stocks/[stockId]/tag/[tagId]` | DELETE | タグ削除 |
 | `/api/stocks/[stockId]/next-action-plan` | GET/PUT/DELETE | 次の一手戦略 |
 
+### ポートフォリオ履歴
+| パス | メソッド | 説明 |
+|------|---------|------|
+| `/api/portfolio/snapshot` | POST | ポートフォリオ日次スナップショット作成/更新（同日upsert） |
+| `/api/portfolio/history` | GET | ポートフォリオ履歴取得（?range=1W/1M/3M/6M/1Y/ALL） |
+
 ### フィードバック
 | パス | メソッド | 説明 |
 |------|---------|------|
@@ -84,7 +96,7 @@ app_users (ユーザー管理)
 
 ---
 
-## カスタムフック一覧（28フック）
+## カスタムフック一覧（29フック）
 
 ### データ管理（DB CRUD）
 | フック | 説明 |
@@ -116,6 +128,7 @@ app_users (ユーザー管理)
 |--------|------|
 | `useStockData` | 銘柄データ一括取得（stocks/list API） |
 | `usePortfolioData` | ポートフォリオ集計データ |
+| `usePortfolioHistory` | ポートフォリオ日次スナップショット履歴（期間切替・作成・todayRecorded） |
 | `useCalendarData` | カレンダー用イベントデータ |
 | `useDividendBenefitData` | 配当・優待一覧データ |
 | `useStockSearch` | 銘柄検索（オートコンプリート） |
@@ -134,7 +147,7 @@ app_users (ユーザー管理)
 
 ---
 
-## 型定義ファイル一覧（11ファイル）
+## 型定義ファイル一覧（12ファイル）
 
 型定義のみ。計算ロジック・フォーマット関数は `src/lib/*Calc.ts` に分離済み。
 
@@ -151,6 +164,7 @@ app_users (ユーザー管理)
 | `managementTabs.ts` | ManagementTabType |
 | `investmentCalendar.ts` | InvestmentEvent, CalendarDay, TimelineEvent, EventSummary |
 | `snooze.ts` | SnoozeDuration, SnoozedAlert |
+| `portfolio.ts` | PortfolioSnapshotData, StockSnapshotData, HistoryRange, ChartType |
 
 ---
 
@@ -189,6 +203,8 @@ app_users (ユーザー管理)
 
 ### ダッシュボード系
 - `SimplePortfolioSummary.tsx`: ポートフォリオサマリー
+- `PortfolioHistory.tsx`: ポートフォリオ推移（スナップショット確定ボタン・期間切替・グラフ）
+- `PortfolioChart.tsx`: ポートフォリオ推移グラフ（Recharts: 評価額/純資産/損益/個別株価）
 - `InvestmentPieChart.tsx`: 円グラフ分析
 - `StrategySummaryPage.tsx`: 戦略一覧ダッシュボード
 - `AlertSummaryPage.tsx`: アラート一覧
@@ -228,6 +244,7 @@ app_users (ユーザー管理)
 | `investmentCalendarCalc.ts` | 営業日計算・権利付最終日・日付フォーマット |
 | `snoozeCalc.ts` | スヌーズ期間定数・ラベル・残り時間計算 |
 | `nextActionPlanCalc.ts` | Next Action Plan分析・判定関数 |
+| `snapshotCalc.ts` | ポートフォリオスナップショット計算（buildSnapshotData, RANGE_DAYS） |
 | `dateFormat.ts` | 日付フォーマット共通関数（ISO形式・M/D形式） |
 
 ## ユーティリティ（src/utils/）

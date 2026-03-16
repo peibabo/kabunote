@@ -13,6 +13,7 @@ import { STORAGE_KEYS } from '@/lib/storageKeys';
 import { CustomTag } from '@/types/tags';
 import { getCompanyNameSync, getSectorSync } from '@/data/stockNames';
 import { useAccordionState } from '@/hooks/useAccordionState';
+import PortfolioHistory from '@/components/PortfolioHistory';
 
 interface StockData {
   id: string;
@@ -442,11 +443,11 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
       )}
 
       {/* 余力現金・キャッシュポジションカード */}
-      <div className="mt-4">
+      <div className="mt-2">
         {/* アコーディオンヘッダー */}
         <button
           onClick={toggleCashSection}
-          className="w-full flex items-center justify-between p-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors cursor-pointer mb-2"
+          className="w-full flex items-center justify-between p-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors cursor-pointer"
         >
           <div className="flex items-center gap-2">
             <span className="text-lg">💼</span>
@@ -561,7 +562,7 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
           {/* アコーディオンヘッダー */}
           <button
             onClick={toggleTargetSummary}
-            className="w-full flex items-center justify-between p-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors cursor-pointer mb-2"
+            className="w-full flex items-center justify-between p-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors cursor-pointer"
           >
             <div className="flex items-center gap-2">
               <span className="text-lg">🎯</span>
@@ -582,7 +583,7 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
           </button>
 
           {/* アコーディオンコンテンツ */}
-          <div className={`pb-2 overflow-hidden transition-all duration-300 ease-in-out ${
+          <div className={`overflow-hidden transition-all duration-300 ease-in-out ${
             isTargetSummaryExpanded
               ? 'max-h-[2000px] opacity-100'
               : 'max-h-0 opacity-0'
@@ -764,7 +765,7 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
 
       {/* 円グラフセクション（アコーディオン） */}
       {overallSummary.stocksWithPositions > 0 && (
-        <div>
+        <div className="mt-2">
           {/* アコーディオンヘッダー */}
           <button
             onClick={toggleCharts}
@@ -803,6 +804,11 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
             </div>
           </div>
         </div>
+      )}
+
+      {/* ポートフォリオ推移グラフセクション */}
+      {hasPositions && (
+        <PortfolioHistory />
       )}
 
     </div>

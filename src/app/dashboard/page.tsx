@@ -10,6 +10,7 @@ import InvestmentCalendar from '@/components/InvestmentCalendar';
 import DailyQuote from '@/components/DailyQuote';
 import PortfolioSummary from '@/components/PortfolioSummary';
 import FloatingAddButton from '@/components/FloatingAddButton';
+import FloatingSnapshotButton from '@/components/FloatingSnapshotButton';
 import StrategySummaryPage from '@/components/StrategySummaryPage';
 import PortfolioPositionsPage from '@/components/PortfolioPositionsPage';
 import AlertSummaryPage from '@/components/AlertSummaryPage';
@@ -297,6 +298,9 @@ export default function Home() {
             </div>
           </div>
         )}
+
+      {/* フローティング記録確定ボタン（15時以降・未記録時のみ表示） */}
+      <FloatingSnapshotButton />
 
       {/* フローティング銘柄追加ボタン */}
       <FloatingAddButton
