@@ -388,6 +388,7 @@ function StockCard({ symbol, onRemove, favoriteGroups, onFavoriteGroupsChange, i
         {activeTab === 'analysis' && (
           <InvestmentStrategyTab
             symbol={symbol}
+            stockId={initialStockData?.id}
             targetPrice={targetPrice}
             stopLoss={stopLoss}
             currentPrice={currentPrice}
