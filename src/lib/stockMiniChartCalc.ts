@@ -42,7 +42,7 @@ export function formatDateLabel(dateStr: string): string {
  * チャートデータを変換する
  */
 export function transformChartData(
-  history: PriceHistoryItem & { date: string }[],
+  history: (PriceHistoryItem & { date: string })[],
 ): { date: string; fullDate: string; price: number | null }[] {
   return history.map(item => ({
     date: formatDateLabel(item.date),
