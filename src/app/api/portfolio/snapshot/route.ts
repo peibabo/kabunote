@@ -40,8 +40,9 @@ export const POST = withAuth(async ({ user }) => {
 
   const snapshotData = buildSnapshotData(stockInputs, cashAmount)
 
-  // ポジションが1つもない場合はスナップショット不要
-  if (snapshotData.stockSnapshots.length === 0) {
+  // ポジション保有銘柄が1つもない場合はスナップショット不要
+  const hasPositionSnapshots = snapshotData.stockSnapshots.some(s => s.shares > 0);
+  if (!hasPositionSnapshots) {
     return NextResponse.json(
       { error: 'Bad Request', message: 'ポジションが設定されていません' },
       { status: 400 }
