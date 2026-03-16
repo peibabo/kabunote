@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import type { PortfolioSnapshotData, HistoryRange } from '@/types/portfolio';
 
 export function usePortfolioHistory() {
@@ -10,9 +10,12 @@ export function usePortfolioHistory() {
   const [isCreating, setIsCreating] = useState(false);
   const [todayRecorded, setTodayRecorded] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const isInitialLoad = useRef(true);
 
   const fetchHistory = useCallback(async (r: HistoryRange) => {
-    setIsLoading(true);
+    if (isInitialLoad.current) {
+      setIsLoading(true);
+    }
     setError(null);
     try {
       const res = await fetch(`/api/portfolio/history?range=${r}`);
@@ -21,21 +24,39 @@ export function usePortfolioHistory() {
       const snapshots: PortfolioSnapshotData[] = json.data || [];
       setData(snapshots);
 
-      // 今日の記録があるか確認（JST基準）
       const now = new Date();
       const jstOffset = 9 * 60;
       const jstDate = new Date(now.getTime() + (jstOffset + now.getTimezoneOffset()) * 60000);
       const todayStr = `${jstDate.getFullYear()}-${String(jstDate.getMonth() + 1).padStart(2, '0')}-${String(jstDate.getDate()).padStart(2, '0')}`;
-      setTodayRecorded(snapshots.some(s => s.snapshotDate === todayStr));
+      const found = snapshots.some(s => s.snapshotDate === todayStr);
+      // 一度 true になったら false に戻さない（記録直後のDB遅延対策）
+      if (found) {
+        setTodayRecorded(true);
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : '不明なエラー');
     } finally {
       setIsLoading(false);
+      isInitialLoad.current = false;
     }
   }, []);
 
   useEffect(() => {
     fetchHistory(range);
+  }, [range, fetchHistory]);
+
+  // 外部（フローティングボタン等）からの記録完了を検知
+  useEffect(() => {
+    let timerId: ReturnType<typeof setTimeout>;
+    const handler = () => {
+      setTodayRecorded(true);
+      timerId = setTimeout(() => fetchHistory(range), 500);
+    };
+    window.addEventListener('kabunote-snapshot-created', handler);
+    return () => {
+      clearTimeout(timerId);
+      window.removeEventListener('kabunote-snapshot-created', handler);
+    };
   }, [range, fetchHistory]);
 
   const createSnapshot = useCallback(async () => {
@@ -48,7 +69,6 @@ export function usePortfolioHistory() {
         throw new Error(json.message || 'スナップショットの作成に失敗しました');
       }
       setTodayRecorded(true);
-      // 履歴を再取得
       await fetchHistory(range);
       return true;
     } catch (e) {

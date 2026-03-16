@@ -22,6 +22,7 @@ export default function FloatingSnapshotButton() {
   const [todayRecorded, setTodayRecorded] = useState<boolean | null>(null); // null = 未確認
   const [isCreating, setIsCreating] = useState(false);
   const [isHiding, setIsHiding] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   // 1分間隔で15時チェック
   useEffect(() => {
@@ -61,12 +62,16 @@ export default function FloatingSnapshotButton() {
       const res = await fetch('/api/portfolio/snapshot', { method: 'POST' });
       if (res.ok) {
         playSound('save');
-        setIsHiding(true);
         window.dispatchEvent(new Event('kabunote-snapshot-created'));
+        setShowSuccess(true);
         setTimeout(() => {
-          setTodayRecorded(true);
-          setIsHiding(false);
-        }, 500);
+          setIsHiding(true);
+          setTimeout(() => {
+            setTodayRecorded(true);
+            setIsHiding(false);
+            setShowSuccess(false);
+          }, 500);
+        }, 1500);
       }
     } catch {
       // エラー時は何もしない
@@ -75,8 +80,8 @@ export default function FloatingSnapshotButton() {
     }
   };
 
-  // 表示条件: 15時以降 かつ 本日未記録
-  const shouldShow = isAfter15 && todayRecorded === false && !isHiding;
+  // 表示条件: 15時以降 かつ (本日未記録 or 成功表示中)
+  const shouldShow = isAfter15 && (todayRecorded === false || showSuccess);
 
   if (!shouldShow) return null;
 
@@ -84,18 +89,30 @@ export default function FloatingSnapshotButton() {
     <div className={`fixed bottom-24 right-6 z-40 transition-all duration-500 ${
       isHiding ? 'opacity-0 scale-90' : 'opacity-100 scale-100'
     }`}>
-      <button
-        onClick={handleSnapshot}
-        disabled={isCreating}
-        className="cursor-pointer flex items-center gap-2 px-4 py-3 rounded-full shadow-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-500 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed animate-pulse hover:animate-none"
-        style={{
-          boxShadow: '0 0 20px rgba(59, 130, 246, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3)',
-        }}
-        title="今日のポートフォリオを記録"
-      >
-        <span className="text-lg">📸</span>
-        {isCreating ? '記録中...' : '今日の記録を確定'}
-      </button>
+      {showSuccess ? (
+        <div
+          className="flex items-center gap-2 px-4 py-3 rounded-full shadow-lg text-sm font-medium text-white bg-green-600"
+          style={{
+            boxShadow: '0 0 20px rgba(16, 185, 129, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3)',
+          }}
+        >
+          <span className="text-lg">✅</span>
+          記録しました！
+        </div>
+      ) : (
+        <button
+          onClick={handleSnapshot}
+          disabled={isCreating}
+          className="cursor-pointer flex items-center gap-2 px-4 py-3 rounded-full shadow-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-500 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed animate-pulse hover:animate-none"
+          style={{
+            boxShadow: '0 0 20px rgba(59, 130, 246, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3)',
+          }}
+          title="今日のポートフォリオを記録"
+        >
+          <span className="text-lg">📸</span>
+          {isCreating ? '記録中...' : '今日の記録を確定'}
+        </button>
+      )}
     </div>
   );
 }

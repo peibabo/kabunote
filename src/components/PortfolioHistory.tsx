@@ -70,24 +70,31 @@ export default function PortfolioHistory() {
           : 'max-h-0 opacity-0'
       }`}>
         <div className="bg-gray-750 rounded-lg p-4">
-          {/* ヘッダー: 確定ボタン + 期間タブ */}
+          {/* ヘッダー: 確定ボタン/ステータス + 期間タブ */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
-            {/* 確定ボタン */}
-            <button
-              onClick={handleSnapshot}
-              disabled={isCreating}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer ${
-                todayRecorded
-                  ? 'bg-gray-600 text-gray-300 hover:bg-gray-500'
-                  : 'bg-blue-600 text-white hover:bg-blue-500 shadow-lg shadow-blue-900/30'
-              } disabled:opacity-50 disabled:cursor-not-allowed`}
-            >
-              {isCreating
-                ? '記録中...'
-                : todayRecorded
-                ? '今日の記録を更新'
-                : '今日の記録を確定'}
-            </button>
+            {/* 確定ボタン or 記録済みステータス */}
+            {todayRecorded ? (
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-green-400 font-medium">
+                  ✅ 本日の記録済み
+                </span>
+                <button
+                  onClick={handleSnapshot}
+                  disabled={isCreating}
+                  className="text-xs text-gray-400 hover:text-gray-200 underline underline-offset-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isCreating ? '更新中...' : '最新データで上書き'}
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={handleSnapshot}
+                disabled={isCreating}
+                className="px-4 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer bg-blue-600 text-white hover:bg-blue-500 shadow-lg shadow-blue-900/30 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isCreating ? '記録中...' : '📸 今日の記録を確定'}
+              </button>
+            )}
 
             {/* 期間切替タブ */}
             <div className="flex gap-1">

@@ -48,11 +48,12 @@ export const POST = withAuth(async ({ user }) => {
     )
   }
 
-  // 今日の日付（JST基準）
+  // 今日の日付（JST基準、UTC midnightとして保存）
   const now = new Date()
   const jstOffset = 9 * 60
   const jstDate = new Date(now.getTime() + (jstOffset + now.getTimezoneOffset()) * 60000)
-  const today = new Date(jstDate.getFullYear(), jstDate.getMonth(), jstDate.getDate())
+  const todayStr = `${jstDate.getFullYear()}-${String(jstDate.getMonth() + 1).padStart(2, '0')}-${String(jstDate.getDate()).padStart(2, '0')}`
+  const today = new Date(todayStr + 'T00:00:00.000Z')
 
   // トランザクションでupsert
   const snapshot = await prisma.$transaction(async (tx) => {

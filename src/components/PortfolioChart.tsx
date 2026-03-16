@@ -100,9 +100,10 @@ export default function PortfolioChart({ data }: PortfolioChartProps) {
 
   if (data.length === 0) {
     return (
-      <div className="text-center py-8 text-gray-400 text-sm">
-        まだスナップショットがありません。<br />
-        「今日の記録を確定」ボタンを押して記録を開始しましょう。
+      <div className="text-center py-8 text-gray-400 text-sm leading-relaxed">
+        毎日の株価を記録して、ポートフォリオの推移をグラフで振り返れます。<br />
+        「今日の記録を確定」を押すと、現在の評価額・損益・純資産が保存されます。<br />
+        <span className="text-gray-500">15時以降に画面右下のボタンからも記録できます。</span>
       </div>
     );
   }
