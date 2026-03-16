@@ -145,17 +145,10 @@ export default function AnalysisSubTab({
           </div>
         </div>
 
-        {/* 株価推移ミニチャート */}
-        <StockMiniChart
-          stockId={stockId}
-          targetPrice={parseFloat(targetPrice) || undefined}
-          stopLossPrice={parseFloat(stopLoss) || undefined}
-        />
-
         {/* ネオンライト株価プログレスバーゲージ・損益分析統合セクション */}
         {progressData && targetPrice && stopLoss && currentPrice && (
           <div className="mt-2 p-2 md:mt-4 md:p-4 bg-gray-900 border border-gray-700 rounded-lg">
-            <div className="flex items-center justify-between mb-2 md:mb-4">
+            <div className="flex items-center justify-between mb-1 md:mb-2">
               <h5 className="text-xs md:text-sm font-medium text-gray-200 whitespace-nowrap">⚡ 株価ポジション・損益分析</h5>
               <span className="text-xs text-gray-400">
                 {progressData.isOverTarget
@@ -166,35 +159,24 @@ export default function AnalysisSubTab({
                 }
               </span>
             </div>
+            {positionSummary.averagePrice > 0 && (
+              <div className="text-xs text-gray-400 text-center mb-1">
+                平均取得価額: {formatPrice(positionSummary.averagePrice)}円 ({formatShares(positionSummary.totalShares)}株)
+              </div>
+            )}
 
             {/* ネオンライトプログレスバー */}
             <div className="relative">
-              <div className="text-center text-sm mt-1 text-white font-medium">
-                平均取得価額 : {formatPrice(positionSummary.averagePrice)} <span className='text-xs'> 円</span> <span className="text-xs text-gray-400">({formatShares(positionSummary.totalShares)}株)</span>
-              </div>
-              {/* 価格ラベル */}
-              <div className="flex justify-between items-center mt-2 text-xs">
-                <div className="text-red-300 font-medium flex flex-col items-center">
-                  <span className="text-red-400 mt-1 font-bold font-light">{formatPrice(parseFloat(stopLoss))}円</span>
-                </div>
-
-                <div className="text-blue-300 font-medium flex flex-col items-center">
-                  <span className="text-blue-400 mb-2 font-bold text-lg md:text-2xl">{formatPrice(parseFloat(currentPrice))}<span className="text-xs text-blue-400"> 円</span></span>
-                </div>
-
-                <div className="text-green-300 font-medium flex flex-col items-center">
-                  <span className="text-green-400 mt-1 font-bold font-light">{formatPrice(parseFloat(targetPrice))}円</span>
-                </div>
-              </div>
               {/* バー背景 */}
-              <div className="w-full h-6 bg-gradient-to-r from-red-900 via-gray-800 to-green-900 rounded-full relative overflow-hidden">
-                {/* グロー効果のオーバーレイ */}
-                <div className="absolute inset-0 bg-gradient-to-r from-red-500/20 via-transparent to-green-500/20 rounded-full"></div>
+              <div className="w-full h-6 relative">
+                <div className="w-full h-full bg-gradient-to-r from-red-900 via-gray-800 to-green-900 rounded-full relative overflow-hidden">
+                  {/* グロー効果のオーバーレイ */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-red-500/20 via-transparent to-green-500/20 rounded-full"></div>
+                </div>
 
                 {/* 中央の取得単価ライン */}
                 {positionSummary.averagePrice > 0 && (
                   (() => {
-                    // 取得単価の位置を計算
                     const stopPrice = parseFloat(stopLoss);
                     const targetPriceNum = parseFloat(targetPrice);
                     const avgPrice = positionSummary.averagePrice;
@@ -205,7 +187,7 @@ export default function AnalysisSubTab({
 
                     return (
                       <div
-                        className="absolute top-0 w-0.5 h-full bg-white transform -translate-x-0.5"
+                        className="absolute top-0 w-0.5 h-full bg-white transform -translate-x-0.5 group/avg cursor-pointer"
                         style={{ left: `${avgPosClamp}%` }}
                       >
                         <div
@@ -214,8 +196,9 @@ export default function AnalysisSubTab({
                             boxShadow: '0 0 10px rgba(255, 255, 255, 0.8), 0 0 20px rgba(255, 255, 255, 0.4)'
                           }}
                         ></div>
-                        <div className="absolute -bottom-5 left-1/2 transform -translate-x-1/2 text-xs text-white font-medium whitespace-nowrap">
-                          平均取得価額
+                        {/* ツールチップ */}
+                        <div className="absolute -top-9 left-1/2 transform -translate-x-1/2 hidden group-hover/avg:block bg-gray-800 border border-gray-600 text-white text-xs rounded px-2 py-1 whitespace-nowrap z-10">
+                          平均取得価額: {formatPrice(avgPrice)}円
                         </div>
                       </div>
                     );
@@ -224,7 +207,7 @@ export default function AnalysisSubTab({
 
                 {/* 現在株価の位置インジケーター（青色統一） */}
                 <div
-                  className="absolute top-0 h-full w-1 transform -translate-x-0.5 transition-all duration-1000"
+                  className="absolute top-0 h-full w-1 transform -translate-x-0.5 transition-all duration-1000 group/current cursor-pointer"
                   style={{
                     left: `${Math.min(95, Math.max(1, progressData.percentage))}%`,
                     background: 'linear-gradient(to bottom, #3b82f6, #1d4ed8)',
@@ -239,181 +222,127 @@ export default function AnalysisSubTab({
                       boxShadow: '0 0 15px rgba(59, 130, 246, 1), 0 0 30px rgba(59, 130, 246, 0.6)'
                     }}
                   ></div>
+                  {/* ツールチップ */}
+                  <div className="absolute -top-9 left-1/2 transform -translate-x-1/2 hidden group-hover/current:block bg-gray-800 border border-blue-600 text-blue-300 text-xs rounded px-2 py-1 whitespace-nowrap z-10">
+                    現在株価: {formatPrice(parseFloat(currentPrice))}円
+                  </div>
                 </div>
               </div>
-              <div className={`text-xs text-center mt-1 ${
-                progressData.isOverTarget
-                  ? 'text-green-400'
-                  : progressData.percentage < 30
-                  ? 'text-red-400'
-                  : progressData.percentage < 70
-                  ? 'text-yellow-400'
-                  : 'text-green-400'
-              }`}>
-                {progressData.isOverTarget
-                  ? '🎯 目標達成'
-                  : progressData.isUnderStop
-                  ? '💥 損切りライン超過'
-                  : progressData.percentage < 30
-                  ? '⚠️ 危険ゾーン'
-                  : progressData.percentage < 70
-                  ? '📊 中間ゾーン'
-                  : '🚀 好調ゾーン'}
-              </div>
-              {/* 取得単価の詳細表示と現在の損益 */}
-              {positionSummary.averagePrice > 0 && (
-                <div className="mt-1 md:mt-3 text-center">
-                  {/* 現在の損益表示 */}
-                  {(() => {
-                    const current = parseFloat(currentPrice);
-                    if (current) {
-                      const currentValue = positionSummary.totalShares * current;
-                      const currentProfitLoss = currentValue - positionSummary.totalCost;
+              {/* ステータス + 損益統合行 */}
+              {positionSummary.averagePrice > 0 ? (() => {
+                const current = parseFloat(currentPrice);
+                const statusColor = progressData.isOverTarget ? 'text-green-400' : progressData.percentage < 30 ? 'text-red-400' : progressData.percentage < 70 ? 'text-yellow-400' : 'text-green-400';
+                const statusText = progressData.isOverTarget ? '🎯 目標達成' : progressData.isUnderStop ? '💥 損切ライン超過' : progressData.percentage < 30 ? '⚠️ 危険ゾーン' : progressData.percentage < 70 ? '📊 中間ゾーン' : '🚀 好調ゾーン';
 
-                      return (
-                        <div className={`text-lg md:text-2xl mt-1 ${currentProfitLoss >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                          <span className='font-bold'>{formatProfitLoss(currentProfitLoss)}</span><span className='text-xs'> 円</span>
-                        </div>
-                      );
-                    }
-                    return null;
-                  })()}
+                if (!current) {
+                  return <div className={`text-xs text-center mt-1 ${statusColor}`}>{statusText}</div>;
+                }
 
-                  {(() => {
-                    const currentPriceNum = parseFloat(currentPrice);
-                    const avgPrice = positionSummary.averagePrice;
+                const currentValue = positionSummary.totalShares * current;
+                const currentProfitLoss = currentValue - positionSummary.totalCost;
+                const diff = current - positionSummary.averagePrice;
+                const diffPercent = positionSummary.averagePrice !== 0 ? (diff / positionSummary.averagePrice) * 100 : 0;
+                const plColor = currentProfitLoss >= 0 ? 'text-green-400' : 'text-red-400';
 
-                    if (isNaN(currentPriceNum) || isNaN(avgPrice) || avgPrice === 0) {
-                      return (
-                        <div className="text-xs mt-1 text-gray-400">
-                          現在価格未設定
-                        </div>
-                      );
-                    }
-
-                    const diff = currentPriceNum - avgPrice;
-                    const diffPercent = (diff / avgPrice) * 100;
-
-                    return (
-                      <div className={`text-xs mt-1 ${diff >= 0 ? 'text-green-200' : 'text-red-300'}`}>
-                        {diff >= 0 ? '+' : ''}{formatPrice(diff)}円
+                return (
+                  <div className="text-center mt-1">
+                    <div className={`text-xs ${statusColor}`}>{statusText}</div>
+                    <div className="mt-0.5">
+                      <span className={`text-sm md:text-base font-bold ${plColor}`}>
+                        {formatProfitLoss(currentProfitLoss)}円
+                      </span>
+                      <span className={`text-xs ${diff >= 0 ? 'text-green-200' : 'text-red-300'} ml-1`}>
                         ({diff >= 0 ? '+' : ''}{diffPercent.toFixed(1)}%)
-                      </div>
-                    );
-                  })()}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })() : (
+                <div className={`text-xs text-center mt-1 ${
+                  progressData.isOverTarget ? 'text-green-400' : progressData.percentage < 30 ? 'text-red-400' : progressData.percentage < 70 ? 'text-yellow-400' : 'text-green-400'
+                }`}>
+                  {progressData.isOverTarget ? '🎯 目標達成' : progressData.isUnderStop ? '💥 損切ライン超過' : progressData.percentage < 30 ? '⚠️ 危険ゾーン' : progressData.percentage < 70 ? '📊 中間ゾーン' : '🚀 好調ゾーン'}
                 </div>
               )}
             </div>
 
-            {/* 損益シミュレーション - 統合部分 */}
+            {/* 損益シミュレーション - 1行凝縮 */}
             {profitLossInfo && positionSummary.totalShares > 0 && (
-              <div className="mt-3 pt-2 md:mt-6 md:pt-4 border-t border-gray-700">
-                <h6 className="text-sm font-bold text-gray-300 mb-2 md:mb-3 text-center">📊 損益シミュレーション</h6>
-                <div className="grid grid-cols-2 gap-2 md:gap-4">
-                  {/* 損切ラインでの損失 */}
-                  {(() => {
-                    const stopLossNum = parseFloat(stopLoss);
-                    if (!stopLossNum) {
-                      // 損切ライン未設定時は誘導メッセージを表示
-                      return (
-                        <div className="text-center bg-red-900 bg-opacity-20 border border-red-700 rounded-lg px-2 py-2">
-                          <div className="text-xs text-red-300 mb-1 whitespace-nowrap">損切ライン到達時</div>
-                          <div className="text-sm font-medium text-gray-400 mb-1">
-                            ---
-                          </div>
-                          <div className="text-xs text-red-400">
-                            💡 損切ラインを入力してください
-                          </div>
-                        </div>
-                      );
-                    }
+              <div className="mt-2 pt-2 md:mt-3 md:pt-3 border-t border-gray-700">
+                {(() => {
+                  const stopLossNum = parseFloat(stopLoss);
+                  const targetPriceNum = parseFloat(targetPrice);
+                  const hasStopLoss = !!stopLossNum;
+                  const hasTarget = !!targetPriceNum;
 
-                    return (
-                      <div className="text-center">
-                        <div className="text-xs text-gray-400 mb-1 whitespace-nowrap">損切ライン到達時</div>
-                        <div className={`text-sm font-bold ${profitLossInfo && profitLossInfo.stopLoss >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                          {profitLossInfo && !isNaN(profitLossInfo.stopLoss) ? formatProfitLoss(profitLossInfo.stopLoss) : '---'}円
-                        </div>
-                        <div className={`text-xs ${profitLossInfo && profitLossInfo.stopLossPercent >= 0 ? 'text-green-300' : 'text-red-300'}`}>
-                          {profitLossInfo && !isNaN(profitLossInfo.stopLossPercent) ?
-                            `(${profitLossInfo.stopLossPercent >= 0 ? '+' : ''}${profitLossInfo.stopLossPercent.toFixed(1)}%)` :
-                            '(---%)'
-                          }
-                        </div>
+                  return (
+                    <div className="grid grid-cols-2 gap-2 text-xs text-center">
+                      <div>
+                        <div className="text-gray-400 mb-0.5">損切時</div>
+                        {hasStopLoss ? (
+                          <div className={profitLossInfo.stopLoss >= 0 ? 'text-green-400' : 'text-red-400'}>
+                            <span className="font-bold">{!isNaN(profitLossInfo.stopLoss) ? formatProfitLoss(profitLossInfo.stopLoss) : '---'}円</span>
+                            {!isNaN(profitLossInfo.stopLossPercent) && <span className="ml-0.5">({profitLossInfo.stopLossPercent >= 0 ? '+' : ''}{profitLossInfo.stopLossPercent.toFixed(1)}%)</span>}
+                          </div>
+                        ) : (
+                          <div className="text-red-400">💡 未設定</div>
+                        )}
                       </div>
-                    );
-                  })()}
-
-                  {/* 目標価格での利益 */}
-                  {(() => {
-                    const targetPriceNum = parseFloat(targetPrice);
-                    if (!targetPriceNum) {
-                      // 利確目標未設定時は誘導メッセージを表示
-                      return (
-                        <div className="text-center bg-green-900 bg-opacity-20 border border-green-700 rounded-lg px-2 py-2">
-                          <div className="text-xs text-green-300 mb-1 whitespace-nowrap">利確目標達成時</div>
-                          <div className="text-sm font-medium text-gray-400 mb-1">
-                            ---
+                      <div>
+                        <div className="text-gray-400 mb-0.5">利確時</div>
+                        {hasTarget ? (
+                          <div className={profitLossInfo.targetProfit >= 0 ? 'text-green-400' : 'text-red-400'}>
+                            <span className="font-bold">{!isNaN(profitLossInfo.targetProfit) ? formatProfitLoss(profitLossInfo.targetProfit) : '---'}円</span>
+                            {!isNaN(profitLossInfo.targetProfitPercent) && <span className="ml-0.5">({profitLossInfo.targetProfitPercent >= 0 ? '+' : ''}{profitLossInfo.targetProfitPercent.toFixed(1)}%)</span>}
                           </div>
-                          <div className="text-xs text-green-400">
-                            💡 利確目標を入力してください
-                          </div>
-                        </div>
-                      );
-                    }
-
-                    return (
-                      <div className="text-center">
-                        <div className="text-xs text-gray-400 mb-1 whitespace-nowrap">利確目標達成時</div>
-                        <div className={`text-sm font-bold ${profitLossInfo && profitLossInfo.targetProfit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                          {profitLossInfo && !isNaN(profitLossInfo.targetProfit) ? formatProfitLoss(profitLossInfo.targetProfit) : '---'}円
-                        </div>
-                        <div className={`text-xs ${profitLossInfo && profitLossInfo.targetProfitPercent >= 0 ? 'text-green-300' : 'text-red-300'}`}>
-                          {profitLossInfo && !isNaN(profitLossInfo.targetProfitPercent) ?
-                            `(${profitLossInfo.targetProfitPercent >= 0 ? '+' : ''}${profitLossInfo.targetProfitPercent.toFixed(1)}%)` :
-                            '(---%)'
-                          }
-                        </div>
-                      </div>
-                    );
-                  })()}
-                </div>
-                <div className="mt-2 md:mt-3 space-y-2">
-                  {/* リスクリワード比の表示 */}
-                  {riskRewardRatio !== null && (
-                    <div className="text-center">
-                      <div className="flex items-center justify-center gap-2">
-                        <span className="text-xs text-gray-400">リスクリワード比</span>
-                        <div className={`text-lg font-bold ${
-                          riskRewardRatio >= 2
-                            ? 'text-green-400'
-                            : riskRewardRatio >= 1.5
-                            ? 'text-yellow-400'
-                            : 'text-red-400'
-                        }`}>
-                          {riskRewardRatio.toFixed(2)}
-                        </div>
-                        <div className={`text-xs font-medium ${
-                          riskRewardRatio >= 2
-                            ? 'text-green-300'
-                            : riskRewardRatio >= 1.5
-                            ? 'text-yellow-300'
-                            : 'text-red-300'
-                        }`}>
-                          {riskRewardRatio >= 2
-                            ? '🟢 優秀'
-                            : riskRewardRatio >= 1.5
-                            ? '🟡 適正'
-                            : '🔴 リスク高'}
-                        </div>
+                        ) : (
+                          <div className="text-green-400">💡 未設定</div>
+                        )}
                       </div>
                     </div>
-                  )}
-                </div>
+                  );
+                })()}
+                {/* リスクリワード比 */}
+                {riskRewardRatio !== null && (
+                  <div className="text-center mt-1">
+                    <div className="flex items-center justify-center gap-2">
+                      <span className="text-xs text-gray-400">リスクリワード比</span>
+                      <div className={`text-lg font-bold ${
+                        riskRewardRatio >= 2
+                          ? 'text-green-400'
+                          : riskRewardRatio >= 1.5
+                          ? 'text-yellow-400'
+                          : 'text-red-400'
+                      }`}>
+                        {riskRewardRatio.toFixed(2)}
+                      </div>
+                      <div className={`text-xs font-medium ${
+                        riskRewardRatio >= 2
+                          ? 'text-green-300'
+                          : riskRewardRatio >= 1.5
+                          ? 'text-yellow-300'
+                          : 'text-red-300'
+                      }`}>
+                        {riskRewardRatio >= 2
+                          ? '🟢 優秀'
+                          : riskRewardRatio >= 1.5
+                          ? '🟡 適正'
+                          : '🔴 リスク高'}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
         )}
+
+        {/* 株価推移ミニチャート */}
+        <StockMiniChart
+          stockId={stockId}
+          targetPrice={parseFloat(targetPrice) || undefined}
+          stopLossPrice={parseFloat(stopLoss) || undefined}
+        />
       </div>
     </div>
   );
