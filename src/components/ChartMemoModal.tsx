@@ -22,7 +22,7 @@ const CHART_TYPE_LABELS: Record<ChartType, { label: string; icon: string }> = {
   stocks: { label: '個別株価', icon: '📊' },
 };
 
-const MAX_LENGTH = 100;
+const MAX_LENGTH = 50;
 
 function formatDisplayDate(dateStr: string): string {
   const [y, m, d] = dateStr.split('-');
