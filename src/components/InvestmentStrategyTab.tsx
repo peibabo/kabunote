@@ -48,7 +48,7 @@ export default function InvestmentStrategyTab({
   return (
     <div className="space-y-4">
       {/* サブタブナビゲーション */}
-      <div className="flex justify-center gap-2 mb-4">
+      <div className="flex items-center justify-center gap-2 mb-4">
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -63,6 +63,14 @@ export default function InvestmentStrategyTab({
             {tab.label}
           </button>
         ))}
+        {currentPrice && parseFloat(currentPrice) > 0 && (
+          <>
+            <span className="text-gray-600 text-xs">|</span>
+            <span className="px-2 py-1 text-xs text-gray-300 bg-gray-700/50 rounded-full">
+              📈 ¥{parseFloat(currentPrice).toLocaleString()}
+            </span>
+          </>
+        )}
       </div>
 
       {/* サブタブコンテンツ */}
