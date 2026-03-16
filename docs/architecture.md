@@ -73,6 +73,7 @@ app_users (ユーザー管理)
 | `/api/stocks/[stockId]/tag` | GET/POST | タグ一覧・追加 |
 | `/api/stocks/[stockId]/tag/[tagId]` | DELETE | タグ削除 |
 | `/api/stocks/[stockId]/next-action-plan` | GET/PUT/DELETE | 次の一手戦略 |
+| `/api/stocks/[stockId]/price-history` | GET | 個別銘柄の株価履歴（?range=1M/3M/6M/1Y/ALL、デフォルト3M） |
 
 ### ポートフォリオ履歴
 | パス | メソッド | 説明 |
@@ -102,7 +103,7 @@ app_users (ユーザー管理)
 
 ---
 
-## カスタムフック一覧（29フック）
+## カスタムフック一覧（30フック）
 
 ### データ管理（DB CRUD）
 | フック | 説明 |
@@ -135,6 +136,7 @@ app_users (ユーザー管理)
 | `useStockData` | 銘柄データ一括取得（stocks/list API） |
 | `usePortfolioData` | ポートフォリオ集計データ |
 | `usePortfolioHistory` | ポートフォリオ日次スナップショット履歴（期間切替・作成・todayRecorded） |
+| `useStockPriceHistory` | 個別銘柄の株価履歴取得（期間切替・スナップショットイベント連動） |
 | `useChartMemos` | チャートメモ管理（memoMap・saveMemo・deleteMemo） |
 | `useCalendarData` | カレンダー用イベントデータ |
 | `useDividendBenefitData` | 配当・優待一覧データ |
@@ -200,7 +202,8 @@ app_users (ユーザー管理)
 
 ### タブコンテンツ
 - `InvestmentStrategyTab.tsx`: 投資戦略タブ（サブタブコンテナ）
-- `AnalysisSubTab.tsx`: 分析サブタブ（投資規律・株価ポジション・損益シミュレーション）
+- `AnalysisSubTab.tsx`: 分析サブタブ（投資規律・株価推移ミニチャート・株価ポジション・損益シミュレーション）
+- `StockMiniChart.tsx`: 個別銘柄株価推移ミニチャート（Recharts LineChart・利確/損切ReferenceLine・期間切替）
 - `NextActionSubTab.tsx`: 次の一手サブタブ
 - `ManagementTab.tsx`: 管理タブ（サブタブコンテナ）
 - `PositionsManagement.tsx`: 保有状況管理（複数ロットCRUD）
@@ -253,6 +256,7 @@ app_users (ユーザー管理)
 | `snoozeCalc.ts` | スヌーズ期間定数・ラベル・残り時間計算 |
 | `nextActionPlanCalc.ts` | Next Action Plan分析・判定関数 |
 | `snapshotCalc.ts` | ポートフォリオスナップショット計算（buildSnapshotData, RANGE_DAYS） |
+| `stockMiniChartCalc.ts` | 個別銘柄ミニチャート計算（YAxis domain計算・日付フォーマット・データ変換） |
 | `dateFormat.ts` | 日付フォーマット共通関数（ISO形式・M/D形式） |
 
 ## ユーティリティ（src/utils/）

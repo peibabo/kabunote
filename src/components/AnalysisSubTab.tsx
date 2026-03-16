@@ -3,6 +3,7 @@
 import { PositionSummary, ProfitLossInfo } from '@/types/positions';
 import { formatPrice, formatShares, formatProfitLoss } from '@/lib/positionCalc';
 import { useSoundOnChange } from '@/hooks/useSoundOnChange';
+import StockMiniChart from '@/components/StockMiniChart';
 
 interface ProgressData {
   percentage: number;
@@ -13,6 +14,7 @@ interface ProgressData {
 
 interface AnalysisSubTabProps {
   symbol: string;
+  stockId?: string;
   targetPrice: string;
   stopLoss: string;
   currentPrice: string;
@@ -68,6 +70,7 @@ const calculateProgress = (
 
 export default function AnalysisSubTab({
   symbol,
+  stockId,
   targetPrice,
   stopLoss,
   currentPrice,
@@ -141,6 +144,13 @@ export default function AnalysisSubTab({
             </div>
           </div>
         </div>
+
+        {/* 株価推移ミニチャート */}
+        <StockMiniChart
+          stockId={stockId}
+          targetPrice={parseFloat(targetPrice) || undefined}
+          stopLossPrice={parseFloat(stopLoss) || undefined}
+        />
 
         {/* ネオンライト株価プログレスバーゲージ・損益分析統合セクション */}
         {progressData && targetPrice && stopLoss && currentPrice && (

@@ -8,6 +8,7 @@ import NextActionSubTab from '@/components/NextActionSubTab';
 
 interface InvestmentStrategyTabProps {
   symbol: string;
+  stockId?: string;
   targetPrice: string;
   stopLoss: string;
   currentPrice: string;
@@ -25,6 +26,7 @@ interface InvestmentStrategyTabProps {
 
 export default function InvestmentStrategyTab({
   symbol,
+  stockId,
   targetPrice,
   stopLoss,
   currentPrice,
@@ -78,6 +80,7 @@ export default function InvestmentStrategyTab({
         {activeTab === 'analysis' && (
           <AnalysisSubTab
             symbol={symbol}
+            stockId={stockId}
             targetPrice={targetPrice}
             stopLoss={stopLoss}
             currentPrice={currentPrice}
