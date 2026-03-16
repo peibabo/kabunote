@@ -1,10 +1,14 @@
 'use client';
 
+import { useState, useCallback } from 'react';
 import { usePortfolioHistory } from '@/hooks/usePortfolioHistory';
+import { useChartMemos } from '@/hooks/useChartMemos';
 import { useAccordionState } from '@/hooks/useAccordionState';
 import { playSound } from '@/lib/sound';
 import PortfolioChart from '@/components/PortfolioChart';
-import type { HistoryRange } from '@/types/portfolio';
+import ChartMemoModal from '@/components/ChartMemoModal';
+import type { HistoryRange, ChartType } from '@/types/portfolio';
+import { chartMemoKey } from '@/types/portfolio';
 
 const RANGE_OPTIONS: { key: HistoryRange; label: string }[] = [
   { key: '1W', label: '1W' },
@@ -14,6 +18,12 @@ const RANGE_OPTIONS: { key: HistoryRange; label: string }[] = [
   { key: '1Y', label: '1Y' },
   { key: 'ALL', label: 'ALL' },
 ];
+
+interface ModalTarget {
+  snapshotDate: string;
+  chartType: ChartType;
+  symbol?: string;
+}
 
 export default function PortfolioHistory() {
   const { isExpanded, toggle } = useAccordionState();
@@ -28,6 +38,9 @@ export default function PortfolioHistory() {
     createSnapshot,
   } = usePortfolioHistory();
 
+  const { memoMap, saveMemo, deleteMemo } = useChartMemos(range);
+  const [modalTarget, setModalTarget] = useState<ModalTarget | null>(null);
+
   const handleSnapshot = async () => {
     const success = await createSnapshot();
     if (success) {
@@ -35,6 +48,29 @@ export default function PortfolioHistory() {
       window.dispatchEvent(new Event('kabunote-snapshot-created'));
     }
   };
+
+  const handleDotClick = useCallback((snapshotDate: string, chartType: ChartType, symbol?: string) => {
+    setModalTarget({ snapshotDate, chartType, symbol });
+  }, []);
+
+  const handleModalClose = useCallback(() => {
+    setModalTarget(null);
+  }, []);
+
+  const handleSave = useCallback(async (content: string) => {
+    if (!modalTarget) return false;
+    return saveMemo(modalTarget.snapshotDate, modalTarget.chartType, modalTarget.symbol, content);
+  }, [modalTarget, saveMemo]);
+
+  const handleDelete = useCallback(async () => {
+    if (!modalTarget) return false;
+    return deleteMemo(modalTarget.snapshotDate, modalTarget.chartType, modalTarget.symbol);
+  }, [modalTarget, deleteMemo]);
+
+  // モーダル表示時の既存メモ内容を取得
+  const existingContent = modalTarget
+    ? memoMap.get(chartMemoKey(modalTarget.snapshotDate, modalTarget.chartType, modalTarget.symbol))?.content || ''
+    : '';
 
   return (
     <div className="mt-2">
@@ -127,10 +163,28 @@ export default function PortfolioHistory() {
               読み込み中...
             </div>
           ) : (
-            <PortfolioChart data={data} />
+            <PortfolioChart
+              data={data}
+              memoMap={memoMap}
+              onDotClick={handleDotClick}
+            />
           )}
         </div>
       </div>
+
+      {/* チャートメモモーダル */}
+      {modalTarget && (
+        <ChartMemoModal
+          isOpen={true}
+          onClose={handleModalClose}
+          snapshotDate={modalTarget.snapshotDate}
+          chartType={modalTarget.chartType}
+          symbol={modalTarget.symbol}
+          existingContent={existingContent}
+          onSave={handleSave}
+          onDelete={handleDelete}
+        />
+      )}
     </div>
   );
 }

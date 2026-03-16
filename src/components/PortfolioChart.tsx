@@ -14,11 +14,14 @@ import {
   ReferenceLine,
   Legend,
 } from 'recharts';
-import type { PortfolioSnapshotData, ChartType } from '@/types/portfolio';
+import type { PortfolioSnapshotData, ChartType, ChartMemoMap } from '@/types/portfolio';
+import { chartMemoKey } from '@/types/portfolio';
 import { formatPrice } from '@/lib/positionCalc';
 
 interface PortfolioChartProps {
   data: PortfolioSnapshotData[];
+  memoMap?: ChartMemoMap;
+  onDotClick?: (snapshotDate: string, chartType: ChartType, symbol?: string) => void;
 }
 
 const CHART_TABS: { key: ChartType; label: string; icon: string }[] = [
@@ -47,11 +50,82 @@ function formatYAxisValue(value: number): string {
   return String(Math.round(value));
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function CustomTooltip({ active, payload, label }: any) {
-  if (!active || !payload?.length) return null;
+// カスタムドット: メモがあるデータポイントを黄色マーカーで表示
+interface CustomDotProps {
+  cx?: number;
+  cy?: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  payload?: any;
+  fill?: string;
+  r?: number;
+  chartType: ChartType;
+  symbol?: string;
+  memoMap: ChartMemoMap;
+  onClick: (snapshotDate: string, chartType: ChartType, symbol?: string) => void;
+}
+
+function CustomDot({ cx, cy, payload, fill, chartType, symbol, memoMap, onClick }: CustomDotProps) {
+  if (cx == null || cy == null || !payload) return null;
+
+  const fullDate = payload.fullDate as string;
+  if (!fullDate) return null;
+
+  const key = chartMemoKey(fullDate, chartType, symbol);
+  const hasMemo = memoMap.has(key);
+
   return (
-    <div className="bg-gray-800 border border-gray-600 rounded-lg p-3 shadow-lg">
+    <g
+      onClick={(e) => { e.stopPropagation(); onClick(fullDate, chartType, symbol); }}
+      style={{ cursor: 'pointer' }}
+    >
+      {hasMemo ? (
+        <>
+          <circle cx={cx} cy={cy} r={6} fill="#fbbf24" stroke="#f59e0b" strokeWidth={2} />
+          <circle cx={cx} cy={cy} r={2} fill="#fff" />
+        </>
+      ) : (
+        <circle cx={cx} cy={cy} r={3} fill={fill || '#60a5fa'} />
+      )}
+    </g>
+  );
+}
+
+// カスタムツールチップ: メモプレビュー付き
+function CustomTooltipContent({
+  active,
+  payload,
+  label,
+  memoMap,
+  chartType,
+}: {
+  active?: boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  payload?: any[];
+  label?: string;
+  memoMap: ChartMemoMap;
+  chartType: ChartType;
+}) {
+  if (!active || !payload?.length) return null;
+
+  const fullDate = payload[0]?.payload?.fullDate as string | undefined;
+
+  // メモ収集
+  const memoEntries: { label: string; content: string }[] = [];
+  if (fullDate) {
+    if (chartType === 'stocks') {
+      for (const p of payload) {
+        const sym = (p.dataKey as string).replace('price_', '');
+        const memo = memoMap.get(chartMemoKey(fullDate, chartType, sym));
+        if (memo) memoEntries.push({ label: sym, content: memo.content });
+      }
+    } else {
+      const memo = memoMap.get(chartMemoKey(fullDate, chartType));
+      if (memo) memoEntries.push({ label: '', content: memo.content });
+    }
+  }
+
+  return (
+    <div className="bg-gray-800 border border-gray-600 rounded-lg p-3 shadow-lg max-w-xs">
       <p className="text-xs text-gray-400 mb-2">{label}</p>
       {payload.map((entry: { name: string; value: number; color: string }, i: number) => (
         <div key={i} className="flex items-center gap-2 text-sm">
@@ -62,12 +136,28 @@ function CustomTooltip({ active, payload, label }: any) {
           </span>
         </div>
       ))}
+      {memoEntries.length > 0 && (
+        <div className="mt-2 pt-2 border-t border-gray-600">
+          {memoEntries.map((entry, i) => (
+            <div key={i} className="flex items-start gap-1.5 text-xs">
+              <span className="text-yellow-400 mt-0.5">📝</span>
+              <span className="text-yellow-200">
+                {entry.label && <span className="text-gray-400">{entry.label}: </span>}
+                {entry.content.length > 50 ? entry.content.slice(0, 50) + '…' : entry.content}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
 
-export default function PortfolioChart({ data }: PortfolioChartProps) {
+export default function PortfolioChart({ data, memoMap: propMemoMap, onDotClick }: PortfolioChartProps) {
   const [chartType, setChartType] = useState<ChartType>('value');
+
+  const memoMap = propMemoMap || new Map();
+  const handleDotClick = onDotClick || (() => {});
 
   // 個別株のユニークシンボルリスト
   const allSymbols = useMemo(() => {
@@ -138,7 +228,9 @@ export default function PortfolioChart({ data }: PortfolioChartProps) {
                 tick={{ fill: '#9ca3af', fontSize: 11 }}
                 tickFormatter={formatYAxisValue}
               />
-              <Tooltip content={<CustomTooltip />} />
+              <Tooltip content={
+                <CustomTooltipContent memoMap={memoMap} chartType={chartType} />
+              } />
               <ReferenceLine y={0} stroke="#6b7280" strokeDasharray="3 3" />
               <Line
                 type="monotone"
@@ -146,7 +238,7 @@ export default function PortfolioChart({ data }: PortfolioChartProps) {
                 name="損益"
                 stroke="#60a5fa"
                 strokeWidth={2}
-                dot={{ r: 3, fill: '#60a5fa' }}
+                dot={<CustomDot chartType="profitLoss" memoMap={memoMap} onClick={handleDotClick} fill="#60a5fa" />}
                 activeDot={{ r: 5 }}
               />
             </LineChart>
@@ -158,7 +250,9 @@ export default function PortfolioChart({ data }: PortfolioChartProps) {
                 tick={{ fill: '#9ca3af', fontSize: 11 }}
                 tickFormatter={formatYAxisValue}
               />
-              <Tooltip content={<CustomTooltip />} />
+              <Tooltip content={
+                <CustomTooltipContent memoMap={memoMap} chartType={chartType} />
+              } />
               <Legend
                 wrapperStyle={{ fontSize: '11px', color: '#9ca3af' }}
               />
@@ -170,7 +264,7 @@ export default function PortfolioChart({ data }: PortfolioChartProps) {
                   name={symbol}
                   stroke={STOCK_COLORS[i % STOCK_COLORS.length]}
                   strokeWidth={2}
-                  dot={{ r: 2 }}
+                  dot={<CustomDot chartType="stocks" symbol={symbol} memoMap={memoMap} onClick={handleDotClick} fill={STOCK_COLORS[i % STOCK_COLORS.length]} />}
                   connectNulls
                 />
               ))}
@@ -193,7 +287,9 @@ export default function PortfolioChart({ data }: PortfolioChartProps) {
                 tick={{ fill: '#9ca3af', fontSize: 11 }}
                 tickFormatter={formatYAxisValue}
               />
-              <Tooltip content={<CustomTooltip />} />
+              <Tooltip content={
+                <CustomTooltipContent memoMap={memoMap} chartType={chartType} />
+              } />
               {chartType === 'value' ? (
                 <>
                   <Area
@@ -212,6 +308,16 @@ export default function PortfolioChart({ data }: PortfolioChartProps) {
                     strokeWidth={1}
                     strokeDasharray="4 4"
                     fill="none"
+                  />
+                  {/* クリック可能なドット用の透明Line */}
+                  <Line
+                    type="monotone"
+                    dataKey="totalValue"
+                    stroke="none"
+                    dot={<CustomDot chartType="value" memoMap={memoMap} onClick={handleDotClick} fill="#3b82f6" />}
+                    activeDot={false}
+                    legendType="none"
+                    isAnimationActive={false}
                   />
                 </>
               ) : (
@@ -232,6 +338,16 @@ export default function PortfolioChart({ data }: PortfolioChartProps) {
                     strokeWidth={1}
                     strokeDasharray="4 4"
                     fill="none"
+                  />
+                  {/* クリック可能なドット用の透明Line */}
+                  <Line
+                    type="monotone"
+                    dataKey="netAssets"
+                    stroke="none"
+                    dot={<CustomDot chartType="netAssets" memoMap={memoMap} onClick={handleDotClick} fill="#10b981" />}
+                    activeDot={false}
+                    legendType="none"
+                    isAnimationActive={false}
                   />
                 </>
               )}

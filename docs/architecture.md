@@ -1,6 +1,6 @@
 # Kabunote - アーキテクチャリファレンス
 
-## データベーススキーマ（18テーブル）
+## データベーススキーマ（19テーブル）
 
 ```
 app_users (ユーザー管理)
@@ -27,12 +27,15 @@ app_users (ユーザー管理)
   │     id, user_id, category(ENUM), content, created_at
   ├── user_external_links (外部リンク設定)
   │     id, user_id, url, label, icon, gradient, order
-  └── portfolio_snapshots (ポートフォリオ日次スナップショット)
-        id, user_id, snapshot_date, total_investment, total_value, profit_loss, cash_amount, net_assets
-        @@unique([userId, snapshotDate])
-        └── stock_price_snapshots (銘柄別日次株価スナップショット)
-              id, snapshot_id, stock_id, symbol, current_price, shares, value, cost
-              @@unique([snapshotId, stockId])
+  ├── portfolio_snapshots (ポートフォリオ日次スナップショット)
+  │     id, user_id, snapshot_date, total_investment, total_value, profit_loss, cash_amount, net_assets
+  │     @@unique([userId, snapshotDate])
+  │     └── stock_price_snapshots (銘柄別日次株価スナップショット)
+  │           id, snapshot_id, stock_id, symbol, current_price, shares, value, cost
+  │           @@unique([snapshotId, stockId])
+  └── chart_memos (チャートメモ: グラフデータポイントへのメモ)
+        id, user_id, snapshot_date, chart_type, symbol, content
+        @@unique([userId, snapshotDate, chartType, symbol])
 ```
 
 ### Enum定義
@@ -76,6 +79,9 @@ app_users (ユーザー管理)
 |------|---------|------|
 | `/api/portfolio/snapshot` | POST | ポートフォリオ日次スナップショット作成/更新（同日upsert） |
 | `/api/portfolio/history` | GET | ポートフォリオ履歴取得（?range=1W/1M/3M/6M/1Y/ALL） |
+| `/api/portfolio/chart-memos` | GET | チャートメモ一覧取得（?range=1W/1M/3M/6M/1Y/ALL） |
+| `/api/portfolio/chart-memos` | PUT | チャートメモ作成/更新（snapshotDate, chartType, symbol?, content） |
+| `/api/portfolio/chart-memos` | DELETE | チャートメモ削除（?snapshotDate&chartType&symbol） |
 
 ### フィードバック
 | パス | メソッド | 説明 |
@@ -129,6 +135,7 @@ app_users (ユーザー管理)
 | `useStockData` | 銘柄データ一括取得（stocks/list API） |
 | `usePortfolioData` | ポートフォリオ集計データ |
 | `usePortfolioHistory` | ポートフォリオ日次スナップショット履歴（期間切替・作成・todayRecorded） |
+| `useChartMemos` | チャートメモ管理（memoMap・saveMemo・deleteMemo） |
 | `useCalendarData` | カレンダー用イベントデータ |
 | `useDividendBenefitData` | 配当・優待一覧データ |
 | `useStockSearch` | 銘柄検索（オートコンプリート） |
@@ -204,7 +211,8 @@ app_users (ユーザー管理)
 ### ダッシュボード系
 - `SimplePortfolioSummary.tsx`: ポートフォリオサマリー
 - `PortfolioHistory.tsx`: ポートフォリオ推移（スナップショット確定ボタン・期間切替・グラフ）
-- `PortfolioChart.tsx`: ポートフォリオ推移グラフ（Recharts: 評価額/純資産/損益/個別株価）
+- `PortfolioChart.tsx`: ポートフォリオ推移グラフ（Recharts: 評価額/純資産/損益/個別株価・メモマーカー付き）
+- `ChartMemoModal.tsx`: チャートメモ入力モーダル（グラフドットクリックで開く・最大100文字）
 - `InvestmentPieChart.tsx`: 円グラフ分析
 - `StrategySummaryPage.tsx`: 戦略一覧ダッシュボード
 - `AlertSummaryPage.tsx`: アラート一覧

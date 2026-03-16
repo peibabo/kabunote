@@ -31,6 +31,7 @@ export const prismaMock = {
   snoozedAlert: createMockModel(),
   feedback: createMockModel(),
   userExternalLink: { ...createMockModel(), createMany: vi.fn() },
+  chartMemo: createMockModel(),
   portfolioSnapshot: createMockModel(),
   stockPriceSnapshot: { ...createMockModel(), createMany: vi.fn() },
   $transaction: vi.fn((arg: unknown) => {

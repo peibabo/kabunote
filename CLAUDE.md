@@ -52,7 +52,7 @@ npm run update:stocks    # JPXデータからstocks.csv更新
 ```
 - 認証保護は `src/proxy.ts` で実装（Next.js 16 proxy規約）
 
-### データベーススキーマ（18テーブル）
+### データベーススキーマ（19テーブル）
 ```
 app_users (ユーザー管理)
 ├── stocks (銘柄マスター)
@@ -64,8 +64,9 @@ app_users (ユーザー管理)
 ├── snoozed_alerts (アラートスヌーズ管理)
 ├── feedbacks (フィードバック・目安箱)
 ├── user_external_links (外部リンク設定)
-└── portfolio_snapshots (ポートフォリオ日次スナップショット)
-    └── stock_price_snapshots (銘柄別日次株価スナップショット)
+├── portfolio_snapshots (ポートフォリオ日次スナップショット)
+│   └── stock_price_snapshots (銘柄別日次株価スナップショット)
+└── chart_memos (チャートメモ: グラフデータポイントへのメモ)
 ```
 
 > コンポーネント・フック・API・型定義の詳細は `docs/architecture.md` を参照
