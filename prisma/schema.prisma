@@ -31,6 +31,7 @@ model User {
   feedbacks     Feedback[]
   externalLinks UserExternalLink[]
   portfolioSnapshots PortfolioSnapshot[]
+  chartMemos         ChartMemo[]
 
   @@map("app_users")
 }
@@ -286,6 +287,23 @@ model StockPriceSnapshot {
 
   @@unique([snapshotId, stockId])
   @@map("stock_price_snapshots")
+}
+
+// チャートメモ（グラフデータポイントへのメモ）
+model ChartMemo {
+  id           String   @id @default(cuid())
+  userId       String   @map("user_id")
+  snapshotDate DateTime @map("snapshot_date") @db.Date
+  chartType    String   @map("chart_type")
+  symbol       String   @default("")
+  content      String   @default("")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, snapshotDate, chartType, symbol])
+  @@map("chart_memos")
 }
 
 // Enums
