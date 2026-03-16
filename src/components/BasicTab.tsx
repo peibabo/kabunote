@@ -150,7 +150,7 @@ export default function BasicTab({
               href={link.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex flex-col items-center gap-0.5 flex-shrink-0"
+              className="flex flex-col items-center gap-0.5 flex-shrink-0 w-14"
               title={link.name}
             >
               <div
@@ -159,7 +159,7 @@ export default function BasicTab({
               >
                 {link.icon}
               </div>
-              <span className="text-[10px] text-gray-400 whitespace-nowrap">{link.name}</span>
+              <span className="text-[10px] text-gray-400 truncate w-full text-center">{link.name}</span>
             </a>
           ))}
         </div>
