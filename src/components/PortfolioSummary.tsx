@@ -13,6 +13,7 @@ import { STORAGE_KEYS } from '@/lib/storageKeys';
 import { CustomTag } from '@/types/tags';
 import { getCompanyNameSync, getSectorSync } from '@/data/stockNames';
 import { useAccordionState } from '@/hooks/useAccordionState';
+import PortfolioHistory from '@/components/PortfolioHistory';
 
 interface StockData {
   id: string;
@@ -803,6 +804,11 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
             </div>
           </div>
         </div>
+      )}
+
+      {/* ポートフォリオ推移グラフセクション */}
+      {hasPositions && (
+        <PortfolioHistory />
       )}
 
     </div>

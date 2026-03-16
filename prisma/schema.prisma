@@ -30,6 +30,7 @@ model User {
   snoozedAlerts SnoozedAlert[]
   feedbacks     Feedback[]
   externalLinks UserExternalLink[]
+  portfolioSnapshots PortfolioSnapshot[]
 
   @@map("app_users")
 }
@@ -247,6 +248,44 @@ model StockTabState {
 
   @@unique([stockId, tabType])
   @@map("stock_tab_states")
+}
+
+// ポートフォリオ日次スナップショット
+model PortfolioSnapshot {
+  id              String   @id @default(cuid())
+  userId          String   @map("user_id")
+  snapshotDate    DateTime @map("snapshot_date") @db.Date
+  totalInvestment Decimal  @map("total_investment")
+  totalValue      Decimal  @map("total_value")
+  profitLoss      Decimal  @map("profit_loss")
+  cashAmount      Decimal  @map("cash_amount")
+  netAssets       Decimal  @map("net_assets")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stockSnapshots StockPriceSnapshot[]
+
+  @@unique([userId, snapshotDate])
+  @@map("portfolio_snapshots")
+}
+
+// 銘柄別日次株価スナップショット
+model StockPriceSnapshot {
+  id           String   @id @default(cuid())
+  snapshotId   String   @map("snapshot_id")
+  stockId      String   @map("stock_id")
+  symbol       String
+  currentPrice Decimal? @map("current_price")
+  shares       Int
+  value        Decimal
+  cost         Decimal
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  snapshot PortfolioSnapshot @relation(fields: [snapshotId], references: [id], onDelete: Cascade)
+
+  @@unique([snapshotId, stockId])
+  @@map("stock_price_snapshots")
 }
 
 // Enums
