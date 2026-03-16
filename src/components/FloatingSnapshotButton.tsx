@@ -61,7 +61,7 @@ export default function FloatingSnapshotButton() {
     try {
       const res = await fetch('/api/portfolio/snapshot', { method: 'POST' });
       if (res.ok) {
-        playSound('save');
+        playSound('noteSave');
         window.dispatchEvent(new Event('kabunote-snapshot-created'));
         setShowSuccess(true);
         setTimeout(() => {
