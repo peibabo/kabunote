@@ -10,6 +10,7 @@ export default defineConfig({
     globals: true,
     css: false,
     include: ['src/__tests__/**/*.test.{ts,tsx}'],
+    execArgv: ['--no-experimental-webstorage'],
   },
   resolve: {
     alias: {
