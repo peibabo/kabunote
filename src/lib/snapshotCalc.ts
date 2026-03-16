@@ -34,27 +34,37 @@ export function buildSnapshotData(stocks: StockInput[], cashAmount: number): Sna
   const stockSnapshots: StockSnapshotInput[] = [];
 
   for (const stock of stocks) {
-    if (stock.positions.length === 0) continue;
+    const hasPositions = stock.positions.length > 0;
+    const summary = hasPositions ? calculatePositionSummary(stock.positions) : null;
+    const hasShares = summary != null && summary.totalShares > 0;
 
-    const summary = calculatePositionSummary(stock.positions);
-    if (summary.totalShares === 0) continue;
+    if (hasShares) {
+      const price = stock.currentPrice;
+      const value = price != null && price > 0
+        ? price * summary.totalShares
+        : summary.totalCost;
 
-    const price = stock.currentPrice;
-    const value = price != null && price > 0
-      ? price * summary.totalShares
-      : summary.totalCost;
+      totalInvestment += summary.totalCost;
+      totalValue += value;
 
-    totalInvestment += summary.totalCost;
-    totalValue += value;
-
-    stockSnapshots.push({
-      stockId: stock.id,
-      symbol: stock.symbol,
-      currentPrice: price,
-      shares: summary.totalShares,
-      value,
-      cost: summary.totalCost,
-    });
+      stockSnapshots.push({
+        stockId: stock.id,
+        symbol: stock.symbol,
+        currentPrice: price,
+        shares: summary.totalShares,
+        value,
+        cost: summary.totalCost,
+      });
+    } else if (stock.currentPrice != null && stock.currentPrice > 0) {
+      stockSnapshots.push({
+        stockId: stock.id,
+        symbol: stock.symbol,
+        currentPrice: stock.currentPrice,
+        shares: 0,
+        value: 0,
+        cost: 0,
+      });
+    }
   }
 
   const profitLoss = totalValue - totalInvestment;

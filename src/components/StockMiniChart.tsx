@@ -59,9 +59,9 @@ export default function StockMiniChart({
     );
   }
 
-  // データが2件未満の場合はメッセージ表示
+  // データがない場合はメッセージ表示
   const priceDataCount = data.filter(d => d.price != null).length;
-  if (priceDataCount < 2) {
+  if (priceDataCount < 1) {
     return (
       <div className="text-center py-4 text-gray-400 text-xs leading-relaxed">
         📊 スナップショットを記録すると<br />

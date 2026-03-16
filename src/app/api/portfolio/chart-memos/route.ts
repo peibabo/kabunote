@@ -4,7 +4,7 @@ import { withAuth } from '@/lib/apiHandler'
 import { RANGE_DAYS } from '@/lib/snapshotCalc'
 import { VALID_CHART_TYPES } from '@/types/portfolio'
 
-const MAX_CONTENT_LENGTH = 100
+const MAX_CONTENT_LENGTH = 50
 
 // GET: チャートメモ一覧取得
 export const GET = withAuth(async ({ user, request }) => {

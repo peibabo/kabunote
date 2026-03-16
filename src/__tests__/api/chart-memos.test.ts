@@ -126,11 +126,11 @@ describe('PUT /api/portfolio/chart-memos', () => {
     expect(res.status).toBe(400)
   })
 
-  it('400: contentが100文字超過', async () => {
+  it('400: contentが50文字超過', async () => {
     const req = createRequest('PUT', 'http://localhost:3000/api/portfolio/chart-memos', {
       snapshotDate: '2024-06-15',
       chartType: 'value',
-      content: 'あ'.repeat(101),
+      content: 'あ'.repeat(51),
     })
     const res = await PUT(req)
 
