@@ -249,7 +249,7 @@ export default function StockMiniChart({
               stroke="#60a5fa"
               strokeWidth={2}
               dot={<MiniChartDot memoMap={memoMap} symbol={symbol} onClick={handleDotClick} />}
-              activeDot={{ r: 4 }}
+              activeDot={false}
               connectNulls
             />
           </LineChart>
