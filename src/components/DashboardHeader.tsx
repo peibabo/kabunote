@@ -3,9 +3,10 @@
 import Image from 'next/image';
 import AuthButton from '@/components/AuthButton';
 import HamburgerMenuButton from '@/components/HamburgerMenuButton';
+import { AlertCounts } from '@/hooks/useAlertCounts';
 
 interface DashboardHeaderProps {
-  alertCounts: { total: number; [key: string]: number };
+  alertCounts: AlertCounts;
   onMenuOpen: () => void;
 }
 

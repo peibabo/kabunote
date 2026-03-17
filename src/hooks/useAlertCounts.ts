@@ -5,7 +5,7 @@ import { SnoozedAlert } from '@/types/snooze';
 import { getAllActiveAlerts } from '@/utils/alertSystem';
 import { calculatePositionSummary } from '@/lib/positionCalc';
 
-interface AlertCounts {
+export interface AlertCounts {
   total: number;
   urgent: number;
 }

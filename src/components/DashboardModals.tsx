@@ -13,6 +13,7 @@ import FeedbackModal from '@/components/FeedbackModal';
 import OnboardingWizard from '@/components/OnboardingWizard';
 import SlideOutMenu from '@/components/SlideOutMenu';
 import { FavoriteGroup } from '@/types/favorites';
+import { AlertCounts } from '@/hooks/useAlertCounts';
 
 interface FullScreenModalProps {
   isOpen: boolean;
@@ -92,7 +93,7 @@ interface DashboardModalsProps {
   dividendBenefitData: DividendBenefitData;
   favoriteGroups: FavoriteGroup[];
   setFavoriteGroups: (groups: FavoriteGroup[]) => void;
-  alertCounts: { total: number; [key: string]: number };
+  alertCounts: AlertCounts;
   refreshData: () => void;
   onStockClick: (symbol: string) => void;
   showOnboarding: boolean;
