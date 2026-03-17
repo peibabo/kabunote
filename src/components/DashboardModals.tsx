@@ -1,9 +1,9 @@
 'use client';
 
 import { ReactNode } from 'react';
-import FavoriteGroupManager from '@/components/FavoriteGroupManager';
-import TagManager from '@/components/TagManager';
-import AlertSummaryPage from '@/components/AlertSummaryPage';
+import FavoriteGroupManager from '@/components/tag/FavoriteGroupManager';
+import TagManager from '@/components/tag/TagManager';
+import AlertSummaryPage from '@/components/alert/AlertSummaryPage';
 import StrategySummaryPage from '@/components/StrategySummaryPage';
 import PortfolioPositionsPage from '@/components/PortfolioPositionsPage';
 import EventCalendarPage from '@/components/EventCalendarPage';

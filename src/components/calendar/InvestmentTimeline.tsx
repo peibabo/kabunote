@@ -5,7 +5,7 @@ import { InvestmentEvent, TimelineEvent } from '@/types/investmentCalendar';
 import { formatDateString } from '@/lib/investmentCalendarCalc';
 import { getEventStyle, shouldShowDateLabel } from '@/utils/timelineUtils';
 import { useTooltipState } from '@/hooks/util/useTooltipState';
-import MonthlyCalendar from '@/components/MonthlyCalendar';
+import MonthlyCalendar from '@/components/calendar/MonthlyCalendar';
 
 interface InvestmentTimelineProps {
   events: Record<string, InvestmentEvent[]>;

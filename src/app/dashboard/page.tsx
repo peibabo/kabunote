@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import StockCard from '@/components/StockCard';
 import SearchBar from '@/components/SearchBar';
-import InvestmentCalendar from '@/components/InvestmentCalendar';
+import InvestmentCalendar from '@/components/calendar/InvestmentCalendar';
 import DailyQuote from '@/components/settings/DailyQuote';
 import PortfolioSummary from '@/components/PortfolioSummary';
 import FloatingAddButton from '@/components/FloatingAddButton';
