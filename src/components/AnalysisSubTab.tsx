@@ -340,6 +340,7 @@ export default function AnalysisSubTab({
         {/* 株価推移ミニチャート */}
         <StockMiniChart
           stockId={stockId}
+          symbol={symbol}
           targetPrice={parseFloat(targetPrice) || undefined}
           stopLossPrice={parseFloat(stopLoss) || undefined}
         />
