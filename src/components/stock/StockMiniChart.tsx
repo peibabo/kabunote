@@ -17,7 +17,7 @@ import { formatPrice } from '@/lib/positionCalc';
 import { calcYAxisDomain, formatDateLabel } from '@/lib/stockMiniChartCalc';
 import { chartMemoKey } from '@/types/portfolio';
 import type { HistoryRange, ChartMemoMap } from '@/types/portfolio';
-import ChartMemoModal from './ChartMemoModal';
+import ChartMemoModal from '../portfolio/ChartMemoModal';
 
 interface StockMiniChartProps {
   stockId: string | undefined;

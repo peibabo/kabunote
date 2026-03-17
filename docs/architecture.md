@@ -103,11 +103,13 @@ app_users (ユーザー管理)
 
 ---
 
-## カスタムフック一覧（30フック）
+## カスタムフック一覧（44フック）
 
-### データ管理（DB CRUD）
+### `hooks/stock/` — 銘柄データ
 | フック | 説明 |
 |--------|------|
+| `useStockData` | 銘柄データ一括取得（stocks/list API） |
+| `useStockCardData` | 銘柄カード統合データ（10+フックのファサード） |
 | `useStockMemo` | 株ノオト（デバウンス自動保存） |
 | `useStockPrice` | 株価データ（現在株価・利確目標・損切り）300msデバウンス |
 | `useStockPosition` | 複数ポジションCRUD（追加・編集・削除） |
@@ -115,44 +117,76 @@ app_users (ユーザー管理)
 | `useStockDividend` | 配当情報（500msデバウンス） |
 | `useStockBenefit` | 株主優待情報（500msデバウンス） |
 | `useStockTag` | タグ管理（楽観的更新） |
-| `useNextActionPlan` | 次の一手戦略 |
-| `useFavoriteGroups` | お気に入りグループ（楽観的更新・差分同期） |
-| `useCash` | 投資余力現金・Next Actionメモ（300msデバウンス） |
+| `useStockPriceHistory` | 個別銘柄の株価履歴取得（期間切替・スナップショットイベント連動） |
+| `useStockSearch` | 銘柄検索（オートコンプリート） |
+
+### `hooks/alert/` — アラート
+| フック | 説明 |
+|--------|------|
+| `useStockAlerts` | アラート計算・カードスタイル |
+| `useAlertCounts` | ヘッダー用アラート集計 |
+| `useAlertSummaryData` | アラート一覧テーブルデータ |
 | `useSnooze` | アラートスヌーズ管理 |
+
+### `hooks/portfolio/` — ポートフォリオ
+| フック | 説明 |
+|--------|------|
+| `usePortfolioData` | ポートフォリオ集計データ |
+| `usePortfolioSummary` | ポートフォリオサマリー（投資額・損益・配当・優待） |
+| `usePieChartData` | 円グラフデータ生成 |
+| `usePortfolioHistory` | ポートフォリオ日次スナップショット履歴（期間切替・作成・todayRecorded） |
+| `useChartMemos` | チャートメモ管理（memoMap・saveMemo・deleteMemo） |
+
+### `hooks/calendar/` — カレンダー
+| フック | 説明 |
+|--------|------|
+| `useCalendarData` | カレンダー用イベントデータ |
+| `useEventCalendarData` | イベントカレンダーデータ（フィルタ・ソート） |
+
+### `hooks/dividend/` — 配当・優待
+| フック | 説明 |
+|--------|------|
+| `useDividendBenefitData` | 配当・優待一覧データ |
+| `useDividendBenefitList` | 配当・優待リスト（ソート・フィルタ・検索） |
+
+### `hooks/dashboard/` — ダッシュボード
+| フック | 説明 |
+|--------|------|
+| `useModals` | モーダル表示状態 |
+| `useDashboardActions` | ダッシュボード操作（銘柄追加・削除・D&D） |
+| `useFavoriteGroups` | お気に入りグループ（楽観的更新・差分同期） |
 | `useExternalLinks` | 外部リンク設定（モジュールキャッシュ・デフォルトフォールバック） |
 
-### UI状態管理
+### `hooks/auth/` — 認証・グローバル
+| フック | 説明 |
+|--------|------|
+| `useAuth` | Supabase認証状態管理 |
+| `useCash` | 投資余力現金・Next Actionメモ（300msデバウンス） |
+| `useSound` | サウンド設定 |
+| `useSoundOnChange` | 値変更時のサウンド再生 |
+
+### `hooks/tab/` — タブ状態
 | フック | 説明 |
 |--------|------|
 | `useTabState` | メインタブ状態 |
 | `useInvestmentTabState` | 投資戦略サブタブ状態 |
 | `useManagementTabState` | 管理サブタブ状態 |
-| `useModals` | モーダル表示状態 |
-| `useLocalStorage` | localStorage汎用ラッパー |
 
-### データ取得・集約
+### `hooks/util/` — ユーティリティ
 | フック | 説明 |
 |--------|------|
-| `useStockData` | 銘柄データ一括取得（stocks/list API） |
-| `usePortfolioData` | ポートフォリオ集計データ |
-| `usePortfolioHistory` | ポートフォリオ日次スナップショット履歴（期間切替・作成・todayRecorded） |
-| `useStockPriceHistory` | 個別銘柄の株価履歴取得（期間切替・スナップショットイベント連動） |
-| `useChartMemos` | チャートメモ管理（memoMap・saveMemo・deleteMemo） |
-| `useCalendarData` | カレンダー用イベントデータ |
-| `useDividendBenefitData` | 配当・優待一覧データ |
-| `useStockSearch` | 銘柄検索（オートコンプリート） |
-| `useStockAlerts` | アラート計算・カードスタイル |
-| `useAlertCounts` | ヘッダー用アラート集計 |
-
-### ユーティリティ
-| フック | 説明 |
-|--------|------|
-| `useAuth` | Supabase認証状態管理 |
 | `useDebounce` | デバウンス汎用 |
+| `useLocalStorage` | localStorage汎用ラッパー |
 | `useAutoSave` | 自動保存ロジック |
 | `useAsyncState` | 非同期状態管理 |
 | `useAccordionState` | アコーディオン開閉管理（playSound統合・localStorage対応） |
 | `useTooltipState` | ツールチップ表示/非表示管理（遅延非表示・クリーンアップ） |
+
+### `hooks/other/` — その他
+| フック | 説明 |
+|--------|------|
+| `useOnboarding` | オンボーディング完了状態 |
+| `useNextActionPlan` | 次の一手戦略 |
 
 ---
 
@@ -190,47 +224,50 @@ app_users (ユーザー管理)
 
 ---
 
-## 主要コンポーネント構成
+## コンポーネント構成（機能別ディレクトリ）
 
-### メインページ
-- `page.tsx`: ランディングページ（LP、Server Component）
-- `dashboard/page.tsx`: メインダッシュボード（D&D・銘柄一覧・カレンダー・ポートフォリオサマリー）
+### `components/layout/` — レイアウト
+- `DashboardHeader.tsx`, `DashboardModals.tsx`, `SlideOutMenu.tsx`, `HamburgerMenuButton.tsx`
+- `BulkTabSwitcher.tsx`, `ToastContainer.tsx`, `CookieConsentBanner.tsx`, `GoogleAnalyticsWrapper.tsx`
 
-### カード系
+### `components/stock/` — 銘柄
 - `StockCard.tsx`: 銘柄カード（タブ制御・統合アラート・スマートナビゲーション）
-- `StockCardHeader.tsx`: カードヘッダー（銘柄名・コード・アラートアイコン）
+- `StockCardHeader.tsx`, `StockInput.tsx`, `SearchBar.tsx`, `StockMiniChart.tsx`
+- `FloatingAddButton.tsx`, `SimplePortfolioSummary.tsx`
 
-### タブコンテンツ
-- `InvestmentStrategyTab.tsx`: 投資戦略タブ（サブタブコンテナ）
-- `AnalysisSubTab.tsx`: 分析サブタブ（投資規律・株価推移ミニチャート・株価ポジション・損益シミュレーション）
-- `StockMiniChart.tsx`: 個別銘柄株価推移ミニチャート（Recharts LineChart・利確/損切ReferenceLine・期間切替）
-- `NextActionSubTab.tsx`: 次の一手サブタブ
-- `ManagementTab.tsx`: 管理タブ（サブタブコンテナ）
-- `PositionsManagement.tsx`: 保有状況管理（複数ロットCRUD）
-- `EventManagement.tsx`: 決算発表日・株主総会日管理
-- `DividendManagement.tsx`: 配当管理
-- `ShareholderBenefitManagement.tsx`: 株主優待管理
+### `components/stock-tabs/` — 銘柄カードタブ
+- `BasicTab.tsx`, `InvestmentStrategyTab.tsx`, `ManagementTab.tsx`
+- `AnalysisSubTab.tsx`, `NextActionSubTab.tsx`
+- `PositionsManagement.tsx`, `EventManagement.tsx`, `DividendManagement.tsx`, `ShareholderBenefitManagement.tsx`
 
-### ダッシュボード系
-- `SimplePortfolioSummary.tsx`: ポートフォリオサマリー
-- `PortfolioHistory.tsx`: ポートフォリオ推移（スナップショット確定ボタン・期間切替・グラフ）
-- `PortfolioChart.tsx`: ポートフォリオ推移グラフ（Recharts: 評価額/純資産/損益/個別株価・メモマーカー付き）
-- `ChartMemoModal.tsx`: チャートメモ入力モーダル（グラフドットクリックで開く・最大100文字）
-- `InvestmentPieChart.tsx`: 円グラフ分析
-- `StrategySummaryPage.tsx`: 戦略一覧ダッシュボード
-- `AlertSummaryPage.tsx`: アラート一覧
-- `DividendBenefitListPage.tsx`: 配当・優待一覧ダッシュボード
-- `PositionListPage.tsx`: 保有ポジション一覧
+### `components/portfolio/` — ポートフォリオ
+- `PortfolioSummary.tsx`, `PortfolioOverviewGrid.tsx`, `InvestmentPieChart.tsx`
+- `CashPositionSection.tsx`, `TargetSummarySection.tsx`
+- `PortfolioHistory.tsx`, `PortfolioChart.tsx`, `ChartMemoModal.tsx`
 
-### カレンダー系
-- `InvestmentCalendar.tsx`: 投資カレンダー
-- `InvestmentTimeline.tsx`: 投資タイムライン
-- `TodayTomorrowEvents.tsx`: 今日・明日の予定表示
+### `components/alert/` — アラート
+- `AlertDisplay.tsx`, `AlertSummaryPage.tsx`
 
-### 設定・同意系
-- `SoundSettings.tsx`: サウンドフィードバック設定（ON/OFF・音量・試聴）
-- `CookieConsentBanner.tsx`: Cookie同意バナー（GA4の同意管理・localStorage永続化）
-- `GoogleAnalyticsWrapper.tsx`: GA4条件付きロード（同意済みの場合のみ読み込み）
+### `components/calendar/` — カレンダー
+- `InvestmentCalendar.tsx`, `InvestmentTimeline.tsx`, `MonthlyCalendar.tsx`, `TodayTomorrowEvents.tsx`
+
+### `components/summary/` — 一覧ページ
+- `PortfolioPositionsPage.tsx`, `DividendBenefitListPage.tsx`, `StrategySummaryPage.tsx`, `EventCalendarPage.tsx`
+
+### `components/tag/` — タグ・グループ
+- `TagEditor.tsx`, `TagManager.tsx`, `FavoriteGroupManager.tsx`, `FavoriteGroupSelector.tsx`
+
+### `components/settings/` — 設定
+- `ExternalLinksArea.tsx`, `ExternalLinksSettingsModal.tsx`, `SoundSettings.tsx`, `DailyQuote.tsx`, `FloatingSnapshotButton.tsx`
+
+### `components/modal/` — モーダル
+- `FeedbackModal.tsx`, `DeleteAccountModal.tsx`
+
+### `components/auth/` — 認証
+- `AuthButton.tsx`
+
+### `components/landing/` — LP（既存）
+### `components/onboarding/` — オンボーディング（既存 + OnboardingWizard.tsx）
 
 ---
 

@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, M_PLUS_1p } from "next/font/google";
 import "./globals.css";
-import ToastContainer from "@/components/ToastContainer";
-import CookieConsentBanner from "@/components/CookieConsentBanner";
-import GoogleAnalyticsWrapper from "@/components/GoogleAnalyticsWrapper";
+import ToastContainer from "@/components/layout/ToastContainer";
+import CookieConsentBanner from "@/components/layout/CookieConsentBanner";
+import GoogleAnalyticsWrapper from "@/components/layout/GoogleAnalyticsWrapper";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

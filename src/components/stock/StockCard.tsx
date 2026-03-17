@@ -11,12 +11,12 @@ import { stockKey } from '@/lib/storageKeys';
 
 // Components
 import StockCardHeader from './StockCardHeader';
-import BasicTab from './BasicTab';
-import InvestmentStrategyTab from './InvestmentStrategyTab';
-import ManagementTab from './ManagementTab';
-import AlertDisplay from './AlertDisplay';
-import TagEditor from './TagEditor';
-import FavoriteGroupSelector from './FavoriteGroupSelector';
+import BasicTab from '../stock-tabs/BasicTab';
+import InvestmentStrategyTab from '../stock-tabs/InvestmentStrategyTab';
+import ManagementTab from '../stock-tabs/ManagementTab';
+import AlertDisplay from '../alert/AlertDisplay';
+import TagEditor from '../tag/TagEditor';
+import FavoriteGroupSelector from '../tag/FavoriteGroupSelector';
 
 interface StockCardProps {
   symbol: string;

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import SoundSettings from './SoundSettings';
+import SoundSettings from '../settings/SoundSettings';
 
 interface SlideOutMenuProps {
   isOpen: boolean;
