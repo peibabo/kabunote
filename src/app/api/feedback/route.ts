@@ -3,13 +3,12 @@ import { prisma } from '@/lib/prisma'
 import { withAuth } from '@/lib/apiHandler'
 import { FEEDBACK_LIMIT } from '@/lib/rateLimit'
 import { notifyFeedback } from '@/lib/slack'
-
-const VALID_CATEGORIES = ['FEATURE_REQUEST', 'IMPROVEMENT', 'BUG_REPORT', 'OTHER'] as const
+import { VALID_FEEDBACK_CATEGORIES } from '@/lib/feedbackCategories'
 
 export const POST = withAuth(async ({ user, request }) => {
   const { category, content } = await request.json()
 
-  if (!category || !VALID_CATEGORIES.includes(category)) {
+  if (!category || !VALID_FEEDBACK_CATEGORIES.includes(category)) {
     return NextResponse.json(
       { error: 'Bad Request', message: 'カテゴリを選択してください' },
       { status: 400 }

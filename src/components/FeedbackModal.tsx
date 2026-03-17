@@ -4,18 +4,14 @@ import { useState } from 'react';
 import { apiPost } from '@/lib/apiClient';
 import { toast } from '@/lib/toast';
 import { playSound } from '@/lib/sound';
+import { FEEDBACK_CATEGORIES } from '@/lib/feedbackCategories';
 
 interface FeedbackModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const CATEGORIES = [
-  { value: 'FEATURE_REQUEST', label: '機能要望', icon: '💡' },
-  { value: 'IMPROVEMENT', label: '改善提案', icon: '✨' },
-  { value: 'BUG_REPORT', label: '不具合報告', icon: '🐛' },
-  { value: 'OTHER', label: 'その他', icon: '📝' },
-] as const;
+const CATEGORIES = FEEDBACK_CATEGORIES;
 
 const MAX_LENGTH = 1000;
 
