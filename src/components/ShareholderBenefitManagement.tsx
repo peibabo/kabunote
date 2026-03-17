@@ -2,7 +2,7 @@
 
 import { PositionSummary } from '@/types/positions';
 import { playSound } from '@/lib/sound';
-import { useSoundOnChange } from '@/hooks/useSoundOnChange';
+import { useSoundOnChange } from '@/hooks/auth/useSoundOnChange';
 import { calculateRightsDateFromSettings } from '@/types/rightsDate';
 import { calculateShareholderBenefit, formatBenefitValue, formatBenefitYield } from '@/lib/shareholderCalc';
 import { useStockBenefit } from '@/hooks/useStockBenefit';

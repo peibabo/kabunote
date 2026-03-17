@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { useSound } from '@/hooks/useSound';
+import { useSound } from '@/hooks/auth/useSound';
 
 describe('useSound', () => {
   it('デフォルトの設定を返す', () => {

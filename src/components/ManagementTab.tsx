@@ -1,7 +1,7 @@
 'use client';
 
 import { ShareholderMeetingSettings } from '@/types/rightsDate';
-import { useManagementTabState } from '@/hooks/useManagementTabState';
+import { useManagementTabState } from '@/hooks/tab/useManagementTabState';
 import { PositionSummary } from '@/types/positions';
 import EventManagement from '@/components/EventManagement';
 import DividendManagement from '@/components/DividendManagement';

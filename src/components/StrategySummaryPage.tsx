@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { useCash } from '@/hooks/useCash';
+import { useCash } from '@/hooks/auth/useCash';
 import { StockData } from '@/hooks/useStockData';
 import { NextActionPlan, NextActionPlanAnalysis } from '@/types/nextActionPlan';
 import { analyzeNextActionPlan, hasNextActionPlan } from '@/lib/nextActionPlanCalc';

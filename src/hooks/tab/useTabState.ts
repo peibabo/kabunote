@@ -1,4 +1,4 @@
-import { useLocalStorage } from './util/useLocalStorage';
+import { useLocalStorage } from '../util/useLocalStorage';
 
 export type TabId = 'basic' | 'analysis' | 'management';
 

@@ -7,15 +7,15 @@ import { ProfitLossInfo } from '@/types/positions';
 import { calculateProfitLoss, calculatePositionSummary } from '@/lib/positionCalc';
 import { RightsDateSettings, createDefaultRightsSettings, shouldDeactivateRights } from '@/types/rightsDate';
 import { useStringLocalStorage } from '@/hooks/util/useLocalStorage';
-import { useTabState } from '@/hooks/useTabState';
-import { useNextActionPlan } from '@/hooks/useNextActionPlan';
+import { useTabState } from '@/hooks/tab/useTabState';
+import { useNextActionPlan } from '@/hooks/other/useNextActionPlan';
 import { useStockMemo } from '@/hooks/useStockMemo';
 import { useStockPosition } from '@/hooks/useStockPosition';
 import { useStockPrice } from '@/hooks/useStockPrice';
 import { useStockEvent } from '@/hooks/useStockEvent';
 import { useStockTag } from '@/hooks/useStockTag';
 import { useStockAlerts } from '@/hooks/useStockAlerts';
-import { useCash } from '@/hooks/useCash';
+import { useCash } from '@/hooks/auth/useCash';
 import { stockKey } from '@/lib/storageKeys';
 
 export function useStockCardData(symbol: string, favoriteGroups: FavoriteGroup[], initialStockData?: DBStockData) {

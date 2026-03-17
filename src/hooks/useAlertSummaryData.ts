@@ -4,7 +4,7 @@ import { getAllActiveAlerts, AlertType } from '@/utils/alertSystem';
 import { getCompanyNameSync } from '@/data/stockNames';
 import { calculatePositionSummary } from '@/lib/positionCalc';
 import { useSnooze } from '@/hooks/useSnooze';
-import { useCash } from '@/hooks/useCash';
+import { useCash } from '@/hooks/auth/useCash';
 import { StockData } from '@/hooks/useStockData';
 
 export interface AlertRowData {

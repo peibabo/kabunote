@@ -1,6 +1,6 @@
 import React from 'react';
 import { playSound } from '@/lib/sound';
-import { useSoundOnChange } from '@/hooks/useSoundOnChange';
+import { useSoundOnChange } from '@/hooks/auth/useSoundOnChange';
 import {
   NextActionPlan as NextActionPlanType,
   NextActionPlanAnalysis,
@@ -9,7 +9,7 @@ import {
 } from '@/types/nextActionPlan';
 import { analyzeNextActionPlan, hasNextActionPlan, isCompleteNextActionPlan } from '@/lib/nextActionPlanCalc';
 import { PositionSummary } from '@/types/positions';
-import { useCash } from '@/hooks/useCash';
+import { useCash } from '@/hooks/auth/useCash';
 
 interface NextActionSubTabProps {
   symbol: string;

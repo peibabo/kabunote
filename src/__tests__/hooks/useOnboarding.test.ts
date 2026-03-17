@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderHook, act, waitFor } from '@testing-library/react'
-import { useOnboarding } from '@/hooks/useOnboarding'
+import { useOnboarding } from '@/hooks/other/useOnboarding'
 
 function mockFetchOnboarding(completed: boolean) {
   vi.spyOn(global, 'fetch').mockResolvedValue(

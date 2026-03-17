@@ -1,4 +1,4 @@
-import { useLocalStorage } from './util/useLocalStorage';
+import { useLocalStorage } from '../util/useLocalStorage';
 import { ManagementTabId, MANAGEMENT_TABS } from '@/types/managementTabs';
 
 /**

@@ -1,6 +1,6 @@
 'use client';
 
-import { useSound } from '@/hooks/useSound';
+import { useSound } from '@/hooks/auth/useSound';
 import { initSoundEngine, playSound } from '@/lib/sound';
 
 /**

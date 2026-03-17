@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useDebouncedCallback } from './util/useDebounce';
+import { useDebouncedCallback } from '../util/useDebounce';
 import { toast } from '@/lib/toast';
 
 interface CashData {

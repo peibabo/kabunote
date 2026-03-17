@@ -6,7 +6,7 @@ import CashPositionSection from '@/components/CashPositionSection';
 import TargetSummarySection from '@/components/TargetSummarySection';
 import PortfolioHistory from '@/components/PortfolioHistory';
 import { usePortfolioSummary, StockData } from '@/hooks/usePortfolioSummary';
-import { useCash } from '@/hooks/useCash';
+import { useCash } from '@/hooks/auth/useCash';
 import { useAccordionState } from '@/hooks/util/useAccordionState';
 import { STORAGE_KEYS } from '@/lib/storageKeys';
 
