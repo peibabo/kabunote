@@ -6,6 +6,12 @@ interface ToastItem {
   message: string
 }
 
+const TOAST_DURATIONS: Record<ToastType, number> = {
+  success: 3000,
+  warning: 4000,
+  error: 5000,
+}
+
 const EMPTY: ToastItem[] = []
 let nextId = 0
 let items: ToastItem[] = EMPTY
@@ -20,8 +26,7 @@ function add(type: ToastType, message: string) {
   items = [...items, { id, type, message }]
   emit()
 
-  const duration = type === 'success' ? 3000 : type === 'warning' ? 4000 : 5000
-  setTimeout(() => remove(id), duration)
+  setTimeout(() => remove(id), TOAST_DURATIONS[type])
 }
 
 function remove(id: number) {
