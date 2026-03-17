@@ -1,22 +1,16 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React from 'react';
 import { DividendRightsSettings, ShareholderRightsSettings, ShareholderMeetingSettings } from '@/types/rightsDate';
 import { formatMonthDay } from '@/lib/dateFormat';
-
-interface EventData {
-  symbol: string;
-  companyName: string;
-  eventType: 'earnings' | 'dividend-rights' | 'dividend-final' | 'shareholder-rights' | 'shareholder-final' | 'meeting';
-  date: string;
-  daysUntil: number;
-  icon: string;
-  colorClass: string;
-  description: string;
-}
-
-type SortKey = 'date' | 'symbol' | 'eventType' | 'daysUntil';
-type FilterType = 'all' | 'earnings' | 'dividend' | 'shareholder' | 'meeting';
+import {
+  useEventCalendarData,
+  getDaysUntilDisplay,
+  MONTH_NAMES,
+  type EventData,
+  type EventSortKey,
+  type EventFilterType,
+} from '@/hooks/useEventCalendarData';
 
 interface EventCalendarPageProps {
   stockSymbols: string[];
@@ -32,263 +26,17 @@ interface EventCalendarPageProps {
 }
 
 export default function EventCalendarPage({ stockSymbols, stockData }: EventCalendarPageProps) {
-  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [sortBy, setSortBy] = useState<SortKey>('date');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-  const [filterType, setFilterType] = useState<FilterType>('all');
-
-  // 営業日計算関数
-  const getPreviousBusinessDay = (date: Date): Date => {
-    const result = new Date(date);
-    result.setDate(result.getDate() - 1);
-
-    // 土曜日(6)なら金曜日に、日曜日(0)なら金曜日に調整
-    if (result.getDay() === 6) { // 土曜日
-      result.setDate(result.getDate() - 1);
-    } else if (result.getDay() === 0) { // 日曜日
-      result.setDate(result.getDate() - 2);
-    }
-
-    return result;
-  };
-
-  // 日数差を計算
-  const calculateDaysUntil = (dateStr: string): number => {
-    const eventDate = new Date(dateStr);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    eventDate.setHours(0, 0, 0, 0);
-
-    const diffTime = eventDate.getTime() - today.getTime();
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  };
-
-  // イベントデータを収集
-  const eventsData = useMemo(() => {
-    // 日付形式を統一して解析する関数（useMemo内で定義して依存関係を明確化）
-    const parseDate = (dateStr: string): Date => {
-      if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
-        // 完全な日付形式 (YYYY-MM-DD) の場合
-        return new Date(dateStr);
-      } else if (dateStr.match(/^\d{2}-\d{2}$/)) {
-        // 月日のみ形式 (MM-DD) の場合
-        return new Date(`${selectedYear}-${dateStr}`);
-      } else {
-        // その他の形式
-        return new Date(dateStr);
-      }
-    };
-
-    const events: EventData[] = [];
-
-    stockSymbols.forEach(symbol => {
-      const symbolData = stockData[symbol];
-      if (!symbolData) return;
-
-      const companyName = symbolData.name;
-
-      // 決算発表日
-      if (symbolData.earningsDate) {
-        try {
-          const earningsDate = parseDate(symbolData.earningsDate);
-
-          if (!isNaN(earningsDate.getTime()) &&
-              earningsDate.getMonth() === selectedMonth &&
-              earningsDate.getFullYear() === selectedYear) {
-            events.push({
-              symbol,
-              companyName,
-              eventType: 'earnings',
-              date: earningsDate.toISOString().split('T')[0],
-              daysUntil: calculateDaysUntil(earningsDate.toISOString().split('T')[0]),
-              icon: '📊',
-              colorClass: 'text-blue-400 bg-blue-900/20',
-              description: '決算発表'
-            });
-          }
-        } catch (error) {
-          console.warn(`Failed to parse earnings date for ${symbol}: ${symbolData.earningsDate}`, error);
-        }
-      }
-
-      // 配当権利確定日関連
-      const dividendRights = symbolData.dividendRightsSettings;
-      if (dividendRights && dividendRights.isActive && dividendRights.month && dividendRights.day) {
-        const rightsDate = new Date(selectedYear, parseInt(dividendRights.month.toString()) - 1, parseInt(dividendRights.day.toString()));
-        if (rightsDate.getMonth() === selectedMonth && rightsDate.getFullYear() === selectedYear) {
-          // 権利確定日
-          events.push({
-            symbol,
-            companyName,
-            eventType: 'dividend-rights',
-            date: rightsDate.toISOString().split('T')[0],
-            daysUntil: calculateDaysUntil(rightsDate.toISOString().split('T')[0]),
-            icon: '💰',
-            colorClass: 'text-green-400 bg-green-900/20',
-            description: '配当権利確定日'
-          });
-
-          // 権利付き最終日
-          const finalDate = getPreviousBusinessDay(rightsDate);
-          if (finalDate.getMonth() === selectedMonth && finalDate.getFullYear() === selectedYear) {
-            events.push({
-              symbol,
-              companyName,
-              eventType: 'dividend-final',
-              date: finalDate.toISOString().split('T')[0],
-              daysUntil: calculateDaysUntil(finalDate.toISOString().split('T')[0]),
-              icon: '🏦',
-              colorClass: 'text-green-300 bg-green-800/20',
-              description: '配当権利付き最終日'
-            });
-          }
-        }
-      }
-
-      // 優待権利確定日関連
-      const shareholderRights = symbolData.shareholderRightsSettings;
-      if (shareholderRights && shareholderRights.isActive && shareholderRights.month && shareholderRights.day) {
-        const rightsDate = new Date(selectedYear, parseInt(shareholderRights.month.toString()) - 1, parseInt(shareholderRights.day.toString()));
-        if (rightsDate.getMonth() === selectedMonth && rightsDate.getFullYear() === selectedYear) {
-          // 権利確定日
-          events.push({
-            symbol,
-            companyName,
-            eventType: 'shareholder-rights',
-            date: rightsDate.toISOString().split('T')[0],
-            daysUntil: calculateDaysUntil(rightsDate.toISOString().split('T')[0]),
-            icon: '🎁',
-            colorClass: 'text-purple-400 bg-purple-900/20',
-            description: '優待権利確定日'
-          });
-
-          // 権利付き最終日
-          const finalDate = getPreviousBusinessDay(rightsDate);
-          if (finalDate.getMonth() === selectedMonth && finalDate.getFullYear() === selectedYear) {
-            events.push({
-              symbol,
-              companyName,
-              eventType: 'shareholder-final',
-              date: finalDate.toISOString().split('T')[0],
-              daysUntil: calculateDaysUntil(finalDate.toISOString().split('T')[0]),
-              icon: '🛍️',
-              colorClass: 'text-purple-300 bg-purple-800/20',
-              description: '優待権利付き最終日'
-            });
-          }
-        }
-      }
-
-      // 株主総会
-      const meeting = symbolData.shareholderMeetingSettings;
-      if (meeting && meeting.isActive && meeting.month && meeting.day) {
-        const meetingDate = new Date(selectedYear, parseInt(meeting.month.toString()) - 1, parseInt(meeting.day.toString()));
-        if (meetingDate.getMonth() === selectedMonth && meetingDate.getFullYear() === selectedYear) {
-          events.push({
-            symbol,
-            companyName,
-            eventType: 'meeting',
-            date: meetingDate.toISOString().split('T')[0],
-            daysUntil: calculateDaysUntil(meetingDate.toISOString().split('T')[0]),
-            icon: '🏢',
-            colorClass: 'text-orange-400 bg-orange-900/20',
-            description: '株主総会'
-          });
-        }
-      }
-    });
-
-    return events;
-  }, [stockSymbols, stockData, selectedMonth, selectedYear]);
-
-  // フィルター処理
-  const filteredEvents = useMemo(() => {
-    if (filterType === 'all') return eventsData;
-
-    switch (filterType) {
-      case 'earnings':
-        return eventsData.filter(event => event.eventType === 'earnings');
-      case 'dividend':
-        return eventsData.filter(event => event.eventType.includes('dividend'));
-      case 'shareholder':
-        return eventsData.filter(event => event.eventType.includes('shareholder'));
-      case 'meeting':
-        return eventsData.filter(event => event.eventType === 'meeting');
-      default:
-        return eventsData;
-    }
-  }, [eventsData, filterType]);
-
-  // ソート処理
-  const sortedEvents = useMemo(() => {
-    return [...filteredEvents].sort((a, b) => {
-      let comparison = 0;
-
-      switch (sortBy) {
-        case 'date':
-          comparison = new Date(a.date).getTime() - new Date(b.date).getTime();
-          break;
-        case 'symbol':
-          comparison = a.symbol.localeCompare(b.symbol);
-          break;
-        case 'eventType':
-          comparison = a.eventType.localeCompare(b.eventType);
-          break;
-        case 'daysUntil':
-          comparison = a.daysUntil - b.daysUntil;
-          break;
-      }
-
-      return sortOrder === 'desc' ? -comparison : comparison;
-    });
-  }, [filteredEvents, sortBy, sortOrder]);
-
-  // ソート変更ハンドラー
-  const handleSort = (key: SortKey) => {
-    if (sortBy === key) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortBy(key);
-      setSortOrder('asc');
-    }
-  };
-
-  // 月変更
-  const changeMonth = (direction: 'prev' | 'next') => {
-    if (direction === 'next') {
-      if (selectedMonth === 11) {
-        setSelectedMonth(0);
-        setSelectedYear(selectedYear + 1);
-      } else {
-        setSelectedMonth(selectedMonth + 1);
-      }
-    } else {
-      if (selectedMonth === 0) {
-        setSelectedMonth(11);
-        setSelectedYear(selectedYear - 1);
-      } else {
-        setSelectedMonth(selectedMonth - 1);
-      }
-    }
-  };
-
-  const monthNames = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
-
-
-  // 日数表示
-  const getDaysUntilDisplay = (daysUntil: number) => {
-    if (daysUntil === 0) return '今日';
-    if (daysUntil === 1) return '明日';
-    if (daysUntil < 0) return `${Math.abs(daysUntil)}日前`;
-    return `${daysUntil}日後`;
-  };
+  const {
+    selectedMonth, selectedYear,
+    sortBy, sortOrder, filterType, setFilterType,
+    sortedEvents, handleSort, changeMonth,
+  } = useEventCalendarData(stockSymbols, stockData);
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-2 sm:p-6">
       <div className="max-w-6xl mx-auto">
 
-        {/* 月ナビゲーション（統一位置） */}
+        {/* 月ナビゲーション */}
         <div className="flex items-center justify-center gap-2 sm:gap-4 mb-4 sm:mb-6">
           <button
             onClick={() => changeMonth('prev')}
@@ -296,7 +44,7 @@ export default function EventCalendarPage({ stockSymbols, stockData }: EventCale
           >
             ← 前月
           </button>
-          <h2 className="text-lg sm:text-xl font-semibold">{selectedYear}年 {monthNames[selectedMonth]}</h2>
+          <h2 className="text-lg sm:text-xl font-semibold">{selectedYear}年 {MONTH_NAMES[selectedMonth]}</h2>
           <button
             onClick={() => changeMonth('next')}
             className="cursor-pointer p-1 sm:p-2 text-sm sm:text-base text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
@@ -314,15 +62,15 @@ export default function EventCalendarPage({ stockSymbols, stockData }: EventCale
           </div>
         ) : (
           <>
-            {/* フィルター（常に表示） */}
+            {/* フィルター */}
             <div className="flex justify-center gap-1 sm:gap-2 mb-4 sm:mb-6">
-              {[
-                { key: 'all' as FilterType, label: '全て' },
-                { key: 'earnings' as FilterType, label: '決算' },
-                { key: 'dividend' as FilterType, label: '配当' },
-                { key: 'shareholder' as FilterType, label: '優待' },
-                { key: 'meeting' as FilterType, label: '総会' }
-              ].map(({ key, label }) => (
+              {([
+                { key: 'all' as EventFilterType, label: '全て' },
+                { key: 'earnings' as EventFilterType, label: '決算' },
+                { key: 'dividend' as EventFilterType, label: '配当' },
+                { key: 'shareholder' as EventFilterType, label: '優待' },
+                { key: 'meeting' as EventFilterType, label: '総会' }
+              ]).map(({ key, label }) => (
                 <button
                   key={key}
                   onClick={() => setFilterType(key)}
@@ -340,12 +88,12 @@ export default function EventCalendarPage({ stockSymbols, stockData }: EventCale
             {/* ソートボタン */}
             <div className="flex flex-wrap gap-1 sm:gap-2 mb-4 sm:mb-6">
               <span className="text-xs sm:text-sm text-gray-400 self-center mr-1 sm:mr-2">並び替え:</span>
-              {[
-                { key: 'date' as SortKey, label: '日付' },
-                { key: 'daysUntil' as SortKey, label: '日数' },
-                { key: 'eventType' as SortKey, label: 'イベント' },
-                { key: 'symbol' as SortKey, label: '銘柄' }
-              ].map(({ key, label }) => (
+              {([
+                { key: 'date' as EventSortKey, label: '日付' },
+                { key: 'daysUntil' as EventSortKey, label: '日数' },
+                { key: 'eventType' as EventSortKey, label: 'イベント' },
+                { key: 'symbol' as EventSortKey, label: '銘柄' }
+              ]).map(({ key, label }) => (
                 <button
                   key={key}
                   onClick={() => handleSort(key)}
@@ -360,7 +108,7 @@ export default function EventCalendarPage({ stockSymbols, stockData }: EventCale
               ))}
             </div>
 
-            {/* イベント一覧 - デスクトップ: テーブル */}
+            {/* デスクトップテーブル */}
             <div className="hidden md:block bg-gray-800 rounded-lg overflow-hidden">
               <table className="w-full">
                 <thead className="bg-gray-700">
@@ -373,64 +121,16 @@ export default function EventCalendarPage({ stockSymbols, stockData }: EventCale
                 </thead>
                 <tbody className="divide-y divide-gray-700">
                   {sortedEvents.map((event, index) => (
-                    <tr key={`${event.symbol}-${event.eventType}-${index}`} className="hover:bg-gray-750">
-                      <td className="px-4 py-3 text-white font-medium">
-                        {formatMonthDay(event.date)}
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className={`flex items-center space-x-2 px-3 py-1 rounded-lg ${event.colorClass}`}>
-                          <span className="text-lg">{event.icon}</span>
-                          <span className="text-sm font-medium">{event.description}</span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div>
-                          <div className="font-medium text-white">{event.symbol}</div>
-                          <div className="text-xs text-gray-400 truncate max-w-[200px]">{event.companyName}</div>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        <span className={`px-2 py-1 rounded text-xs font-medium ${
-                          event.daysUntil <= 0 ? 'bg-red-600 text-white' :
-                          event.daysUntil <= 3 ? 'bg-yellow-600 text-white' :
-                          event.daysUntil <= 7 ? 'bg-blue-600 text-white' :
-                          'bg-gray-600 text-gray-300'
-                        }`}>
-                          {getDaysUntilDisplay(event.daysUntil)}
-                        </span>
-                      </td>
-                    </tr>
+                    <EventDesktopRow key={`${event.symbol}-${event.eventType}-${index}`} event={event} />
                   ))}
                 </tbody>
               </table>
             </div>
 
-            {/* イベント一覧 - モバイル: カードレイアウト */}
+            {/* モバイルカード */}
             <div className="md:hidden space-y-2">
               {sortedEvents.map((event, index) => (
-                <div key={`mobile-${event.symbol}-${event.eventType}-${index}`} className="bg-gray-800 rounded-lg p-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs ${event.colorClass}`}>
-                      <span>{event.icon}</span>
-                      <span className="font-medium">{event.description}</span>
-                    </div>
-                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-                      event.daysUntil <= 0 ? 'bg-red-600 text-white' :
-                      event.daysUntil <= 3 ? 'bg-yellow-600 text-white' :
-                      event.daysUntil <= 7 ? 'bg-blue-600 text-white' :
-                      'bg-gray-600 text-gray-300'
-                    }`}>
-                      {getDaysUntilDisplay(event.daysUntil)}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-white">{event.symbol}</span>
-                      <span className="text-xs text-gray-400 truncate max-w-[150px]">{event.companyName}</span>
-                    </div>
-                    <span className="text-sm text-gray-300">{formatMonthDay(event.date)}</span>
-                  </div>
-                </div>
+                <EventMobileCard key={`mobile-${event.symbol}-${event.eventType}-${index}`} event={event} />
               ))}
             </div>
 
@@ -461,6 +161,63 @@ export default function EventCalendarPage({ stockSymbols, stockData }: EventCale
             </div>
           </>
         )}
+      </div>
+    </div>
+  );
+}
+
+function DaysUntilBadge({ daysUntil }: { daysUntil: number }) {
+  const bgClass = daysUntil <= 0 ? 'bg-red-600 text-white'
+    : daysUntil <= 3 ? 'bg-yellow-600 text-white'
+    : daysUntil <= 7 ? 'bg-blue-600 text-white'
+    : 'bg-gray-600 text-gray-300';
+
+  return (
+    <span className={`px-2 py-0.5 rounded text-xs font-medium ${bgClass}`}>
+      {getDaysUntilDisplay(daysUntil)}
+    </span>
+  );
+}
+
+function EventDesktopRow({ event }: { event: EventData }) {
+  return (
+    <tr className="hover:bg-gray-750">
+      <td className="px-4 py-3 text-white font-medium">{formatMonthDay(event.date)}</td>
+      <td className="px-4 py-3">
+        <div className={`flex items-center space-x-2 px-3 py-1 rounded-lg ${event.colorClass}`}>
+          <span className="text-lg">{event.icon}</span>
+          <span className="text-sm font-medium">{event.description}</span>
+        </div>
+      </td>
+      <td className="px-4 py-3">
+        <div>
+          <div className="font-medium text-white">{event.symbol}</div>
+          <div className="text-xs text-gray-400 truncate max-w-[200px]">{event.companyName}</div>
+        </div>
+      </td>
+      <td className="px-4 py-3 text-center">
+        <DaysUntilBadge daysUntil={event.daysUntil} />
+      </td>
+    </tr>
+  );
+}
+
+function EventMobileCard({ event }: { event: EventData }) {
+  return (
+    <div className="bg-gray-800 rounded-lg p-3">
+      <div className="flex items-center justify-between mb-2">
+        <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs ${event.colorClass}`}>
+          <span>{event.icon}</span>
+          <span className="font-medium">{event.description}</span>
+        </div>
+        <DaysUntilBadge daysUntil={event.daysUntil} />
+      </div>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-white">{event.symbol}</span>
+          <span className="text-xs text-gray-400 truncate max-w-[150px]">{event.companyName}</span>
+        </div>
+        <span className="text-sm text-gray-300">{formatMonthDay(event.date)}</span>
       </div>
     </div>
   );
