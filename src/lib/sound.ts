@@ -27,7 +27,7 @@ interface SoundDef {
   duration: number; // seconds
 }
 
-const SOUND_DEFS: Record<Exclude<SoundName, 'noteSave' | 'accordionOpen' | 'accordionClose'>, SoundDef> = {
+const SOUND_DEFS: Record<Exclude<SoundName, 'noteSave' | 'accordionOpen' | 'accordionClose' | 'levelUp'>, SoundDef> = {
   textInput:    { waveform: 'sine', freqStart: 1047, freqEnd: 1047, duration: 0.05 },
   toggle:       { waveform: 'sine', freqStart: 700,  freqEnd: 900,  duration: 0.08 },
   select:       { waveform: 'sine', freqStart: 880,  freqEnd: 1100, duration: 0.06 },
