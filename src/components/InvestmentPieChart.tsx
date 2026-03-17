@@ -144,14 +144,19 @@ function PieChartSVG({ chartData, type, centerLabel, centerValue, tooltip, setTo
   const centerX = 120;
   const centerY = 120;
   const radius = 100;
-  let currentAngle = 0;
+
+  // 各スライスの開始・終了角度を事前計算
+  const sliceAngles = chartData.reduce<{ startAngle: number; endAngle: number }[]>((acc, item) => {
+    const startAngle = acc.length > 0 ? acc[acc.length - 1].endAngle : 0;
+    const endAngle = startAngle + (item.percentage / 100) * 360;
+    acc.push({ startAngle, endAngle });
+    return acc;
+  }, []);
 
   return (
     <svg width="240" height="240" className="mx-auto">
       {chartData.map((item, index) => {
-        const startAngle = currentAngle;
-        const endAngle = currentAngle + (item.percentage / 100) * 360;
-        currentAngle = endAngle;
+        const { startAngle, endAngle } = sliceAngles[index];
 
         const startAngleRad = (startAngle - 90) * (Math.PI / 180);
         const endAngleRad = (endAngle - 90) * (Math.PI / 180);
