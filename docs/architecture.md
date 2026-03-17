@@ -73,14 +73,14 @@ app_users (ユーザー管理)
 | `/api/stocks/[stockId]/tag` | GET/POST | タグ一覧・追加 |
 | `/api/stocks/[stockId]/tag/[tagId]` | DELETE | タグ削除 |
 | `/api/stocks/[stockId]/next-action-plan` | GET/PUT/DELETE | 次の一手戦略 |
-| `/api/stocks/[stockId]/price-history` | GET | 個別銘柄の株価履歴（?range=1M/3M/6M/1Y/ALL、デフォルト3M） |
+| `/api/stocks/[stockId]/price-history` | GET | 個別銘柄の株価履歴（?range=1M/3M/6M/1Y/2Y、デフォルト3M） |
 
 ### ポートフォリオ履歴
 | パス | メソッド | 説明 |
 |------|---------|------|
 | `/api/portfolio/snapshot` | POST | ポートフォリオ日次スナップショット作成/更新（同日upsert） |
-| `/api/portfolio/history` | GET | ポートフォリオ履歴取得（?range=1W/1M/3M/6M/1Y/ALL） |
-| `/api/portfolio/chart-memos` | GET | チャートメモ一覧取得（?range=1W/1M/3M/6M/1Y/ALL） |
+| `/api/portfolio/history` | GET | ポートフォリオ履歴取得（?range=1W/1M/3M/6M/1Y/2Y） |
+| `/api/portfolio/chart-memos` | GET | チャートメモ一覧取得（?range=1W/1M/3M/6M/1Y/2Y） |
 | `/api/portfolio/chart-memos` | PUT | チャートメモ作成/更新（snapshotDate, chartType, symbol?, content） |
 | `/api/portfolio/chart-memos` | DELETE | チャートメモ削除（?snapshotDate&chartType&symbol） |
 

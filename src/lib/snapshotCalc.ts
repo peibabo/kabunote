@@ -86,5 +86,5 @@ export const RANGE_DAYS: Record<string, number> = {
   '3M': 90,
   '6M': 180,
   '1Y': 365,
-  'ALL': 0,
+  '2Y': 730,
 };

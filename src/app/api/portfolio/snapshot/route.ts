@@ -99,6 +99,19 @@ export const POST = withAuth(async ({ user }) => {
       })
     }
 
+    // 2年以上前のスナップショットを削除（CASCADE で stockPriceSnapshot も削除される）
+    const cutoff = new Date()
+    cutoff.setDate(cutoff.getDate() - 730)
+    cutoff.setHours(0, 0, 0, 0)
+    await tx.portfolioSnapshot.deleteMany({
+      where: { userId: user.id, snapshotDate: { lt: cutoff } },
+    })
+
+    // 2年以上前のチャートメモも削除（CASCADE関係なし）
+    await tx.chartMemo.deleteMany({
+      where: { userId: user.id, snapshotDate: { lt: cutoff } },
+    })
+
     return result
   })
 
