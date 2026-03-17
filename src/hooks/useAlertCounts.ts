@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { StockData } from '@/hooks/useStockData';
+import { StockData } from '@/hooks/stock/useStockData';
 import { NextActionPlan } from '@/types/nextActionPlan';
 import { SnoozedAlert } from '@/types/snooze';
 import { getAllActiveAlerts } from '@/utils/alertSystem';

@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { StockData } from '@/hooks/useStockData';
+import { StockData } from '@/hooks/stock/useStockData';
 
 interface UsePortfolioDataReturn {
   hasPortfolioData: boolean;

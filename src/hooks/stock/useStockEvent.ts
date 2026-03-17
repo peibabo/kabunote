@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { apiFetch } from '@/lib/apiClient'
-import { useAsyncState } from './util/useAsyncState'
-import { useAutoSave } from './util/useAutoSave'
+import { useAsyncState } from '../util/useAsyncState'
+import { useAutoSave } from '../util/useAutoSave'
 import {
   ShareholderMeetingSettings,
   createDefaultRightsSettings

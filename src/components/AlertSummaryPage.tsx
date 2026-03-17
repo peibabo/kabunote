@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { StockData } from '@/hooks/useStockData';
+import { StockData } from '@/hooks/stock/useStockData';
 import { SnoozeDuration } from '@/types/snooze';
 import { SNOOZE_DURATIONS, getTimeUntilUnsnooze, generateAlertKey } from '@/lib/snoozeCalc';
 import {

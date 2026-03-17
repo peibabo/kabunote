@@ -11,7 +11,7 @@ import {
   ResponsiveContainer,
   ReferenceLine,
 } from 'recharts';
-import { useStockPriceHistory } from '@/hooks/useStockPriceHistory';
+import { useStockPriceHistory } from '@/hooks/stock/useStockPriceHistory';
 import { useChartMemos } from '@/hooks/useChartMemos';
 import { formatPrice } from '@/lib/positionCalc';
 import { calcYAxisDomain, formatDateLabel } from '@/lib/stockMiniChartCalc';

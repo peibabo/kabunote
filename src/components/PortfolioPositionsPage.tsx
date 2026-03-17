@@ -4,7 +4,7 @@ import React, { useState, useMemo } from 'react';
 import { Position } from '@/types/positions';
 import { calculatePositionSummary, formatShares } from '@/lib/positionCalc';
 import { getCompanyNameSync } from '@/data/stockNames';
-import { StockData } from '@/hooks/useStockData';
+import { StockData } from '@/hooks/stock/useStockData';
 
 interface PositionRowData {
   symbol: string;

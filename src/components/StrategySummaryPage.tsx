@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { useCash } from '@/hooks/auth/useCash';
-import { StockData } from '@/hooks/useStockData';
+import { StockData } from '@/hooks/stock/useStockData';
 import { NextActionPlan, NextActionPlanAnalysis } from '@/types/nextActionPlan';
 import { analyzeNextActionPlan, hasNextActionPlan } from '@/lib/nextActionPlanCalc';
 import { getIntegratedAlert, AlertType } from '@/utils/alertSystem';

@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { loadStockData, getStockData } from '@/data/stockNames';
-import { StockData } from '@/hooks/useStockData';
+import { StockData } from '@/hooks/stock/useStockData';
 import { FavoriteGroup } from '@/types/favorites';
 
 interface UseStockSearchReturn {

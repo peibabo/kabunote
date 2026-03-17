@@ -5,7 +5,7 @@ import { getCompanyNameSync } from '@/data/stockNames';
 import { calculatePositionSummary } from '@/lib/positionCalc';
 import { useSnooze } from '@/hooks/useSnooze';
 import { useCash } from '@/hooks/auth/useCash';
-import { StockData } from '@/hooks/useStockData';
+import { StockData } from '@/hooks/stock/useStockData';
 
 export interface AlertRowData {
   symbol: string;

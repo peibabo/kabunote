@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { loadStockData, getCompanyNameSync, isKnownStockSync, StockData } from '@/data/stockNames';
 import { FavoriteGroup } from '@/types/favorites';
-import { StockData as DBStockData } from '@/hooks/useStockData';
+import { StockData as DBStockData } from '@/hooks/stock/useStockData';
 import { CustomTag } from '@/types/tags';
 import { ProfitLossInfo } from '@/types/positions';
 import { calculateProfitLoss, calculatePositionSummary } from '@/lib/positionCalc';
@@ -9,11 +9,11 @@ import { RightsDateSettings, createDefaultRightsSettings, shouldDeactivateRights
 import { useStringLocalStorage } from '@/hooks/util/useLocalStorage';
 import { useTabState } from '@/hooks/tab/useTabState';
 import { useNextActionPlan } from '@/hooks/other/useNextActionPlan';
-import { useStockMemo } from '@/hooks/useStockMemo';
-import { useStockPosition } from '@/hooks/useStockPosition';
-import { useStockPrice } from '@/hooks/useStockPrice';
-import { useStockEvent } from '@/hooks/useStockEvent';
-import { useStockTag } from '@/hooks/useStockTag';
+import { useStockMemo } from '@/hooks/stock/useStockMemo';
+import { useStockPosition } from '@/hooks/stock/useStockPosition';
+import { useStockPrice } from '@/hooks/stock/useStockPrice';
+import { useStockEvent } from '@/hooks/stock/useStockEvent';
+import { useStockTag } from '@/hooks/stock/useStockTag';
 import { useStockAlerts } from '@/hooks/useStockAlerts';
 import { useCash } from '@/hooks/auth/useCash';
 import { stockKey } from '@/lib/storageKeys';

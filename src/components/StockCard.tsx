@@ -2,10 +2,10 @@
 
 import { useState, memo } from 'react';
 import { FavoriteGroup } from '@/types/favorites';
-import { StockData as DBStockData } from '@/hooks/useStockData';
+import { StockData as DBStockData } from '@/hooks/stock/useStockData';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { useStockCardData } from '@/hooks/useStockCardData';
+import { useStockCardData } from '@/hooks/stock/useStockCardData';
 import { playSound } from '@/lib/sound';
 import { stockKey } from '@/lib/storageKeys';
 

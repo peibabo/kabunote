@@ -5,7 +5,7 @@ import { playSound } from '@/lib/sound';
 import { useSoundOnChange } from '@/hooks/auth/useSoundOnChange';
 import { calculateRightsDateFromSettings } from '@/types/rightsDate';
 import { calculateDividendInfo, formatDividendAmount, formatDividendYield } from '@/lib/dividendCalc';
-import { useStockDividend } from '@/hooks/useStockDividend';
+import { useStockDividend } from '@/hooks/stock/useStockDividend';
 
 interface EarningsCountdown {
   text: string;

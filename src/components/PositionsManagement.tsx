@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { playSound } from '@/lib/sound';
-import { useStockPosition } from '@/hooks/useStockPosition';
+import { useStockPosition } from '@/hooks/stock/useStockPosition';
 import { Position } from '@/types/positions';
 import { calculatePositionSummary, formatPrice, formatShares } from '@/lib/positionCalc';
 

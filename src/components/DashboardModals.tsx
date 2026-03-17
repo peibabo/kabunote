@@ -14,7 +14,7 @@ import OnboardingWizard from '@/components/OnboardingWizard';
 import SlideOutMenu from '@/components/SlideOutMenu';
 import { FavoriteGroup } from '@/types/favorites';
 import { AlertCounts } from '@/hooks/useAlertCounts';
-import { StockData } from '@/hooks/useStockData';
+import { StockData } from '@/hooks/stock/useStockData';
 import { CalendarDataMap } from '@/hooks/useCalendarData';
 import { DividendBenefitStockData } from '@/hooks/useDividendBenefitData';
 
