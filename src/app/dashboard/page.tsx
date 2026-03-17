@@ -1,28 +1,18 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import Image from 'next/image';
+import { useState, useEffect } from 'react';
 import StockCard from '@/components/StockCard';
-import FavoriteGroupManager from '@/components/FavoriteGroupManager';
-import TagManager from '@/components/TagManager';
 import SearchBar from '@/components/SearchBar';
 import InvestmentCalendar from '@/components/InvestmentCalendar';
 import DailyQuote from '@/components/DailyQuote';
 import PortfolioSummary from '@/components/PortfolioSummary';
 import FloatingAddButton from '@/components/FloatingAddButton';
 import FloatingSnapshotButton from '@/components/FloatingSnapshotButton';
-import StrategySummaryPage from '@/components/StrategySummaryPage';
-import PortfolioPositionsPage from '@/components/PortfolioPositionsPage';
-import AlertSummaryPage from '@/components/AlertSummaryPage';
-import HamburgerMenuButton from '@/components/HamburgerMenuButton';
-import SlideOutMenu from '@/components/SlideOutMenu';
-import EventCalendarPage from '@/components/EventCalendarPage';
-import DividendBenefitListPage from '@/components/DividendBenefitListPage';
-import DeleteAccountModal from '@/components/DeleteAccountModal';
-import FeedbackModal from '@/components/FeedbackModal';
-import AuthButton from '@/components/AuthButton';
+import DashboardHeader from '@/components/DashboardHeader';
+import DashboardModals from '@/components/DashboardModals';
 import BulkTabSwitcher from '@/components/BulkTabSwitcher';
-import { loadStockData, getStockData } from '@/data/stockNames';
+import ExternalLinksArea from '@/components/ExternalLinksArea';
+import { loadStockData } from '@/data/stockNames';
 import { initSoundEngine, playSound } from '@/lib/sound';
 import { GROUP_COLORS } from '@/types/favorites';
 import { useStockData } from '@/hooks/useStockData';
@@ -30,13 +20,12 @@ import { useFavoriteGroups } from '@/hooks/useFavoriteGroups';
 import { useCash } from '@/hooks/useCash';
 import { useModals } from '@/hooks/useModals';
 import { useOnboarding } from '@/hooks/useOnboarding';
-import OnboardingWizard from '@/components/OnboardingWizard';
-import ExternalLinksArea from '@/components/ExternalLinksArea';
 import { useStockSearch } from '@/hooks/useStockSearch';
 import { useAlertCounts } from '@/hooks/useAlertCounts';
 import { useCalendarData } from '@/hooks/useCalendarData';
 import { usePortfolioData } from '@/hooks/usePortfolioData';
 import { useDividendBenefitData } from '@/hooks/useDividendBenefitData';
+import { useDashboardActions } from '@/hooks/useDashboardActions';
 import {
   DndContext,
   closestCenter,
@@ -44,27 +33,19 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
-  DragEndEvent,
 } from '@dnd-kit/core';
 import {
-  arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
   rectSortingStrategy,
 } from '@dnd-kit/sortable';
 
-const MAX_STOCKS = 20;
-
 export default function Home() {
   const {
     stockData, stockDataMap, stockSymbols, isLoading: isStockDataLoading,
-    error: stockDataError, refreshData, reorderStocks, addStock,
+    refreshData, reorderStocks, addStock,
     updateStockPrice, updateStockData, updateStockEvent,
   } = useStockData();
-
-  const [additionalError, setAdditionalError] = useState('');
-  const error = stockDataError || additionalError;
-  const setError = setAdditionalError;
 
   const {
     groups: favoriteGroups, setGroups: setFavoriteGroups,
@@ -74,9 +55,7 @@ export default function Home() {
   const { cashAmount } = useCash();
 
   const [isInitialized, setIsInitialized] = useState(false);
-  const [forceOpenAdd, setForceOpenAdd] = useState(false);
 
-  // Custom hooks
   const { showOnboarding, completeOnboarding, resetOnboarding } = useOnboarding();
   const modals = useModals(refreshData, resetOnboarding);
   const { searchQuery, setSearchQuery, isSearching, filteredStocks } = useStockSearch(
@@ -91,39 +70,25 @@ export default function Home() {
     stockSymbols, stockDataMap, modals.isDividendBenefitListOpen, isInitialized
   );
 
-  // ドラッグ&ドロップセンサー
+  const {
+    additionalError, setAdditionalError,
+    forceOpenAdd, setForceOpenAdd,
+    handleAddStock, handleRemoveStock, handleDragEnd, handleStockClick,
+    MAX_STOCKS,
+  } = useDashboardActions({
+    stockSymbols, filteredStocks, favoriteGroups, setFavoriteGroups,
+    selectedGroupFilter, reorderStocks, addStock,
+  });
+
+  const error = additionalError;
+  const setError = setAdditionalError;
+
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
   );
-
-  // ドラッグ開始ハンドラー
-  const handleDragStart = () => {
-    // no-op: ドラッグ開始時の処理
-  };
-
-  // ドラッグ終了ハンドラー
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-
-    if (over && active.id !== over.id) {
-      const oldIndex = filteredStocks.indexOf(active.id as string);
-      const newIndex = filteredStocks.indexOf(over.id as string);
-      const newOrder = arrayMove(filteredStocks, oldIndex, newIndex);
-      const otherStocks = stockSymbols.filter(stock => !filteredStocks.includes(stock));
-      const updatedStocks = [...otherStocks, ...newOrder];
-
-      reorderStocks(updatedStocks);
-
-      fetch('/api/stocks/reorder', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ symbols: updatedStocks }),
-      }).catch(err => console.error('並び順の保存に失敗:', err));
-    }
-  };
 
   useEffect(() => {
     const initializeApp = async () => {
@@ -137,125 +102,28 @@ export default function Home() {
     initializeApp();
   }, []);
 
-  const handleAddStock = async (code: string) => {
-    if (stockSymbols.length >= MAX_STOCKS) {
-      setError(`最大${MAX_STOCKS}銘柄まで登録できます。不要な銘柄を削除してから追加してください。`);
-      return;
-    }
-    if (stockSymbols.includes(code)) {
-      setError('この銘柄は既に追加されています');
-      return;
-    }
-    setError('');
-
-    // CSVデータから銘柄名・業種・市場を取得
-    const stockInfo = await getStockData(code);
-    await addStock(code, stockInfo?.name, stockInfo?.sector, stockInfo?.market);
-
-    if (selectedGroupFilter) {
-      const updatedGroups = favoriteGroups.map(group => {
-        if (group.id === selectedGroupFilter && !group.stocks.includes(code)) {
-          return { ...group, stocks: [...group.stocks, code] };
-        }
-        return group;
-      });
-      setFavoriteGroups(updatedGroups);
-    }
-  };
-
-  const handleRemoveStock = useCallback((code: string) => {
-    const newStocks = stockSymbols.filter(stock => stock !== code);
-    reorderStocks(newStocks);
-    setError('');
-
-    // DBから銘柄を削除（カスケードで関連データも削除）
-    fetch('/api/stocks', {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ symbol: code }),
-    }).catch(err => console.error('銘柄の削除に失敗:', err));
-
-    const updatedGroups = favoriteGroups.map(group => ({
-      ...group,
-      stocks: group.stocks.filter(s => s !== code)
-    }));
-    setFavoriteGroups(updatedGroups);
-  }, [stockSymbols, reorderStocks, favoriteGroups, setFavoriteGroups, setError]);
-
-  const handleStockClick = (symbol: string) => {
-    const element = document.getElementById(`stock-card-${symbol}`);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      element.style.transform = 'scale(1.02)';
-      element.style.boxShadow = '0 0 20px rgba(59, 130, 246, 0.5)';
-      setTimeout(() => {
-        element.style.transform = '';
-        element.style.boxShadow = '';
-        element.style.transition = 'all 0.3s ease';
-      }, 1000);
-    }
-  };
-
   const shouldShowHints = stockSymbols.length > 0 && (!hasPortfolioData || !hasCalendarData);
 
   return (
     <div className="min-h-screen bg-gray-900" onClick={() => initSoundEngine()}>
-      {/* Header with Logo */}
-      <header className="bg-slate-900 border-b border-gray-700">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <a
-              href="/dashboard"
-              className="flex items-center gap-4 group cursor-pointer transition-transform duration-200 hover:scale-105"
-              title="カブノオト ホームページ"
-            >
-            <Image
-              src="/kabunote-logo.png"
-              alt="カブノオト - 投資思考整理ダッシュボード"
-              width={200}
-              height={64}
-              className="h-12 md:h-16 w-auto transition-all duration-300"
-              style={{
-                filter: 'drop-shadow(0 0 8px rgba(255, 255, 255, 0.4))'
-              }}
-            />
-            </a>
-
-            {/* ナビゲーション */}
-            <div className="flex items-center gap-3 flex-shrink-0">
-              <AuthButton />
-              <HamburgerMenuButton
-                onClick={() => modals.setIsMenuOpen(true)}
-                alertCounts={alertCounts}
-              />
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <style jsx>{`
-        .group:hover img {
-          filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.8)) drop-shadow(0 0 40px rgba(255, 255, 255, 0.4)) drop-shadow(0 0 60px rgba(255, 255, 255, 0.2)) !important;
-        }
-      `}</style>
+      <DashboardHeader
+        alertCounts={alertCounts}
+        onMenuOpen={() => modals.setIsMenuOpen(true)}
+      />
 
       <main className="container mx-auto px-4 py-4">
         <div className="mb-4">
-          {/* 外部リンク */}
           <ExternalLinksArea />
         </div>
 
-        {/* 今日の格言 */}
         <div className="mb-4">
           <DailyQuote />
         </div>
 
-        {/* ポートフォリオサマリー */}
         <div className="portfolio-summary">
           <PortfolioSummary portfolioData={stockData} />
         </div>
 
-        {/* 投資カレンダー */}
         {stockSymbols.length > 0 && hasCalendarData && (
           <InvestmentCalendar
             stockSymbols={stockSymbols}
@@ -299,29 +167,27 @@ export default function Home() {
           </div>
         )}
 
-      {/* フローティング記録確定ボタン（15時以降・未記録時のみ表示） */}
-      <FloatingSnapshotButton />
+        <FloatingSnapshotButton />
 
-      {/* フローティング銘柄追加ボタン */}
-      <FloatingAddButton
-        onAddStock={handleAddStock}
-        error={error}
-        setError={setError}
-        disabled={stockSymbols.length >= MAX_STOCKS}
-        currentCount={stockSymbols.length}
-        maxCount={MAX_STOCKS}
-        selectedGroupInfo={
-          selectedGroupFilter
-            ? {
-                name: favoriteGroups.find(g => g.id === selectedGroupFilter)?.name || '',
-                color: favoriteGroups.find(g => g.id === selectedGroupFilter)?.color || 'blue'
-              }
-            : null
-        }
-        isFirstTime={stockSymbols.length === 0}
-        forceOpen={forceOpenAdd}
-        onForceOpenHandled={() => setForceOpenAdd(false)}
-      />
+        <FloatingAddButton
+          onAddStock={handleAddStock}
+          error={error}
+          setError={setError}
+          disabled={stockSymbols.length >= MAX_STOCKS}
+          currentCount={stockSymbols.length}
+          maxCount={MAX_STOCKS}
+          selectedGroupInfo={
+            selectedGroupFilter
+              ? {
+                  name: favoriteGroups.find(g => g.id === selectedGroupFilter)?.name || '',
+                  color: favoriteGroups.find(g => g.id === selectedGroupFilter)?.color || 'blue'
+                }
+              : null
+          }
+          isFirstTime={stockSymbols.length === 0}
+          forceOpen={forceOpenAdd}
+          onForceOpenHandled={() => setForceOpenAdd(false)}
+        />
 
         {/* お気に入りグループフィルター */}
         {favoriteGroups.length > 0 && stockSymbols.length > 0 && (
@@ -378,7 +244,6 @@ export default function Home() {
 
         <BulkTabSwitcher stockSymbols={filteredStocks} />
 
-        {/* 検索バー */}
         <div className="mb-2">
           <SearchBar
             searchQuery={searchQuery}
@@ -423,7 +288,6 @@ export default function Home() {
                     <p className="text-gray-400 mb-4">投資の思考整理を始めましょう。まずは気になる銘柄を追加してみてください。</p>
                   </div>
 
-                  {/* フローティングボタンへの誘導 */}
                   <div className="bg-blue-900 bg-opacity-30 border border-blue-700 rounded-lg p-4 mb-4">
                     <div className="flex items-center justify-center gap-3 mb-2">
                       <span className="text-blue-300 text-sm">右下の</span>
@@ -440,7 +304,6 @@ export default function Home() {
                     </div>
                   </div>
 
-                  {/* 使い方のヒント */}
                   <div className="text-left max-w-md mx-auto space-y-2 text-sm text-gray-400">
                     <div className="flex items-center gap-2">
                       <span className="text-green-400">✨</span>
@@ -478,7 +341,7 @@ export default function Home() {
             <DndContext
               sensors={sensors}
               collisionDetection={closestCenter}
-              onDragStart={handleDragStart}
+              onDragStart={() => {}}
               onDragEnd={handleDragEnd}
             >
               <SortableContext items={filteredStocks} strategy={rectSortingStrategy}>
@@ -500,166 +363,25 @@ export default function Home() {
           )}
         </div>
 
-        {/* グループ管理モーダル */}
-        {modals.isGroupManagerOpen && (
-          <FavoriteGroupManager
-            groups={favoriteGroups}
-            onGroupsChange={setFavoriteGroups}
-            onClose={() => modals.setIsGroupManagerOpen(false)}
-          />
-        )}
-
-        {/* タグ管理モーダル */}
-        <TagManager
-          isOpen={modals.isTagManagerOpen}
-          onClose={() => { modals.setIsTagManagerOpen(false); refreshData(); }}
-        />
-
-
-        {/* アラート一覧モーダル */}
-        {modals.isAlertSummaryOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-gray-900 rounded-lg p-4 max-w-6xl w-full mx-4 max-h-[90vh] overflow-hidden">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold text-white">🚨 アラート一覧</h2>
-                <button
-                  onClick={() => modals.setIsAlertSummaryOpen(false)}
-                  className="cursor-pointer text-gray-400 hover:text-white transition-colors"
-                >
-                  ✕
-                </button>
-              </div>
-              <div className="overflow-auto max-h-[calc(90vh-8rem)]">
-                <AlertSummaryPage stockData={stockData} />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* 戦略一覧ダッシュボードモーダル */}
-        {modals.isStrategySummaryOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-gray-900 rounded-lg p-4 max-w-7xl w-full mx-4 max-h-[90vh] overflow-hidden">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold text-white">🎯 戦略一覧ダッシュボード</h2>
-                <button
-                  onClick={() => modals.setIsStrategySummaryOpen(false)}
-                  className="text-gray-400 hover:text-white transition-colors cursor-pointer"
-                >
-                  ✕
-                </button>
-              </div>
-              <div className="overflow-auto max-h-[calc(90vh-8rem)]">
-                <StrategySummaryPage stockData={stockData} />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* 保有ポジション一覧ダッシュボードモーダル */}
-        {modals.isPortfolioPositionsOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-gray-900 rounded-lg p-4 max-w-7xl w-full mx-4 max-h-[90vh] overflow-hidden">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold text-white">💼 保有ポジション一覧</h2>
-                <button
-                  onClick={() => modals.setIsPortfolioPositionsOpen(false)}
-                  className="text-gray-400 hover:text-white transition-colors cursor-pointer"
-                >
-                  ✕
-                </button>
-              </div>
-              <div className="overflow-auto max-h-[calc(90vh-8rem)]">
-                <PortfolioPositionsPage stockData={stockData} />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* イベント一覧モーダル */}
-        {modals.isEventCalendarOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-gray-900 rounded-lg p-4 max-w-6xl w-full mx-4 max-h-[90vh] overflow-hidden">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold text-white">📅 イベント一覧</h2>
-                <button
-                  onClick={() => modals.setIsEventCalendarOpen(false)}
-                  className="cursor-pointer text-gray-400 hover:text-white transition-colors p-2 rounded"
-                >
-                  ✕
-                </button>
-              </div>
-              <div className="overflow-auto max-h-[calc(90vh-8rem)]">
-                <EventCalendarPage
-                  stockSymbols={stockSymbols}
-                  stockData={stockCalendarData}
-                />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* 配当・優待一覧モーダル */}
-        {modals.isDividendBenefitListOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-gray-900 rounded-lg p-4 max-w-7xl w-full mx-4 max-h-[90vh] overflow-hidden">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold text-white">💰 配当・優待一覧</h2>
-                <button
-                  onClick={() => modals.setIsDividendBenefitListOpen(false)}
-                  className="cursor-pointer text-gray-400 hover:text-white transition-colors p-2 rounded"
-                >
-                  ✕
-                </button>
-              </div>
-              <div className="overflow-auto max-h-[calc(90vh-8rem)]">
-                <DividendBenefitListPage
-                    stockSymbols={stockSymbols}
-                    stockData={dividendBenefitData}
-                    onStockClick={(symbol) => {
-                      modals.setIsDividendBenefitListOpen(false);
-                      if (typeof window !== 'undefined') {
-                        localStorage.setItem(`kabunote-open-tab-${symbol}`, 'dividend');
-                      }
-                      handleStockClick(symbol);
-                    }}
-                  />
-              </div>
-            </div>
-          </div>
-        )}
-      </main>
-
-      {/* アカウント削除モーダル */}
-      <DeleteAccountModal
-        isOpen={modals.isDeleteAccountOpen}
-        onClose={() => modals.setIsDeleteAccountOpen(false)}
-      />
-
-      {/* 目安箱モーダル */}
-      <FeedbackModal
-        isOpen={modals.isFeedbackOpen}
-        onClose={() => modals.setIsFeedbackOpen(false)}
-      />
-
-      {/* オンボーディングウィザード */}
-      {showOnboarding && (
-        <OnboardingWizard
-          onComplete={() => {
+        <DashboardModals
+          modals={modals}
+          stockData={stockData}
+          stockSymbols={stockSymbols}
+          stockCalendarData={stockCalendarData}
+          dividendBenefitData={dividendBenefitData}
+          favoriteGroups={favoriteGroups}
+          setFavoriteGroups={setFavoriteGroups}
+          alertCounts={alertCounts}
+          refreshData={refreshData}
+          onStockClick={handleStockClick}
+          showOnboarding={showOnboarding}
+          completeOnboarding={completeOnboarding}
+          onOnboardingComplete={() => {
             completeOnboarding();
             setForceOpenAdd(true);
           }}
-          onClose={completeOnboarding}
         />
-      )}
-
-      {/* スライドアウトメニュー */}
-      <SlideOutMenu
-        isOpen={modals.isMenuOpen}
-        onClose={() => modals.setIsMenuOpen(false)}
-        alertCounts={alertCounts}
-        onMenuItemClick={modals.handleMenuItemClick}
-      />
+      </main>
     </div>
   );
 }
