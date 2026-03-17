@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
-import { useAutoSave } from '@/hooks/useAutoSave'
+import { useAutoSave } from '@/hooks/util/useAutoSave'
 
 describe('useAutoSave', () => {
   beforeEach(() => { vi.useFakeTimers() })

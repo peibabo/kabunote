@@ -6,7 +6,7 @@ import { CustomTag } from '@/types/tags';
 import { ProfitLossInfo } from '@/types/positions';
 import { calculateProfitLoss, calculatePositionSummary } from '@/lib/positionCalc';
 import { RightsDateSettings, createDefaultRightsSettings, shouldDeactivateRights } from '@/types/rightsDate';
-import { useStringLocalStorage } from '@/hooks/useLocalStorage';
+import { useStringLocalStorage } from '@/hooks/util/useLocalStorage';
 import { useTabState } from '@/hooks/useTabState';
 import { useNextActionPlan } from '@/hooks/useNextActionPlan';
 import { useStockMemo } from '@/hooks/useStockMemo';

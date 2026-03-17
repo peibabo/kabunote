@@ -5,8 +5,8 @@ import { InvestmentEvent, CalendarDay } from '@/types/investmentCalendar';
 import { formatDateString } from '@/lib/investmentCalendarCalc';
 import { getEventDotColor } from '@/utils/timelineUtils';
 import { STORAGE_KEYS } from '@/lib/storageKeys';
-import { useAccordionState } from '@/hooks/useAccordionState';
-import { useTooltipState } from '@/hooks/useTooltipState';
+import { useAccordionState } from '@/hooks/util/useAccordionState';
+import { useTooltipState } from '@/hooks/util/useTooltipState';
 
 interface MonthlyCalendarProps {
   events: Record<string, InvestmentEvent[]>;

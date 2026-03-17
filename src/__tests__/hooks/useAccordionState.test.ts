@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
-import { useAccordionState } from '@/hooks/useAccordionState'
+import { useAccordionState } from '@/hooks/util/useAccordionState'
 
 // playSound をモック
 vi.mock('@/lib/sound', () => ({

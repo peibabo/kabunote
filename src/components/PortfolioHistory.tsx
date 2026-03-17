@@ -3,7 +3,7 @@
 import { useState, useCallback } from 'react';
 import { usePortfolioHistory } from '@/hooks/usePortfolioHistory';
 import { useChartMemos } from '@/hooks/useChartMemos';
-import { useAccordionState } from '@/hooks/useAccordionState';
+import { useAccordionState } from '@/hooks/util/useAccordionState';
 import { playSound } from '@/lib/sound';
 import PortfolioChart from '@/components/PortfolioChart';
 import ChartMemoModal from '@/components/ChartMemoModal';

@@ -4,7 +4,7 @@ import React, { useMemo } from 'react';
 import { InvestmentEvent, TimelineEvent } from '@/types/investmentCalendar';
 import { formatDateString } from '@/lib/investmentCalendarCalc';
 import { getEventStyle, shouldShowDateLabel } from '@/utils/timelineUtils';
-import { useTooltipState } from '@/hooks/useTooltipState';
+import { useTooltipState } from '@/hooks/util/useTooltipState';
 import MonthlyCalendar from '@/components/MonthlyCalendar';
 
 interface InvestmentTimelineProps {

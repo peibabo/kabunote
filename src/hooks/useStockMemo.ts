@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { apiFetch, apiPut, apiDelete } from '@/lib/apiClient'
 import { playSound } from '@/lib/sound'
-import { useAsyncState } from './useAsyncState'
-import { useAutoSave } from './useAutoSave'
+import { useAsyncState } from './util/useAsyncState'
+import { useAutoSave } from './util/useAutoSave'
 
 interface UseStockMemoReturn {
   memo: string
