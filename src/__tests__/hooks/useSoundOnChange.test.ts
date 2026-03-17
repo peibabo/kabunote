@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { useSoundOnChange } from '@/hooks/useSoundOnChange';
+import { useSoundOnChange } from '@/hooks/auth/useSoundOnChange';
 
 // playSound をモック
 vi.mock('@/lib/sound', () => ({

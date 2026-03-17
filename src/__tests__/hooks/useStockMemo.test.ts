@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderHook, act, waitFor } from '@testing-library/react'
-import { useStockMemo } from '@/hooks/useStockMemo'
+import { useStockMemo } from '@/hooks/stock/useStockMemo'
 
 const mockApiFetch = vi.fn()
 const mockApiPut = vi.fn()

@@ -1,31 +1,31 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import StockCard from '@/components/StockCard';
-import SearchBar from '@/components/SearchBar';
-import InvestmentCalendar from '@/components/InvestmentCalendar';
-import DailyQuote from '@/components/DailyQuote';
-import PortfolioSummary from '@/components/PortfolioSummary';
-import FloatingAddButton from '@/components/FloatingAddButton';
-import FloatingSnapshotButton from '@/components/FloatingSnapshotButton';
-import DashboardHeader from '@/components/DashboardHeader';
-import DashboardModals from '@/components/DashboardModals';
-import BulkTabSwitcher from '@/components/BulkTabSwitcher';
-import ExternalLinksArea from '@/components/ExternalLinksArea';
+import StockCard from '@/components/stock/StockCard';
+import SearchBar from '@/components/stock/SearchBar';
+import InvestmentCalendar from '@/components/calendar/InvestmentCalendar';
+import DailyQuote from '@/components/settings/DailyQuote';
+import PortfolioSummary from '@/components/portfolio/PortfolioSummary';
+import FloatingAddButton from '@/components/stock/FloatingAddButton';
+import FloatingSnapshotButton from '@/components/settings/FloatingSnapshotButton';
+import DashboardHeader from '@/components/layout/DashboardHeader';
+import DashboardModals from '@/components/layout/DashboardModals';
+import BulkTabSwitcher from '@/components/layout/BulkTabSwitcher';
+import ExternalLinksArea from '@/components/settings/ExternalLinksArea';
 import { loadStockData } from '@/data/stockNames';
 import { initSoundEngine, playSound } from '@/lib/sound';
 import { GROUP_COLORS } from '@/types/favorites';
-import { useStockData } from '@/hooks/useStockData';
-import { useFavoriteGroups } from '@/hooks/useFavoriteGroups';
-import { useCash } from '@/hooks/useCash';
-import { useModals } from '@/hooks/useModals';
-import { useOnboarding } from '@/hooks/useOnboarding';
-import { useStockSearch } from '@/hooks/useStockSearch';
-import { useAlertCounts } from '@/hooks/useAlertCounts';
-import { useCalendarData } from '@/hooks/useCalendarData';
-import { usePortfolioData } from '@/hooks/usePortfolioData';
-import { useDividendBenefitData } from '@/hooks/useDividendBenefitData';
-import { useDashboardActions } from '@/hooks/useDashboardActions';
+import { useStockData } from '@/hooks/stock/useStockData';
+import { useFavoriteGroups } from '@/hooks/dashboard/useFavoriteGroups';
+import { useCash } from '@/hooks/auth/useCash';
+import { useModals } from '@/hooks/dashboard/useModals';
+import { useOnboarding } from '@/hooks/other/useOnboarding';
+import { useStockSearch } from '@/hooks/stock/useStockSearch';
+import { useAlertCounts } from '@/hooks/alert/useAlertCounts';
+import { useCalendarData } from '@/hooks/calendar/useCalendarData';
+import { usePortfolioData } from '@/hooks/portfolio/usePortfolioData';
+import { useDividendBenefitData } from '@/hooks/dividend/useDividendBenefitData';
+import { useDashboardActions } from '@/hooks/dashboard/useDashboardActions';
 import {
   DndContext,
   closestCenter,

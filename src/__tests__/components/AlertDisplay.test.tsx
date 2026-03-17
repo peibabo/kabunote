@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render } from '@testing-library/react'
-import AlertDisplay from '@/components/AlertDisplay'
+import AlertDisplay from '@/components/alert/AlertDisplay'
 import type { AlertInfo } from '@/utils/alertSystem'
 
 describe('AlertDisplay', () => {

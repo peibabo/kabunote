@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
-import OnboardingWizard from '@/components/OnboardingWizard'
+import OnboardingWizard from '@/components/onboarding/OnboardingWizard'
 
 const defaultProps = {
   onComplete: vi.fn(),

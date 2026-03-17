@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render } from '@testing-library/react'
 import { act } from 'react'
-import GoogleAnalyticsWrapper from '@/components/GoogleAnalyticsWrapper'
+import GoogleAnalyticsWrapper from '@/components/layout/GoogleAnalyticsWrapper'
 import { STORAGE_KEYS } from '@/lib/storageKeys'
 
 // GoogleAnalytics コンポーネントをモック

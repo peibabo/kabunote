@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderHook, act, waitFor } from '@testing-library/react'
-import { useStockPosition } from '@/hooks/useStockPosition'
+import { useStockPosition } from '@/hooks/stock/useStockPosition'
 
 const mockApiFetch = vi.fn()
 const mockApiPost = vi.fn()

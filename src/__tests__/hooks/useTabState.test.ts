@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
-import { useTabState, DEFAULT_TABS } from '@/hooks/useTabState'
+import { useTabState, DEFAULT_TABS } from '@/hooks/tab/useTabState'
 
 describe('useTabState', () => {
   beforeEach(() => {
