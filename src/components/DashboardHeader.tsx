@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import AuthButton from '@/components/AuthButton';
+import AuthButton from '@/components/auth/AuthButton';
 import HamburgerMenuButton from '@/components/HamburgerMenuButton';
 import { AlertCounts } from '@/hooks/alert/useAlertCounts';
 
