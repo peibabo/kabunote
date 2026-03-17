@@ -3,7 +3,7 @@ import { NextActionPlan, NextActionPlanAnalysis } from '@/types/nextActionPlan';
 import { getAllActiveAlerts, AlertType } from '@/utils/alertSystem';
 import { getCompanyNameSync } from '@/data/stockNames';
 import { calculatePositionSummary } from '@/lib/positionCalc';
-import { useSnooze } from '@/hooks/useSnooze';
+import { useSnooze } from '@/hooks/alert/useSnooze';
 import { useCash } from '@/hooks/auth/useCash';
 import { StockData } from '@/hooks/stock/useStockData';
 

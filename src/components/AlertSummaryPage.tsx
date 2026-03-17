@@ -9,7 +9,7 @@ import {
   getAlertStyles,
   formatAlertPrice,
   type AlertRowData,
-} from '@/hooks/useAlertSummaryData';
+} from '@/hooks/alert/useAlertSummaryData';
 
 interface AlertSummaryPageProps {
   stockData?: StockData[];

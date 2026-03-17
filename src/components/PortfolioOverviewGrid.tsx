@@ -1,6 +1,6 @@
 'use client';
 
-import { OverallSummary } from '@/hooks/usePortfolioSummary';
+import { OverallSummary } from '@/hooks/portfolio/usePortfolioSummary';
 import { formatPrice, formatShares } from '@/lib/positionCalc';
 import { formatDividendAmount, formatDividendYield } from '@/lib/dividendCalc';
 import { formatBenefitValue, formatBenefitYield } from '@/lib/shareholderCalc';

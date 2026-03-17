@@ -14,7 +14,7 @@ import {
   type DividendBenefitItem,
   type SortKey,
   type FilterType,
-} from '@/hooks/useDividendBenefitList';
+} from '@/hooks/dividend/useDividendBenefitList';
 
 interface IntegratedPosition {
   totalShares: number;

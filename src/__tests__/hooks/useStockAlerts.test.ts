@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { renderHook } from '@testing-library/react'
-import { useStockAlerts } from '@/hooks/useStockAlerts'
+import { useStockAlerts } from '@/hooks/alert/useStockAlerts'
 import { createNextActionPlan, createPositionSummary } from '../helpers/mockFactories'
 
 describe('useStockAlerts', () => {

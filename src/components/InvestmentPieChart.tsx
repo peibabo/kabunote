@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { formatPrice } from '@/lib/positionCalc';
 import { formatDividendAmount, formatDividendYield } from '@/lib/dividendCalc';
 import { formatBenefitValue, formatBenefitYield } from '@/lib/shareholderCalc';
-import { usePieChartData, type PortfolioData, type PieChartType, type ChartSlice } from '@/hooks/usePieChartData';
+import { usePieChartData, type PortfolioData, type PieChartType, type ChartSlice } from '@/hooks/portfolio/usePieChartData';
 
 interface TooltipData {
   label: string;

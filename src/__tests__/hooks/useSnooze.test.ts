@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
-import { useSnooze } from '@/hooks/useSnooze'
+import { useSnooze } from '@/hooks/alert/useSnooze'
 
 describe('useSnooze', () => {
   beforeEach(() => {

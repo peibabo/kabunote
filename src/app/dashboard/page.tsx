@@ -16,16 +16,16 @@ import { loadStockData } from '@/data/stockNames';
 import { initSoundEngine, playSound } from '@/lib/sound';
 import { GROUP_COLORS } from '@/types/favorites';
 import { useStockData } from '@/hooks/stock/useStockData';
-import { useFavoriteGroups } from '@/hooks/useFavoriteGroups';
+import { useFavoriteGroups } from '@/hooks/dashboard/useFavoriteGroups';
 import { useCash } from '@/hooks/auth/useCash';
-import { useModals } from '@/hooks/useModals';
+import { useModals } from '@/hooks/dashboard/useModals';
 import { useOnboarding } from '@/hooks/other/useOnboarding';
 import { useStockSearch } from '@/hooks/stock/useStockSearch';
-import { useAlertCounts } from '@/hooks/useAlertCounts';
-import { useCalendarData } from '@/hooks/useCalendarData';
-import { usePortfolioData } from '@/hooks/usePortfolioData';
-import { useDividendBenefitData } from '@/hooks/useDividendBenefitData';
-import { useDashboardActions } from '@/hooks/useDashboardActions';
+import { useAlertCounts } from '@/hooks/alert/useAlertCounts';
+import { useCalendarData } from '@/hooks/calendar/useCalendarData';
+import { usePortfolioData } from '@/hooks/portfolio/usePortfolioData';
+import { useDividendBenefitData } from '@/hooks/dividend/useDividendBenefitData';
+import { useDashboardActions } from '@/hooks/dashboard/useDashboardActions';
 import {
   DndContext,
   closestCenter,

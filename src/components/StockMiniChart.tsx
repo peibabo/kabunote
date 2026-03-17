@@ -12,7 +12,7 @@ import {
   ReferenceLine,
 } from 'recharts';
 import { useStockPriceHistory } from '@/hooks/stock/useStockPriceHistory';
-import { useChartMemos } from '@/hooks/useChartMemos';
+import { useChartMemos } from '@/hooks/portfolio/useChartMemos';
 import { formatPrice } from '@/lib/positionCalc';
 import { calcYAxisDomain, formatDateLabel } from '@/lib/stockMiniChartCalc';
 import { chartMemoKey } from '@/types/portfolio';

@@ -13,10 +13,10 @@ import FeedbackModal from '@/components/FeedbackModal';
 import OnboardingWizard from '@/components/OnboardingWizard';
 import SlideOutMenu from '@/components/SlideOutMenu';
 import { FavoriteGroup } from '@/types/favorites';
-import { AlertCounts } from '@/hooks/useAlertCounts';
+import { AlertCounts } from '@/hooks/alert/useAlertCounts';
 import { StockData } from '@/hooks/stock/useStockData';
-import { CalendarDataMap } from '@/hooks/useCalendarData';
-import { DividendBenefitStockData } from '@/hooks/useDividendBenefitData';
+import { CalendarDataMap } from '@/hooks/calendar/useCalendarData';
+import { DividendBenefitStockData } from '@/hooks/dividend/useDividendBenefitData';
 
 interface FullScreenModalProps {
   isOpen: boolean;

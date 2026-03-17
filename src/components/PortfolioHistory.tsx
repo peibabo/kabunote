@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { usePortfolioHistory } from '@/hooks/usePortfolioHistory';
-import { useChartMemos } from '@/hooks/useChartMemos';
+import { usePortfolioHistory } from '@/hooks/portfolio/usePortfolioHistory';
+import { useChartMemos } from '@/hooks/portfolio/useChartMemos';
 import { useAccordionState } from '@/hooks/util/useAccordionState';
 import { playSound } from '@/lib/sound';
 import PortfolioChart from '@/components/PortfolioChart';

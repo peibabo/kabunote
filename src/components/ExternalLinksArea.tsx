@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useExternalLinks } from '@/hooks/useExternalLinks';
+import { useExternalLinks } from '@/hooks/dashboard/useExternalLinks';
 import ExternalLinksSettingsModal from './ExternalLinksSettingsModal';
 
 export default function ExternalLinksArea() {

@@ -1,6 +1,6 @@
 'use client';
 
-import { OverallSummary } from '@/hooks/usePortfolioSummary';
+import { OverallSummary } from '@/hooks/portfolio/usePortfolioSummary';
 import { formatPrice } from '@/lib/positionCalc';
 
 interface CashPositionSectionProps {

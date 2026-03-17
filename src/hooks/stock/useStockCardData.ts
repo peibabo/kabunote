@@ -14,7 +14,7 @@ import { useStockPosition } from '@/hooks/stock/useStockPosition';
 import { useStockPrice } from '@/hooks/stock/useStockPrice';
 import { useStockEvent } from '@/hooks/stock/useStockEvent';
 import { useStockTag } from '@/hooks/stock/useStockTag';
-import { useStockAlerts } from '@/hooks/useStockAlerts';
+import { useStockAlerts } from '@/hooks/alert/useStockAlerts';
 import { useCash } from '@/hooks/auth/useCash';
 import { stockKey } from '@/lib/storageKeys';
 

@@ -10,7 +10,7 @@ import {
   type EventData,
   type EventSortKey,
   type EventFilterType,
-} from '@/hooks/useEventCalendarData';
+} from '@/hooks/calendar/useEventCalendarData';
 
 interface EventCalendarPageProps {
   stockSymbols: string[];
