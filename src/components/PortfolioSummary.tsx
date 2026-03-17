@@ -1,288 +1,34 @@
 'use client';
 
-import { useMemo, useState } from 'react';
 import InvestmentPieChart from '@/components/InvestmentPieChart';
-import { PortfolioTargetSummary, StockTargetInfo, Position } from '@/types/positions';
-import { formatPrice, formatShares, formatProfitLoss, calculatePortfolioTargetSummary, calculatePositionSummary, calculateProfitLoss, evaluateCashRatio, type CashRatioEvaluation } from '@/lib/positionCalc';
-import { PortfolioDividendSummary } from '@/types/dividend';
-import { calculateDividendInfo, formatDividendAmount, formatDividendYield } from '@/lib/dividendCalc';
-import { PortfolioShareholderSummary } from '@/types/shareholder';
-import { calculateShareholderBenefit, formatBenefitValue, formatBenefitYield } from '@/lib/shareholderCalc';
-import { useCash } from '@/hooks/useCash';
-import { STORAGE_KEYS } from '@/lib/storageKeys';
-import { CustomTag } from '@/types/tags';
-import { getCompanyNameSync, getSectorSync } from '@/data/stockNames';
-import { useAccordionState } from '@/hooks/useAccordionState';
+import PortfolioOverviewGrid from '@/components/PortfolioOverviewGrid';
+import CashPositionSection from '@/components/CashPositionSection';
+import TargetSummarySection from '@/components/TargetSummarySection';
 import PortfolioHistory from '@/components/PortfolioHistory';
-
-interface StockData {
-  id: string;
-  symbol: string;
-  name: string;
-  sector: string | null;
-  currentPrice: number | null;
-  targetPrice: number | null;
-  stopLossPrice: number | null;
-  positions: Position[];
-  dividend: {
-    dividendPerShare: number | null;
-    frequency: number | null;
-    rightsMonth: number | null;
-    rightsDay: number | null;
-  } | null;
-  benefit: {
-    description?: string;
-    minimumShares: number | null;
-    estimatedValue: number | null;
-    rightsMonth: number | null;
-    rightsDay: number | null;
-  } | null;
-  tags: Array<{
-    id: string;
-    label: string;
-    color: string;
-    createdAt: string;
-  }>;
-}
+import { usePortfolioSummary, StockData } from '@/hooks/usePortfolioSummary';
+import { useCash } from '@/hooks/useCash';
+import { useAccordionState } from '@/hooks/useAccordionState';
+import { STORAGE_KEYS } from '@/lib/storageKeys';
 
 interface PortfolioSummaryProps {
   portfolioData: StockData[];
 }
 
-interface OverallSummary {
-  totalInvestment: number;
-  totalCurrentValue: number;
-  totalProfitLoss: number;
-  totalProfitLossRate: number;
-  totalShares: number;
-  stocksWithPositions: number;
-  stocksWithPrices: number;
-  stocksWithoutPrices: number;
-  cashAmount: number;
-  totalAssets: number;
-  stockRatio: number;
-  cashRatio: number;
-  cashRatioEvaluation: CashRatioEvaluation;
-  dividendSummary: PortfolioDividendSummary;
-  shareholderSummary: PortfolioShareholderSummary;
-  targetSummary: PortfolioTargetSummary;
-}
-
 export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProps) {
   const { isExpanded: isChartsExpanded, toggle: toggleCharts } = useAccordionState();
   const { isExpanded: isTargetSummaryExpanded, toggle: toggleTargetSummary } = useAccordionState();
-  const [isRiskRewardExpanded, setIsRiskRewardExpanded] = useState(false);
   const { isExpanded: isCashSectionExpanded, toggle: toggleCashSection } = useAccordionState({
     storageKey: STORAGE_KEYS.CASH_SECTION_EXPANDED,
     defaultExpanded: true,
   });
-  // 現金額・Next Actionメモ管理（DB永続化 + localStorageフォールバック）
   const { cashAmount, nextActionMemo, updateCash, updateNextActionMemo } = useCash();
+  const { overallSummary, chartPortfolioData } = usePortfolioSummary(portfolioData, cashAmount);
 
-  // 全体のサマリーを計算
-  const overallSummary = useMemo<OverallSummary>(() => {
-    let totalInvestmentAll = 0;
-    let totalInvestmentWithPrice = 0;
-    let totalCurrentValue = 0;
-    let totalSharesAll = 0;
-    let stocksWithPositions = 0;
-    let stocksWithPrices = 0;
-    let stocksWithoutPrices = 0;
-
-    const cashAmountNum = parseFloat(cashAmount) || 0;
-
-    let totalAnnualDividend = 0;
-    let totalDividendInvestment = 0;
-    let stocksWithDividend = 0;
-
-    let totalEligibleStocks = 0;
-    let totalEstimatedValue = 0;
-    let totalStocksWithBenefits = 0;
-    let totalBenefitInvestment = 0;
-
-    portfolioData.forEach(stock => {
-      const positions = stock.positions || [];
-      if (positions.length === 0) return;
-
-      const summary = calculatePositionSummary(positions);
-      if (summary.totalShares === 0) return;
-
-      stocksWithPositions++;
-      totalInvestmentAll += summary.totalCost;
-      totalSharesAll += summary.totalShares;
-
-      const currentPriceNum = stock.currentPrice ?? 0;
-
-      if (currentPriceNum > 0) {
-        stocksWithPrices++;
-        totalInvestmentWithPrice += summary.totalCost;
-        totalCurrentValue += summary.totalShares * currentPriceNum;
-      } else {
-        stocksWithoutPrices++;
-      }
-
-      const perShare = stock.dividend?.dividendPerShare ?? 0;
-      const frequency = stock.dividend?.frequency ?? 0;
-
-      if (perShare > 0 && summary.totalShares > 0) {
-        stocksWithDividend++;
-        const dividendCalculation = calculateDividendInfo(
-          perShare,
-          (frequency || 1) as 1 | 2 | 4,
-          summary.totalShares,
-          summary.averagePrice
-        );
-        totalAnnualDividend += dividendCalculation.annualDividend;
-        totalDividendInvestment += summary.totalCost;
-      }
-
-      const minShares = stock.benefit?.minimumShares ?? 0;
-      const estValue = stock.benefit?.estimatedValue ?? 0;
-
-      if (minShares > 0 && estValue > 0 && summary.totalShares > 0) {
-        totalStocksWithBenefits++;
-        const benefitCalculation = calculateShareholderBenefit(
-          minShares,
-          summary.totalShares,
-          estValue,
-          summary.totalCost
-        );
-        if (benefitCalculation.isEligible) {
-          totalEligibleStocks++;
-          totalEstimatedValue += benefitCalculation.estimatedValue;
-        }
-        totalBenefitInvestment += summary.totalCost;
-      }
-    });
-
-    const totalProfitLoss = totalCurrentValue - totalInvestmentWithPrice;
-    const totalProfitLossRate = totalInvestmentWithPrice > 0 ? (totalProfitLoss / totalInvestmentWithPrice) * 100 : 0;
-
-    const averageDividendYield = totalDividendInvestment > 0
-      ? (totalAnnualDividend / totalDividendInvestment) * 100
-      : 0;
-
-    const dividendSummary: PortfolioDividendSummary = {
-      totalAnnualDividend,
-      averageDividendYield,
-      totalAfterTaxAmount: totalAnnualDividend * (1 - 0.20315),
-      stocksWithDividend,
-      totalStocksWithPositions: stocksWithPositions
-    };
-
-    const averageYield = totalBenefitInvestment > 0
-      ? (totalEstimatedValue / totalBenefitInvestment) * 100
-      : 0;
-
-    const shareholderSummary: PortfolioShareholderSummary = {
-      totalEligibleStocks,
-      totalEstimatedValue,
-      totalStocksWithBenefits,
-      totalStocksWithPositions: stocksWithPositions,
-      averageYield
-    };
-
-    // 損益目標サマリー
-    const stocksTargetData: StockTargetInfo[] = portfolioData.map(stock => {
-      const positions = stock.positions || [];
-      const positionSummary = calculatePositionSummary(positions);
-
-      const targetPrice: number | undefined = stock.targetPrice ?? undefined;
-      const stopLossPrice: number | undefined = stock.stopLossPrice ?? undefined;
-
-      const profitLossInfo = calculateProfitLoss(positionSummary, targetPrice, stopLossPrice);
-
-      return {
-        symbol: stock.symbol,
-        positionSummary,
-        targetPrice,
-        stopLossPrice,
-        profitLossInfo
-      };
-    });
-
-    const targetSummary = calculatePortfolioTargetSummary(stocksTargetData);
-
-    const evaluationValue = totalCurrentValue > 0 ? totalCurrentValue : totalInvestmentAll;
-    const totalAssetsValue = evaluationValue + cashAmountNum;
-    const stockRatioValue = totalAssetsValue > 0 ? (evaluationValue / totalAssetsValue) * 100 : 0;
-    const cashRatioValue = totalAssetsValue > 0 ? (cashAmountNum / totalAssetsValue) * 100 : 0;
-    const cashRatioEvaluationValue = evaluateCashRatio(cashRatioValue, cashAmountNum);
-
-    return {
-      totalInvestment: totalInvestmentAll,
-      totalCurrentValue,
-      totalProfitLoss,
-      totalProfitLossRate,
-      totalShares: totalSharesAll,
-      stocksWithPositions,
-      stocksWithPrices,
-      stocksWithoutPrices,
-      cashAmount: cashAmountNum,
-      totalAssets: totalAssetsValue,
-      stockRatio: stockRatioValue,
-      cashRatio: cashRatioValue,
-      cashRatioEvaluation: cashRatioEvaluationValue,
-      dividendSummary,
-      shareholderSummary,
-      targetSummary
-    };
-  }, [portfolioData, cashAmount]);
-
-  // InvestmentPieChart用データを構築（stockPositionsのポジション + DBの配当・優待データ）
-  const chartPortfolioData = useMemo(() => {
-    return portfolioData.map(stock => {
-      const dividend = stock.dividend?.dividendPerShare
-        ? { dividendPerShare: stock.dividend.dividendPerShare, frequency: stock.dividend.frequency }
-        : null;
-
-      const benefit = stock.benefit?.minimumShares
-        ? { minimumShares: stock.benefit.minimumShares, estimatedValue: stock.benefit.estimatedValue }
-        : null;
-
-      const csvName = getCompanyNameSync(stock.symbol);
-      const resolvedName = (stock.name && stock.name !== stock.symbol)
-        ? stock.name
-        : (csvName !== '読み込み中...' && csvName !== '銘柄情報なし' ? csvName : stock.symbol);
-
-      return {
-        symbol: stock.symbol,
-        name: resolvedName,
-        positions: stock.positions || [],
-        currentPrice: stock.currentPrice,
-        sector: stock.sector || getSectorSync(stock.symbol),
-        customTags: (stock.tags || []).map(tag => ({
-          id: tag.id,
-          label: tag.label,
-          color: tag.color as CustomTag['color'],
-          createdAt: tag.createdAt,
-        })),
-        dividend,
-        benefit,
-      };
-    });
-  }, [portfolioData]);
-
-  // 銘柄が1つもない場合は表示しない（現金管理セクションは常に表示）
   if (portfolioData.length === 0) {
     return null;
   }
 
   const hasPositions = overallSummary.stocksWithPositions > 0;
-
-  // 損益の色を決定
-  const getProfitLossColor = (value: number) => {
-    if (value > 0) return 'text-green-400';
-    if (value < 0) return 'text-red-400';
-    return 'text-gray-300';
-  };
-
-  // 損益率の背景色を決定
-  const getProfitLossBgColor = (rate: number) => {
-    if (rate > 0) return 'bg-green-900 border-green-700';
-    if (rate < 0) return 'bg-red-900 border-red-700';
-    return 'bg-gray-800 border-gray-600';
-  };
 
   return (
     <div className="bg-gray-800 rounded-lg p-4 mb-6 font-thin">
@@ -299,474 +45,28 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
       </div>
 
       {hasPositions && (
-        <>
-      {/* 現在の株価未設定の誘導メッセージ */}
-      {overallSummary.stocksWithoutPrices > 0 && (
-        <div className="mb-4 px-3 py-2 bg-blue-900 bg-opacity-30 border border-blue-700 rounded-lg text-sm text-blue-300">
-          <div className="flex items-center gap-2">
-            <span>💡</span>
-            <span>
-              {overallSummary.stocksWithoutPrices}銘柄で現在の株価が未設定です。
-              「📊 シナリオ」タブで現在の株価を設定すると損益が表示されます
-            </span>
-          </div>
-        </div>
+        <PortfolioOverviewGrid overallSummary={overallSummary} />
       )}
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        {/* 総投資額 */}
-        <div className="bg-gray-700 rounded-lg p-3">
-          <div className="text-xs text-gray-400 mb-1">総投資額</div>
-          <div className="text-base sm:text-lg font-medium text-white">
-            {formatPrice(overallSummary.totalInvestment)}円
-          </div>
-          <div className="text-xs text-gray-500 mt-1 font-medium">
-            {formatShares(overallSummary.totalShares)}株
-          </div>
-        </div>
+      <CashPositionSection
+        overallSummary={overallSummary}
+        cashAmount={cashAmount}
+        nextActionMemo={nextActionMemo}
+        updateCash={updateCash}
+        updateNextActionMemo={updateNextActionMemo}
+        isCashSectionExpanded={isCashSectionExpanded}
+        toggleCashSection={toggleCashSection}
+      />
 
-        {/* 現在評価額 */}
-        <div className="bg-gray-700 rounded-lg p-3">
-          <div className="text-xs text-gray-400 mb-1">現在評価額</div>
-          <div className="text-base sm:text-lg font-medium text-blue-300">
-            {overallSummary.totalCurrentValue > 0
-              ? `${formatPrice(overallSummary.totalCurrentValue)}円`
-              : '未設定'
-            }
-          </div>
-          {overallSummary.totalCurrentValue > 0 && (
-            <div className="text-xs text-gray-500 mt-1">
-              現在の株価ベース
-            </div>
-          )}
-        </div>
-
-        {/* 損益額 */}
-        <div className="bg-gray-700 rounded-lg p-3">
-          <div className="text-xs text-gray-400 mb-1">損益額</div>
-          {overallSummary.totalCurrentValue > 0 ? (
-            <div>
-              <div className={`text-base sm:text-lg font-medium ${getProfitLossColor(overallSummary.totalProfitLoss)}`}>
-                {overallSummary.totalProfitLoss >= 0 ? '+' : ''}
-                {formatPrice(overallSummary.totalProfitLoss)}円
-              </div>
-              {overallSummary.totalProfitLoss > 0 && (
-                <div className="text-sm text-green-200 mt-1 font-medium">
-                  税引後 {overallSummary.totalProfitLoss >= 0 ? '+' : ''}
-                  {formatPrice(Math.round(overallSummary.totalProfitLoss * 0.79685))}円
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="text-base sm:text-lg font-medium text-gray-500">
-              未設定
-            </div>
-          )}
-        </div>
-
-        {/* 損益率 */}
-        <div className={`rounded-lg p-3 border ${getProfitLossBgColor(overallSummary.totalProfitLossRate)}`}>
-          <div className="text-xs text-gray-300 mb-1">損益率</div>
-          {overallSummary.totalCurrentValue > 0 ? (
-            <div className={`text-base sm:text-lg font-medium ${getProfitLossColor(overallSummary.totalProfitLoss)}`}>
-              {overallSummary.totalProfitLossRate >= 0 ? '+' : ''}
-              {overallSummary.totalProfitLossRate.toFixed(2)}%
-            </div>
-          ) : (
-            <div className="text-base sm:text-lg font-medium text-gray-500">
-              未設定
-            </div>
-          )}
-        </div>
-
-        {/* 配当サマリー */}
-        <div className="bg-gray-700 rounded-lg p-3">
-          <div className="text-xs text-gray-400 mb-1">年間配当金額</div>
-          {overallSummary.dividendSummary.stocksWithDividend > 0 ? (
-            <>
-              <div className="text-base sm:text-lg font-medium text-green-300">
-                {formatDividendAmount(overallSummary.dividendSummary.totalAnnualDividend)}円
-              </div>
-              <div className="text-sm text-green-200 mt-1 font-medium">
-                税引後 {formatDividendAmount(overallSummary.dividendSummary.totalAfterTaxAmount)}円
-              </div>
-              <div className="text-xs text-gray-500 mt-1">
-                利回り <span className="font-medium">{formatDividendYield(overallSummary.dividendSummary.averageDividendYield)}%</span>
-              </div>
-              <div className="text-xs text-gray-400 mt-1 font-medium">
-                {overallSummary.dividendSummary.stocksWithDividend}/{overallSummary.dividendSummary.totalStocksWithPositions}銘柄設定済
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="text-base sm:text-lg font-medium text-gray-500">
-                未設定
-              </div>
-              <div className="text-xs text-gray-500 mt-1">
-                配当情報なし
-              </div>
-            </>
-          )}
-        </div>
-
-        {/* 株主優待サマリー */}
-        <div className="bg-gray-700 rounded-lg p-3">
-          <div className="text-xs text-gray-400 mb-1">年間優待価値</div>
-          {overallSummary.shareholderSummary.totalStocksWithBenefits > 0 ? (
-            <>
-              <div className="text-base sm:text-lg font-medium text-purple-300">
-                {formatBenefitValue(overallSummary.shareholderSummary.totalEstimatedValue)}円
-              </div>
-              <div className="text-xs text-gray-500 mt-1">
-                優待利回り <span className="font-medium">{formatBenefitYield(overallSummary.shareholderSummary.averageYield)}%</span>
-              </div>
-              <div className="text-sm text-purple-300 mt-1 font-medium">
-                取得可能 {overallSummary.shareholderSummary.totalEligibleStocks}銘柄
-              </div>
-              <div className="text-xs text-gray-400 mt-1 font-medium">
-                {overallSummary.shareholderSummary.totalStocksWithBenefits}/{overallSummary.shareholderSummary.totalStocksWithPositions}銘柄設定済
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="text-base sm:text-lg font-medium text-gray-500">
-                未設定
-              </div>
-              <div className="text-xs text-gray-500 mt-1">
-                株主優待情報なし
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-        </>
-      )}
-
-      {/* 余力現金・キャッシュポジションカード */}
-      <div className="mt-2">
-        {/* アコーディオンヘッダー */}
-        <button
-          onClick={toggleCashSection}
-          className="w-full flex items-center justify-between p-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors cursor-pointer"
-        >
-          <div className="flex items-center gap-2">
-            <span className="text-lg">💼</span>
-            <h3 className="text-sm font-medium text-gray-200">
-              余力現金・キャッシュポジション
-            </h3>
-            {!isCashSectionExpanded && overallSummary.cashAmount > 0 && (
-              <span className="text-xs font-medium text-yellow-300 hidden sm:inline">
-                {formatPrice(overallSummary.cashAmount)}円（現金{overallSummary.cashRatio.toFixed(1)}%）
-              </span>
-            )}
-          </div>
-          <div className={`transform transition-transform duration-200 text-gray-400 ${
-            isCashSectionExpanded ? 'rotate-180' : 'rotate-0'
-          }`}>
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-              <path d="M4 6l4 4 4-4H4z"/>
-            </svg>
-          </div>
-        </button>
-
-        {/* アコーディオンコンテンツ */}
-        <div className={`overflow-hidden transition-all duration-300 ease-in-out ${
-          isCashSectionExpanded ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'
-        }`}>
-          <div className="bg-gray-700 rounded-lg p-3">
-            <div className="space-y-2 mb-2">
-              {/* 現金入力行 */}
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4">
-                <div className="flex items-center gap-2">
-                  <label className="text-xs text-gray-300 whitespace-nowrap">投資余力現金:</label>
-                  <input
-                    type="text"
-                    value={cashAmount}
-                    onChange={(e) => updateCash(e.target.value)}
-                    placeholder="0"
-                    className="w-28 text-lg bg-gray-600 border border-gray-500 rounded px-2 py-1.5 text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none text-right"
-                  />
-                  <span className="text-xs text-gray-400">円</span>
-                </div>
-
-                {/* Total Assets表示（現金が設定されている場合） */}
-                {overallSummary.cashAmount > 0 && (
-                  <div className="text-xs font-medium text-yellow-300 whitespace-nowrap">
-                    総資産: <span className="text-lg font-normal">{formatPrice(overallSummary.totalAssets)}</span> 円
-                  </div>
-                )}
-              </div>
-
-              {/* Next Action メモ */}
-              <div className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-center gap-1 sm:gap-2">
-                <label className="text-xs font-semibold text-gray-300 whitespace-nowrap">Next Action メモ:</label>
-                <input
-                  type="text"
-                  value={nextActionMemo}
-                  onChange={(e) => updateNextActionMemo(e.target.value)}
-                  placeholder="この余力現金は○○株が◯円になったときに買い増しする"
-                  maxLength={100}
-                  className="w-full sm:flex-1 max-w-2xl text-sm bg-gray-600 border border-gray-500 rounded px-2 py-1.5 text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
-                />
-              </div>
-            </div>
-
-            {/* キャッシュポジション可視化（現金が設定されている場合のみプログレスバー表示） */}
-            {overallSummary.cashAmount > 0 && (
-              <>
-                {/* 比率表示 */}
-                <div className="flex justify-between items-center text-xs font-medium mb-1">
-                  <span className="text-blue-300">
-                    株式: {overallSummary.stockRatio.toFixed(1)}%
-                  </span>
-                  <span className="text-green-400">
-                    現金: {overallSummary.cashRatio.toFixed(1)}%
-                  </span>
-                </div>
-
-                {/* 極細プログレスバー */}
-                <div className="relative mb-2">
-                  <div className="w-full h-1 bg-green-400 rounded-full overflow-hidden">
-                    <div
-                      className="h-full transition-all duration-500 rounded-full"
-                      style={{
-                        width: `${overallSummary.stockRatio}%`,
-                        background: 'linear-gradient(to right, #3b82f6, #60a5fa)',
-                        boxShadow: '0 0 10px rgba(59, 130, 246, 0.5)'
-                      }}
-                    ></div>
-                  </div>
-                </div>
-              </>
-            )}
-
-            {/* 現金比率評価（常に表示） */}
-            <div className="bg-gray-800 border border-gray-600 rounded-lg p-2.5 text-center">
-              <div className="flex items-center justify-center gap-1.5 mb-1.5">
-                <span className="text-sm">{overallSummary.cashRatioEvaluation.icon}</span>
-                <span className={`text-xs font-medium ${overallSummary.cashRatioEvaluation.color}`}>
-                  {overallSummary.cashAmount === 0 ? 'ポートフォリオ分析' : '現金比率評価'}
-                </span>
-              </div>
-              <p className="text-xs text-gray-300 leading-snug">
-                {overallSummary.cashRatioEvaluation.message}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* 損益目標サマリーセクション */}
-      {(overallSummary.targetSummary.targetSetCount > 0 || overallSummary.targetSummary.stopLossSetCount > 0) && (
-        <div className="mt-2">
-          {/* アコーディオンヘッダー */}
-          <button
-            onClick={toggleTargetSummary}
-            className="w-full flex items-center justify-between p-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors cursor-pointer"
-          >
-            <div className="flex items-center gap-2">
-              <span className="text-lg">🎯</span>
-              <h3 className="text-sm font-medium text-gray-200">
-                損益目標サマリー
-              </h3>
-              <span className="text-xs text-gray-400 hidden sm:inline">
-                ({overallSummary.targetSummary.targetSetCount + overallSummary.targetSummary.stopLossSetCount}/{overallSummary.targetSummary.totalStocksWithPosition}銘柄で設定済み)
-              </span>
-            </div>
-            <div className={`transform transition-transform duration-200 text-gray-400 ${
-              isTargetSummaryExpanded ? 'rotate-180' : 'rotate-0'
-            }`}>
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                <path d="M4 6l4 4 4-4H4z"/>
-              </svg>
-            </div>
-          </button>
-
-          {/* アコーディオンコンテンツ */}
-          <div className={`overflow-hidden transition-all duration-300 ease-in-out ${
-            isTargetSummaryExpanded
-              ? 'max-h-[2000px] opacity-100'
-              : 'max-h-0 opacity-0'
-          }`}>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* 利確目標合計 */}
-            {overallSummary.targetSummary.targetSetCount > 0 && (
-              <div className="bg-green-900 bg-opacity-30 border border-green-700 rounded-lg p-4 text-center">
-                <div className="text-xs text-green-300 mb-2">利確目標達成時</div>
-                <div className="text-xl font-medium text-green-300">
-                  {formatProfitLoss(overallSummary.targetSummary.totalTargetProfit)}円
-                </div>
-                {overallSummary.targetSummary.totalTargetProfit > 0 && (
-                  <div className="text-sm text-green-200 mt-1">
-                    税引後 {formatProfitLoss(Math.round(overallSummary.targetSummary.totalTargetProfit * 0.79685))}円
-                  </div>
-                )}
-                <div className="text-sm text-green-400 mt-1">
-                  {overallSummary.targetSummary.targetSetCount}銘柄で設定
-                </div>
-              </div>
-            )}
-
-            {/* 損切り合計 */}
-            {overallSummary.targetSummary.stopLossSetCount > 0 && (
-              <div className="bg-red-900 bg-opacity-30 border border-red-700 rounded-lg p-4 text-center">
-                <div className="text-xs text-red-300 mb-2">損切り実行時</div>
-                <div className="text-xl font-medium text-red-300">
-                  {formatProfitLoss(overallSummary.targetSummary.totalStopLoss)}円
-                </div>
-                <div className="text-sm text-red-400 mt-1">
-                  {overallSummary.targetSummary.stopLossSetCount}銘柄で設定
-                </div>
-              </div>
-            )}
-
-            {/* リスクリワード比（クリッカブル） */}
-            {overallSummary.targetSummary.riskRewardRatio !== null && (
-              <button
-                onClick={() => setIsRiskRewardExpanded(!isRiskRewardExpanded)}
-                className="cursor-pointer bg-blue-900 bg-opacity-30 border border-blue-700 hover:border-blue-600 rounded-lg p-4 w-full transition-all duration-200 hover:bg-blue-800 hover:bg-opacity-30"
-              >
-                <div className="text-xs text-blue-300 mb-2">リスクリワード比</div>
-                <div className="text-xl font-medium text-blue-300">
-                  {overallSummary.targetSummary.riskRewardRatio.toFixed(2)}
-                </div>
-                <div className="text-sm text-blue-400 mt-1 flex items-center justify-center gap-2">
-                  <span>
-                    {overallSummary.targetSummary.riskRewardRatio >= 2 ? '良好' :
-                     overallSummary.targetSummary.riskRewardRatio >= 1 ? '適正' : 'リスク高'}
-                  </span>
-                  <div className={`transform transition-transform duration-200 ${
-                    isRiskRewardExpanded ? 'rotate-180' : 'rotate-0'
-                  }`}>
-                    <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
-                      <path d="M4 6l4 4 4-4H4z"/>
-                    </svg>
-                  </div>
-                </div>
-              </button>
-            )}
-          </div>
-
-          {/* ネオンライトリスクリワードプログレスバー（アコーディオン） */}
-          {overallSummary.targetSummary.riskRewardRatio !== null && (
-            <div className={`overflow-hidden transition-all duration-300 ease-in-out ${
-              isRiskRewardExpanded
-                ? 'max-h-96 opacity-100 mt-4'
-                : 'max-h-0 opacity-0'
-            }`}>
-              <div className="p-4 bg-gray-900 border border-gray-700 rounded-lg">
-                <div className="flex items-center gap-3 mb-4">
-                  <span className="text-lg">⚡</span>
-                  <h4 className="text-lg font-semibold text-white">リスクリワード可視化</h4>
-                  <span className="text-xs text-gray-400">
-                    ポートフォリオ全体の損益バランス
-                  </span>
-                </div>
-
-                {/* プログレスバー */}
-                <div className="relative">
-                <div className="w-full h-6 bg-gradient-to-r from-red-900 via-gray-800 to-green-900 rounded-full relative overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-r from-red-500/20 via-transparent to-green-500/20 rounded-full"></div>
-
-                  <div className="absolute left-1/2 top-0 w-0.5 h-full bg-white transform -translate-x-0.5">
-                    <div className="absolute -top-1 left-1/2 w-2 h-2 bg-white rounded-full transform -translate-x-1/2 animate-pulse"
-                         style={{
-                           boxShadow: '0 0 10px rgba(255, 255, 255, 0.8), 0 0 20px rgba(255, 255, 255, 0.4)'
-                         }}></div>
-                  </div>
-
-                  {(() => {
-                    const ratio = overallSummary.targetSummary.riskRewardRatio;
-                    const maxRatio = 3;
-                    const position = Math.min(100, Math.max(0,
-                      50 + ((ratio - 1) / (maxRatio - 1)) * 50
-                    ));
-
-                    return (
-                      <div
-                        className="absolute top-0 h-full w-1 transform -translate-x-0.5 transition-all duration-1000"
-                        style={{
-                          left: `${position}%`,
-                          background: ratio >= 2
-                            ? 'linear-gradient(to bottom, #10b981, #059669)'
-                            : ratio >= 1.5
-                            ? 'linear-gradient(to bottom, #f59e0b, #d97706)'
-                            : 'linear-gradient(to bottom, #ef4444, #dc2626)',
-                          boxShadow: ratio >= 2
-                            ? '0 0 20px rgba(16, 185, 129, 0.8), 0 0 40px rgba(16, 185, 129, 0.4)'
-                            : ratio >= 1.5
-                            ? '0 0 20px rgba(245, 158, 11, 0.8), 0 0 40px rgba(245, 158, 11, 0.4)'
-                            : '0 0 20px rgba(239, 68, 68, 0.8), 0 0 40px rgba(239, 68, 68, 0.4)'
-                        }}
-                      >
-                        <div
-                          className="absolute -top-1 left-1/2 w-3 h-3 rounded-full transform -translate-x-1/2 animate-pulse"
-                          style={{
-                            background: ratio >= 2
-                              ? 'linear-gradient(to bottom, #10b981, #059669)'
-                              : ratio >= 1.5
-                              ? 'linear-gradient(to bottom, #f59e0b, #d97706)'
-                              : 'linear-gradient(to bottom, #ef4444, #dc2626)',
-                            boxShadow: ratio >= 2
-                              ? '0 0 15px rgba(16, 185, 129, 1), 0 0 30px rgba(16, 185, 129, 0.6)'
-                              : ratio >= 1.5
-                              ? '0 0 15px rgba(245, 158, 11, 1), 0 0 30px rgba(245, 158, 11, 0.6)'
-                              : '0 0 15px rgba(239, 68, 68, 1), 0 0 30px rgba(239, 68, 68, 0.6)'
-                          }}
-                        ></div>
-                      </div>
-                    );
-                  })()}
-                </div>
-
-                <div className="flex justify-between items-center mt-3 text-xs">
-                  <div className="text-red-300 font-medium flex flex-col items-center">
-                    <span>🔻 高リスク</span>
-                    <span className="text-red-400 mt-1">0:1</span>
-                  </div>
-                  <div className="text-white font-medium flex flex-col items-center">
-                    <span>⚖️ 取得価格</span>
-                    <span className="text-gray-300 mt-1">基準点</span>
-                  </div>
-                  <div className="text-green-300 font-medium flex flex-col items-center">
-                    <span>💰 安全ゾーン</span>
-                    <span className="text-green-400 mt-1">3:1+</span>
-                  </div>
-                </div>
-
-                <div className="mt-4 text-center">
-                  <div className="text-2xl font-bold text-white mb-2">
-                    {overallSummary.targetSummary.riskRewardRatio.toFixed(2)}
-                  </div>
-                  <div className={`text-sm font-medium ${
-                    overallSummary.targetSummary.riskRewardRatio >= 2
-                      ? 'text-green-400'
-                      : overallSummary.targetSummary.riskRewardRatio >= 1.5
-                      ? 'text-yellow-400'
-                      : 'text-red-400'
-                  }`}>
-                    {overallSummary.targetSummary.riskRewardRatio >= 2
-                      ? '🟢 優秀なリスクリワード比'
-                      : overallSummary.targetSummary.riskRewardRatio >= 1.5
-                      ? '🟡 適正なリスクリワード比'
-                      : '🔴 リスクが高い設定です'}
-                  </div>
-                  <div className="text-xs text-gray-400 mt-1">
-                    利益可能性 vs 損失リスクの比率
-                  </div>
-                </div>
-                </div>
-              </div>
-            </div>
-          )}
-          </div>
-        </div>
-      )}
+      <TargetSummarySection
+        targetSummary={overallSummary.targetSummary}
+        isTargetSummaryExpanded={isTargetSummaryExpanded}
+        toggleTargetSummary={toggleTargetSummary}
+      />
 
       {/* 円グラフセクション（アコーディオン） */}
       {overallSummary.stocksWithPositions > 0 && (
         <div className="mt-2">
-          {/* アコーディオンヘッダー */}
           <button
             onClick={toggleCharts}
             className="w-full flex items-center justify-between p-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors cursor-pointer"
@@ -789,7 +89,6 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
             </div>
           </button>
 
-          {/* アコーディオンコンテンツ */}
           <div className={`overflow-hidden transition-all duration-300 ease-in-out ${
             isChartsExpanded
               ? 'max-h-[3000px] opacity-100 mt-4'
@@ -806,11 +105,9 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
         </div>
       )}
 
-      {/* ポートフォリオ推移グラフセクション */}
       {hasPositions && (
         <PortfolioHistory />
       )}
-
     </div>
   );
 }
