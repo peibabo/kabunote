@@ -5,6 +5,8 @@ import StockCard from '@/components/stock/StockCard';
 import SearchBar from '@/components/stock/SearchBar';
 import InvestmentCalendar from '@/components/calendar/InvestmentCalendar';
 import DailyQuote from '@/components/settings/DailyQuote';
+import LevelBadge from '@/components/settings/LevelBadge';
+import LevelUpCelebration from '@/components/settings/LevelUpCelebration';
 import PortfolioSummary from '@/components/portfolio/PortfolioSummary';
 import FloatingAddButton from '@/components/stock/FloatingAddButton';
 import FloatingSnapshotButton from '@/components/settings/FloatingSnapshotButton';
@@ -116,9 +118,15 @@ export default function Home() {
           <ExternalLinksArea />
         </div>
 
+        <div className="mb-2">
+          <LevelBadge />
+        </div>
+
         <div className="mb-4">
           <DailyQuote />
         </div>
+
+        <LevelUpCelebration />
 
         <div className="portfolio-summary">
           <PortfolioSummary portfolioData={stockData} />

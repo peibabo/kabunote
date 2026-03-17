@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { apiFetch } from '@/lib/apiClient'
 import { useAsyncState } from '../util/useAsyncState'
 import { useAutoSave } from '../util/useAutoSave'
+import { grantXp } from '@/lib/gamification'
 import {
   ShareholderMeetingSettings,
   createDefaultRightsSettings
@@ -86,6 +87,7 @@ export function useStockEvent(stockId: string, options?: UseStockEventOptions): 
               }
             }
           }))
+          grantXp('EVENT_REGISTER')
         }
       })
     },
@@ -122,6 +124,7 @@ export function useStockEvent(stockId: string, options?: UseStockEventOptions): 
               }
             }
           }))
+          grantXp('EVENT_REGISTER')
         }
       })
     },

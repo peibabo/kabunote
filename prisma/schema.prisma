@@ -32,6 +32,8 @@ model User {
   externalLinks UserExternalLink[]
   portfolioSnapshots PortfolioSnapshot[]
   chartMemos         ChartMemo[]
+  gamification       UserGamification?
+  xpActivityLogs     XpActivityLog[]
 
   @@map("app_users")
 }
@@ -304,6 +306,40 @@ model ChartMemo {
 
   @@unique([userId, snapshotDate, chartType, symbol])
   @@map("chart_memos")
+}
+
+// ゲーミフィケーション状態
+model UserGamification {
+  id             String    @id @default(cuid())
+  userId         String    @unique @map("user_id")
+  totalXp        Int       @default(0) @map("total_xp")
+  level          Int       @default(1)
+  dailyXp        Int       @default(0) @map("daily_xp")
+  dailyXpDate    DateTime  @default(now()) @map("daily_xp_date") @db.Date
+  currentStreak  Int       @default(0) @map("current_streak")
+  longestStreak  Int       @default(0) @map("longest_streak")
+  lastActiveDate DateTime? @map("last_active_date") @db.Date
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_gamification")
+}
+
+// XPアクティビティログ
+model XpActivityLog {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  actionType  String   @map("action_type")
+  xpEarned    Int      @map("xp_earned")
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("xp_activity_logs")
 }
 
 // Enums

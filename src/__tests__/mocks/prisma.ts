@@ -34,6 +34,8 @@ export const prismaMock = {
   chartMemo: createMockModel(),
   portfolioSnapshot: createMockModel(),
   stockPriceSnapshot: { ...createMockModel(), createMany: vi.fn() },
+  userGamification: createMockModel(),
+  xpActivityLog: createMockModel(),
   $transaction: vi.fn((arg: unknown) => {
     if (typeof arg === 'function') return arg(prismaMock)
     if (Array.isArray(arg)) return Promise.all(arg)

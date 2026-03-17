@@ -4,6 +4,7 @@ import { useAsyncState } from '../util/useAsyncState'
 import { useAutoSave } from '../util/useAutoSave'
 import { NextActionPlan } from '@/types/nextActionPlan'
 import { playSound } from '@/lib/sound'
+import { grantXp } from '@/lib/gamification'
 
 interface UseNextActionPlanReturn {
   nextActionPlan: NextActionPlan | null
@@ -77,6 +78,7 @@ export function useNextActionPlan(stockId: string, options?: UseNextActionPlanOp
               }
             }
           }))
+          grantXp('NEXT_ACTION')
         }
       })
     },

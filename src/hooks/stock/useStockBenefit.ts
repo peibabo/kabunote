@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { apiFetch } from '@/lib/apiClient'
 import { useAsyncState } from '../util/useAsyncState'
 import { useAutoSave } from '../util/useAutoSave'
+import { grantXp } from '@/lib/gamification'
 import { ShareholderRightsSettings, createDefaultRightsSettings } from '@/types/rightsDate'
 
 interface BenefitState {
@@ -107,6 +108,7 @@ export function useStockBenefit(stockId: string, options?: UseStockBenefitOption
             }
           }
         }))
+        grantXp('BENEFIT_REGISTER')
       })
     },
   })

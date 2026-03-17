@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { apiFetch } from '@/lib/apiClient'
 import { useAsyncState } from '../util/useAsyncState'
 import { useAutoSave } from '../util/useAutoSave'
+import { grantXp } from '@/lib/gamification'
 import { DividendRightsSettings, createDefaultRightsSettings } from '@/types/rightsDate'
 
 interface DividendState {
@@ -99,6 +100,7 @@ export function useStockDividend(stockId: string, options?: UseStockDividendOpti
             }
           }
         }))
+        grantXp('DIVIDEND_REGISTER')
       })
     },
   })

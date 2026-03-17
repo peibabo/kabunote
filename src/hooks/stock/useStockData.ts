@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { createClient } from '@/lib/supabase-client';
 import { toast } from '@/lib/toast';
+import { grantXp } from '@/lib/gamification';
 
 export interface StockData {
   id: string;
@@ -213,6 +214,7 @@ export function useStockData(): UseStockDataReturn {
           prev.map(s => s.id === tempId ? { ...s, id: result.data.id } : s)
         );
       }
+      grantXp('STOCK_ADD')
     } catch (err) {
       console.error('❌ 銘柄のDB保存に失敗:', err);
       // ロールバック
