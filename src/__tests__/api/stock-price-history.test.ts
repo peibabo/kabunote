@@ -89,15 +89,16 @@ describe('GET /api/stocks/[stockId]/price-history', () => {
     expect(callArgs.where.snapshotDate.gte).toBeInstanceOf(Date)
   })
 
-  it('成功: range=ALL で全件取得', async () => {
+  it('成功: range=2Y で2年分取得', async () => {
     prismaMock.portfolioSnapshot.findMany.mockResolvedValue([] as never)
 
-    const req = createRequest('GET', 'http://localhost:3000/api/stocks/7203/price-history?range=ALL')
+    const req = createRequest('GET', 'http://localhost:3000/api/stocks/7203/price-history?range=2Y')
     const res = await GET(req, createParams({ stockId: '7203' }))
     expect(res.status).toBe(200)
 
     const calls = prismaMock.portfolioSnapshot.findMany.mock.calls
     const callArgs = calls[calls.length - 1][0]
-    expect(callArgs.where.snapshotDate).toBeUndefined()
+    expect(callArgs.where.snapshotDate).toBeDefined()
+    expect(callArgs.where.snapshotDate.gte).toBeInstanceOf(Date)
   })
 })

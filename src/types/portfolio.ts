@@ -19,7 +19,7 @@ export interface StockSnapshotData {
   cost: number;
 }
 
-export type HistoryRange = '1W' | '1M' | '3M' | '6M' | '1Y' | 'ALL';
+export type HistoryRange = '1W' | '1M' | '3M' | '6M' | '1Y' | '2Y';
 
 export type ChartType = 'value' | 'netAssets' | 'profitLoss' | 'stocks';
 

@@ -31,7 +31,7 @@ const RANGE_OPTIONS: { key: HistoryRange; label: string }[] = [
   { key: '3M', label: '3M' },
   { key: '6M', label: '6M' },
   { key: '1Y', label: '1Y' },
-  { key: 'ALL', label: '全期間' },
+  { key: '2Y', label: '2Y' },
 ];
 
 function formatYAxisValue(value: number): string {

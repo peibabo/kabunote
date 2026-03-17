@@ -214,6 +214,6 @@ describe('RANGE_DAYS', () => {
     expect(RANGE_DAYS['3M']).toBe(90)
     expect(RANGE_DAYS['6M']).toBe(180)
     expect(RANGE_DAYS['1Y']).toBe(365)
-    expect(RANGE_DAYS['ALL']).toBe(0)
+    expect(RANGE_DAYS['2Y']).toBe(730)
   })
 })

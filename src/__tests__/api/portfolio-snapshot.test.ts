@@ -34,6 +34,8 @@ describe('POST /api/portfolio/snapshot', () => {
 
     prismaMock.stockPriceSnapshot.deleteMany.mockResolvedValue({ count: 0 })
     prismaMock.stockPriceSnapshot.createMany.mockResolvedValue({ count: 1 })
+    prismaMock.portfolioSnapshot.deleteMany.mockResolvedValue({ count: 0 })
+    prismaMock.chartMemo.deleteMany.mockResolvedValue({ count: 0 })
 
     const req = createRequest('POST', 'http://localhost:3000/api/portfolio/snapshot')
     const res = await POST(req)
@@ -109,20 +111,21 @@ describe('GET /api/portfolio/history', () => {
     expect(json.data[0].stockSnapshots[0].symbol).toBe('7203')
   })
 
-  it('成功: range=ALL で全件取得', async () => {
+  it('成功: range=2Y で2年分取得', async () => {
     prismaMock.portfolioSnapshot.findMany.mockResolvedValue([] as never)
 
-    const req = createRequest('GET', 'http://localhost:3000/api/portfolio/history?range=ALL')
+    const req = createRequest('GET', 'http://localhost:3000/api/portfolio/history?range=2Y')
     const res = await GET(req)
     const json = await getJson(res)
 
     expect(res.status).toBe(200)
     expect(json.data).toHaveLength(0)
 
-    // ALL の場合は snapshotDate フィルタなし
+    // 2Y の場合は snapshotDate フィルタあり（730日前から）
     const calls = prismaMock.portfolioSnapshot.findMany.mock.calls
     const callArgs = calls[calls.length - 1][0]
-    expect(callArgs.where.snapshotDate).toBeUndefined()
+    expect(callArgs.where.snapshotDate).toBeDefined()
+    expect(callArgs.where.snapshotDate.gte).toBeInstanceOf(Date)
   })
 
   it('デフォルト: rangeなしの場合は1M', async () => {
