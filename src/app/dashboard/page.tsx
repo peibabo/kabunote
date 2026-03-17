@@ -1,16 +1,16 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import StockCard from '@/components/StockCard';
-import SearchBar from '@/components/SearchBar';
+import StockCard from '@/components/stock/StockCard';
+import SearchBar from '@/components/stock/SearchBar';
 import InvestmentCalendar from '@/components/calendar/InvestmentCalendar';
 import DailyQuote from '@/components/settings/DailyQuote';
 import PortfolioSummary from '@/components/portfolio/PortfolioSummary';
-import FloatingAddButton from '@/components/FloatingAddButton';
+import FloatingAddButton from '@/components/stock/FloatingAddButton';
 import FloatingSnapshotButton from '@/components/settings/FloatingSnapshotButton';
-import DashboardHeader from '@/components/DashboardHeader';
-import DashboardModals from '@/components/DashboardModals';
-import BulkTabSwitcher from '@/components/BulkTabSwitcher';
+import DashboardHeader from '@/components/layout/DashboardHeader';
+import DashboardModals from '@/components/layout/DashboardModals';
+import BulkTabSwitcher from '@/components/layout/BulkTabSwitcher';
 import ExternalLinksArea from '@/components/settings/ExternalLinksArea';
 import { loadStockData } from '@/data/stockNames';
 import { initSoundEngine, playSound } from '@/lib/sound';

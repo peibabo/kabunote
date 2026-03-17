@@ -1,9 +1,9 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
-import FloatingAddButton from '@/components/FloatingAddButton'
+import FloatingAddButton from '@/components/stock/FloatingAddButton'
 
 // StockInputをモック
-vi.mock('@/components/StockInput', () => ({
+vi.mock('@/components/stock/StockInput', () => ({
   default: ({ onAddStock }: { onAddStock: (code: string) => void }) => (
     <input
       data-testid="stock-input-mock"

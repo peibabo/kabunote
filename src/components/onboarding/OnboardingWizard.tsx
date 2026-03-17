@@ -1,11 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import WelcomeStep from './onboarding/WelcomeStep';
-import AddStockStep from './onboarding/AddStockStep';
-import StockCardStep from './onboarding/StockCardStep';
-import DashboardStep from './onboarding/DashboardStep';
-import GetStartedStep from './onboarding/GetStartedStep';
+import WelcomeStep from './WelcomeStep';
+import AddStockStep from './AddStockStep';
+import StockCardStep from './StockCardStep';
+import DashboardStep from './DashboardStep';
+import GetStartedStep from './GetStartedStep';
 
 const TOTAL_STEPS = 5;
 

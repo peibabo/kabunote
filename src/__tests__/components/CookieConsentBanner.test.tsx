@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
-import CookieConsentBanner from '@/components/CookieConsentBanner'
+import CookieConsentBanner from '@/components/layout/CookieConsentBanner'
 import { STORAGE_KEYS } from '@/lib/storageKeys'
 
 // Next.js Link をシンプルな a タグとしてモック

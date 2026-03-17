@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { playSound } from '@/lib/sound';
-import StockInput from '@/components/StockInput';
+import StockInput from '@/components/stock/StockInput';
 import { GROUP_COLORS, GroupColor } from '@/types/favorites';
 
 interface FloatingAddButtonProps {

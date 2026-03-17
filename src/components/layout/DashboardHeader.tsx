@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import AuthButton from '@/components/auth/AuthButton';
-import HamburgerMenuButton from '@/components/HamburgerMenuButton';
+import HamburgerMenuButton from '@/components/layout/HamburgerMenuButton';
 import { AlertCounts } from '@/hooks/alert/useAlertCounts';
 
 interface DashboardHeaderProps {

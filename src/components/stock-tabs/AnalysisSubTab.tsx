@@ -3,7 +3,7 @@
 import { PositionSummary, ProfitLossInfo } from '@/types/positions';
 import { formatPrice, formatShares, formatProfitLoss } from '@/lib/positionCalc';
 import { useSoundOnChange } from '@/hooks/auth/useSoundOnChange';
-import StockMiniChart from '@/components/StockMiniChart';
+import StockMiniChart from '@/components/stock/StockMiniChart';
 
 interface ProgressData {
   percentage: number;
