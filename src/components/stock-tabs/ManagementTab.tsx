@@ -3,10 +3,10 @@
 import { ShareholderMeetingSettings } from '@/types/rightsDate';
 import { useManagementTabState } from '@/hooks/tab/useManagementTabState';
 import { PositionSummary } from '@/types/positions';
-import EventManagement from '@/components/EventManagement';
-import DividendManagement from '@/components/DividendManagement';
-import ShareholderBenefitManagement from '@/components/ShareholderBenefitManagement';
-import PositionsManagement from '@/components/PositionsManagement';
+import EventManagement from '@/components/stock-tabs/EventManagement';
+import DividendManagement from '@/components/stock-tabs/DividendManagement';
+import ShareholderBenefitManagement from '@/components/stock-tabs/ShareholderBenefitManagement';
+import PositionsManagement from '@/components/stock-tabs/PositionsManagement';
 import { Position } from '@/types/positions';
 
 interface ManagementTabProps {

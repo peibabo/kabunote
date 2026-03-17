@@ -3,8 +3,8 @@
 import { PositionSummary, ProfitLossInfo } from '@/types/positions';
 import { NextActionPlan } from '@/types/nextActionPlan';
 import { useInvestmentTabState } from '@/hooks/tab/useInvestmentTabState';
-import AnalysisSubTab from '@/components/AnalysisSubTab';
-import NextActionSubTab from '@/components/NextActionSubTab';
+import AnalysisSubTab from '@/components/stock-tabs/AnalysisSubTab';
+import NextActionSubTab from '@/components/stock-tabs/NextActionSubTab';
 
 interface InvestmentStrategyTabProps {
   symbol: string;

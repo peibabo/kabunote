@@ -1,10 +1,10 @@
 'use client';
 
-import InvestmentPieChart from '@/components/InvestmentPieChart';
-import PortfolioOverviewGrid from '@/components/PortfolioOverviewGrid';
-import CashPositionSection from '@/components/CashPositionSection';
-import TargetSummarySection from '@/components/TargetSummarySection';
-import PortfolioHistory from '@/components/PortfolioHistory';
+import InvestmentPieChart from '@/components/portfolio/InvestmentPieChart';
+import PortfolioOverviewGrid from '@/components/portfolio/PortfolioOverviewGrid';
+import CashPositionSection from '@/components/portfolio/CashPositionSection';
+import TargetSummarySection from '@/components/portfolio/TargetSummarySection';
+import PortfolioHistory from '@/components/portfolio/PortfolioHistory';
 import { usePortfolioSummary, StockData } from '@/hooks/portfolio/usePortfolioSummary';
 import { useCash } from '@/hooks/auth/useCash';
 import { useAccordionState } from '@/hooks/util/useAccordionState';

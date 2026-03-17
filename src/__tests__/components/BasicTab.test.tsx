@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import BasicTab from '@/components/BasicTab'
+import BasicTab from '@/components/stock-tabs/BasicTab'
 
 describe('BasicTab', () => {
   const defaultProps = {

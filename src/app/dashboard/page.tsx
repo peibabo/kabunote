@@ -5,7 +5,7 @@ import StockCard from '@/components/StockCard';
 import SearchBar from '@/components/SearchBar';
 import InvestmentCalendar from '@/components/calendar/InvestmentCalendar';
 import DailyQuote from '@/components/settings/DailyQuote';
-import PortfolioSummary from '@/components/PortfolioSummary';
+import PortfolioSummary from '@/components/portfolio/PortfolioSummary';
 import FloatingAddButton from '@/components/FloatingAddButton';
 import FloatingSnapshotButton from '@/components/settings/FloatingSnapshotButton';
 import DashboardHeader from '@/components/DashboardHeader';

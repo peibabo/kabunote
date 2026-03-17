@@ -5,8 +5,8 @@ import { usePortfolioHistory } from '@/hooks/portfolio/usePortfolioHistory';
 import { useChartMemos } from '@/hooks/portfolio/useChartMemos';
 import { useAccordionState } from '@/hooks/util/useAccordionState';
 import { playSound } from '@/lib/sound';
-import PortfolioChart from '@/components/PortfolioChart';
-import ChartMemoModal from '@/components/ChartMemoModal';
+import PortfolioChart from '@/components/portfolio/PortfolioChart';
+import ChartMemoModal from '@/components/portfolio/ChartMemoModal';
 import type { HistoryRange, ChartType } from '@/types/portfolio';
 import { chartMemoKey } from '@/types/portfolio';
 
