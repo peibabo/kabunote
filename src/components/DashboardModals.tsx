@@ -14,6 +14,9 @@ import OnboardingWizard from '@/components/OnboardingWizard';
 import SlideOutMenu from '@/components/SlideOutMenu';
 import { FavoriteGroup } from '@/types/favorites';
 import { AlertCounts } from '@/hooks/useAlertCounts';
+import { StockData } from '@/hooks/useStockData';
+import { CalendarDataMap } from '@/hooks/useCalendarData';
+import { DividendBenefitStockData } from '@/hooks/useDividendBenefitData';
 
 interface FullScreenModalProps {
   isOpen: boolean;
@@ -46,23 +49,6 @@ function FullScreenModal({ isOpen, onClose, title, maxWidth = 'max-w-6xl', child
   );
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type StockData = any[];
-
-interface CalendarStockData {
-  [symbol: string]: {
-    earningsDate: string | null;
-    earningsTime: string | null;
-    shareholderMeetingDate: string | null;
-    rightsDate: string | null;
-    exDividendDate: string | null;
-    dividendPaymentDate: string | null;
-  };
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type DividendBenefitData = Map<string, any>;
-
 interface DashboardModalsProps {
   modals: {
     isGroupManagerOpen: boolean;
@@ -87,10 +73,10 @@ interface DashboardModalsProps {
     setIsMenuOpen: (v: boolean) => void;
     handleMenuItemClick: (item: string) => void;
   };
-  stockData: StockData;
+  stockData: StockData[];
   stockSymbols: string[];
-  stockCalendarData: CalendarStockData;
-  dividendBenefitData: DividendBenefitData;
+  stockCalendarData: CalendarDataMap;
+  dividendBenefitData: Record<string, DividendBenefitStockData>;
   favoriteGroups: FavoriteGroup[];
   setFavoriteGroups: (groups: FavoriteGroup[]) => void;
   alertCounts: AlertCounts;
