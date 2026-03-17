@@ -1,49 +1,27 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React from 'react';
 import { DividendInfo } from '@/types/dividend';
-import { calculateDividendInfo, formatDividendAmount, formatDividendYield } from '@/lib/dividendCalc';
+import { formatDividendAmount, formatDividendYield } from '@/lib/dividendCalc';
 import { ShareholderBenefitInfo } from '@/types/shareholder';
-import { calculateShareholderBenefit, formatBenefitValue, formatBenefitYield } from '@/lib/shareholderCalc';
+import { formatBenefitValue, formatBenefitYield } from '@/lib/shareholderCalc';
 import { DividendRightsSettings, ShareholderRightsSettings } from '@/types/rightsDate';
-import { getStockData } from '@/data/stockNames';
 import { formatMonthDay } from '@/lib/dateFormat';
+import {
+  useDividendBenefitList,
+  calculateDaysUntil,
+  getDaysUntilDisplay,
+  type DividendBenefitItem,
+  type SortKey,
+  type FilterType,
+} from '@/hooks/useDividendBenefitList';
 
-// 統合されたポジション情報の型
 interface IntegratedPosition {
   totalShares: number;
   averagePrice: number;
   purchaseDate: string;
   notes: string;
 }
-
-interface DividendBenefitData {
-  symbol: string;
-  companyName: string;
-  type: 'dividend' | 'benefit' | 'both' | 'none';
-
-  // 配当関連
-  dividendInfo?: DividendInfo;
-  dividendRightsDate?: string;
-  annualDividend?: number;
-  dividendYield?: number;
-  afterTaxDividend?: number;
-
-  // 優待関連
-  benefitInfo?: ShareholderBenefitInfo;
-  shareholderRightsDate?: string;
-  benefitValue?: number;
-  benefitYield?: number;
-  isEligible?: boolean;
-  shortfall?: number;
-
-  // ポジション情報
-  position?: IntegratedPosition;
-  hasPosition: boolean;
-}
-
-type SortKey = 'symbol' | 'dividendYield' | 'benefitYield' | 'annualDividend' | 'benefitValue' | 'dividendRightsDate' | 'shareholderRightsDate';
-type FilterType = 'all' | 'dividend' | 'benefit' | 'both' | 'none';
 
 interface DividendBenefitListPageProps {
   stockSymbols: string[];
@@ -61,230 +39,17 @@ interface DividendBenefitListPageProps {
 }
 
 export default function DividendBenefitListPage({ stockSymbols, stockData, onStockClick }: DividendBenefitListPageProps) {
-  const [sortBy, setSortBy] = useState<SortKey>('dividendYield');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-  const [filterType, setFilterType] = useState<FilterType>('all');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [companyNames, setCompanyNames] = useState<{ [symbol: string]: string }>({});
-
-  // 会社名を非同期で取得
-  useEffect(() => {
-    const fetchCompanyNames = async () => {
-      const names: { [symbol: string]: string } = {};
-      await Promise.all(
-        stockSymbols.map(async (symbol) => {
-          try {
-            const stockInfo = await getStockData(symbol);
-            names[symbol] = stockInfo?.name || symbol;
-          } catch (error) {
-            console.error(`Failed to fetch name for ${symbol}:`, error);
-            names[symbol] = symbol;
-          }
-        })
-      );
-      setCompanyNames(names);
-    };
-
-    fetchCompanyNames();
-  }, [stockSymbols]);
-
-  // 日数差を計算
-  const calculateDaysUntil = (dateStr: string): number => {
-    if (!dateStr) return Infinity;
-    const eventDate = new Date(dateStr);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    eventDate.setHours(0, 0, 0, 0);
-
-    const diffTime = eventDate.getTime() - today.getTime();
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  };
-
-  // 権利確定日から完全な日付を計算
-  const calculateRightsDate = (settings: DividendRightsSettings | ShareholderRightsSettings): string => {
-    if (!settings.isActive || !settings.month || !settings.day) return '';
-
-    const currentYear = new Date().getFullYear();
-    let targetDate = new Date(currentYear, settings.month - 1, settings.day);
-
-    if (settings.isRecurring && targetDate < new Date()) {
-      targetDate = new Date(currentYear + 1, settings.month - 1, settings.day);
-    }
-
-    return targetDate.toISOString().split('T')[0];
-  };
-
-  // データ処理
-  const processedData = useMemo<DividendBenefitData[]>(() => {
-    return stockSymbols.map(symbol => {
-      const data = stockData[symbol];
-      if (!data) return null;
-
-      const hasPosition = !!data.position;
-      const position = data.position;
-
-      // 配当情報処理
-      const hasDividend = !!data.dividendInfo?.dividendPerShare && parseFloat(data.dividendInfo.dividendPerShare) > 0;
-      const dividendRightsDate = calculateRightsDate(data.dividendRightsSettings);
-
-      let dividendCalc = null;
-      if (hasDividend && hasPosition) {
-        const dividendPerShare = parseFloat(data.dividendInfo!.dividendPerShare);
-        const frequency = data.dividendInfo!.dividendFrequency;
-        const totalShares = position!.totalShares;
-        const averagePrice = position!.averagePrice;
-
-        dividendCalc = calculateDividendInfo(dividendPerShare, frequency, totalShares, averagePrice);
-      }
-
-      // 優待情報処理
-      const hasBenefit = !!data.shareholderBenefitInfo?.benefitDescription;
-      const shareholderRightsDate = calculateRightsDate(data.shareholderRightsSettings);
-
-      let benefitCalc = null;
-      if (hasBenefit && hasPosition) {
-        const minimumShares = parseInt(data.shareholderBenefitInfo!.minimumShares) || 0;
-        const currentShares = position!.totalShares;
-        const estimatedValue = parseFloat(data.shareholderBenefitInfo!.estimatedValue) || 0;
-        const totalInvestment = position!.totalShares * position!.averagePrice;
-
-        benefitCalc = calculateShareholderBenefit(minimumShares, currentShares, estimatedValue, totalInvestment);
-      }
-
-      // タイプ判定
-      let type: 'dividend' | 'benefit' | 'both' | 'none' = 'none';
-      if (hasDividend && hasBenefit) type = 'both';
-      else if (hasDividend) type = 'dividend';
-      else if (hasBenefit) type = 'benefit';
-
-
-      return {
-        symbol,
-        companyName: companyNames[symbol] || data.name,
-        type,
-        dividendInfo: data.dividendInfo,
-        dividendRightsDate,
-        annualDividend: dividendCalc?.annualDividend || 0,
-        dividendYield: dividendCalc?.dividendYield || 0,
-        afterTaxDividend: dividendCalc?.afterTaxAmount || 0,
-        benefitInfo: data.shareholderBenefitInfo,
-        shareholderRightsDate,
-        benefitValue: benefitCalc?.estimatedValue || 0,
-        benefitYield: benefitCalc?.yieldOnInvestment || 0,
-        isEligible: benefitCalc?.isEligible || false,
-        shortfall: benefitCalc?.shortfall || 0,
-        position,
-        hasPosition
-      };
-    }).filter(Boolean) as DividendBenefitData[];
-  }, [stockSymbols, stockData, companyNames]);
-
-  // フィルター処理
-  const filteredData = useMemo(() => {
-    let filtered = processedData;
-
-    // タイプフィルター
-    if (filterType !== 'all') {
-      filtered = filtered.filter(item => item.type === filterType);
-    }
-
-    // 検索フィルター
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase().trim();
-      filtered = filtered.filter(item =>
-        item.symbol.toLowerCase().includes(query) ||
-        item.companyName.toLowerCase().includes(query)
-      );
-    }
-
-    return filtered;
-  }, [processedData, filterType, searchQuery]);
-
-  // ソート処理
-  const sortedData = useMemo(() => {
-    return [...filteredData].sort((a, b) => {
-      let comparison = 0;
-
-      switch (sortBy) {
-        case 'symbol':
-          comparison = a.symbol.localeCompare(b.symbol);
-          break;
-        case 'dividendYield':
-          comparison = (a.dividendYield || 0) - (b.dividendYield || 0);
-          break;
-        case 'benefitYield':
-          comparison = (a.benefitYield || 0) - (b.benefitYield || 0);
-          break;
-        case 'annualDividend':
-          comparison = (a.annualDividend || 0) - (b.annualDividend || 0);
-          break;
-        case 'benefitValue':
-          comparison = (a.benefitValue || 0) - (b.benefitValue || 0);
-          break;
-        case 'dividendRightsDate':
-          comparison = calculateDaysUntil(a.dividendRightsDate || '') - calculateDaysUntil(b.dividendRightsDate || '');
-          break;
-        case 'shareholderRightsDate':
-          comparison = calculateDaysUntil(a.shareholderRightsDate || '') - calculateDaysUntil(b.shareholderRightsDate || '');
-          break;
-      }
-
-      return sortOrder === 'desc' ? -comparison : comparison;
-    });
-  }, [filteredData, sortBy, sortOrder]);
-
-  // サマリー統計
-  const summary = useMemo(() => {
-    const dividendItems = processedData.filter(item => item.type === 'dividend' || item.type === 'both');
-    const benefitItems = processedData.filter(item => item.type === 'benefit' || item.type === 'both');
-
-    const totalAnnualDividend = dividendItems.reduce((sum, item) => sum + (item.annualDividend || 0), 0);
-    const totalAfterTaxDividend = dividendItems.reduce((sum, item) => sum + (item.afterTaxDividend || 0), 0);
-    const totalBenefitValue = benefitItems.reduce((sum, item) => sum + (item.benefitValue || 0), 0);
-    const eligibleBenefits = benefitItems.filter(item => item.isEligible).length;
-
-    const avgDividendYield = dividendItems.length > 0
-      ? dividendItems.reduce((sum, item) => sum + (item.dividendYield || 0), 0) / dividendItems.length
-      : 0;
-
-    return {
-      totalStocks: processedData.length,
-      dividendStocks: dividendItems.length,
-      benefitStocks: benefitItems.length,
-      totalAnnualDividend,
-      totalAfterTaxDividend,
-      totalBenefitValue,
-      avgDividendYield,
-      eligibleBenefits
-    };
-  }, [processedData]);
-
-  // ソート変更ハンドラー
-  const handleSort = (key: SortKey) => {
-    if (sortBy === key) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortBy(key);
-      setSortOrder('desc');
-    }
-  };
-
-  // 日数表示
-  const getDaysUntilDisplay = (daysUntil: number) => {
-    if (daysUntil === Infinity) return '-';
-    if (daysUntil === 0) return '今日';
-    if (daysUntil === 1) return '明日';
-    if (daysUntil < 0) return `${Math.abs(daysUntil)}日前`;
-    return `${daysUntil}日後`;
-  };
-
+  const {
+    sortBy, sortOrder, filterType, setFilterType,
+    searchQuery, setSearchQuery,
+    sortedData, summary, handleSort,
+  } = useDividendBenefitList(stockSymbols, stockData);
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-4 md:p-6">
       <div className="max-w-7xl mx-auto">
         {/* 検索とフィルター */}
         <div className="flex flex-col md:flex-row gap-4 mb-6">
-          {/* 検索 */}
           <div className="flex-1">
             <input
               type="text"
@@ -295,15 +60,14 @@ export default function DividendBenefitListPage({ stockSymbols, stockData, onSto
             />
           </div>
 
-          {/* フィルター */}
           <div className="flex gap-2">
-            {[
+            {([
               { key: 'all' as FilterType, label: '全て' },
               { key: 'dividend' as FilterType, label: '配当のみ' },
               { key: 'benefit' as FilterType, label: '優待のみ' },
               { key: 'both' as FilterType, label: '両方' },
               { key: 'none' as FilterType, label: '未設定' }
-            ].map(({ key, label }) => (
+            ]).map(({ key, label }) => (
               <button
                 key={key}
                 onClick={() => setFilterType(key)}
@@ -357,7 +121,7 @@ export default function DividendBenefitListPage({ stockSymbols, stockData, onSto
         {/* ソートボタン */}
         <div className="flex flex-wrap gap-2 mb-4">
           <span className="text-sm text-gray-400 self-center mr-2">並び替え:</span>
-          {[
+          {([
             { key: 'symbol' as SortKey, label: '銘柄' },
             { key: 'dividendYield' as SortKey, label: '配当利回り' },
             { key: 'annualDividend' as SortKey, label: '配当金額' },
@@ -365,7 +129,7 @@ export default function DividendBenefitListPage({ stockSymbols, stockData, onSto
             { key: 'benefitValue' as SortKey, label: '優待価値' },
             { key: 'dividendRightsDate' as SortKey, label: '配当権利日' },
             { key: 'shareholderRightsDate' as SortKey, label: '優待権利日' }
-          ].map(({ key, label }) => (
+          ]).map(({ key, label }) => (
             <button
               key={key}
               onClick={() => handleSort(key)}
@@ -393,88 +157,7 @@ export default function DividendBenefitListPage({ stockSymbols, stockData, onSto
             </thead>
             <tbody className="divide-y divide-gray-700">
               {sortedData.map((item, index) => (
-                <tr key={`${item.symbol}-${index}`} className="hover:bg-gray-750">
-                  <td className="px-4 py-3">
-                    <div>
-                      <div
-                        className="font-medium text-white hover:text-blue-300 cursor-pointer transition-colors"
-                        onClick={() => onStockClick?.(item.symbol)}
-                        title="銘柄カードの配当・優待タブを開く"
-                      >
-                        {item.companyName}
-                      </div>
-                      <div className="text-xs text-gray-400">{item.symbol}</div>
-                      {!item.hasPosition && (
-                        <div className="text-xs text-red-400">ポジションなし</div>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-4 py-3">
-                    {(item.type === 'dividend' || item.type === 'both') ? (
-                      <div className="space-y-1">
-                        <div className="flex items-center space-x-2">
-                          <span className="text-lg">💰</span>
-                          <span className="text-sm font-medium text-green-400">
-                            ¥{formatDividendAmount(item.annualDividend || 0)}
-                          </span>
-                        </div>
-                        <div className="text-xs text-gray-400">
-                          利回り: {formatDividendYield(item.dividendYield || 0)}%
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          税引後: ¥{formatDividendAmount(item.afterTaxDividend || 0)}
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="text-sm text-gray-500">配当未設定</div>
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    {(item.type === 'benefit' || item.type === 'both') ? (
-                      <div className="space-y-1">
-                        <div className="flex items-center space-x-2">
-                          <span className="text-lg">🎁</span>
-                          <span className={`text-sm font-medium ${item.isEligible ? 'text-purple-400' : 'text-gray-400'}`}>
-                            ¥{formatBenefitValue(item.benefitValue || 0)}
-                          </span>
-                        </div>
-                        <div className="text-xs text-gray-400">
-                          利回り: {formatBenefitYield(item.benefitYield || 0)}%
-                        </div>
-                        {!item.isEligible && item.shortfall && item.shortfall > 0 && (
-                          <div className="text-xs text-red-400">
-                            不足: {item.shortfall}株
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="text-sm text-gray-500">優待未設定</div>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <div className="space-y-1">
-                      {item.dividendRightsDate && (
-                        <div className="text-xs">
-                          <div className="text-green-300">配当: {formatMonthDay(item.dividendRightsDate)}</div>
-                          <div className="text-gray-500">
-                            {getDaysUntilDisplay(calculateDaysUntil(item.dividendRightsDate))}
-                          </div>
-                        </div>
-                      )}
-                      {item.shareholderRightsDate && (
-                        <div className="text-xs">
-                          <div className="text-purple-300">優待: {formatMonthDay(item.shareholderRightsDate)}</div>
-                          <div className="text-gray-500">
-                            {getDaysUntilDisplay(calculateDaysUntil(item.shareholderRightsDate))}
-                          </div>
-                        </div>
-                      )}
-                      {!item.dividendRightsDate && !item.shareholderRightsDate && (
-                        <div className="text-xs text-gray-500">-</div>
-                      )}
-                    </div>
-                  </td>
-                </tr>
+                <DesktopTableRow key={`${item.symbol}-${index}`} item={item} onStockClick={onStockClick} />
               ))}
             </tbody>
           </table>
@@ -483,89 +166,7 @@ export default function DividendBenefitListPage({ stockSymbols, stockData, onSto
         {/* モバイル用カードレイアウト */}
         <div className="md:hidden space-y-3">
           {sortedData.map((item, index) => (
-            <div key={`mobile-${item.symbol}-${index}`} className="bg-gray-800 rounded-lg p-4">
-              {/* ヘッダー: 会社名 + 銘柄コード */}
-              <div
-                className="flex items-center justify-between mb-3 cursor-pointer"
-                onClick={() => onStockClick?.(item.symbol)}
-              >
-                <div>
-                  <div className="font-medium text-white hover:text-blue-300 transition-colors">
-                    {item.companyName}
-                  </div>
-                  <div className="text-xs text-gray-400">{item.symbol}</div>
-                </div>
-                {!item.hasPosition && (
-                  <span className="text-xs text-red-400 bg-red-900/30 px-2 py-0.5 rounded">ポジションなし</span>
-                )}
-              </div>
-
-              {/* 配当情報 */}
-              <div className="flex items-start gap-4 mb-2">
-                <div className="flex-1 min-w-0">
-                  {(item.type === 'dividend' || item.type === 'both') ? (
-                    <div className="flex items-center gap-3 flex-wrap">
-                      <span className="text-sm">💰</span>
-                      <span className="text-sm font-medium text-green-400 whitespace-nowrap">
-                        ¥{formatDividendAmount(item.annualDividend || 0)}
-                      </span>
-                      <span className="text-xs text-gray-400 whitespace-nowrap">
-                        利回り {formatDividendYield(item.dividendYield || 0)}%
-                      </span>
-                      <span className="text-xs text-gray-500 whitespace-nowrap">
-                        税引後 ¥{formatDividendAmount(item.afterTaxDividend || 0)}
-                      </span>
-                    </div>
-                  ) : (
-                    <div className="text-xs text-gray-500">💰 配当未設定</div>
-                  )}
-                </div>
-              </div>
-
-              {/* 優待情報 */}
-              <div className="flex items-start gap-4 mb-2">
-                <div className="flex-1 min-w-0">
-                  {(item.type === 'benefit' || item.type === 'both') ? (
-                    <div className="flex items-center gap-3 flex-wrap">
-                      <span className="text-sm">🎁</span>
-                      <span className={`text-sm font-medium whitespace-nowrap ${item.isEligible ? 'text-purple-400' : 'text-gray-400'}`}>
-                        ¥{formatBenefitValue(item.benefitValue || 0)}
-                      </span>
-                      <span className="text-xs text-gray-400 whitespace-nowrap">
-                        利回り {formatBenefitYield(item.benefitYield || 0)}%
-                      </span>
-                      {!item.isEligible && item.shortfall && item.shortfall > 0 && (
-                        <span className="text-xs text-red-400 whitespace-nowrap">
-                          不足 {item.shortfall}株
-                        </span>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="text-xs text-gray-500">🎁 優待未設定</div>
-                  )}
-                </div>
-              </div>
-
-              {/* 権利確定日 */}
-              {(item.dividendRightsDate || item.shareholderRightsDate) && (
-                <div className="space-y-1 text-xs border-t border-gray-700 pt-2 mt-2">
-                  {item.dividendRightsDate && (
-                    <div className="flex items-center gap-1">
-                      <span className="text-green-300">配当権利日</span>
-                      <span className="text-white">{formatMonthDay(item.dividendRightsDate)}</span>
-                      <span className="text-gray-500">({getDaysUntilDisplay(calculateDaysUntil(item.dividendRightsDate))})</span>
-                    </div>
-                  )}
-                  {item.shareholderRightsDate && (
-                    <div className="flex items-center gap-1">
-                      <span className="text-purple-300">優待権利日</span>
-                      <span className="text-white">{formatMonthDay(item.shareholderRightsDate)}</span>
-                      <span className="text-gray-500">({getDaysUntilDisplay(calculateDaysUntil(item.shareholderRightsDate))})</span>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
+            <MobileCard key={`mobile-${item.symbol}-${index}`} item={item} onStockClick={onStockClick} />
           ))}
         </div>
 
@@ -578,6 +179,189 @@ export default function DividendBenefitListPage({ stockSymbols, stockData, onSto
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+// デスクトップテーブル行コンポーネント
+function DesktopTableRow({ item, onStockClick }: { item: DividendBenefitItem; onStockClick?: (symbol: string) => void }) {
+  return (
+    <tr className="hover:bg-gray-750">
+      <td className="px-4 py-3">
+        <div>
+          <div
+            className="font-medium text-white hover:text-blue-300 cursor-pointer transition-colors"
+            onClick={() => onStockClick?.(item.symbol)}
+            title="銘柄カードの配当・優待タブを開く"
+          >
+            {item.companyName}
+          </div>
+          <div className="text-xs text-gray-400">{item.symbol}</div>
+          {!item.hasPosition && (
+            <div className="text-xs text-red-400">ポジションなし</div>
+          )}
+        </div>
+      </td>
+      <td className="px-4 py-3">
+        {(item.type === 'dividend' || item.type === 'both') ? (
+          <div className="space-y-1">
+            <div className="flex items-center space-x-2">
+              <span className="text-lg">💰</span>
+              <span className="text-sm font-medium text-green-400">
+                ¥{formatDividendAmount(item.annualDividend || 0)}
+              </span>
+            </div>
+            <div className="text-xs text-gray-400">
+              利回り: {formatDividendYield(item.dividendYield || 0)}%
+            </div>
+            <div className="text-xs text-gray-500">
+              税引後: ¥{formatDividendAmount(item.afterTaxDividend || 0)}
+            </div>
+          </div>
+        ) : (
+          <div className="text-sm text-gray-500">配当未設定</div>
+        )}
+      </td>
+      <td className="px-4 py-3">
+        {(item.type === 'benefit' || item.type === 'both') ? (
+          <div className="space-y-1">
+            <div className="flex items-center space-x-2">
+              <span className="text-lg">🎁</span>
+              <span className={`text-sm font-medium ${item.isEligible ? 'text-purple-400' : 'text-gray-400'}`}>
+                ¥{formatBenefitValue(item.benefitValue || 0)}
+              </span>
+            </div>
+            <div className="text-xs text-gray-400">
+              利回り: {formatBenefitYield(item.benefitYield || 0)}%
+            </div>
+            {!item.isEligible && item.shortfall && item.shortfall > 0 && (
+              <div className="text-xs text-red-400">
+                不足: {item.shortfall}株
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="text-sm text-gray-500">優待未設定</div>
+        )}
+      </td>
+      <td className="px-4 py-3 text-center">
+        <RightsDateDisplay item={item} />
+      </td>
+    </tr>
+  );
+}
+
+// モバイルカードコンポーネント
+function MobileCard({ item, onStockClick }: { item: DividendBenefitItem; onStockClick?: (symbol: string) => void }) {
+  return (
+    <div className="bg-gray-800 rounded-lg p-4">
+      <div
+        className="flex items-center justify-between mb-3 cursor-pointer"
+        onClick={() => onStockClick?.(item.symbol)}
+      >
+        <div>
+          <div className="font-medium text-white hover:text-blue-300 transition-colors">
+            {item.companyName}
+          </div>
+          <div className="text-xs text-gray-400">{item.symbol}</div>
+        </div>
+        {!item.hasPosition && (
+          <span className="text-xs text-red-400 bg-red-900/30 px-2 py-0.5 rounded">ポジションなし</span>
+        )}
+      </div>
+
+      {/* 配当情報 */}
+      <div className="flex items-start gap-4 mb-2">
+        <div className="flex-1 min-w-0">
+          {(item.type === 'dividend' || item.type === 'both') ? (
+            <div className="flex items-center gap-3 flex-wrap">
+              <span className="text-sm">💰</span>
+              <span className="text-sm font-medium text-green-400 whitespace-nowrap">
+                ¥{formatDividendAmount(item.annualDividend || 0)}
+              </span>
+              <span className="text-xs text-gray-400 whitespace-nowrap">
+                利回り {formatDividendYield(item.dividendYield || 0)}%
+              </span>
+              <span className="text-xs text-gray-500 whitespace-nowrap">
+                税引後 ¥{formatDividendAmount(item.afterTaxDividend || 0)}
+              </span>
+            </div>
+          ) : (
+            <div className="text-xs text-gray-500">💰 配当未設定</div>
+          )}
+        </div>
+      </div>
+
+      {/* 優待情報 */}
+      <div className="flex items-start gap-4 mb-2">
+        <div className="flex-1 min-w-0">
+          {(item.type === 'benefit' || item.type === 'both') ? (
+            <div className="flex items-center gap-3 flex-wrap">
+              <span className="text-sm">🎁</span>
+              <span className={`text-sm font-medium whitespace-nowrap ${item.isEligible ? 'text-purple-400' : 'text-gray-400'}`}>
+                ¥{formatBenefitValue(item.benefitValue || 0)}
+              </span>
+              <span className="text-xs text-gray-400 whitespace-nowrap">
+                利回り {formatBenefitYield(item.benefitYield || 0)}%
+              </span>
+              {!item.isEligible && item.shortfall && item.shortfall > 0 && (
+                <span className="text-xs text-red-400 whitespace-nowrap">
+                  不足 {item.shortfall}株
+                </span>
+              )}
+            </div>
+          ) : (
+            <div className="text-xs text-gray-500">🎁 優待未設定</div>
+          )}
+        </div>
+      </div>
+
+      {/* 権利確定日 */}
+      {(item.dividendRightsDate || item.shareholderRightsDate) && (
+        <div className="space-y-1 text-xs border-t border-gray-700 pt-2 mt-2">
+          {item.dividendRightsDate && (
+            <div className="flex items-center gap-1">
+              <span className="text-green-300">配当権利日</span>
+              <span className="text-white">{formatMonthDay(item.dividendRightsDate)}</span>
+              <span className="text-gray-500">({getDaysUntilDisplay(calculateDaysUntil(item.dividendRightsDate))})</span>
+            </div>
+          )}
+          {item.shareholderRightsDate && (
+            <div className="flex items-center gap-1">
+              <span className="text-purple-300">優待権利日</span>
+              <span className="text-white">{formatMonthDay(item.shareholderRightsDate)}</span>
+              <span className="text-gray-500">({getDaysUntilDisplay(calculateDaysUntil(item.shareholderRightsDate))})</span>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// 権利確定日表示コンポーネント
+function RightsDateDisplay({ item }: { item: DividendBenefitItem }) {
+  return (
+    <div className="space-y-1">
+      {item.dividendRightsDate && (
+        <div className="text-xs">
+          <div className="text-green-300">配当: {formatMonthDay(item.dividendRightsDate)}</div>
+          <div className="text-gray-500">
+            {getDaysUntilDisplay(calculateDaysUntil(item.dividendRightsDate))}
+          </div>
+        </div>
+      )}
+      {item.shareholderRightsDate && (
+        <div className="text-xs">
+          <div className="text-purple-300">優待: {formatMonthDay(item.shareholderRightsDate)}</div>
+          <div className="text-gray-500">
+            {getDaysUntilDisplay(calculateDaysUntil(item.shareholderRightsDate))}
+          </div>
+        </div>
+      )}
+      {!item.dividendRightsDate && !item.shareholderRightsDate && (
+        <div className="text-xs text-gray-500">-</div>
+      )}
     </div>
   );
 }
