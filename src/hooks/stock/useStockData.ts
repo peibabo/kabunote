@@ -13,6 +13,8 @@ export interface StockData {
   currentPrice: number | null;
   targetPrice: number | null;
   stopLossPrice: number | null;
+  per: number | null;
+  pbr: number | null;
   memo: string;
   positions: Array<{
     id: string;

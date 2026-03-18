@@ -30,6 +30,8 @@ export const GET = withAuth(async ({ user }) => {
       currentPrice: price?.currentPrice != null ? Number(price.currentPrice) : null,
       targetPrice: price?.targetPrice != null ? Number(price.targetPrice) : null,
       stopLossPrice: price?.stopLossPrice != null ? Number(price.stopLossPrice) : null,
+      per: price?.per != null ? Number(price.per) : null,
+      pbr: price?.pbr != null ? Number(price.pbr) : null,
       memo: stock.memo?.content ?? '',
       positions: stock.positions.map(p => ({
         id: p.id,

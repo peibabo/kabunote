@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withAuth, withStock, toNumber } from '@/lib/apiHandler'
 import { resolveStockId } from '@/lib/resolveStockId'
-import { isValidPrice } from '@/lib/validation'
+import { isValidPrice, isValidRatio } from '@/lib/validation'
 
 // GET: 株価情報取得（stockId未発見時はnullデータ返却、404ではない）
 export const GET = withAuth(async ({ user, params }) => {
@@ -11,7 +11,7 @@ export const GET = withAuth(async ({ user, params }) => {
   if (!stockId) {
     return NextResponse.json({
       success: true,
-      data: { currentPrice: null, targetPrice: null, stopLossPrice: null }
+      data: { currentPrice: null, targetPrice: null, stopLossPrice: null, per: null, pbr: null }
     })
   }
 
@@ -23,6 +23,8 @@ export const GET = withAuth(async ({ user, params }) => {
       currentPrice: toNumber(price?.currentPrice),
       targetPrice: toNumber(price?.targetPrice),
       stopLossPrice: toNumber(price?.stopLossPrice),
+      per: toNumber(price?.per),
+      pbr: toNumber(price?.pbr),
       updatedAt: price?.updatedAt?.toISOString() ?? null
     }
   })
@@ -30,11 +32,18 @@ export const GET = withAuth(async ({ user, params }) => {
 
 // PUT: 株価情報更新
 export const PUT = withStock(async ({ stockId, request }) => {
-  const { currentPrice, targetPrice, stopLossPrice } = await request.json()
+  const { currentPrice, targetPrice, stopLossPrice, per, pbr } = await request.json()
 
   if (!isValidPrice(currentPrice) || !isValidPrice(targetPrice) || !isValidPrice(stopLossPrice)) {
     return NextResponse.json(
       { error: 'Bad Request', message: '株価は0以上の有効な数値である必要があります' },
+      { status: 400 }
+    )
+  }
+
+  if (!isValidRatio(per) || !isValidRatio(pbr)) {
+    return NextResponse.json(
+      { error: 'Bad Request', message: 'PER/PBRは0以上の有効な数値である必要があります' },
       { status: 400 }
     )
   }
@@ -45,12 +54,16 @@ export const PUT = withStock(async ({ stockId, request }) => {
       currentPrice: currentPrice !== undefined ? (currentPrice || null) : undefined,
       targetPrice: targetPrice !== undefined ? (targetPrice || null) : undefined,
       stopLossPrice: stopLossPrice !== undefined ? (stopLossPrice || null) : undefined,
+      per: per !== undefined ? (per || null) : undefined,
+      pbr: pbr !== undefined ? (pbr || null) : undefined,
     },
     create: {
       stockId,
       currentPrice: currentPrice || null,
       targetPrice: targetPrice || null,
       stopLossPrice: stopLossPrice || null,
+      per: per || null,
+      pbr: pbr || null,
     }
   })
 
@@ -60,6 +73,8 @@ export const PUT = withStock(async ({ stockId, request }) => {
       currentPrice: toNumber(price.currentPrice),
       targetPrice: toNumber(price.targetPrice),
       stopLossPrice: toNumber(price.stopLossPrice),
+      per: toNumber(price.per),
+      pbr: toNumber(price.pbr),
       updatedAt: price.updatedAt.toISOString()
     }
   })

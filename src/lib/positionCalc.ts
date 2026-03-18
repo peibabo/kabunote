@@ -111,6 +111,33 @@ export const calculatePortfolioTargetSummary = (stocksData: StockTargetInfo[]) =
   };
 };
 
+// PER（株価収益率）評価
+export interface ValuationEvaluation {
+  label: string;
+  color: string;
+}
+
+export function evaluatePer(per: number): ValuationEvaluation {
+  if (per <= 15) {
+    return { label: '割安', color: 'text-green-400' };
+  } else if (per <= 25) {
+    return { label: '適正', color: 'text-yellow-400' };
+  } else {
+    return { label: '割高', color: 'text-red-400' };
+  }
+}
+
+// PBR（株価純資産倍率）評価
+export function evaluatePbr(pbr: number): ValuationEvaluation {
+  if (pbr < 1.0) {
+    return { label: '割安', color: 'text-green-400' };
+  } else if (pbr <= 2.0) {
+    return { label: '適正', color: 'text-yellow-400' };
+  } else {
+    return { label: '割高', color: 'text-red-400' };
+  }
+}
+
 // 現金比率評価
 export interface CashRatioEvaluation {
   status: 'excellent' | 'good' | 'moderate' | 'risky' | 'dangerous';

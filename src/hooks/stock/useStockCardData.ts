@@ -47,14 +47,20 @@ export function useStockCardData(symbol: string, favoriteGroups: FavoriteGroup[]
     currentPrice,
     targetPrice,
     stopLoss,
+    per,
+    pbr,
     setCurrentPrice,
     setTargetPrice,
     setStopLoss,
+    setPer,
+    setPbr,
   } = useStockPrice(`stock-${symbol}`, initialStockData ? {
     initialData: {
       currentPrice: initialStockData.currentPrice,
       targetPrice: initialStockData.targetPrice,
       stopLossPrice: initialStockData.stopLossPrice,
+      per: initialStockData.per ?? null,
+      pbr: initialStockData.pbr ?? null,
     }
   } : undefined);
 
@@ -229,9 +235,13 @@ export function useStockCardData(symbol: string, favoriteGroups: FavoriteGroup[]
     currentPrice,
     targetPrice,
     stopLoss,
+    per,
+    pbr,
     setCurrentPrice,
     setTargetPrice,
     setStopLoss,
+    setPer,
+    setPbr,
 
     // タグ
     customTags,
