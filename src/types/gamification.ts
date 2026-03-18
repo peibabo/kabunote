@@ -40,6 +40,7 @@ export type XpActionType =
   | 'NEXT_ACTION'
   | 'FEEDBACK'
   | 'CHECKLIST_COMPLETE'
+  | 'DIARY_SAVE'
 
 /** アクティビティログ */
 export interface XpActivityLogEntry {

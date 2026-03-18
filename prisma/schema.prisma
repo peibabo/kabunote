@@ -36,6 +36,7 @@ model User {
   xpActivityLogs     XpActivityLog[]
   checklists         UserChecklist[]
   checklistChecks    ChecklistCheck[]
+  diaries            InvestmentDiary[]
 
   @@map("app_users")
 }
@@ -387,6 +388,25 @@ model ChecklistCheck {
   @@unique([checklistId, checkedDate])
   @@index([userId, checkedDate])
   @@map("checklist_checks")
+}
+
+// 投資日記
+model InvestmentDiary {
+  id              String   @id @default(cuid())
+  userId          String   @map("user_id")
+  diaryDate       DateTime @map("diary_date") @db.Date
+  marketOverview  String   @default("") @map("market_overview")
+  newsMemo        String   @default("") @map("news_memo")
+  reflection      String   @default("") @map("reflection")
+  tomorrowFocus   String   @default("") @map("tomorrow_focus")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, diaryDate])
+  @@index([userId, diaryDate(sort: Desc)])
+  @@map("investment_diaries")
 }
 
 // Enums
