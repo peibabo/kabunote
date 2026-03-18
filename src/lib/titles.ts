@@ -34,8 +34,8 @@ const TITLES: TitleWithCondition[] = [
   { id: 'snapshot_habit', name: 'スナップショット習慣', description: '7日分の記録を達成', category: 'asset', icon: '📸', rarity: 'epic', check: d => d.snapshotCount >= 7 },
 
   // ── 🎯 戦略（4個）──
-  { id: 'first_strategy', name: '戦略家', description: '最初のNext Actionを登録', category: 'strategy', icon: '🎯', rarity: 'common', check: d => d.nextActionCount >= 1 },
-  { id: 'strategy_master', name: '戦略マスター', description: '10個のNext Actionを登録', category: 'strategy', icon: '🧠', rarity: 'epic', check: d => d.nextActionCount >= 10 },
+  { id: 'first_strategy', name: '戦略家', description: '最初の次の一手を登録', category: 'strategy', icon: '🎯', rarity: 'common', check: d => d.nextActionCount >= 1 },
+  { id: 'strategy_master', name: '戦略マスター', description: '10銘柄の次の一手を登録', category: 'strategy', icon: '🧠', rarity: 'epic', check: d => d.nextActionCount >= 10 },
   { id: 'earnings_watcher', name: '決算ウォッチャー', description: '3つの決算日を登録', category: 'strategy', icon: '📅', rarity: 'rare', check: d => d.eventCount >= 3 },
   { id: 'benefit_researcher', name: '優待リサーチャー', description: '3つの優待を登録', category: 'strategy', icon: '🎁', rarity: 'rare', check: d => d.benefitCount >= 3 },
 
