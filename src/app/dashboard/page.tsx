@@ -4,6 +4,10 @@ import { useState, useEffect } from 'react';
 import StockCard from '@/components/stock/StockCard';
 import SearchBar from '@/components/stock/SearchBar';
 import InvestmentCalendar from '@/components/calendar/InvestmentCalendar';
+import EarningsCountdown from '@/components/calendar/EarningsCountdown';
+import RightsDateCountdown from '@/components/calendar/RightsDateCountdown';
+import MonthlyDividendChart from '@/components/calendar/MonthlyDividendChart';
+import DividendYieldRanking from '@/components/calendar/DividendYieldRanking';
 import DailyChecklist from '@/components/settings/DailyChecklist';
 import InvestmentDiary from '@/components/settings/InvestmentDiary';
 import LevelBadge from '@/components/settings/LevelBadge';
@@ -71,7 +75,7 @@ export default function Home() {
   );
   const { hasPortfolioData } = usePortfolioData(stockData, isInitialized);
   const { dividendBenefitData } = useDividendBenefitData(
-    stockSymbols, stockDataMap, modals.isDividendBenefitListOpen, isInitialized
+    stockSymbols, stockDataMap, true, isInitialized
   );
 
   const {
@@ -136,12 +140,19 @@ export default function Home() {
           <PortfolioSummary portfolioData={stockData} />
         </div>
 
+        <MonthlyDividendChart dividendBenefitData={dividendBenefitData} />
+        <DividendYieldRanking dividendBenefitData={dividendBenefitData} onStockClick={handleStockClick} />
+
         {stockSymbols.length > 0 && hasCalendarData && (
-          <InvestmentCalendar
-            stockSymbols={stockSymbols}
-            stockData={stockCalendarData}
-            onStockClick={handleStockClick}
-          />
+          <>
+            <EarningsCountdown stockCalendarData={stockCalendarData} onStockClick={handleStockClick} />
+            <RightsDateCountdown stockCalendarData={stockCalendarData} onStockClick={handleStockClick} />
+            <InvestmentCalendar
+              stockSymbols={stockSymbols}
+              stockData={stockCalendarData}
+              onStockClick={handleStockClick}
+            />
+          </>
         )}
 
         {/* 次のステップのヒント */}
