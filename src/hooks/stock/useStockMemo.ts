@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { apiFetch, apiPut, apiDelete } from '@/lib/apiClient'
 import { playSound } from '@/lib/sound'
+import { grantXp } from '@/lib/gamification'
 import { useAsyncState } from '../util/useAsyncState'
 import { useAutoSave } from '../util/useAutoSave'
 
@@ -43,6 +44,7 @@ export function useStockMemo(stockId: string, options?: UseStockMemoOptions): Us
         if (data) {
           setLastSaved(new Date(data.updatedAt))
           playSound('noteSave')
+          grantXp('MEMO_SAVE')
         }
       })
     },

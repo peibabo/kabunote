@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { apiFetch } from '@/lib/apiClient'
 import { useAsyncState } from '../util/useAsyncState'
 import { useAutoSave } from '../util/useAutoSave'
+import { grantXp } from '@/lib/gamification'
 
 interface PriceState {
   currentPrice: string
@@ -75,6 +76,7 @@ export function useStockPrice(stockId: string, options?: UseStockPriceOptions): 
               stopLossPrice: latest.stopLoss ? parseFloat(latest.stopLoss) : null,
             }
           }))
+          grantXp('PRICE_UPDATE')
         }
       })
     },

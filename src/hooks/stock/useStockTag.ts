@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { apiFetch, apiPost, apiDelete } from '@/lib/apiClient'
 import { CustomTag, TagColor } from '@/types/tags'
 import { toast } from '@/lib/toast'
+import { grantXp } from '@/lib/gamification'
 
 interface UseStockTagReturn {
   tags: CustomTag[]
@@ -50,6 +51,7 @@ export function useStockTag(stockId: string, options?: UseStockTagOptions): UseS
       window.dispatchEvent(new CustomEvent('kabunote-db-tag-update', {
         detail: { symbol, tags: updatedTags }
       }))
+      grantXp('TAG_ADD')
     } catch (err) {
       console.error('❌ タグ追加エラー:', err)
       toast.error('タグの追加がうまくいきませんでした。再度お試しください')

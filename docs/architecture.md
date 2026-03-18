@@ -1,6 +1,6 @@
 # Kabunote - アーキテクチャリファレンス
 
-## データベーススキーマ（19テーブル）
+## データベーススキーマ（21テーブル）
 
 ```
 app_users (ユーザー管理)
@@ -33,9 +33,14 @@ app_users (ユーザー管理)
   │     └── stock_price_snapshots (銘柄別日次株価スナップショット)
   │           id, snapshot_id, stock_id, symbol, current_price, shares, value, cost
   │           @@unique([snapshotId, stockId])
-  └── chart_memos (チャートメモ: グラフデータポイントへのメモ)
-        id, user_id, snapshot_date, chart_type, symbol, content
-        @@unique([userId, snapshotDate, chartType, symbol])
+  ├── chart_memos (チャートメモ: グラフデータポイントへのメモ)
+  │     id, user_id, snapshot_date, chart_type, symbol, content
+  │     @@unique([userId, snapshotDate, chartType, symbol])
+  ├── user_gamification (ゲーミフィケーション状態)
+  │     id, user_id(UNIQUE), total_xp, level, daily_xp, daily_xp_date, current_streak, longest_streak, last_active_date
+  └── xp_activity_logs (XPアクティビティログ)
+        id, user_id, action_type, xp_earned, description
+        @@index([userId, createdAt DESC])
 ```
 
 ### Enum定義
@@ -84,6 +89,14 @@ app_users (ユーザー管理)
 | `/api/portfolio/chart-memos` | PUT | チャートメモ作成/更新（snapshotDate, chartType, symbol?, content） |
 | `/api/portfolio/chart-memos` | DELETE | チャートメモ削除（?snapshotDate&chartType&symbol） |
 
+### ゲーミフィケーション
+| パス | メソッド | 説明 |
+|------|---------|------|
+| `/api/gamification` | GET | ゲーミフィケーション状態取得（初回自動作成） |
+| `/api/gamification/xp` | POST | XP付与（日次上限・ストリーク・レベルアップ判定） |
+| `/api/gamification/activity` | GET | 直近30件のXPアクティビティログ |
+| `/api/gamification/titles` | GET | 称号コレクション状態（集計+全25称号の獲得判定） |
+
 ### フィードバック
 | パス | メソッド | 説明 |
 |------|---------|------|
@@ -103,7 +116,7 @@ app_users (ユーザー管理)
 
 ---
 
-## カスタムフック一覧（44フック）
+## カスタムフック一覧（46フック）
 
 ### `hooks/stock/` — 銘柄データ
 | フック | 説明 |
@@ -164,6 +177,8 @@ app_users (ユーザー管理)
 | `useCash` | 投資余力現金・Next Actionメモ（300msデバウンス） |
 | `useSound` | サウンド設定 |
 | `useSoundOnChange` | 値変更時のサウンド再生 |
+| `useGamification` | ゲーミフィケーション状態管理（XPイベントリスニング） |
+| `useTitles` | 称号コレクション状態管理（獲得検知・トースト連動） |
 
 ### `hooks/tab/` — タブ状態
 | フック | 説明 |
@@ -190,7 +205,7 @@ app_users (ユーザー管理)
 
 ---
 
-## 型定義ファイル一覧（12ファイル）
+## 型定義ファイル一覧（14ファイル）
 
 型定義のみ。計算ロジック・フォーマット関数は `src/lib/*Calc.ts` に分離済み。
 
@@ -208,6 +223,8 @@ app_users (ユーザー管理)
 | `investmentCalendar.ts` | InvestmentEvent, CalendarDay, TimelineEvent, EventSummary |
 | `snooze.ts` | SnoozeDuration, SnoozedAlert |
 | `portfolio.ts` | PortfolioSnapshotData, StockSnapshotData, HistoryRange, ChartType |
+| `gamification.ts` | GamificationState, XpGrantResult, XpActionType, XpActivityLogEntry |
+| `titles.ts` | TitleDefinition, TitleStatus, TitlesResponse, TitleCheckData, TitleCategory, TitleRarity |
 
 ---
 

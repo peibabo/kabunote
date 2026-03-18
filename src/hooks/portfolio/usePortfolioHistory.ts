@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import type { PortfolioSnapshotData, HistoryRange } from '@/types/portfolio';
+import { grantXp } from '@/lib/gamification';
 
 export function usePortfolioHistory() {
   const [range, setRange] = useState<HistoryRange>('1M');
@@ -70,6 +71,7 @@ export function usePortfolioHistory() {
       }
       setTodayRecorded(true);
       await fetchHistory(range);
+      grantXp('PORTFOLIO_SNAPSHOT')
       return true;
     } catch (e) {
       setError(e instanceof Error ? e.message : '不明なエラー');

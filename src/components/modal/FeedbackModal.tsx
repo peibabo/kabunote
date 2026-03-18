@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { apiPost } from '@/lib/apiClient';
 import { toast } from '@/lib/toast';
 import { playSound } from '@/lib/sound';
+import { grantXp } from '@/lib/gamification';
 import { FEEDBACK_CATEGORIES } from '@/lib/feedbackCategories';
 
 interface FeedbackModalProps {
@@ -41,6 +42,7 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
     try {
       await apiPost('/api/feedback', { category, content: content.trim() });
       playSound('buttonAction');
+      grantXp('FEEDBACK');
       setIsSending(false);
       handleClose();
       toast.success('ご意見ありがとうございます！今後の改善に活かしていきます 🙏');

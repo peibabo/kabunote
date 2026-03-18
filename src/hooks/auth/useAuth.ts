@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase-client'
+import { grantXp } from '@/lib/gamification'
 import type { User as SupabaseUser } from '@supabase/supabase-js'
 
 interface User extends SupabaseUser {
@@ -76,6 +77,7 @@ export function useAuth() {
       }
 
       const dbUser = await response.json()
+      grantXp('LOGIN')
       return {
         ...supabaseUser,
         dbUser,

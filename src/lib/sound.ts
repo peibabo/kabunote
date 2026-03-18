@@ -17,7 +17,8 @@ export type SoundName =
   | 'searchClear'
   | 'noteSave'
   | 'accordionOpen'
-  | 'accordionClose';
+  | 'accordionClose'
+  | 'levelUp';
 
 interface SoundDef {
   waveform: OscillatorType;
@@ -26,7 +27,7 @@ interface SoundDef {
   duration: number; // seconds
 }
 
-const SOUND_DEFS: Record<Exclude<SoundName, 'noteSave' | 'accordionOpen' | 'accordionClose'>, SoundDef> = {
+const SOUND_DEFS: Record<Exclude<SoundName, 'noteSave' | 'accordionOpen' | 'accordionClose' | 'levelUp'>, SoundDef> = {
   textInput:    { waveform: 'sine', freqStart: 1047, freqEnd: 1047, duration: 0.05 },
   toggle:       { waveform: 'sine', freqStart: 700,  freqEnd: 900,  duration: 0.08 },
   select:       { waveform: 'sine', freqStart: 880,  freqEnd: 1100, duration: 0.06 },
@@ -146,9 +147,38 @@ function playChimeSound(open: boolean): void {
   }
 }
 
+/** レベルアップ時の上昇アルペジオ（C5→E5→G5→C6） */
+function playLevelUpSound(): void {
+  if (!audioCtx) return;
+  const t = audioCtx.currentTime;
+  const notes = [523, 659, 784, 1047]; // C5, E5, G5, C6
+  const noteDelay = 0.1;
+  const noteDuration = 0.4;
+
+  for (let i = 0; i < notes.length; i++) {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = notes[i];
+    const start = t + i * noteDelay;
+    gain.gain.setValueAtTime(volume * 0.3, start);
+    gain.gain.linearRampToValueAtTime(0, start + noteDuration);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(start);
+    osc.stop(start + noteDuration);
+  }
+}
+
 /** サウンドを再生する */
 export function playSound(name: SoundName): void {
   if (!enabled || !audioCtx) return;
+
+  // レベルアップのアルペジオ
+  if (name === 'levelUp') {
+    playLevelUpSound();
+    return;
+  }
 
   // noteSave はノイズベースのペン書き音
   if (name === 'noteSave') {

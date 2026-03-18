@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { apiFetch, apiPost } from '@/lib/apiClient'
 import { useAsyncState } from '../util/useAsyncState'
 import { Position } from '@/types/positions'
+import { grantXp } from '@/lib/gamification'
 
 interface UseStockPositionReturn {
   positions: Position[]
@@ -46,6 +47,7 @@ export function useStockPosition(stockId: string, options?: UseStockPositionOpti
       await apiPost(`/api/stocks/${stockId}/position`, data)
       const newPositions = await loadFromDB()
       dispatchUpdate(newPositions)
+      grantXp('POSITION_ADD')
     })
   }, [stockId, withSaving, loadFromDB, dispatchUpdate])
 

@@ -12,6 +12,7 @@ const createMockModel = () => ({
   deleteMany: vi.fn(),
   count: vi.fn(),
   aggregate: vi.fn(),
+  groupBy: vi.fn(),
 })
 
 export const prismaMock = {
@@ -34,6 +35,8 @@ export const prismaMock = {
   chartMemo: createMockModel(),
   portfolioSnapshot: createMockModel(),
   stockPriceSnapshot: { ...createMockModel(), createMany: vi.fn() },
+  userGamification: createMockModel(),
+  xpActivityLog: createMockModel(),
   $transaction: vi.fn((arg: unknown) => {
     if (typeof arg === 'function') return arg(prismaMock)
     if (Array.isArray(arg)) return Promise.all(arg)
