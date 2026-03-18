@@ -12,6 +12,7 @@ import { stockKey } from '@/lib/storageKeys';
 // Components
 import StockCardHeader from './StockCardHeader';
 import BasicTab from '../stock-tabs/BasicTab';
+import MemoTemplateSelector from '../stock-tabs/MemoTemplateSelector';
 import InvestmentStrategyTab from '../stock-tabs/InvestmentStrategyTab';
 import ManagementTab from '../stock-tabs/ManagementTab';
 import AlertDisplay from '../alert/AlertDisplay';
@@ -242,9 +243,15 @@ function StockCard({ symbol, onRemove, favoriteGroups, onFavoriteGroupsChange, i
                 />
 
                 <div className="flex items-center justify-between">
-                  <p className="text-xs text-gray-400">
-                    自動保存されます
-                  </p>
+                  <div className="flex items-center gap-3">
+                    <p className="text-xs text-gray-400">
+                      自動保存されます
+                    </p>
+                    <MemoTemplateSelector
+                      onSelect={(content) => updateMemo(content)}
+                      currentMemo={memo}
+                    />
+                  </div>
                   <span className={`text-xs ${memo.length > 1800 ? 'text-orange-400' : memo.length > 1900 ? 'text-red-400' : 'text-gray-400'}`}>
                     {memo.length}/2000文字
                   </span>
