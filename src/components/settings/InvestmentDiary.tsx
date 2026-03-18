@@ -230,31 +230,33 @@ export default function InvestmentDiary() {
 
                   {/* 追加フォーム */}
                   {diary.newsItems.length < 20 && (
-                    <div className="flex gap-1.5">
+                    <div className="space-y-1.5">
                       <input
                         type="url"
                         value={newUrl}
                         onChange={e => setNewUrl(e.target.value)}
                         onKeyDown={e => { if (e.key === 'Enter') handleAddNews() }}
                         placeholder="https://..."
-                        className="flex-1 bg-gray-900/50 text-xs text-gray-200 placeholder-gray-600 border border-gray-700/50 rounded-md px-2 py-1.5 focus:outline-none focus:border-orange-500/50 transition-colors"
+                        className="w-full bg-gray-900/50 text-xs text-gray-200 placeholder-gray-600 border border-gray-700/50 rounded-md px-2 py-1.5 focus:outline-none focus:border-orange-500/50 transition-colors"
                       />
-                      <input
-                        type="text"
-                        value={newComment}
-                        onChange={e => setNewComment(e.target.value)}
-                        onKeyDown={e => { if (e.key === 'Enter') handleAddNews() }}
-                        placeholder="コメント"
-                        maxLength={500}
-                        className="w-28 bg-gray-900/50 text-xs text-gray-200 placeholder-gray-600 border border-gray-700/50 rounded-md px-2 py-1.5 focus:outline-none focus:border-orange-500/50 transition-colors"
-                      />
-                      <button
-                        onClick={handleAddNews}
-                        disabled={!newUrl.trim() || !/^https?:\/\/.+/.test(newUrl.trim())}
-                        className="cursor-pointer text-xs text-orange-400 hover:text-orange-300 px-2 py-1 disabled:opacity-30 disabled:cursor-not-allowed transition-colors shrink-0"
-                      >
-                        追加
-                      </button>
+                      <div className="flex gap-1.5">
+                        <input
+                          type="text"
+                          value={newComment}
+                          onChange={e => setNewComment(e.target.value)}
+                          onKeyDown={e => { if (e.key === 'Enter') handleAddNews() }}
+                          placeholder="コメント（任意）"
+                          maxLength={500}
+                          className="flex-1 bg-gray-900/50 text-xs text-gray-200 placeholder-gray-600 border border-gray-700/50 rounded-md px-2 py-1.5 focus:outline-none focus:border-orange-500/50 transition-colors"
+                        />
+                        <button
+                          onClick={handleAddNews}
+                          disabled={!newUrl.trim() || !/^https?:\/\/.+/.test(newUrl.trim())}
+                          className="cursor-pointer text-xs text-orange-400 hover:text-orange-300 px-2 py-1 disabled:opacity-30 disabled:cursor-not-allowed transition-colors shrink-0"
+                        >
+                          追加
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>
