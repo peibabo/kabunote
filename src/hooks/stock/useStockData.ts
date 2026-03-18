@@ -180,6 +180,8 @@ export function useStockData(): UseStockDataReturn {
         currentPrice: null,
         targetPrice: null,
         stopLossPrice: null,
+        per: null,
+        pbr: null,
         memo: '',
         positions: [],
         events: [],
