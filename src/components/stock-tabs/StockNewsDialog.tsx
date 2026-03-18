@@ -44,7 +44,7 @@ export default function StockNewsDialog({
     onAdd(url, newComment.trim())
     setNewUrl('')
     setNewComment('')
-    playSound('buttonClick')
+    playSound('buttonAction')
   }
 
   return (
