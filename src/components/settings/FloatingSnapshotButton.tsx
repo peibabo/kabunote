@@ -34,7 +34,7 @@ export default function FloatingSnapshotButton() {
   // 今日の記録有無を確認
   const checkTodayRecorded = useCallback(async () => {
     try {
-      const res = await fetch('/api/portfolio/history?range=1W');
+      const res = await fetch('/api/portfolio/history?range=1W&detail=false');
       if (!res.ok) return;
       const json = await res.json();
       const today = getTodayJST();

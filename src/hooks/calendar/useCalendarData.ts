@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { loadStockData, getStockData } from '@/data/stockNames';
+import { getCompanyNameSync } from '@/data/stockNames';
 import { StockData } from '@/hooks/stock/useStockData';
 import {
   DividendRightsSettings,
@@ -45,50 +45,43 @@ export function useCalendarData(
     }).join('||');
   }, [stocks, stockDataMap]);
 
-  // カレンダー用データの更新
+  // カレンダー用データの更新（同期処理）
   useEffect(() => {
-    const updateCalendarData = async () => {
-      if (!isInitialized || stocks.length === 0) return;
+    if (!isInitialized || stocks.length === 0) return;
 
-      const calendarData: CalendarDataMap = {};
+    const calendarData: CalendarDataMap = {};
 
-      await loadStockData();
+    for (const symbol of stocks) {
+      const dbStock = stockDataMap.get(symbol);
 
-      for (const symbol of stocks) {
-        const stockInfo = await getStockData(symbol);
-        const dbStock = stockDataMap.get(symbol);
+      const earningsEvent = dbStock?.events?.find(e => e.eventType === 'EARNINGS');
+      const earningsDate = earningsEvent?.eventDate || '';
 
-        const earningsEvent = dbStock?.events?.find(e => e.eventType === 'EARNINGS');
-        const earningsDate = earningsEvent?.eventDate || '';
-
-        const dividendRightsSettings: DividendRightsSettings =
-          dbStock?.dividend?.rightsMonth && dbStock.dividend.rightsDay
-            ? { month: dbStock.dividend.rightsMonth, day: dbStock.dividend.rightsDay, isRecurring: true, isActive: true }
-            : createDefaultRightsSettings();
-
-        const shareholderRightsSettings: ShareholderRightsSettings =
-          dbStock?.benefit?.rightsMonth && dbStock.benefit.rightsDay
-            ? { month: dbStock.benefit.rightsMonth, day: dbStock.benefit.rightsDay, isRecurring: true, isActive: true }
-            : createDefaultRightsSettings();
-
-        const meetingEvent = dbStock?.events?.find(e => e.eventType === 'SHAREHOLDER_MEETING');
-        const shareholderMeetingSettings: ShareholderMeetingSettings = meetingEvent
-          ? { month: meetingEvent.eventMonth, day: meetingEvent.eventDay, isRecurring: meetingEvent.isRecurring, isActive: meetingEvent.isActive }
+      const dividendRightsSettings: DividendRightsSettings =
+        dbStock?.dividend?.rightsMonth && dbStock.dividend.rightsDay
+          ? { month: dbStock.dividend.rightsMonth, day: dbStock.dividend.rightsDay, isRecurring: true, isActive: true }
           : createDefaultRightsSettings();
 
-        calendarData[symbol] = {
-          name: dbStock?.name || stockInfo?.name || symbol,
-          earningsDate,
-          dividendRightsSettings,
-          shareholderRightsSettings,
-          shareholderMeetingSettings
-        };
-      }
+      const shareholderRightsSettings: ShareholderRightsSettings =
+        dbStock?.benefit?.rightsMonth && dbStock.benefit.rightsDay
+          ? { month: dbStock.benefit.rightsMonth, day: dbStock.benefit.rightsDay, isRecurring: true, isActive: true }
+          : createDefaultRightsSettings();
 
-      setStockCalendarData(calendarData);
-    };
+      const meetingEvent = dbStock?.events?.find(e => e.eventType === 'SHAREHOLDER_MEETING');
+      const shareholderMeetingSettings: ShareholderMeetingSettings = meetingEvent
+        ? { month: meetingEvent.eventMonth, day: meetingEvent.eventDay, isRecurring: meetingEvent.isRecurring, isActive: meetingEvent.isActive }
+        : createDefaultRightsSettings();
 
-    updateCalendarData();
+      calendarData[symbol] = {
+        name: dbStock?.name || getCompanyNameSync(symbol) || symbol,
+        earningsDate,
+        dividendRightsSettings,
+        shareholderRightsSettings,
+        shareholderMeetingSettings
+      };
+    }
+
+    setStockCalendarData(calendarData);
   }, [stocks, isInitialized, calendarRelevantKey, stockDataMap]);
 
   // DB カスタムイベントリスナー

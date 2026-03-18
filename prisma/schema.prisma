@@ -64,6 +64,7 @@ model Stock {
   favoriteGroups StockFavoriteGroup[]
 
   @@unique([userId, symbol])
+  @@index([userId, order])
   @@map("stocks")
 }
 
@@ -108,6 +109,7 @@ model StockPosition {
 
   stock         Stock     @relation(fields: [stockId], references: [id], onDelete: Cascade)
 
+  @@index([stockId])
   @@map("stock_positions")
 }
 
@@ -127,6 +129,7 @@ model StockEvent {
   stock       Stock       @relation(fields: [stockId], references: [id], onDelete: Cascade)
 
   @@unique([stockId, eventType])
+  @@index([stockId])
   @@map("stock_events")
 }
 
@@ -174,6 +177,7 @@ model StockTag {
   stock     Stock    @relation(fields: [stockId], references: [id], onDelete: Cascade)
 
   @@unique([stockId, name])
+  @@index([stockId])
   @@map("stock_tags")
 }
 
@@ -208,6 +212,7 @@ model FavoriteGroup {
   stockGroups StockFavoriteGroup[]
 
   @@unique([userId, name])
+  @@index([userId])
   @@map("favorite_groups")
 }
 
@@ -221,6 +226,8 @@ model StockFavoriteGroup {
   group   FavoriteGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
 
   @@unique([stockId, groupId])
+  @@index([groupId])
+  @@index([stockId])
   @@map("stock_favorite_groups")
 }
 
@@ -235,6 +242,7 @@ model SnoozedAlert {
 
   user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId])
   @@map("snoozed_alerts")
 }
 
@@ -270,6 +278,7 @@ model PortfolioSnapshot {
   stockSnapshots StockPriceSnapshot[]
 
   @@unique([userId, snapshotDate])
+  @@index([userId, snapshotDate])
   @@map("portfolio_snapshots")
 }
 
@@ -288,6 +297,7 @@ model StockPriceSnapshot {
   snapshot PortfolioSnapshot @relation(fields: [snapshotId], references: [id], onDelete: Cascade)
 
   @@unique([snapshotId, stockId])
+  @@index([snapshotId])
   @@map("stock_price_snapshots")
 }
 
@@ -305,6 +315,7 @@ model ChartMemo {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, snapshotDate, chartType, symbol])
+  @@index([userId])
   @@map("chart_memos")
 }
 
@@ -390,6 +401,7 @@ model UserExternalLink {
 
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId])
   @@map("user_external_links")
 }
 
@@ -403,5 +415,6 @@ model Feedback {
 
   user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId])
   @@map("feedbacks")
 }
