@@ -15,6 +15,7 @@ export const GET = withAuth(async ({ user }) => {
       benefit: true,
       tags: { orderBy: { createdAt: 'asc' } },
       nextAction: true,
+      newsItems: { orderBy: { order: 'asc' } },
     }
   })
 
@@ -76,6 +77,11 @@ export const GET = withAuth(async ({ user }) => {
         targetShares: stock.nextAction.targetShares,
         strategyMemo: stock.nextAction.strategyMemo || '',
       } : null,
+      newsItems: stock.newsItems.map(n => ({
+        id: n.id,
+        url: n.url,
+        comment: n.comment,
+      })),
       createdAt: stock.createdAt.toISOString(),
       updatedAt: stock.updatedAt.toISOString()
     }

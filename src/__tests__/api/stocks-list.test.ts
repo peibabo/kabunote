@@ -31,6 +31,7 @@ const mockStockDbData = {
   benefit: null,
   tags: [],
   nextAction: null,
+  newsItems: [],
 }
 
 describe('GET /api/stocks/list', () => {
