@@ -15,6 +15,7 @@ import { useStockPrice } from '@/hooks/stock/useStockPrice';
 import { useStockEvent } from '@/hooks/stock/useStockEvent';
 import { useStockTag } from '@/hooks/stock/useStockTag';
 import { useStockAlerts } from '@/hooks/alert/useStockAlerts';
+import { useStockNews } from '@/hooks/stock/useStockNews';
 import { useCash } from '@/hooks/auth/useCash';
 import { stockKey } from '@/lib/storageKeys';
 
@@ -63,6 +64,17 @@ export function useStockCardData(symbol: string, favoriteGroups: FavoriteGroup[]
       pbr: initialStockData.pbr ?? null,
     }
   } : undefined);
+
+  // 銘柄ニュース
+  const {
+    newsItems,
+    isLoading: isNewsLoading,
+    isSaving: isNewsSaving,
+    lastSaved: newsLastSaved,
+    addNewsItem,
+    removeNewsItem,
+    updateNewsItem,
+  } = useStockNews(`stock-${symbol}`, initialStockData?.newsItems ? { initialData: initialStockData.newsItems } : undefined);
 
   // 権利確定日設定
   const [rightsSettings, setRightsSettings] = useStringLocalStorage(`kabunote-rights-settings-${symbol}`, JSON.stringify(createDefaultRightsSettings()), 400);
@@ -264,5 +276,14 @@ export function useStockCardData(symbol: string, favoriteGroups: FavoriteGroup[]
     // アラート
     targetPriceAlert,
     cardStyles,
+
+    // 銘柄ニュース
+    newsItems,
+    addNewsItem,
+    removeNewsItem,
+    updateNewsItem,
+    isNewsLoading,
+    isNewsSaving,
+    newsLastSaved,
   };
 }

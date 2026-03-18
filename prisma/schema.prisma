@@ -38,6 +38,7 @@ model User {
   checklistChecks    ChecklistCheck[]
   diaries            InvestmentDiary[]
   diaryNewsItems     DiaryNewsItem[]
+  stockNewsItems     StockNewsItem[]
 
   @@map("app_users")
 }
@@ -66,6 +67,7 @@ model Stock {
   nextAction     NextActionPlan?
   tabStates      StockTabState[]
   favoriteGroups StockFavoriteGroup[]
+  newsItems      StockNewsItem[]
 
   @@unique([userId, symbol])
   @@index([userId, order])
@@ -427,6 +429,24 @@ model DiaryNewsItem {
   @@index([diaryId])
   @@index([userId, createdAt(sort: Desc)])
   @@map("diary_news_items")
+}
+
+// 銘柄ニュースアイテム
+model StockNewsItem {
+  id        String   @id @default(cuid())
+  stockId   String   @map("stock_id")
+  userId    String   @map("user_id")
+  url       String
+  comment   String   @default("")
+  order     Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  stock Stock @relation(fields: [stockId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([stockId])
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("stock_news_items")
 }
 
 // Enums

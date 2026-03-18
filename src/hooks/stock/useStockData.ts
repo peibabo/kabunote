@@ -59,6 +59,11 @@ export interface StockData {
     targetShares: number | null;
     strategyMemo: string;
   } | null;
+  newsItems?: Array<{
+    id: string;
+    url: string;
+    comment: string;
+  }>;
   createdAt: string;
   updatedAt: string;
 }

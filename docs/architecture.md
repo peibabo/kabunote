@@ -18,6 +18,7 @@ app_users (ユーザー管理)
   │     ├── stock_tags         1:N  name, color  @@unique([stockId, name])
   │     ├── next_action_plans  1:1  action_type(ENUM), priority(ENUM), target_price, target_shares, strategy_memo
   │     ├── stock_tab_states   1:N  tab_type, current_tab  @@unique([stockId, tabType])
+  │     ├── stock_news_items   1:N  url, comment, order  @@index([stockId]) @@index([userId, createdAt DESC])
   │     └── stock_favorite_groups (中間テーブル)  @@unique([stockId, groupId])
   ├── favorite_groups (お気に入りグループ)
   │     id, user_id, name, color, order  @@unique([userId, name])
@@ -94,6 +95,7 @@ app_users (ユーザー管理)
 | `/api/stocks/[stockId]/tag/[tagId]` | DELETE | タグ削除 |
 | `/api/stocks/[stockId]/next-action-plan` | GET/PUT/DELETE | 次の一手戦略 |
 | `/api/stocks/[stockId]/price-history` | GET | 個別銘柄の株価履歴（?range=1M/3M/6M/1Y/2Y、デフォルト3M） |
+| `/api/stocks/[stockId]/news` | GET/PUT | 銘柄ニュース取得・一括更新（最大20件、URL+コメント） |
 
 ### ポートフォリオ履歴
 | パス | メソッド | 説明 |
@@ -128,7 +130,7 @@ app_users (ユーザー管理)
 |------|---------|------|
 | `/api/diary` | GET | 日記取得（?date=YYYY-MM-DD, newsItems含む）または月の日記日付リスト（?month=YYYY-MM） |
 | `/api/diary` | PUT | 日記保存（upsert: date, marketOverview, newsItems[], reflection, tomorrowFocus） |
-| `/api/diary/news` | GET | ニュース一覧（全日付横断、?limit&offset） |
+| `/api/diary/news` | GET | ニュース一覧（?limit&offset&source=all/diary/stock） |
 
 ### フィードバック
 | パス | メソッド | 説明 |
@@ -157,6 +159,7 @@ app_users (ユーザー管理)
 | `useStockData` | 銘柄データ一括取得（stocks/list API） |
 | `useStockCardData` | 銘柄カード統合データ（10+フックのファサード） |
 | `useStockMemo` | 株ノオト（デバウンス自動保存） |
+| `useStockNews` | 銘柄ニュース管理（URL+コメント、300msデバウンス自動保存） |
 | `useStockPrice` | 株価データ（現在株価・利確目標・損切り）300msデバウンス |
 | `useStockPosition` | 複数ポジションCRUD（追加・編集・削除） |
 | `useStockEvent` | 決算日・株主総会日（500msデバウンス） |

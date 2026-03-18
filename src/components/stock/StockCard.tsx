@@ -18,6 +18,7 @@ import ManagementTab from '../stock-tabs/ManagementTab';
 import AlertDisplay from '../alert/AlertDisplay';
 import TagEditor from '../tag/TagEditor';
 import FavoriteGroupSelector from '../tag/FavoriteGroupSelector';
+import StockNewsDialog from '../stock-tabs/StockNewsDialog';
 
 interface StockCardProps {
   symbol: string;
@@ -43,6 +44,7 @@ function StockCard({ symbol, onRemove, favoriteGroups, onFavoriteGroupsChange, i
   const [isTagEditorOpen, setIsTagEditorOpen] = useState(false);
   const [isFavoriteGroupSelectorOpen, setIsFavoriteGroupSelectorOpen] = useState(false);
   const [isMemoModalOpen, setIsMemoModalOpen] = useState(false);
+  const [isNewsDialogOpen, setIsNewsDialogOpen] = useState(false);
 
   // データ（ファサードフック）
   const {
@@ -55,6 +57,8 @@ function StockCard({ symbol, onRemove, favoriteGroups, onFavoriteGroupsChange, i
     earningsDate, shareholderMeetingSettings, updateEarningsDate, updateShareholderMeetingSettings,
     nextActionPlan, updateNap, deleteNap, isNapLoading, isNapSaving,
     targetPriceAlert, cardStyles,
+    newsItems, addNewsItem, removeNewsItem, updateNewsItem,
+    isNewsLoading, isNewsSaving, newsLastSaved,
   } = useStockCardData(symbol, favoriteGroups, initialStockData);
 
   // お気に入りグループの変更を処理
@@ -175,6 +179,9 @@ function StockCard({ symbol, onRemove, favoriteGroups, onFavoriteGroupsChange, i
               pbr={pbr}
               onPerChange={setPer}
               onPbrChange={setPbr}
+              newsItems={newsItems}
+              onNewsDialogOpen={() => setIsNewsDialogOpen(true)}
+              isNewsLoading={isNewsLoading}
             />
           )}
 
@@ -263,6 +270,21 @@ function StockCard({ symbol, onRemove, favoriteGroups, onFavoriteGroupsChange, i
               </div>
             </div>
           </div>
+        )}
+
+        {/* 銘柄ニュースダイアログ */}
+        {isNewsDialogOpen && (
+          <StockNewsDialog
+            symbol={symbol}
+            companyName={companyName}
+            newsItems={newsItems}
+            onAdd={addNewsItem}
+            onRemove={removeNewsItem}
+            onUpdate={updateNewsItem}
+            isSaving={isNewsSaving}
+            lastSaved={newsLastSaved}
+            onClose={() => setIsNewsDialogOpen(false)}
+          />
         )}
 
         {/* タグエディター */}
