@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { playSound } from '@/lib/sound';
 
 interface UseAccordionStateOptions {
@@ -14,26 +14,29 @@ interface UseAccordionStateOptions {
  * アコーディオンの開閉状態を管理するフック
  * - playSound統合
  * - localStorage保存あり/なし対応
+ * - SSR安全（初回はdefaultExpandedでレンダリング、マウント後にlocalStorageの値を適用）
  */
 export function useAccordionState({
   storageKey,
   defaultExpanded = false,
 }: UseAccordionStateOptions = {}) {
-  const [isExpanded, setIsExpanded] = useState<boolean>(() => {
-    if (storageKey && typeof window !== 'undefined') {
+  const [isExpanded, setIsExpanded] = useState<boolean>(defaultExpanded);
+
+  // マウント後にlocalStorageの値を適用（hydrationミスマッチ回避）
+  useEffect(() => {
+    if (storageKey) {
       const saved = localStorage.getItem(storageKey);
       if (saved !== null) {
-        return saved === 'true';
+        setIsExpanded(saved === 'true');
       }
     }
-    return defaultExpanded;
-  });
+  }, [storageKey]);
 
   const toggle = () => {
     const next = !isExpanded;
     playSound(next ? 'accordionOpen' : 'accordionClose');
     setIsExpanded(next);
-    if (storageKey && typeof window !== 'undefined') {
+    if (storageKey) {
       localStorage.setItem(storageKey, String(next));
     }
   };
