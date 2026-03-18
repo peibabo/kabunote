@@ -84,7 +84,7 @@ app_users (ユーザー管理)
 | パス | メソッド | 説明 |
 |------|---------|------|
 | `/api/portfolio/snapshot` | POST | ポートフォリオ日次スナップショット作成/更新（同日upsert） |
-| `/api/portfolio/history` | GET | ポートフォリオ履歴取得（?range=1W/1M/3M/6M/1Y/2Y） |
+| `/api/portfolio/history` | GET | ポートフォリオ履歴取得（?range=1W/1M/3M/6M/1Y/2Y&detail=false で銘柄別スナップショット省略） |
 | `/api/portfolio/chart-memos` | GET | チャートメモ一覧取得（?range=1W/1M/3M/6M/1Y/2Y） |
 | `/api/portfolio/chart-memos` | PUT | チャートメモ作成/更新（snapshotDate, chartType, symbol?, content） |
 | `/api/portfolio/chart-memos` | DELETE | チャートメモ削除（?snapshotDate&chartType&symbol） |

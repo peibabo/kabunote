@@ -7,6 +7,7 @@ export const GET = withAuth(async ({ user }) => {
     where: { userId: user.id },
     orderBy: { order: 'asc' },
     include: {
+      memo: true,
       prices: true,
       positions: { orderBy: { createdAt: 'asc' } },
       events: true,
@@ -29,7 +30,7 @@ export const GET = withAuth(async ({ user }) => {
       currentPrice: price?.currentPrice != null ? Number(price.currentPrice) : null,
       targetPrice: price?.targetPrice != null ? Number(price.targetPrice) : null,
       stopLossPrice: price?.stopLossPrice != null ? Number(price.stopLossPrice) : null,
-      memo: '',
+      memo: stock.memo?.content ?? '',
       positions: stock.positions.map(p => ({
         id: p.id,
         shares: p.shares,

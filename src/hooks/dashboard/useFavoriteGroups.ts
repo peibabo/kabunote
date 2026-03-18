@@ -64,12 +64,13 @@ export function useFavoriteGroups(): UseFavoriteGroupsReturn {
       const prevMap = new Map(prevGroups.map(g => [g.id, g]))
       const newMap = new Map(newGroups.map(g => [g.id, g]))
 
-      // 削除されたグループ
-      for (const prev of prevGroups) {
-        if (!newMap.has(prev.id)) {
-          await fetch(`/api/favorite-groups/${prev.id}`, { method: 'DELETE' })
-        }
-      }
+      // 削除されたグループ（並列実行）
+      const deletedGroups = prevGroups.filter(prev => !newMap.has(prev.id))
+      await Promise.all(
+        deletedGroups.map(prev =>
+          fetch(`/api/favorite-groups/${prev.id}`, { method: 'DELETE' })
+        )
+      )
 
       // 追加・更新されたグループ
       for (const newGroup of newGroups) {
@@ -100,14 +101,16 @@ export function useFavoriteGroups(): UseFavoriteGroupsReturn {
                 return updated
               })
 
-              // 銘柄紐付けを追加
-              for (const symbol of newGroup.stocks) {
-                await fetch(`/api/favorite-groups/${createdGroup.id}/stocks`, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ symbol })
-                })
-              }
+              // 銘柄紐付けを追加（並列実行）
+              await Promise.all(
+                newGroup.stocks.map(symbol =>
+                  fetch(`/api/favorite-groups/${createdGroup.id}/stocks`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ symbol })
+                  })
+                )
+              )
             }
           }
         } else {
@@ -127,31 +130,29 @@ export function useFavoriteGroups(): UseFavoriteGroupsReturn {
             })
           }
 
-          // 銘柄の差分同期
+          // 銘柄の差分同期（並列実行）
           const prevStocks = new Set(prev.stocks)
           const newStocks = new Set(newGroup.stocks)
 
-          // 追加された銘柄
-          for (const symbol of newGroup.stocks) {
-            if (!prevStocks.has(symbol)) {
-              await fetch(`/api/favorite-groups/${newGroup.id}/stocks`, {
+          const addedStocks = newGroup.stocks.filter(s => !prevStocks.has(s))
+          const removedStocks = prev.stocks.filter(s => !newStocks.has(s))
+
+          await Promise.all([
+            ...addedStocks.map(symbol =>
+              fetch(`/api/favorite-groups/${newGroup.id}/stocks`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ symbol })
               })
-            }
-          }
-
-          // 削除された銘柄
-          for (const symbol of prev.stocks) {
-            if (!newStocks.has(symbol)) {
-              await fetch(`/api/favorite-groups/${newGroup.id}/stocks`, {
+            ),
+            ...removedStocks.map(symbol =>
+              fetch(`/api/favorite-groups/${newGroup.id}/stocks`, {
                 method: 'DELETE',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ symbol })
               })
-            }
-          }
+            ),
+          ])
         }
       }
     } catch (err) {
