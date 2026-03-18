@@ -10,9 +10,10 @@ import MonthlyCalendar from '@/components/calendar/MonthlyCalendar';
 interface InvestmentTimelineProps {
   events: Record<string, InvestmentEvent[]>;
   onStockClick?: (symbol: string) => void;
+  includeCalendar?: boolean;
 }
 
-export default function InvestmentTimeline({ events, onStockClick }: InvestmentTimelineProps) {
+export default function InvestmentTimeline({ events, onStockClick, includeCalendar = true }: InvestmentTimelineProps) {
   const {
     tooltip: timelineTooltip,
     show: showTooltip,
@@ -187,7 +188,7 @@ export default function InvestmentTimeline({ events, onStockClick }: InvestmentT
         </div>
 
         {/* 月間カレンダー */}
-        <MonthlyCalendar events={events} onStockClick={onStockClick} />
+        {includeCalendar && <MonthlyCalendar events={events} onStockClick={onStockClick} />}
       </div>
 
       {/* タイムラインツールチップ */}

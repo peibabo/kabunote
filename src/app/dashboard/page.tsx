@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import StockCard from '@/components/stock/StockCard';
 import SearchBar from '@/components/stock/SearchBar';
-import InvestmentCalendar from '@/components/calendar/InvestmentCalendar';
 import InvestmentScheduleWidget from '@/components/calendar/InvestmentScheduleWidget';
 import DailyChecklist from '@/components/settings/DailyChecklist';
 import InvestmentDiary from '@/components/settings/InvestmentDiary';
@@ -141,14 +140,6 @@ export default function Home() {
           <InvestmentScheduleWidget
             stockCalendarData={stockCalendarData}
             dividendBenefitData={dividendBenefitData}
-            onStockClick={handleStockClick}
-          />
-        )}
-
-        {stockSymbols.length > 0 && hasCalendarData && (
-          <InvestmentCalendar
-            stockSymbols={stockSymbols}
-            stockData={stockCalendarData}
             onStockClick={handleStockClick}
           />
         )}
