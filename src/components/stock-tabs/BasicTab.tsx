@@ -1,5 +1,7 @@
 'use client';
 
+import MemoTemplateSelector from './MemoTemplateSelector';
+
 interface ExternalLink {
   name: string;
   icon: string;
@@ -128,12 +130,18 @@ export default function BasicTab({
           rows={4}
         />
         <div className="flex items-center justify-between">
-          <button
-            onClick={onMemoModalOpen}
-            className="text-xs cursor-pointer text-blue-400 hover:text-blue-300 transition-colors"
-          >
-            📝 株ノオトを大きく開く
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={onMemoModalOpen}
+              className="text-xs cursor-pointer text-blue-400 hover:text-blue-300 transition-colors"
+            >
+              📝 株ノオトを大きく開く
+            </button>
+            <MemoTemplateSelector
+              onSelect={(content) => onMemoChange(content)}
+              currentMemo={memo}
+            />
+          </div>
           <span className={`text-xs ${memo.length > 1800 ? 'text-orange-400' : memo.length > 1900 ? 'text-red-400' : 'text-gray-400'}`}>
             {memo.length}/2000文字
           </span>
