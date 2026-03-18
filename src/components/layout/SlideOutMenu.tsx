@@ -71,13 +71,13 @@ export default function SlideOutMenu({ isOpen, onClose, alertCounts, onMenuItemC
 
         {/* メニュー項目 */}
         <nav className="p-4 space-y-2">
-          {/* 開発者に機能要望を送る */}
+          {/* 開発者にフィードバックを送る */}
           <button
             onClick={() => handleMenuClick('feedback')}
             className="w-full flex items-center space-x-3 p-3 text-left bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 rounded-lg transition-all cursor-pointer shadow-lg"
           >
             <span className="text-xl">📮</span>
-            <span className="text-white font-medium">開発者に機能要望を送る</span>
+            <span className="text-white font-medium">開発者にフィードバックを送る</span>
           </button>
 
           {/* 投資家レベル */}
