@@ -122,29 +122,36 @@ function playPenWriteSound(): void {
   source.stop(audioCtx.currentTime + duration);
 }
 
-/** 柔らかいチャイム音を再生する（開閉で音程を変える） */
+/** iPhone風の軽いタップ音を再生する（開閉で音程を変える） */
 function playChimeSound(open: boolean): void {
   if (!audioCtx) return;
   const t = audioCtx.currentTime;
-  const duration = 0.35;
-  // 開く: C6→E6（明るい上昇2音）、閉じる: E6→C6（柔らかい下降2音）
-  const notes = open ? [1047, 1319] : [1319, 1047];
-  const delay = 0.08; // 2音目のディレイ
 
-  for (let i = 0; i < notes.length; i++) {
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.type = 'sine';
-    osc.frequency.value = notes[i];
-    const start = t + i * delay;
-    // 瞬時に立ち上がり、余韻を持って減衰（チャイムらしさ）
-    gain.gain.setValueAtTime(volume * 0.25, start);
-    gain.gain.linearRampToValueAtTime(0, start + duration);
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    osc.start(start);
-    osc.stop(start + duration);
-  }
+  // 開く: 低→高の軽い2音、閉じる: 高→低の軽い2音
+  // iPhoneのUI音に近い周波数帯（やや高めで軽快）
+  const freq = open ? 1400 : 1200;
+  const duration = 0.06;
+
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+
+  // triangle波で柔らかくも輪郭のある音色（iPhone風）
+  osc.type = 'triangle';
+  osc.frequency.setValueAtTime(freq, t);
+  // わずかに周波数を変化させてタップ感を出す
+  osc.frequency.linearRampToValueAtTime(
+    open ? freq * 1.15 : freq * 0.85,
+    t + duration,
+  );
+
+  // 瞬時に立ち上がり、素早く減衰（クリスプなタップ感）
+  gain.gain.setValueAtTime(volume * 0.3, t);
+  gain.gain.linearRampToValueAtTime(0, t + duration);
+
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start(t);
+  osc.stop(t + duration);
 }
 
 /** レベルアップ時の上昇アルペジオ（C5→E5→G5→C6） */
