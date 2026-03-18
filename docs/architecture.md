@@ -9,7 +9,7 @@ app_users (ユーザー管理)
   │     id, user_id, symbol, name, sector, market, order
   │     @@unique([userId, symbol])
   │     ├── stock_memos        1:1  content
-  │     ├── stock_prices       1:1  current_price, target_price, stop_loss_price
+  │     ├── stock_prices       1:1  current_price, target_price, stop_loss_price, per, pbr
   │     ├── stock_positions    1:N  shares, purchase_price, purchase_date, memo
   │     ├── stock_events       1:N  event_type(ENUM), event_date, event_month, event_day, is_recurring, is_active
   │     │                           @@unique([stockId, eventType])

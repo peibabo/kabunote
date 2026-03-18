@@ -11,6 +11,7 @@ const MAX_DAY = 31;
 const MIN_DAY = 1;
 const MAX_FREQUENCY = 12;        // 配当頻度の上限（月次）
 const MAX_CASH = 99_999_999_999; // 現金残高の上限（1000億未満）
+const MAX_RATIO = 99_999;       // PER/PBR等の倍率上限
 
 /** 数値が有限かつ範囲内かチェック（null/undefinedは許可） */
 export function isValidOptionalNumber(
@@ -33,6 +34,11 @@ export function isValidRequiredPositiveNumber(
 /** 株価（現在値・目標・損切）のバリデーション */
 export function isValidPrice(value: unknown): boolean {
   return isValidOptionalNumber(value, 0, MAX_PRICE);
+}
+
+/** PER/PBR等の倍率バリデーション（0以上、null許可） */
+export function isValidRatio(value: unknown): boolean {
+  return isValidOptionalNumber(value, 0, MAX_RATIO);
 }
 
 /** 必須の株価バリデーション（0より大きい） */

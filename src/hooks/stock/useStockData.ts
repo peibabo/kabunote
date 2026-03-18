@@ -13,6 +13,8 @@ export interface StockData {
   currentPrice: number | null;
   targetPrice: number | null;
   stopLossPrice: number | null;
+  per: number | null;
+  pbr: number | null;
   memo: string;
   positions: Array<{
     id: string;
@@ -178,6 +180,8 @@ export function useStockData(): UseStockDataReturn {
         currentPrice: null,
         targetPrice: null,
         stopLossPrice: null,
+        per: null,
+        pbr: null,
         memo: '',
         positions: [],
         events: [],
