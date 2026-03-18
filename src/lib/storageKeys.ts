@@ -31,6 +31,8 @@ export const STORAGE_KEYS = {
   MONTHLY_DIVIDEND_EXPANDED: 'kabunote-monthly-dividend-expanded',
   /** 配当利回りランキングのアコーディオン展開状態 */
   DIVIDEND_RANKING_EXPANDED: 'kabunote-dividend-ranking-expanded',
+  /** 投資スケジュールウィジェットのアクティブタブ */
+  SCHEDULE_WIDGET_TAB: 'kabunote-schedule-widget-tab',
 } as const;
 
 // ─────────────────────────────────────────

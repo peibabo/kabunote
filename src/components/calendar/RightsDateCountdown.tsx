@@ -35,81 +35,70 @@ function formatDate(dateStr: string): string {
 }
 
 function buildRightsItem(
-  symbol: string,
-  name: string,
-  type: 'dividend' | 'shareholder',
-  settings: RightsDateSettings
+  symbol: string, name: string, type: 'dividend' | 'shareholder', settings: RightsDateSettings
 ): RightsItem | null {
   const confirmationDate = calculateRightsDateFromSettings(settings);
   if (!confirmationDate) return null;
-
   const daysUntilConfirmation = calculateDaysUntil(confirmationDate);
   if (daysUntilConfirmation < 0 || daysUntilConfirmation > 60) return null;
-
   const lastDate = formatDateString(calculateRightsLastDate(new Date(confirmationDate)));
   const daysUntilLast = calculateDaysUntil(lastDate);
-
   return { symbol, name, type, confirmationDate, lastDate, daysUntilConfirmation, daysUntilLast };
 }
 
-export default function RightsDateCountdown({ stockCalendarData, onStockClick }: RightsDateCountdownProps) {
-  const rightsItems = useMemo<RightsItem[]>(() => {
+export function useRightsItems(stockCalendarData: CalendarDataMap): RightsItem[] {
+  return useMemo(() => {
     const items: RightsItem[] = [];
-
     for (const [symbol, data] of Object.entries(stockCalendarData)) {
       const dividendItem = buildRightsItem(symbol, data.name, 'dividend', data.dividendRightsSettings);
       if (dividendItem) items.push(dividendItem);
-
       const shareholderItem = buildRightsItem(symbol, data.name, 'shareholder', data.shareholderRightsSettings);
       if (shareholderItem) items.push(shareholderItem);
     }
-
     return items.sort((a, b) => a.daysUntilLast - b.daysUntilLast);
   }, [stockCalendarData]);
+}
 
-  if (rightsItems.length === 0) return null;
+export default function RightsDateCountdown({ stockCalendarData, onStockClick }: RightsDateCountdownProps) {
+  const rightsItems = useRightsItems(stockCalendarData);
+
+  if (rightsItems.length === 0) {
+    return <div className="text-sm text-gray-500 text-center py-4">60日以内に権利確定予定はありません</div>;
+  }
 
   return (
-    <div className="bg-gray-800/40 backdrop-blur-sm border border-gray-700/50 rounded-lg p-4 mb-4 animate-fade-in">
-      <div className="flex items-center gap-2 mb-3">
-        <span className="text-lg">🎯</span>
-        <h3 className="text-base font-semibold text-white">権利確定日カウントダウン</h3>
-        <span className="text-xs text-gray-400">({rightsItems.length}件)</span>
-      </div>
+    <div className="space-y-2">
+      {rightsItems.map((item) => {
+        const style = getUrgencyStyle(item.daysUntilLast);
+        const icon = item.type === 'dividend' ? '💰' : '🎁';
+        const typeLabel = item.type === 'dividend' ? '配当' : '優待';
 
-      <div className="space-y-2">
-        {rightsItems.map((item) => {
-          const style = getUrgencyStyle(item.daysUntilLast);
-          const icon = item.type === 'dividend' ? '💰' : '🎁';
-          const typeLabel = item.type === 'dividend' ? '配当' : '優待';
-
-          return (
-            <button
-              key={`${item.symbol}-${item.type}`}
-              onClick={() => onStockClick(item.symbol)}
-              className={`cursor-pointer w-full text-left p-3 rounded-lg border ${style.border} ${style.bg} transition-all duration-200 hover:scale-[1.01] ${style.pulse ? 'animate-pulse' : ''}`}
-              style={{ boxShadow: style.glow }}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className="text-sm">{icon}</span>
-                  <span className={`text-sm font-bold ${style.text} shrink-0`}>
-                    {item.daysUntilLast <= 0 ? '期限切れ' : `${item.daysUntilLast}日後`}
-                  </span>
-                  <span className="text-xs text-gray-400 shrink-0">{typeLabel}権利確定</span>
-                  <span className="text-xs text-gray-300 truncate font-medium">{item.name}({item.symbol})</span>
-                </div>
-                <span className="text-xs text-gray-500 shrink-0 ml-2">{formatDate(item.confirmationDate)}</span>
+        return (
+          <button
+            key={`${item.symbol}-${item.type}`}
+            onClick={() => onStockClick(item.symbol)}
+            className={`cursor-pointer w-full text-left p-3 rounded-lg border ${style.border} ${style.bg} transition-all duration-200 hover:scale-[1.01] ${style.pulse ? 'animate-pulse' : ''}`}
+            style={{ boxShadow: style.glow }}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="text-sm">{icon}</span>
+                <span className={`text-sm font-bold ${style.text} shrink-0`}>
+                  {item.daysUntilLast <= 0 ? '期限切れ' : `${item.daysUntilLast}日後`}
+                </span>
+                <span className="text-xs text-gray-400 shrink-0">{typeLabel}権利確定</span>
+                <span className="text-xs text-gray-300 truncate font-medium">{item.name}({item.symbol})</span>
               </div>
-              <div className="mt-1 ml-6 text-xs text-gray-500">
-                └ 権利付き最終日: {formatDate(item.lastDate)}
-                {item.daysUntilLast > 0 && ` (あと${item.daysUntilLast}日)`}
-                {item.daysUntilLast === 0 && ' (本日!)'}
-              </div>
-            </button>
-          );
-        })}
-      </div>
+              <span className="text-xs text-gray-500 shrink-0 ml-2">{formatDate(item.confirmationDate)}</span>
+            </div>
+            <div className="mt-1 ml-6 text-xs text-gray-500">
+              └ 権利付き最終日: {formatDate(item.lastDate)}
+              {item.daysUntilLast > 0 && ` (あと${item.daysUntilLast}日)`}
+              {item.daysUntilLast === 0 && ' (本日!)'}
+            </div>
+          </button>
+        );
+      })}
     </div>
   );
 }
