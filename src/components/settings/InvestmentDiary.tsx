@@ -22,7 +22,7 @@ function formatDateJP(dateStr: string): string {
 function addDays(dateStr: string, n: number): string {
   const d = new Date(dateStr + 'T00:00:00')
   d.setDate(d.getDate() + n)
-  return d.toISOString().slice(0, 10)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
 export default function InvestmentDiary() {
@@ -37,7 +37,10 @@ export default function InvestmentDiary() {
     defaultExpanded: false,
   })
 
-  const today = useMemo(() => new Date().toISOString().slice(0, 10), [])
+  const today = useMemo(() => {
+    const d = new Date()
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  }, [])
   const isToday = selectedDate === today
   const isFutureDate = selectedDate > today
 
