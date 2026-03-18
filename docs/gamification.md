@@ -44,7 +44,7 @@ xpForLevel(n) = floor(50 * (n-1) * n / 2 + 50 * (n-1))
 
 ---
 
-## XP獲得アクション（12種）
+## XP獲得アクション（13種）
 
 | アクション | XP | アクションタイプ | 制限 |
 |-----------|-----|----------------|------|
@@ -60,6 +60,7 @@ xpForLevel(n) = floor(50 * (n-1) * n / 2 + 50 * (n-1))
 | 優待情報登録 | 10 | `BENEFIT_REGISTER` | - |
 | 次の一手登録 | 15 | `NEXT_ACTION` | - |
 | フィードバック送信 | 20 | `FEEDBACK` | - |
+| チェックリスト全完了 | 15 | `CHECKLIST_COMPLETE` | 1日1回 |
 
 - **日次XP上限: 100 XP**（これ以上は翌日に持ち越し）
 - ログイン・メモ保存は**1日1回のみ**XP付与（API側で当日同一action_typeをチェック）
@@ -146,7 +147,7 @@ xpForLevel(n) = floor(50 * (n-1) * n / 2 + 50 * (n-1))
 ```
 
 - メイン操作には一切影響しない（失敗は無視）
-- 既存フック11箇所 + FeedbackModalに`grantXp()`を1行追加で統合
+- 既存フック11箇所 + FeedbackModal + useChecklistに`grantXp()`を1行追加で統合
 
 ### grantXp統合箇所
 
@@ -164,6 +165,7 @@ xpForLevel(n) = floor(50 * (n-1) * n / 2 + 50 * (n-1))
 | `useStockBenefit` | `BENEFIT_REGISTER` |
 | `useNextActionPlan` | `NEXT_ACTION` |
 | `FeedbackModal` | `FEEDBACK` |
+| `useChecklist` | `CHECKLIST_COMPLETE` |
 
 ---
 
@@ -186,12 +188,12 @@ xpForLevel(n) = floor(50 * (n-1) * n / 2 + 50 * (n-1))
 
 | レアリティ | カラー | 個数 |
 |-----------|--------|------|
-| common | グレー | 8 |
-| rare | ブルーグロー | 9 |
-| epic | パープルグロー | 6 |
+| common | グレー | 9 |
+| rare | ブルーグロー | 10 |
+| epic | パープルグロー | 7 |
 | legendary | ゴールドグロー | 2 |
 
-### 称号一覧（全25個）
+### 称号一覧（全28個）
 
 #### 📈 銘柄
 | 称号 | 条件 | レアリティ |
@@ -226,6 +228,13 @@ xpForLevel(n) = floor(50 * (n-1) * n / 2 + 50 * (n-1))
 | 戦略マスター | 次の一手 10銘柄登録 | epic |
 | 決算ウォッチャー | 決算日3件登録 | rare |
 | 優待リサーチャー | 優待情報3件登録 | rare |
+
+#### ✅ ルーティン
+| 称号 | 条件 | レアリティ |
+|------|------|-----------|
+| ルーティン開始 | チェックリスト初回全完了 | common |
+| 朝活投資家 | チェックリスト7日連続全完了 | rare |
+| 鉄の規律 | チェックリスト30日連続全完了 | epic |
 
 #### 🔥 継続
 | 称号 | 条件 | レアリティ |

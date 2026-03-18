@@ -23,6 +23,8 @@ export const STORAGE_KEYS = {
   SOUND_VOLUME: 'kabunote-sound-volume',
   /** Cookie同意状態（'granted' | 'denied' | 未設定） */
   COOKIE_CONSENT: 'kabunote-cookie-consent',
+  /** デイリーチェックリストのアコーディオン展開状態 */
+  CHECKLIST_EXPANDED: 'kabunote-checklist-expanded',
 } as const;
 
 // ─────────────────────────────────────────
