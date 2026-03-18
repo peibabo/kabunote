@@ -110,7 +110,7 @@ export default function InvestmentDiary() {
             </div>
             <button
               onClick={() => changeDate(addDays(selectedDate, 1))}
-              disabled={isFutureDate}
+              disabled={isToday || isFutureDate}
               className="cursor-pointer text-gray-400 hover:text-white text-sm px-2 py-1 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
             >
               ▶
