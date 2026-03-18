@@ -7,6 +7,7 @@ import InvestmentCalendar from '@/components/calendar/InvestmentCalendar';
 import DailyQuote from '@/components/settings/DailyQuote';
 import LevelBadge from '@/components/settings/LevelBadge';
 import LevelUpCelebration from '@/components/settings/LevelUpCelebration';
+import TitleUnlockedToast from '@/components/settings/TitleUnlockedToast';
 import PortfolioSummary from '@/components/portfolio/PortfolioSummary';
 import FloatingAddButton from '@/components/stock/FloatingAddButton';
 import FloatingSnapshotButton from '@/components/settings/FloatingSnapshotButton';
@@ -127,6 +128,7 @@ export default function Home() {
         </div>
 
         <LevelUpCelebration />
+        <TitleUnlockedToast />
 
         <div className="portfolio-summary">
           <PortfolioSummary portfolioData={stockData} />

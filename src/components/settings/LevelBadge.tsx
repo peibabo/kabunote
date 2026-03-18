@@ -1,9 +1,11 @@
 'use client'
 
 import { useGamification } from '@/hooks/auth/useGamification'
+import { useTitles } from '@/hooks/auth/useTitles'
 
 export default function LevelBadge() {
   const { gamification, isLoading } = useGamification()
+  const { titles } = useTitles()
 
   if (isLoading || !gamification) return null
 
@@ -59,6 +61,11 @@ export default function LevelBadge() {
           {currentStreak > 0 && (
             <span className="text-orange-400">
               {currentStreak}日連続
+            </span>
+          )}
+          {titles && (
+            <span className="text-purple-400/70">
+              {titles.unlockedCount}/{titles.totalCount}
             </span>
           )}
           <span className="text-gray-500">

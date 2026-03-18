@@ -95,6 +95,7 @@ app_users (ユーザー管理)
 | `/api/gamification` | GET | ゲーミフィケーション状態取得（初回自動作成） |
 | `/api/gamification/xp` | POST | XP付与（日次上限・ストリーク・レベルアップ判定） |
 | `/api/gamification/activity` | GET | 直近30件のXPアクティビティログ |
+| `/api/gamification/titles` | GET | 称号コレクション状態（集計+全25称号の獲得判定） |
 
 ### フィードバック
 | パス | メソッド | 説明 |
@@ -115,7 +116,7 @@ app_users (ユーザー管理)
 
 ---
 
-## カスタムフック一覧（45フック）
+## カスタムフック一覧（46フック）
 
 ### `hooks/stock/` — 銘柄データ
 | フック | 説明 |
@@ -177,6 +178,7 @@ app_users (ユーザー管理)
 | `useSound` | サウンド設定 |
 | `useSoundOnChange` | 値変更時のサウンド再生 |
 | `useGamification` | ゲーミフィケーション状態管理（XPイベントリスニング） |
+| `useTitles` | 称号コレクション状態管理（獲得検知・トースト連動） |
 
 ### `hooks/tab/` — タブ状態
 | フック | 説明 |
@@ -203,7 +205,7 @@ app_users (ユーザー管理)
 
 ---
 
-## 型定義ファイル一覧（13ファイル）
+## 型定義ファイル一覧（14ファイル）
 
 型定義のみ。計算ロジック・フォーマット関数は `src/lib/*Calc.ts` に分離済み。
 
@@ -222,6 +224,7 @@ app_users (ユーザー管理)
 | `snooze.ts` | SnoozeDuration, SnoozedAlert |
 | `portfolio.ts` | PortfolioSnapshotData, StockSnapshotData, HistoryRange, ChartType |
 | `gamification.ts` | GamificationState, XpGrantResult, XpActionType, XpActivityLogEntry |
+| `titles.ts` | TitleDefinition, TitleStatus, TitlesResponse, TitleCheckData, TitleCategory, TitleRarity |
 
 ---
 

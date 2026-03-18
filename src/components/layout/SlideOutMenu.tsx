@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import SoundSettings from '../settings/SoundSettings';
+import TitleCollection from '../settings/TitleCollection';
 import { useGamification } from '@/hooks/auth/useGamification';
+import { useTitles } from '@/hooks/auth/useTitles';
 import { LEVEL_NAMES, xpForLevel } from '@/lib/gamification';
 import type { XpActivityLogEntry } from '@/types/gamification';
 
@@ -16,6 +18,7 @@ interface SlideOutMenuProps {
 export default function SlideOutMenu({ isOpen, onClose, alertCounts, onMenuItemClick }: SlideOutMenuProps) {
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['analysis']));
   const { gamification } = useGamification();
+  const { titles } = useTitles();
   const [activityLogs, setActivityLogs] = useState<XpActivityLogEntry[]>([]);
 
   // レベル詳細セクション展開時にアクティビティログを取得
@@ -194,6 +197,41 @@ export default function SlideOutMenu({ isOpen, onClose, alertCounts, onMenuItemC
                       </div>
                     </div>
                   )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* 称号コレクション */}
+          {titles && (
+            <div>
+              <button
+                onClick={() => toggleSection('titles')}
+                className="w-full flex items-center justify-between p-3 text-left hover:bg-gray-700 rounded-lg transition-colors cursor-pointer"
+              >
+                <div className="flex items-center space-x-3">
+                  <span className="text-xl">&#x1F3C6;</span>
+                  <span className="text-white">
+                    称号コレクション
+                  </span>
+                  <span className="text-xs text-purple-400/70">
+                    {titles.unlockedCount}/{titles.totalCount}
+                  </span>
+                </div>
+                <span className={`text-gray-400 transition-transform ${
+                  expandedSections.has('titles') ? 'rotate-90' : ''
+                }`}>
+                  &#x25B6;
+                </span>
+              </button>
+
+              {expandedSections.has('titles') && (
+                <div className="ml-2 mr-2 mt-2">
+                  <TitleCollection
+                    titles={titles.titles}
+                    unlockedCount={titles.unlockedCount}
+                    totalCount={titles.totalCount}
+                  />
                 </div>
               )}
             </div>
