@@ -34,14 +34,18 @@ export default function TitleUnlockedToast() {
     setQueue(rest)
     setIsVisible(true)
     playSound('accordionOpen')
+  }, [queue, current])
 
+  // 自動消去タイマー
+  useEffect(() => {
+    if (!current) return
     const hideTimer = setTimeout(() => setIsVisible(false), 3000)
     const clearTimer = setTimeout(() => setCurrent(null), 3500)
     return () => {
       clearTimeout(hideTimer)
       clearTimeout(clearTimer)
     }
-  }, [queue, current])
+  }, [current])
 
   if (!current) return null
 
