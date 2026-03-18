@@ -1,0 +1,166 @@
+# ゲーミフィケーション（投資家レベル・経験値）仕様
+
+## 概要
+
+Phase 1.5「デイリーエンゲージメント強化」の一環として実装。
+ユーザーの操作にXP（経験値）を紐付け、レベルアップ・ストリーク・投資家ランクで達成感を演出する。
+
+---
+
+## レベルシステム
+
+### 20段階の投資家ランク
+
+| レベル | ランク名 | 必要累計XP |
+|--------|---------|-----------|
+| 1 | 見習い投資家 | 0 |
+| 2 | 初心者投資家 | 100 |
+| 3 | 勉強中の投資家 | 250 |
+| 4 | 堅実な投資家 | 450 |
+| 5 | 成長する投資家 | 700 |
+| 6 | 情報通の投資家 | 1,000 |
+| 7 | 分析家見習い | 1,350 |
+| 8 | 戦略的投資家 | 1,750 |
+| 9 | 熟練の投資家 | 2,200 |
+| 10 | ベテラン投資家 | 2,700 |
+| 11 | 市場の目利き | 3,250 |
+| 12 | 投資マイスター | 3,850 |
+| 13 | 相場師 | 4,500 |
+| 14 | 投資の達人 | 5,200 |
+| 15 | マーケットマスター | 5,950 |
+| 16 | 伝説の投資家 | 6,750 |
+| 17 | ウォール街の賢者 | 7,600 |
+| 18 | 投資の鬼才 | 8,500 |
+| 19 | 兜町の覇者 | 9,450 |
+| 20 | 投資の神 | 10,450 |
+
+### レベル計算式
+
+```
+xpForLevel(n) = floor(50 * (n-1) * n / 2 + 50 * (n-1))
+```
+
+日次100XP上限で毎日使うと約3.5ヶ月（105日）でLv.20到達。
+
+---
+
+## XP獲得アクション（12種）
+
+| アクション | XP | アクションタイプ | 制限 |
+|-----------|-----|----------------|------|
+| ログイン（日次初回） | 10 | `LOGIN` | 1日1回 |
+| 銘柄追加 | 15 | `STOCK_ADD` | - |
+| メモ保存 | 10 | `MEMO_SAVE` | 1日1回 |
+| タグ追加 | 5 | `TAG_ADD` | - |
+| 株価更新 | 5 | `PRICE_UPDATE` | - |
+| ポジション追加 | 15 | `POSITION_ADD` | - |
+| ポートフォリオ記録 | 20 | `PORTFOLIO_SNAPSHOT` | - |
+| 決算日登録 | 10 | `EVENT_REGISTER` | - |
+| 配当情報登録 | 10 | `DIVIDEND_REGISTER` | - |
+| 優待情報登録 | 10 | `BENEFIT_REGISTER` | - |
+| Next Action登録 | 15 | `NEXT_ACTION` | - |
+| フィードバック送信 | 20 | `FEEDBACK` | - |
+
+- **日次XP上限: 100 XP**（これ以上は翌日に持ち越し）
+- ログイン・メモ保存は**1日1回のみ**XP付与（API側で当日同一action_typeをチェック）
+
+---
+
+## ストリーク（連続アクティブ日数）
+
+毎日ログインすると連続日数がカウントされ、ログインXPにボーナスが加算される。
+
+| 連続日数 | ボーナス | 合計ログインXP |
+|---------|---------|---------------|
+| 1-2日 | +0 | 10 |
+| 3-6日 | +5 | 15 |
+| 7-13日 | +10 | 20 |
+| 14-29日 | +15 | 25 |
+| 30日以上 | +20 | 30 |
+
+- ストリークボーナスは**日次XP上限の対象外**
+- 1日でもアクセスしないとストリークは1にリセット
+- 最長ストリーク記録は別途保持
+
+---
+
+## UI表示
+
+### LevelBadge（ダッシュボード上部、DailyQuoteの上）
+
+- レベル番号・ランク名
+- 次レベルまでのXPプログレスバー（青→紫グラデーション）
+- ストリーク日数（1日以上で表示）
+- 今日のXP進捗（ミニバー付き、100到達で緑色）
+
+### レベルアップ演出
+
+- フルスクリーンオーバーレイ（金色グラデーション、3秒間表示）
+- 上昇アルペジオサウンド（C5→E5→G5→C6）
+- 星アニメーション
+
+### スライドメニュー内「投資家レベル」セクション
+
+- XPプログレス詳細
+- 累計XP・連続日数・最長記録
+- 今日のXPバー
+- 全20レベル一覧（現在レベルをハイライト）
+- 直近のXP獲得履歴（最大10件）
+
+---
+
+## 技術構成
+
+### DBテーブル
+
+- **`user_gamification`**: ゲーミフィケーション状態（レベル、XP、ストリーク等）。ユーザーごとに1レコード。
+- **`xp_activity_logs`**: XP付与記録。直近30件をフロントで表示。集計値は`user_gamification`に蓄積済みのため、古いログは削除可能。
+
+### APIルート
+
+| パス | メソッド | 説明 |
+|------|---------|------|
+| `/api/gamification` | GET | 状態取得（初回アクセス時にupsertで自動作成） |
+| `/api/gamification/xp` | POST | XP付与（日次上限・ストリーク・レベルアップ判定） |
+| `/api/gamification/activity` | GET | 直近30件のアクティビティログ |
+
+### フロントエンド
+
+| ファイル | 役割 |
+|---------|------|
+| `src/lib/gamification.ts` | XP定数・レベル計算・`grantXp()` fire-and-forget |
+| `src/types/gamification.ts` | 型定義 |
+| `src/hooks/auth/useGamification.ts` | 状態管理フック（CustomEventリスニング） |
+| `src/components/settings/LevelBadge.tsx` | ダッシュボード上部のレベル表示 |
+| `src/components/settings/LevelUpCelebration.tsx` | レベルアップ演出オーバーレイ |
+
+### XP付与の仕組み（fire-and-forget）
+
+```
+ユーザー操作 → 既存フックの成功後 → grantXp('ACTION_TYPE')
+  → fetch POST /api/gamification/xp（バックグラウンド）
+  → 成功時: CustomEvent 'kabunote-xp-gained' を発火
+  → レベルアップ時: CustomEvent 'kabunote-level-up' を発火
+  → useGamification がイベントをリスニングして状態再取得
+  → LevelBadge / LevelUpCelebration が更新
+```
+
+- メイン操作には一切影響しない（失敗は無視）
+- 既存フック11箇所 + FeedbackModalに`grantXp()`を1行追加で統合
+
+### grantXp統合箇所
+
+| フック/コンポーネント | アクションタイプ |
+|---------------------|----------------|
+| `useAuth` | `LOGIN` |
+| `useStockData` | `STOCK_ADD` |
+| `useStockMemo` | `MEMO_SAVE` |
+| `useStockTag` | `TAG_ADD` |
+| `useStockPrice` | `PRICE_UPDATE` |
+| `useStockPosition` | `POSITION_ADD` |
+| `usePortfolioHistory` | `PORTFOLIO_SNAPSHOT` |
+| `useStockEvent` | `EVENT_REGISTER` |
+| `useStockDividend` | `DIVIDEND_REGISTER` |
+| `useStockBenefit` | `BENEFIT_REGISTER` |
+| `useNextActionPlan` | `NEXT_ACTION` |
+| `FeedbackModal` | `FEEDBACK` |

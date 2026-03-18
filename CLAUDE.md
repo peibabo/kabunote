@@ -28,6 +28,7 @@ npm run update:stocks    # JPXデータからstocks.csv更新
 - `docs/architecture.md` - DB設計・API仕様・フック・型定義・コンポーネント構成
 - `docs/patterns.md` - 実装パターン集（resolveStockId・DBフック・APIルート・RLS等）
 - `docs/changelog.md` - Phase完了履歴（マイルストーンアーカイブ）
+- `docs/gamification.md` - ゲーミフィケーション仕様（レベル・XP・ストリーク・UI・技術構成）
 
 ## 主要機能
 - **銘柄管理**: 検索・追加・最大20銘柄・D&D並べ替え・お気に入りグループ
