@@ -12,6 +12,11 @@ function isValidMonth(s: string): boolean {
   return /^\d{4}-\d{2}$/.test(s)
 }
 
+/** URL簡易バリデーション */
+function isValidUrl(s: string): boolean {
+  return /^https?:\/\/.+/.test(s)
+}
+
 /** GET: 日記取得（?date=YYYY-MM-DD）または月の日記日付リスト（?month=YYYY-MM） */
 export const GET = withAuth(async ({ user, request }) => {
   const url = new URL(request.url)
@@ -31,6 +36,9 @@ export const GET = withAuth(async ({ user, request }) => {
       where: {
         userId_diaryDate: { userId: user.id, diaryDate: new Date(date) },
       },
+      include: {
+        newsItems: { orderBy: { order: 'asc' } },
+      },
     })
 
     if (!diary) {
@@ -41,6 +49,7 @@ export const GET = withAuth(async ({ user, request }) => {
           diaryDate: date,
           marketOverview: '',
           newsMemo: '',
+          newsItems: [],
           reflection: '',
           tomorrowFocus: '',
           updatedAt: null,
@@ -55,6 +64,11 @@ export const GET = withAuth(async ({ user, request }) => {
         diaryDate: diary.diaryDate.toISOString().slice(0, 10),
         marketOverview: diary.marketOverview,
         newsMemo: diary.newsMemo,
+        newsItems: diary.newsItems.map(item => ({
+          id: item.id,
+          url: item.url,
+          comment: item.comment,
+        })),
         reflection: diary.reflection,
         tomorrowFocus: diary.tomorrowFocus,
         updatedAt: diary.updatedAt.toISOString(),
@@ -105,6 +119,7 @@ export const PUT = withAuth(async ({ user, request }) => {
     date?: string
     marketOverview?: string
     newsMemo?: string
+    newsItems?: { url: string; comment?: string }[]
     reflection?: string
     tomorrowFocus?: string
   }
@@ -116,12 +131,41 @@ export const PUT = withAuth(async ({ user, request }) => {
     )
   }
 
-  // 各セクション2000文字制限
-  const fields = ['marketOverview', 'newsMemo', 'reflection', 'tomorrowFocus'] as const
-  for (const field of fields) {
+  // テキストセクション2000文字制限
+  const textFields = ['marketOverview', 'newsMemo', 'reflection', 'tomorrowFocus'] as const
+  for (const field of textFields) {
     if (body[field] && body[field]!.length > 2000) {
       return NextResponse.json(
         { error: 'Bad Request', message: `${field}は2000文字以内で入力してください` },
+        { status: 400 }
+      )
+    }
+  }
+
+  // newsItemsバリデーション
+  const newsItems = body.newsItems ?? []
+  if (newsItems.length > 20) {
+    return NextResponse.json(
+      { error: 'Bad Request', message: 'ニュースは最大20件までです' },
+      { status: 400 }
+    )
+  }
+  for (const item of newsItems) {
+    if (!item.url || !isValidUrl(item.url)) {
+      return NextResponse.json(
+        { error: 'Bad Request', message: 'URLはhttp://またはhttps://で始まる必要があります' },
+        { status: 400 }
+      )
+    }
+    if (item.url.length > 2000) {
+      return NextResponse.json(
+        { error: 'Bad Request', message: 'URLは2000文字以内で入力してください' },
+        { status: 400 }
+      )
+    }
+    if (item.comment && item.comment.length > 500) {
+      return NextResponse.json(
+        { error: 'Bad Request', message: 'コメントは500文字以内で入力してください' },
         { status: 400 }
       )
     }
@@ -135,16 +179,35 @@ export const PUT = withAuth(async ({ user, request }) => {
     tomorrowFocus: body.tomorrowFocus ?? '',
   }
 
-  const diary = await prisma.investmentDiary.upsert({
-    where: {
-      userId_diaryDate: { userId: user.id, diaryDate },
-    },
-    create: {
-      userId: user.id,
-      diaryDate,
-      ...data,
-    },
-    update: data,
+  // トランザクションで日記upsert + newsItems一括更新
+  const diary = await prisma.$transaction(async (tx) => {
+    const d = await tx.investmentDiary.upsert({
+      where: {
+        userId_diaryDate: { userId: user.id, diaryDate },
+      },
+      create: {
+        userId: user.id,
+        diaryDate,
+        ...data,
+      },
+      update: data,
+    })
+
+    // 既存newsItemsを削除して再作成
+    await tx.diaryNewsItem.deleteMany({ where: { diaryId: d.id } })
+    if (newsItems.length > 0) {
+      await tx.diaryNewsItem.createMany({
+        data: newsItems.map((item, i) => ({
+          diaryId: d.id,
+          userId: user.id,
+          url: item.url,
+          comment: item.comment ?? '',
+          order: i,
+        })),
+      })
+    }
+
+    return d
   })
 
   return NextResponse.json({

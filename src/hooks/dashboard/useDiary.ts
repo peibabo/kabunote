@@ -4,11 +4,12 @@ import { playSound } from '@/lib/sound'
 import { grantXp } from '@/lib/gamification'
 import { useAsyncState } from '../util/useAsyncState'
 import { useAutoSave } from '../util/useAutoSave'
-import type { DiaryData, DiaryResponse, DiaryMonthResponse, DiaryField } from '@/types/diary'
+import type { DiaryData, DiaryResponse, DiaryMonthResponse, DiaryTextField, NewsItem } from '@/types/diary'
 
 const EMPTY_DIARY: DiaryData = {
   marketOverview: '',
   newsMemo: '',
+  newsItems: [],
   reflection: '',
   tomorrowFocus: '',
 }
@@ -29,8 +30,11 @@ interface UseDiaryReturn {
   isLoading: boolean
   isSaving: boolean
   lastSaved: Date | null
-  updateField: (field: DiaryField, value: string) => void
+  updateField: (field: DiaryTextField, value: string) => void
   changeDate: (date: string) => void
+  addNewsItem: (url: string, comment: string) => void
+  removeNewsItem: (index: number) => void
+  updateNewsItem: (index: number, field: 'url' | 'comment', value: string) => void
 }
 
 export function useDiary(): UseDiaryReturn {
@@ -48,6 +52,7 @@ export function useDiary(): UseDiaryReturn {
     setDiary({
       marketOverview: data.marketOverview,
       newsMemo: data.newsMemo,
+      newsItems: data.newsItems ?? [],
       reflection: data.reflection,
       tomorrowFocus: data.tomorrowFocus,
     })
@@ -86,13 +91,16 @@ export function useDiary(): UseDiaryReturn {
       await withSaving(async () => {
         const data = await apiPut<{ updatedAt: string }>('/api/diary', {
           date: selectedDate,
-          ...diary,
+          marketOverview: diary.marketOverview,
+          newsMemo: diary.newsMemo,
+          newsItems: diary.newsItems.map(item => ({ url: item.url, comment: item.comment })),
+          reflection: diary.reflection,
+          tomorrowFocus: diary.tomorrowFocus,
         })
         if (data) {
           setLastSaved(new Date(data.updatedAt))
           playSound('noteSave')
           grantXp('DIARY_SAVE')
-          // 月のドットリストを更新（新しい日付が追加された可能性）
           if (!diaryDates.includes(selectedDate)) {
             setDiaryDates(prev => [...prev, selectedDate].sort())
           }
@@ -101,8 +109,34 @@ export function useDiary(): UseDiaryReturn {
     },
   })
 
-  const updateField = useCallback((field: DiaryField, value: string) => {
+  const updateField = useCallback((field: DiaryTextField, value: string) => {
     setDiary(prev => ({ ...prev, [field]: value }))
+    markDirty()
+  }, [markDirty])
+
+  const addNewsItem = useCallback((url: string, comment: string) => {
+    setDiary(prev => ({
+      ...prev,
+      newsItems: [...prev.newsItems, { url, comment }],
+    }))
+    markDirty()
+  }, [markDirty])
+
+  const removeNewsItem = useCallback((index: number) => {
+    setDiary(prev => ({
+      ...prev,
+      newsItems: prev.newsItems.filter((_, i) => i !== index),
+    }))
+    markDirty()
+  }, [markDirty])
+
+  const updateNewsItem = useCallback((index: number, field: 'url' | 'comment', value: string) => {
+    setDiary(prev => ({
+      ...prev,
+      newsItems: prev.newsItems.map((item, i) =>
+        i === index ? { ...item, [field]: value } : item
+      ),
+    }))
     markDirty()
   }, [markDirty])
 
@@ -122,5 +156,6 @@ export function useDiary(): UseDiaryReturn {
     diary, selectedDate, diaryDates,
     isLoading, isSaving, lastSaved,
     updateField, changeDate,
+    addNewsItem, removeNewsItem, updateNewsItem,
   }
 }

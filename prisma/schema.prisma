@@ -37,6 +37,7 @@ model User {
   checklists         UserChecklist[]
   checklistChecks    ChecklistCheck[]
   diaries            InvestmentDiary[]
+  diaryNewsItems     DiaryNewsItem[]
 
   @@map("app_users")
 }
@@ -402,11 +403,30 @@ model InvestmentDiary {
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  newsItems DiaryNewsItem[]
 
   @@unique([userId, diaryDate])
   @@index([userId, diaryDate(sort: Desc)])
   @@map("investment_diaries")
+}
+
+// 投資日記ニュースアイテム
+model DiaryNewsItem {
+  id        String   @id @default(cuid())
+  diaryId   String   @map("diary_id")
+  userId    String   @map("user_id")
+  url       String
+  comment   String   @default("")
+  order     Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  diary InvestmentDiary @relation(fields: [diaryId], references: [id], onDelete: Cascade)
+  user  User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([diaryId])
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("diary_news_items")
 }
 
 // Enums

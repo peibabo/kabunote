@@ -1,6 +1,6 @@
 # Kabunote - アーキテクチャリファレンス
 
-## データベーススキーマ（24テーブル）
+## データベーススキーマ（25テーブル）
 
 ```
 app_users (ユーザー管理)
@@ -52,6 +52,10 @@ app_users (ユーザー管理)
         id, user_id, diary_date, market_overview, news_memo, reflection, tomorrow_focus
         @@unique([userId, diaryDate])
         @@index([userId, diaryDate DESC])
+        └── diary_news_items (日記ニュースアイテム)
+              id, diary_id, user_id, url, comment, order
+              @@index([diaryId])
+              @@index([userId, createdAt DESC])
 ```
 
 ### Enum定義
@@ -122,8 +126,9 @@ app_users (ユーザー管理)
 ### 投資日記
 | パス | メソッド | 説明 |
 |------|---------|------|
-| `/api/diary` | GET | 日記取得（?date=YYYY-MM-DD）または月の日記日付リスト（?month=YYYY-MM） |
-| `/api/diary` | PUT | 日記保存（upsert: date, marketOverview, newsMemo, reflection, tomorrowFocus） |
+| `/api/diary` | GET | 日記取得（?date=YYYY-MM-DD, newsItems含む）または月の日記日付リスト（?month=YYYY-MM） |
+| `/api/diary` | PUT | 日記保存（upsert: date, marketOverview, newsItems[], reflection, tomorrowFocus） |
+| `/api/diary/news` | GET | ニュース一覧（全日付横断、?limit&offset） |
 
 ### フィードバック
 | パス | メソッド | 説明 |
