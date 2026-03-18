@@ -31,13 +31,18 @@ describe('GET /api/stocks/[stockId]/next-action-plan', () => {
     expect(json.data.priority).toBe('medium')
   })
 
-  it('未設定時にデフォルト作成', async () => {
+  it('未設定時にDB作成せずデフォルト値を返す', async () => {
     prismaMock.nextActionPlan.findUnique.mockResolvedValue(null)
-    prismaMock.nextActionPlan.create.mockResolvedValue(mockNAP as never)
 
     const req = createRequest('GET', 'http://localhost:3000/api/stocks/stock-7203/next-action-plan')
-    await GET(req, createParams({ stockId: 'stock-7203' }))
-    expect(prismaMock.nextActionPlan.create).toHaveBeenCalled()
+    const res = await GET(req, createParams({ stockId: 'stock-7203' }))
+    const json = await getJson(res)
+    expect(json.success).toBe(true)
+    expect(json.data.id).toBe('default')
+    expect(json.data.actionType).toBe('buy')
+    expect(json.data.priority).toBe('medium')
+    expect(json.data.memo).toBe('')
+    expect(prismaMock.nextActionPlan.create).not.toHaveBeenCalled()
   })
 })
 

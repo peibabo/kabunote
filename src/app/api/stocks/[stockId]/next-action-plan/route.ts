@@ -5,17 +5,19 @@ import { isValidPrice, isValidOptionalShares } from '@/lib/validation'
 
 // GET: Next Action Plan取得
 export const GET = withStock(async ({ stockId }) => {
-  let nextActionPlan = await prisma.nextActionPlan.findUnique({ where: { stockId } })
+  const nextActionPlan = await prisma.nextActionPlan.findUnique({ where: { stockId } })
 
   if (!nextActionPlan) {
-    nextActionPlan = await prisma.nextActionPlan.create({
+    return NextResponse.json({
+      success: true,
       data: {
-        stockId,
-        actionType: 'BUY',
-        priority: 'MEDIUM',
+        id: 'default',
+        actionType: 'buy',
+        priority: 'medium',
         targetPrice: null,
-        targetShares: null,
-        strategyMemo: null
+        targetQuantity: null,
+        memo: '',
+        updatedAt: new Date().toISOString()
       }
     })
   }

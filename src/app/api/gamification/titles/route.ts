@@ -31,7 +31,7 @@ export const GET = withAuth(async ({ user }) => {
     prisma.stockDividend.count({ where: { stock: { userId } } }),
     prisma.stockBenefit.count({ where: { stock: { userId } } }),
     prisma.stockEvent.count({ where: { stock: { userId } } }),
-    prisma.nextActionPlan.count({ where: { stock: { userId } } }),
+    prisma.nextActionPlan.count({ where: { stock: { userId }, OR: [{ strategyMemo: { not: null } }, { targetPrice: { not: null } }, { targetShares: { not: null } }] } }),
     prisma.portfolioSnapshot.count({ where: { userId } }),
     prisma.feedback.count({ where: { userId } }),
     prisma.userGamification.findUnique({ where: { userId } }),
