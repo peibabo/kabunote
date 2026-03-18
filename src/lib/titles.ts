@@ -39,6 +39,11 @@ const TITLES: TitleWithCondition[] = [
   { id: 'earnings_watcher', name: '決算ウォッチャー', description: '3つの決算日を登録', category: 'strategy', icon: '📅', rarity: 'rare', check: d => d.eventCount >= 3 },
   { id: 'benefit_researcher', name: '優待リサーチャー', description: '3つの優待を登録', category: 'strategy', icon: '🎁', rarity: 'rare', check: d => d.benefitCount >= 3 },
 
+  // ── ✅ ルーティン（3個）──
+  { id: 'checklist_first', name: 'ルーティン開始', description: 'チェックリスト初回全完了', category: 'streak', icon: '✅', rarity: 'common', check: d => d.checklistCompleteStreak >= 1 },
+  { id: 'checklist_7', name: '朝活投資家', description: 'チェックリスト7日連続全完了', category: 'streak', icon: '🌅', rarity: 'rare', check: d => d.checklistCompleteStreak >= 7 },
+  { id: 'checklist_30', name: '鉄の規律', description: 'チェックリスト30日連続全完了', category: 'streak', icon: '🛡️', rarity: 'epic', check: d => d.checklistCompleteStreak >= 30 },
+
   // ── 🔥 継続（5個）──
   { id: 'streak_3', name: '三日坊主突破', description: '3日連続ログイン', category: 'streak', icon: '🔥', rarity: 'common', check: d => d.longestStreak >= 3 },
   { id: 'streak_7', name: '一週間の習慣', description: '7日連続ログイン', category: 'streak', icon: '📆', rarity: 'common', check: d => d.longestStreak >= 7 },

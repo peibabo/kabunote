@@ -22,6 +22,7 @@ export const GET = withAuth(async ({ user }) => {
     feedbackCount,
     gamification,
     stocksWithMemoCount,
+    checklistCompleteStreak,
   ] = await Promise.all([
     prisma.stock.count({ where: { userId } }),
     prisma.stockMemo.count({ where: { stock: { userId } } }),
@@ -36,6 +37,35 @@ export const GET = withAuth(async ({ user }) => {
     prisma.feedback.count({ where: { userId } }),
     prisma.userGamification.findUnique({ where: { userId } }),
     prisma.stock.count({ where: { userId, memo: { isNot: null } } }),
+    // チェックリスト連続完了日数を計算
+    (async () => {
+      // CHECKLIST_COMPLETEのアクティビティログから連続日数を算出
+      const logs = await prisma.xpActivityLog.findMany({
+        where: { userId, actionType: 'CHECKLIST_COMPLETE' },
+        orderBy: { createdAt: 'desc' },
+        select: { createdAt: true },
+        take: 60, // 最大60日分
+      })
+      if (logs.length === 0) return 0
+      // 日付の重複を除去して降順ソート
+      const dates = [...new Set(logs.map(l => l.createdAt.toISOString().slice(0, 10)))].sort().reverse()
+      const today = new Date().toISOString().slice(0, 10)
+      let streak = 0
+      for (let i = 0; i < dates.length; i++) {
+        const expected = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10)
+        // 初日は今日または昨日から開始可能
+        if (i === 0 && dates[0] !== today) {
+          const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10)
+          if (dates[0] !== yesterday) break
+          // 昨日から開始
+          const expectedFromYesterday = new Date(Date.now() - (i + 1) * 86400000).toISOString().slice(0, 10)
+          if (dates[i] === expectedFromYesterday) { streak++; continue }
+          break
+        }
+        if (dates[i] === expected) { streak++ } else { break }
+      }
+      return streak
+    })(),
   ])
 
   const data: TitleCheckData = {
@@ -53,6 +83,7 @@ export const GET = withAuth(async ({ user }) => {
     level: gamification?.level ?? 1,
     longestStreak: gamification?.longestStreak ?? 0,
     allStocksHaveMemo: stockCount > 0 && stockCount === stocksWithMemoCount,
+    checklistCompleteStreak,
   }
 
   const titles = evaluateTitles(data)

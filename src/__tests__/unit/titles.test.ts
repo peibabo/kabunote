@@ -17,6 +17,7 @@ const emptyData: TitleCheckData = {
   level: 1,
   longestStreak: 0,
   allStocksHaveMemo: false,
+  checklistCompleteStreak: 0,
 }
 
 const maxData: TitleCheckData = {
@@ -34,12 +35,13 @@ const maxData: TitleCheckData = {
   level: 20,
   longestStreak: 30,
   allStocksHaveMemo: true,
+  checklistCompleteStreak: 30,
 }
 
 describe('TITLE_DEFINITIONS', () => {
-  it('全25個の称号が定義されている', () => {
-    expect(TITLE_DEFINITIONS).toHaveLength(25)
-    expect(TOTAL_TITLE_COUNT).toBe(25)
+  it('全28個の称号が定義されている', () => {
+    expect(TITLE_DEFINITIONS).toHaveLength(28)
+    expect(TOTAL_TITLE_COUNT).toBe(28)
   })
 
   it('全称号にユニークなIDがある', () => {
@@ -47,12 +49,12 @@ describe('TITLE_DEFINITIONS', () => {
     expect(new Set(ids).size).toBe(ids.length)
   })
 
-  it('レアリティ分布: common 8, rare 9, epic 6, legendary 2', () => {
+  it('レアリティ分布: common 9, rare 10, epic 7, legendary 2', () => {
     const counts = { common: 0, rare: 0, epic: 0, legendary: 0 }
     for (const t of TITLE_DEFINITIONS) counts[t.rarity]++
-    expect(counts.common).toBe(8)
-    expect(counts.rare).toBe(9)
-    expect(counts.epic).toBe(6)
+    expect(counts.common).toBe(9)
+    expect(counts.rare).toBe(10)
+    expect(counts.epic).toBe(7)
     expect(counts.legendary).toBe(2)
   })
 })

@@ -232,6 +232,21 @@ html {
   }
 }
 
+@keyframes confetti {
+  0% {
+    opacity: 1;
+    transform: translateY(0) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(60px) rotate(360deg);
+  }
+}
+
+.animate-confetti {
+  animation: confetti 1.5s ease-out forwards;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .scroll-hidden,
   .scroll-hidden-left,
@@ -248,7 +263,8 @@ html {
   .animate-shimmer,
   .animate-orb-1,
   .animate-orb-2,
-  .animate-orb-3 {
+  .animate-orb-3,
+  .animate-confetti {
     animation: none;
   }
 }

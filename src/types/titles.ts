@@ -42,6 +42,7 @@ export interface TitleCheckData {
   level: number
   longestStreak: number
   allStocksHaveMemo: boolean
+  checklistCompleteStreak: number
 }
 
 /** カテゴリ表示情報 */

@@ -39,6 +39,7 @@ export type XpActionType =
   | 'BENEFIT_REGISTER'
   | 'NEXT_ACTION'
   | 'FEEDBACK'
+  | 'CHECKLIST_COMPLETE'
 
 /** アクティビティログ */
 export interface XpActivityLogEntry {

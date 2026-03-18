@@ -38,9 +38,16 @@ app_users (ユーザー管理)
   │     @@unique([userId, snapshotDate, chartType, symbol])
   ├── user_gamification (ゲーミフィケーション状態)
   │     id, user_id(UNIQUE), total_xp, level, daily_xp, daily_xp_date, current_streak, longest_streak, last_active_date
-  └── xp_activity_logs (XPアクティビティログ)
-        id, user_id, action_type, xp_earned, description
-        @@index([userId, createdAt DESC])
+  ├── xp_activity_logs (XPアクティビティログ)
+  │     id, user_id, action_type, xp_earned, description
+  │     @@index([userId, createdAt DESC])
+  ├── user_checklists (デイリーチェックリスト項目)
+  │     id, user_id, label, order
+  │     @@index([userId])
+  └── checklist_checks (チェックリスト日次チェック記録)
+        id, checklist_id, user_id, checked_date
+        @@unique([checklistId, checkedDate])
+        @@index([userId, checkedDate])
 ```
 
 ### Enum定義
@@ -95,7 +102,18 @@ app_users (ユーザー管理)
 | `/api/gamification` | GET | ゲーミフィケーション状態取得（初回自動作成） |
 | `/api/gamification/xp` | POST | XP付与（日次上限・ストリーク・レベルアップ判定） |
 | `/api/gamification/activity` | GET | 直近30件のXPアクティビティログ |
-| `/api/gamification/titles` | GET | 称号コレクション状態（集計+全25称号の獲得判定） |
+| `/api/gamification/titles` | GET | 称号コレクション状態（集計+全28称号の獲得判定） |
+
+### チェックリスト
+| パス | メソッド | 説明 |
+|------|---------|------|
+| `/api/checklist` | GET | チェックリスト項目一覧 + 今日のチェック状態 |
+| `/api/checklist` | POST | 項目追加 |
+| `/api/checklist` | PUT | 項目一括更新（並び替え・テキスト編集） |
+| `/api/checklist/[itemId]` | DELETE | 項目削除 |
+| `/api/checklist/check` | POST | チェック登録 |
+| `/api/checklist/check` | DELETE | チェック解除 |
+| `/api/checklist/preset` | POST | プリセット一括登録 |
 
 ### フィードバック
 | パス | メソッド | 説明 |
@@ -167,6 +185,7 @@ app_users (ユーザー管理)
 |--------|------|
 | `useModals` | モーダル表示状態 |
 | `useDashboardActions` | ダッシュボード操作（銘柄追加・削除・D&D） |
+| `useChecklist` | デイリーチェックリスト（CRUD・チェック状態・XP連携） |
 | `useFavoriteGroups` | お気に入りグループ（楽観的更新・差分同期） |
 | `useExternalLinks` | 外部リンク設定（モジュールキャッシュ・デフォルトフォールバック） |
 

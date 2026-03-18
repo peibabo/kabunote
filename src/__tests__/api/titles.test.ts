@@ -17,6 +17,7 @@ beforeEach(() => {
   prismaMock.portfolioSnapshot.count.mockReset()
   prismaMock.feedback.count.mockReset()
   prismaMock.userGamification.findUnique.mockReset()
+  prismaMock.xpActivityLog.findMany.mockReset()
 })
 
 function mockCounts(overrides: Partial<Record<string, number>> = {}) {
@@ -44,6 +45,7 @@ function mockCounts(overrides: Partial<Record<string, number>> = {}) {
   prismaMock.userGamification.findUnique.mockResolvedValue({
     level: 1, longestStreak: 0,
   } as never)
+  prismaMock.xpActivityLog.findMany.mockResolvedValue([] as never)
 }
 
 describe('GET /api/gamification/titles', () => {
@@ -55,8 +57,8 @@ describe('GET /api/gamification/titles', () => {
     const json = await getJson(res)
 
     expect(json.success).toBe(true)
-    expect(json.data.titles).toHaveLength(25)
-    expect(json.data.totalCount).toBe(25)
+    expect(json.data.titles).toHaveLength(28)
+    expect(json.data.totalCount).toBe(28)
     expect(json.data.unlockedCount).toBe(0)
   })
 

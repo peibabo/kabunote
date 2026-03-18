@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import StockCard from '@/components/stock/StockCard';
 import SearchBar from '@/components/stock/SearchBar';
 import InvestmentCalendar from '@/components/calendar/InvestmentCalendar';
+import DailyChecklist from '@/components/settings/DailyChecklist';
 import DailyQuote from '@/components/settings/DailyQuote';
 import LevelBadge from '@/components/settings/LevelBadge';
 import LevelUpCelebration from '@/components/settings/LevelUpCelebration';
@@ -121,6 +122,10 @@ export default function Home() {
 
         <div className="mb-2">
           <LevelBadge />
+        </div>
+
+        <div className="mb-2">
+          <DailyChecklist />
         </div>
 
         <div className="mb-4">

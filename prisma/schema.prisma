@@ -34,6 +34,8 @@ model User {
   chartMemos         ChartMemo[]
   gamification       UserGamification?
   xpActivityLogs     XpActivityLog[]
+  checklists         UserChecklist[]
+  checklistChecks    ChecklistCheck[]
 
   @@map("app_users")
 }
@@ -353,6 +355,38 @@ model XpActivityLog {
 
   @@index([userId, createdAt(sort: Desc)])
   @@map("xp_activity_logs")
+}
+
+// デイリーチェックリスト項目
+model UserChecklist {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  label     String
+  order     Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user   User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  checks ChecklistCheck[]
+
+  @@index([userId])
+  @@map("user_checklists")
+}
+
+// チェックリスト日次チェック記録
+model ChecklistCheck {
+  id          String   @id @default(cuid())
+  checklistId String   @map("checklist_id")
+  userId      String   @map("user_id")
+  checkedDate DateTime @map("checked_date") @db.Date
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  checklist UserChecklist @relation(fields: [checklistId], references: [id], onDelete: Cascade)
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([checklistId, checkedDate])
+  @@index([userId, checkedDate])
+  @@map("checklist_checks")
 }
 
 // Enums
