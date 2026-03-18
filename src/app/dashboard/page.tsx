@@ -5,7 +5,6 @@ import StockCard from '@/components/stock/StockCard';
 import SearchBar from '@/components/stock/SearchBar';
 import InvestmentCalendar from '@/components/calendar/InvestmentCalendar';
 import DailyChecklist from '@/components/settings/DailyChecklist';
-import DailyQuote from '@/components/settings/DailyQuote';
 import InvestmentDiary from '@/components/settings/InvestmentDiary';
 import LevelBadge from '@/components/settings/LevelBadge';
 import LevelUpCelebration from '@/components/settings/LevelUpCelebration';
@@ -125,15 +124,8 @@ export default function Home() {
           <LevelBadge />
         </div>
 
-        <div className="mb-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-4 items-start">
           <DailyChecklist />
-        </div>
-
-        <div className="mb-2">
-          <DailyQuote />
-        </div>
-
-        <div className="mb-4">
           <InvestmentDiary />
         </div>
 
