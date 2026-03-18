@@ -9,6 +9,10 @@ describe('BasicTab', () => {
     memo: 'テストメモ',
     onMemoChange: vi.fn(),
     onMemoModalOpen: vi.fn(),
+    per: '',
+    pbr: '',
+    onPerChange: vi.fn(),
+    onPbrChange: vi.fn(),
   }
 
   it('メモテキストエリアを表示する', () => {

@@ -12,13 +12,9 @@ interface InvestmentStrategyTabProps {
   targetPrice: string;
   stopLoss: string;
   currentPrice: string;
-  per: string;
-  pbr: string;
   onTargetPriceChange: (value: string) => void;
   onStopLossChange: (value: string) => void;
   onCurrentPriceChange: (value: string) => void;
-  onPerChange: (value: string) => void;
-  onPbrChange: (value: string) => void;
   positionSummary: PositionSummary;
   profitLossInfo: ProfitLossInfo | null;
   nextActionPlan: NextActionPlan | null;
@@ -34,13 +30,9 @@ export default function InvestmentStrategyTab({
   targetPrice,
   stopLoss,
   currentPrice,
-  per,
-  pbr,
   onTargetPriceChange,
   onStopLossChange,
   onCurrentPriceChange,
-  onPerChange,
-  onPbrChange,
   positionSummary,
   profitLossInfo,
   nextActionPlan,
@@ -92,13 +84,9 @@ export default function InvestmentStrategyTab({
             targetPrice={targetPrice}
             stopLoss={stopLoss}
             currentPrice={currentPrice}
-            per={per}
-            pbr={pbr}
             onTargetPriceChange={onTargetPriceChange}
             onStopLossChange={onStopLossChange}
             onCurrentPriceChange={onCurrentPriceChange}
-            onPerChange={onPerChange}
-            onPbrChange={onPbrChange}
             positionSummary={positionSummary}
             profitLossInfo={profitLossInfo}
           />

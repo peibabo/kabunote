@@ -171,6 +171,10 @@ function StockCard({ symbol, onRemove, favoriteGroups, onFavoriteGroupsChange, i
               isMemoSaving={isMemoSaving}
               memoError={memoError}
               memoLastSaved={memoLastSaved}
+              per={per}
+              pbr={pbr}
+              onPerChange={setPer}
+              onPbrChange={setPbr}
             />
           )}
 
@@ -181,13 +185,9 @@ function StockCard({ symbol, onRemove, favoriteGroups, onFavoriteGroupsChange, i
               targetPrice={targetPrice}
               stopLoss={stopLoss}
               currentPrice={currentPrice}
-              per={per}
-              pbr={pbr}
               onTargetPriceChange={setTargetPrice}
               onStopLossChange={setStopLoss}
               onCurrentPriceChange={setCurrentPrice}
-              onPerChange={setPer}
-              onPbrChange={setPbr}
               positionSummary={positionSummary}
               profitLossInfo={profitLossInfo}
               nextActionPlan={nextActionPlan}
