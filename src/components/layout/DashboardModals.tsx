@@ -12,6 +12,7 @@ import DeleteAccountModal from '@/components/modal/DeleteAccountModal';
 import FeedbackModal from '@/components/modal/FeedbackModal';
 import OnboardingWizard from '@/components/onboarding/OnboardingWizard';
 import SlideOutMenu from '@/components/layout/SlideOutMenu';
+import NewsListPage from '@/components/news/NewsListPage';
 import { FavoriteGroup } from '@/types/favorites';
 import { AlertCounts } from '@/hooks/alert/useAlertCounts';
 import { StockData } from '@/hooks/stock/useStockData';
@@ -69,6 +70,8 @@ interface DashboardModalsProps {
     setIsDeleteAccountOpen: (v: boolean) => void;
     isFeedbackOpen: boolean;
     setIsFeedbackOpen: (v: boolean) => void;
+    isNewsListOpen: boolean;
+    setIsNewsListOpen: (v: boolean) => void;
     isMenuOpen: boolean;
     setIsMenuOpen: (v: boolean) => void;
     handleMenuItemClick: (item: string) => void;
@@ -185,6 +188,15 @@ export default function DashboardModals({
         isOpen={modals.isDeleteAccountOpen}
         onClose={() => modals.setIsDeleteAccountOpen(false)}
       />
+
+      {/* ニュース一覧モーダル */}
+      <FullScreenModal
+        isOpen={modals.isNewsListOpen}
+        onClose={() => modals.setIsNewsListOpen(false)}
+        title="📰 ニュース一覧"
+      >
+        <NewsListPage isOpen={modals.isNewsListOpen} />
+      </FullScreenModal>
 
       {/* 目安箱モーダル */}
       <FeedbackModal

@@ -23,6 +23,7 @@ export const XP_VALUES: Record<XpActionType, number> = {
   NEXT_ACTION: 15,
   FEEDBACK: 20,
   CHECKLIST_COMPLETE: 15,
+  DIARY_SAVE: 15,
 }
 
 /** アクションの日本語説明 */
@@ -40,6 +41,7 @@ export const XP_DESCRIPTIONS: Record<XpActionType, string> = {
   NEXT_ACTION: 'Next Action登録',
   FEEDBACK: 'フィードバック送信',
   CHECKLIST_COMPLETE: 'チェックリスト全完了',
+  DIARY_SAVE: '投資日記保存',
 }
 
 /** 日次XP上限 */

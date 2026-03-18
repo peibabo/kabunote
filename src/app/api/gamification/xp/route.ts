@@ -8,7 +8,7 @@ import {
 import type { XpActionType } from '@/types/gamification'
 
 /** 日次1回制限のアクション */
-const DAILY_ONCE_ACTIONS: XpActionType[] = ['LOGIN', 'MEMO_SAVE', 'CHECKLIST_COMPLETE']
+const DAILY_ONCE_ACTIONS: XpActionType[] = ['LOGIN', 'MEMO_SAVE', 'CHECKLIST_COMPLETE', 'DIARY_SAVE']
 
 export const POST = withAuth(async ({ user, request }) => {
   const { actionType } = await request.json() as { actionType: string }

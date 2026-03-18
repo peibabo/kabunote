@@ -25,6 +25,8 @@ export const STORAGE_KEYS = {
   COOKIE_CONSENT: 'kabunote-cookie-consent',
   /** デイリーチェックリストのアコーディオン展開状態 */
   CHECKLIST_EXPANDED: 'kabunote-checklist-expanded',
+  /** 投資日記のアコーディオン展開状態 */
+  DIARY_EXPANDED: 'kabunote-diary-expanded',
 } as const;
 
 // ─────────────────────────────────────────

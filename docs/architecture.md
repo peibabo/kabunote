@@ -1,6 +1,6 @@
 # Kabunote - アーキテクチャリファレンス
 
-## データベーススキーマ（21テーブル）
+## データベーススキーマ（25テーブル）
 
 ```
 app_users (ユーザー管理)
@@ -44,10 +44,18 @@ app_users (ユーザー管理)
   ├── user_checklists (デイリーチェックリスト項目)
   │     id, user_id, label, order
   │     @@index([userId])
-  └── checklist_checks (チェックリスト日次チェック記録)
-        id, checklist_id, user_id, checked_date
-        @@unique([checklistId, checkedDate])
-        @@index([userId, checkedDate])
+  ├── checklist_checks (チェックリスト日次チェック記録)
+  │     id, checklist_id, user_id, checked_date
+  │     @@unique([checklistId, checkedDate])
+  │     @@index([userId, checkedDate])
+  └── investment_diaries (投資日記: 1日1記録)
+        id, user_id, diary_date, market_overview, news_memo, reflection, tomorrow_focus
+        @@unique([userId, diaryDate])
+        @@index([userId, diaryDate DESC])
+        └── diary_news_items (日記ニュースアイテム)
+              id, diary_id, user_id, url, comment, order
+              @@index([diaryId])
+              @@index([userId, createdAt DESC])
 ```
 
 ### Enum定義
@@ -114,6 +122,13 @@ app_users (ユーザー管理)
 | `/api/checklist/check` | POST | チェック登録 |
 | `/api/checklist/check` | DELETE | チェック解除 |
 | `/api/checklist/preset` | POST | プリセット一括登録 |
+
+### 投資日記
+| パス | メソッド | 説明 |
+|------|---------|------|
+| `/api/diary` | GET | 日記取得（?date=YYYY-MM-DD, newsItems含む）または月の日記日付リスト（?month=YYYY-MM） |
+| `/api/diary` | PUT | 日記保存（upsert: date, marketOverview, newsItems[], reflection, tomorrowFocus） |
+| `/api/diary/news` | GET | ニュース一覧（全日付横断、?limit&offset） |
 
 ### フィードバック
 | パス | メソッド | 説明 |
@@ -186,6 +201,7 @@ app_users (ユーザー管理)
 | `useModals` | モーダル表示状態 |
 | `useDashboardActions` | ダッシュボード操作（銘柄追加・削除・D&D） |
 | `useChecklist` | デイリーチェックリスト（CRUD・チェック状態・XP連携） |
+| `useDiary` | 投資日記（自動保存・日付ナビゲーション・XP連携） |
 | `useFavoriteGroups` | お気に入りグループ（楽観的更新・差分同期） |
 | `useExternalLinks` | 外部リンク設定（モジュールキャッシュ・デフォルトフォールバック） |
 

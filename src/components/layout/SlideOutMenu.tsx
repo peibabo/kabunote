@@ -302,6 +302,13 @@ export default function SlideOutMenu({ isOpen, onClose, alertCounts, onMenuItemC
                   <span className="text-lg">💰</span>
                   <span className="text-gray-300">配当・優待一覧</span>
                 </button>
+                <button
+                  onClick={() => handleMenuClick('news')}
+                  className="w-full flex items-center space-x-3 p-2 text-left hover:bg-gray-700 rounded-lg transition-colors cursor-pointer"
+                >
+                  <span className="text-lg">📰</span>
+                  <span className="text-gray-300">ニュース一覧</span>
+                </button>
               </div>
             )}
           </div>

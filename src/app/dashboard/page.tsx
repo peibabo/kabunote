@@ -6,6 +6,7 @@ import SearchBar from '@/components/stock/SearchBar';
 import InvestmentCalendar from '@/components/calendar/InvestmentCalendar';
 import DailyChecklist from '@/components/settings/DailyChecklist';
 import DailyQuote from '@/components/settings/DailyQuote';
+import InvestmentDiary from '@/components/settings/InvestmentDiary';
 import LevelBadge from '@/components/settings/LevelBadge';
 import LevelUpCelebration from '@/components/settings/LevelUpCelebration';
 import TitleUnlockedToast from '@/components/settings/TitleUnlockedToast';
@@ -128,8 +129,12 @@ export default function Home() {
           <DailyChecklist />
         </div>
 
-        <div className="mb-4">
+        <div className="mb-2">
           <DailyQuote />
+        </div>
+
+        <div className="mb-4">
+          <InvestmentDiary />
         </div>
 
         <LevelUpCelebration />
