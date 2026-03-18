@@ -122,7 +122,7 @@ export default function LevelBadge() {
           </div>
         </div>
 
-        <p className="text-gray-500 italic text-xs truncate cursor-default">
+        <p className="text-gray-400 italic text-xs truncate cursor-default">
           &ldquo;{quote.text}&rdquo; &mdash; {quote.author}
         </p>
       </div>

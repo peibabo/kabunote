@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { StockData } from '@/data/stockNames';
 import { CustomTag, TAG_COLORS } from '@/types/tags';
 import { FavoriteGroup, GROUP_COLORS } from '@/types/favorites';
+import EarningsBadge from './EarningsBadge';
 
 interface StockCardHeaderProps {
   symbol: string;
@@ -17,6 +18,7 @@ interface StockCardHeaderProps {
   onFavoriteGroupSelectorOpen: () => void;
   onTagRemove: (tagId: string) => void;
   onRemove: () => void;
+  earningsDate?: string;
   // ドラッグ&ドロップ関連
   // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
   listeners: Record<string, Function> | undefined;
@@ -34,6 +36,7 @@ export default function StockCardHeader({
   onFavoriteGroupSelectorOpen,
   onTagRemove,
   onRemove,
+  earningsDate,
   listeners,
 }: StockCardHeaderProps) {
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
@@ -58,6 +61,7 @@ export default function StockCardHeader({
         <div className="flex-1 min-w-0 max-w-[calc(100%-80px)]">
           <div className="flex items-center gap-2 mb-1">
             <h3 className="text-base md:text-lg font-bold text-white">{symbol}</h3>
+            {earningsDate && <EarningsBadge earningsDate={earningsDate} />}
             {isLoading ? (
               <span className="text-xs bg-gray-600 text-gray-300 px-2 py-0.5 rounded-full">
                 読込中

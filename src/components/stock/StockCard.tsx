@@ -111,6 +111,7 @@ function StockCard({ symbol, onRemove, favoriteGroups, onFavoriteGroupsChange, i
           onFavoriteGroupSelectorOpen={() => setIsFavoriteGroupSelectorOpen(true)}
           onTagRemove={(tagId) => removeTagFromDB(tagId)}
           onRemove={() => onRemove(symbol)}
+          earningsDate={earningsDate}
           listeners={listeners}
         />
 

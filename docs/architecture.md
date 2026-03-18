@@ -197,6 +197,7 @@ app_users (ユーザー管理)
 |--------|------|
 | `useDividendBenefitData` | 配当・優待一覧データ |
 | `useDividendBenefitList` | 配当・優待リスト（ソート・フィルタ・検索） |
+| `useMonthlyDividendData` | 月別配当受取データ計算 |
 
 ### `hooks/dashboard/` — ダッシュボード
 | フック | 説明 |
@@ -287,7 +288,7 @@ app_users (ユーザー管理)
 
 ### `components/stock/` — 銘柄
 - `StockCard.tsx`: 銘柄カード（タブ制御・統合アラート・スマートナビゲーション）
-- `StockCardHeader.tsx`, `StockInput.tsx`, `SearchBar.tsx`, `StockMiniChart.tsx`
+- `StockCardHeader.tsx`, `StockInput.tsx`, `SearchBar.tsx`, `StockMiniChart.tsx`, `EarningsBadge.tsx`
 - `FloatingAddButton.tsx`, `SimplePortfolioSummary.tsx`
 
 ### `components/stock-tabs/` — 銘柄カードタブ
@@ -305,6 +306,10 @@ app_users (ユーザー管理)
 
 ### `components/calendar/` — カレンダー
 - `InvestmentCalendar.tsx`, `InvestmentTimeline.tsx`, `MonthlyCalendar.tsx`, `TodayTomorrowEvents.tsx`
+- `EarningsCountdown.tsx` — 決算カウントダウンウィジェット（30日以内・ネオン演出）
+- `RightsDateCountdown.tsx` — 権利確定日カウントダウン一覧（権利付き最終日併記）
+- `MonthlyDividendChart.tsx` — 月別配当受取カレンダー（CSS棒グラフ）
+- `DividendYieldRanking.tsx` — 配当利回りランキング
 
 ### `components/summary/` — 一覧ページ
 - `PortfolioPositionsPage.tsx`, `DividendBenefitListPage.tsx`, `StrategySummaryPage.tsx`, `EventCalendarPage.tsx`

@@ -27,6 +27,12 @@ export const STORAGE_KEYS = {
   CHECKLIST_EXPANDED: 'kabunote-checklist-expanded',
   /** 投資日記のアコーディオン展開状態 */
   DIARY_EXPANDED: 'kabunote-diary-expanded',
+  /** 月別配当カレンダーのアコーディオン展開状態 */
+  MONTHLY_DIVIDEND_EXPANDED: 'kabunote-monthly-dividend-expanded',
+  /** 配当利回りランキングのアコーディオン展開状態 */
+  DIVIDEND_RANKING_EXPANDED: 'kabunote-dividend-ranking-expanded',
+  /** 投資スケジュールウィジェットのアクティブタブ */
+  SCHEDULE_WIDGET_TAB: 'kabunote-schedule-widget-tab',
 } as const;
 
 // ─────────────────────────────────────────

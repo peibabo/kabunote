@@ -11,9 +11,10 @@ import { useTooltipState } from '@/hooks/util/useTooltipState';
 interface MonthlyCalendarProps {
   events: Record<string, InvestmentEvent[]>;
   onStockClick?: (symbol: string) => void;
+  standalone?: boolean;
 }
 
-export default function MonthlyCalendar({ events, onStockClick }: MonthlyCalendarProps) {
+export default function MonthlyCalendar({ events, onStockClick, standalone = false }: MonthlyCalendarProps) {
   const { isExpanded: isCalendarExpanded, toggle: toggleCalendarExpanded } = useAccordionState({
     storageKey: STORAGE_KEYS.TIMELINE_CALENDAR_EXPANDED,
   });
@@ -113,31 +114,35 @@ export default function MonthlyCalendar({ events, onStockClick }: MonthlyCalenda
     setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1));
   };
 
-  return (
-    <div className="mt-4 border-t border-gray-700 pt-4">
-      <button
-        onClick={toggleCalendarExpanded}
-        className="w-full flex items-center justify-between p-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors cursor-pointer"
-      >
-        <div className="flex items-center gap-2">
-          <span className="text-lg">📊</span><h3 className="text-sm font-medium text-gray-200">月間カレンダー</h3>
-          {currentMonthEvents > 0 && (
-            <span className="text-xs text-gray-400">
-              ({currentMonthEvents}件)
-            </span>
-          )}
-        </div>
-        <div className={`transform transition-transform duration-200 text-gray-400 ${
-          isCalendarExpanded ? 'rotate-180' : 'rotate-0'
-        }`}>
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-            <path d="M4 6l4 4 4-4H4z"/>
-          </svg>
-        </div>
-      </button>
+  const isVisible = standalone || isCalendarExpanded;
 
-      {/* アコーディオンコンテンツ */}
-      <div className={`overflow-hidden transition-all duration-300 ease-in-out ${
+  return (
+    <div className={standalone ? '' : 'mt-4 border-t border-gray-700 pt-4'}>
+      {!standalone && (
+        <button
+          onClick={toggleCalendarExpanded}
+          className="w-full flex items-center justify-between p-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors cursor-pointer"
+        >
+          <div className="flex items-center gap-2">
+            <span className="text-lg">📊</span><h3 className="text-sm font-medium text-gray-200">月間カレンダー</h3>
+            {currentMonthEvents > 0 && (
+              <span className="text-xs text-gray-400">
+                ({currentMonthEvents}件)
+              </span>
+            )}
+          </div>
+          <div className={`transform transition-transform duration-200 text-gray-400 ${
+            isCalendarExpanded ? 'rotate-180' : 'rotate-0'
+          }`}>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M4 6l4 4 4-4H4z"/>
+            </svg>
+          </div>
+        </button>
+      )}
+
+      {/* カレンダーコンテンツ */}
+      <div className={standalone ? '' : `overflow-hidden transition-all duration-300 ease-in-out ${
         isCalendarExpanded
           ? 'max-h-[800px] opacity-100 mt-4'
           : 'max-h-0 opacity-0'
@@ -231,7 +236,7 @@ export default function MonthlyCalendar({ events, onStockClick }: MonthlyCalenda
       </div>
 
       {/* カレンダーツールチップ */}
-      {isCalendarExpanded && calendarTooltipState.show && calendarTooltipState.data && (
+      {isVisible && calendarTooltipState.show && calendarTooltipState.data && (
         <div
           data-tooltip="true"
           className="fixed z-50"
