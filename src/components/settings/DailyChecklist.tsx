@@ -111,9 +111,9 @@ export default function DailyChecklist() {
 
   if (isLoading || !hasLoaded) return null
 
-  // ネオン縦線の色
-  const borderColor = allCompleted ? 'rgb(34, 197, 94)' : 'rgb(168, 85, 247)'
-  const shadowColor = allCompleted ? 'rgba(34, 197, 94, 0.3)' : 'rgba(168, 85, 247, 0.3)'
+  // ネオン縦線の色（ティール系で LevelBadge の紫と差別化）
+  const borderColor = allCompleted ? 'rgb(34, 197, 94)' : 'rgb(20, 184, 166)'
+  const shadowColor = allCompleted ? 'rgba(34, 197, 94, 0.3)' : 'rgba(20, 184, 166, 0.3)'
 
   return (
     <div
@@ -163,7 +163,7 @@ export default function DailyChecklist() {
                       width: `${totalCount > 0 ? (checkedCount / totalCount) * 100 : 0}%`,
                       background: allCompleted
                         ? 'rgb(34, 197, 94)'
-                        : 'linear-gradient(90deg, rgb(168, 85, 247), rgb(59, 130, 246))',
+                        : 'linear-gradient(90deg, rgb(20, 184, 166), rgb(59, 130, 246))',
                     }}
                   />
                 </div>
@@ -190,7 +190,7 @@ export default function DailyChecklist() {
               </p>
               <button
                 onClick={handleApplyPreset}
-                className="cursor-pointer bg-purple-600 hover:bg-purple-700 text-white text-sm px-4 py-2 rounded-lg transition-colors"
+                className="cursor-pointer bg-teal-600 hover:bg-teal-700 text-white text-sm px-4 py-2 rounded-lg transition-colors"
               >
                 おすすめプリセットを使う
               </button>
@@ -213,7 +213,7 @@ export default function DailyChecklist() {
                     type="checkbox"
                     checked={item.checked}
                     onChange={() => handleToggle(item.id, item.checked)}
-                    className="w-4 h-4 rounded border-gray-600 text-purple-500 focus:ring-purple-500 focus:ring-offset-0 bg-gray-700 cursor-pointer"
+                    className="w-4 h-4 rounded border-gray-600 text-teal-500 focus:ring-teal-500 focus:ring-offset-0 bg-gray-700 cursor-pointer"
                   />
                   <span
                     className={`text-sm transition-all duration-300 ${
@@ -246,7 +246,7 @@ export default function DailyChecklist() {
                     type="text"
                     value={item.label}
                     onChange={e => handleLabelChange(item.id, e.target.value)}
-                    className="flex-1 bg-transparent text-sm text-gray-200 border-b border-gray-600 focus:border-purple-500 outline-none py-1"
+                    className="flex-1 bg-transparent text-sm text-gray-200 border-b border-gray-600 focus:border-teal-500 outline-none py-1"
                     maxLength={100}
                   />
                   <button
@@ -273,13 +273,13 @@ export default function DailyChecklist() {
                   onChange={e => setNewItemLabel(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter') handleAddItem() }}
                   placeholder="+ 項目を追加"
-                  className="flex-1 bg-transparent text-sm text-gray-300 placeholder-gray-600 border-b border-gray-700 focus:border-purple-500 outline-none py-1"
+                  className="flex-1 bg-transparent text-sm text-gray-300 placeholder-gray-600 border-b border-gray-700 focus:border-teal-500 outline-none py-1"
                   maxLength={100}
                 />
                 {newItemLabel.trim() && (
                   <button
                     onClick={handleAddItem}
-                    className="cursor-pointer text-purple-400 hover:text-purple-300 text-xs transition-colors"
+                    className="cursor-pointer text-teal-400 hover:text-teal-300 text-xs transition-colors"
                   >
                     追加
                   </button>
