@@ -14,7 +14,7 @@ git commit, push, PR作成まで続けてやってください。
 
 ## 開発コマンド
 ```bash
-npm run dev          # localhost:3000
+npm run dev          # localhost:3000（開発用DB自動接続）
 npm run test         # テスト（ウォッチモード）
 npm run test:run     # テスト（1回実行）
 npm run test:unit    # P0: 純粋関数ユニットテスト
@@ -23,6 +23,12 @@ npm run test:hooks   # P2: カスタムフックテスト
 npm run test:components  # P3: コンポーネント描画テスト
 npm run update:stocks    # JPXデータからstocks.csv更新
 ```
+
+## 環境分離（dev/prod）
+- `.env.development.local` → 開発用Supabaseプロジェクト（`npm run dev` で自動適用）
+- `.env.local` → 本番用Supabaseプロジェクト（`npm run build` で適用）
+- セットアップ手順は `.env.example` を参照
+- 開発DB初期化: `scripts/setup-dev-db.sql` をSQL Editorで実行
 
 ## ドキュメント構成
 - `docs/architecture.md` - DB設計・API仕様・フック・型定義・コンポーネント構成
@@ -77,6 +83,9 @@ app_users (ユーザー管理)
 > 実装パターンは `docs/patterns.md` を参照
 
 ## 未完了タスク
+
+### 早急に対応
+- [x] local環境の接続先はテストDBにする（`.env.development.local` + `scripts/setup-dev-db.sql` で対応）
 
 ### ローンチ後改善
 - [ ] ユーザビリティ向上（キーボードショートカット・一括操作・並び替え）
