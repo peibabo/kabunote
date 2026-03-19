@@ -44,6 +44,7 @@ export const VALID_CHART_TYPES: ChartType[] = ['value', 'netAssets', 'profitLoss
 export type ChartMemoFilter = 'all' | ChartType;
 
 export interface ChartMemoListItem extends ChartMemoData {
+  stockName: string | null;
   createdAt: string;
   updatedAt: string;
 }

@@ -113,7 +113,7 @@ export default function ChartMemoListPage({ isOpen }: ChartMemoListPageProps) {
                     </span>
                     {item.chartType === 'stocks' && item.symbol && (
                       <span className="text-[10px] text-purple-400/70 bg-purple-400/10 px-1.5 py-0.5 rounded">
-                        {item.symbol}
+                        {item.symbol}{item.stockName ? ` ${item.stockName}` : ''}
                       </span>
                     )}
                   </div>

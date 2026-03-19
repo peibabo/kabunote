@@ -31,11 +31,23 @@ export const GET = withAuth(async ({ user, request }) => {
     prisma.chartMemo.count({ where }),
   ])
 
+  // 個別株メモの銘柄名を取得
+  const stockSymbols = [...new Set(memos.filter(m => m.chartType === 'stocks' && m.symbol).map(m => m.symbol))]
+  const stockNameMap = new Map<string, string>()
+  if (stockSymbols.length > 0) {
+    const stocks = await prisma.stock.findMany({
+      where: { userId: user.id, symbol: { in: stockSymbols } },
+      select: { symbol: true, name: true },
+    })
+    stocks.forEach(s => stockNameMap.set(s.symbol, s.name))
+  }
+
   const items = memos.map(m => ({
     id: m.id,
     snapshotDate: m.snapshotDate.toISOString().split('T')[0],
     chartType: m.chartType,
     symbol: m.symbol,
+    stockName: stockNameMap.get(m.symbol) || null,
     content: m.content,
     createdAt: m.createdAt.toISOString(),
     updatedAt: m.updatedAt.toISOString(),

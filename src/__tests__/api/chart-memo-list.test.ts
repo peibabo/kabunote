@@ -93,6 +93,34 @@ describe('GET /api/portfolio/chart-memos/list', () => {
     )
   })
 
+  it('成功: 個別株メモに銘柄名が含まれる', async () => {
+    const now = new Date()
+    prismaMock.chartMemo.findMany.mockResolvedValue([
+      {
+        id: 'memo-1',
+        userId: 'test-user-id-123',
+        snapshotDate: new Date('2024-06-15'),
+        chartType: 'stocks',
+        symbol: '7203',
+        content: 'トヨタ好決算',
+        createdAt: now,
+        updatedAt: now,
+      },
+    ] as never)
+    prismaMock.chartMemo.count.mockResolvedValue(1)
+    prismaMock.stock.findMany.mockResolvedValue([
+      { symbol: '7203', name: 'トヨタ自動車' },
+    ] as never)
+
+    const req = createRequest('GET', 'http://localhost:3000/api/portfolio/chart-memos/list')
+    const res = await GET(req)
+    const json = await getJson(res)
+
+    expect(res.status).toBe(200)
+    expect(json.data.items[0].symbol).toBe('7203')
+    expect(json.data.items[0].stockName).toBe('トヨタ自動車')
+  })
+
   it('成功: limitが上限100を超えない', async () => {
     prismaMock.chartMemo.findMany.mockResolvedValue([])
     prismaMock.chartMemo.count.mockResolvedValue(0)
