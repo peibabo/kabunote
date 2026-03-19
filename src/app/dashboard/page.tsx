@@ -117,6 +117,13 @@ export default function Home() {
       />
 
       <main className="container mx-auto px-4 py-4">
+        {isStockDataLoading ? (
+          <div className="flex flex-col justify-center items-center py-20">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400" />
+            <span className="mt-3 text-gray-400">読み込み中...</span>
+          </div>
+        ) : (
+        <>
         <div className="mb-4">
           <ExternalLinksArea />
         </div>
@@ -398,6 +405,8 @@ export default function Home() {
             setForceOpenAdd(true);
           }}
         />
+        </>
+        )}
       </main>
     </div>
   );
