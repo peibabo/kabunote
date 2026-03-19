@@ -21,6 +21,8 @@ interface UseModalsReturn {
   setIsFeedbackOpen: (open: boolean) => void;
   isNewsListOpen: boolean;
   setIsNewsListOpen: (open: boolean) => void;
+  isChartMemoListOpen: boolean;
+  setIsChartMemoListOpen: (open: boolean) => void;
   isMenuOpen: boolean;
   setIsMenuOpen: (open: boolean) => void;
   handleMenuItemClick: (action: string) => void;
@@ -37,6 +39,7 @@ export function useModals(refreshData: () => Promise<void>, onTutorialClick?: ()
   const [isDeleteAccountOpen, setIsDeleteAccountOpen] = useState(false);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [isNewsListOpen, setIsNewsListOpen] = useState(false);
+  const [isChartMemoListOpen, setIsChartMemoListOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const handleMenuItemClick = useCallback((action: string) => {
@@ -78,6 +81,9 @@ export function useModals(refreshData: () => Promise<void>, onTutorialClick?: ()
       case 'news':
         setIsNewsListOpen(true);
         break;
+      case 'chartMemos':
+        setIsChartMemoListOpen(true);
+        break;
       case 'tutorial':
         if (onTutorialClick) {
           onTutorialClick();
@@ -99,6 +105,7 @@ export function useModals(refreshData: () => Promise<void>, onTutorialClick?: ()
     isDeleteAccountOpen, setIsDeleteAccountOpen,
     isFeedbackOpen, setIsFeedbackOpen,
     isNewsListOpen, setIsNewsListOpen,
+    isChartMemoListOpen, setIsChartMemoListOpen,
     isMenuOpen, setIsMenuOpen,
     handleMenuItemClick,
   };
