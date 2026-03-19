@@ -27,6 +27,7 @@ interface PortfolioSummary {
   stocksWithPositions: number;
   stocksWithPrices: number;
   stocksWithoutPrices: number;
+  weightedTaxRate: number;
 }
 
 export default function SimplePortfolioSummary({ portfolioData }: SimplePortfolioSummaryProps) {
