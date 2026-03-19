@@ -45,12 +45,14 @@ export default function ChartMemoModal({
   const [content, setContent] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
     if (isOpen) {
       setContent(existingContent);
       setError('');
+      setConfirmDelete(false);
     }
   }, [isOpen, existingContent]);
 
@@ -81,7 +83,11 @@ export default function ChartMemoModal({
     }
   };
 
-  const handleDelete = async () => {
+  const handleDeleteClick = () => {
+    setConfirmDelete(true);
+  };
+
+  const handleDeleteConfirm = async () => {
     if (isDeleting) return;
     setIsDeleting(true);
     setError('');
@@ -178,15 +184,38 @@ export default function ChartMemoModal({
             </div>
           )}
 
+          {/* 削除確認 */}
+          {confirmDelete && (
+            <div className="mb-4 bg-red-900 bg-opacity-30 border border-red-700 rounded-lg p-3">
+              <p className="text-red-300 text-sm mb-2">このメモを削除しますか？</p>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleDeleteConfirm}
+                  disabled={isDeleting}
+                  className="cursor-pointer px-3 py-1.5 bg-red-700 hover:bg-red-600 text-white rounded text-xs transition-colors disabled:opacity-50"
+                >
+                  {isDeleting ? '削除中...' : '削除する'}
+                </button>
+                <button
+                  onClick={() => setConfirmDelete(false)}
+                  disabled={isDeleting}
+                  className="cursor-pointer px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-white rounded text-xs transition-colors disabled:opacity-50"
+                >
+                  キャンセル
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* ボタン */}
           <div className="flex gap-3">
-            {isExisting && (
+            {isExisting && !confirmDelete && (
               <button
-                onClick={handleDelete}
+                onClick={handleDeleteClick}
                 disabled={isSaving || isDeleting}
                 className="cursor-pointer px-4 py-2 bg-red-900 bg-opacity-50 hover:bg-red-800 text-red-300 rounded-lg text-sm transition-colors disabled:opacity-50"
               >
-                {isDeleting ? '削除中...' : '削除'}
+                削除
               </button>
             )}
             <div className="flex-1" />
