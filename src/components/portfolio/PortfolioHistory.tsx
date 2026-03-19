@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { playSound } from '@/lib/sound';
+import { formatPrice } from '@/lib/positionCalc';
 import PortfolioChart from '@/components/portfolio/PortfolioChart';
 import ChartMemoModal from '@/components/portfolio/ChartMemoModal';
 import type { HistoryRange, ChartType, PortfolioSnapshotData, ChartMemoMap } from '@/types/portfolio';
@@ -77,10 +78,56 @@ export default function PortfolioHistory({
     return deleteMemo(modalTarget.snapshotDate, modalTarget.chartType, modalTarget.symbol);
   }, [modalTarget, deleteMemo]);
 
-  // モーダル表示時の既存メモ内容を取得
+  // モーダル表示時の既存メモ内容とデータ値を取得
   const existingContent = modalTarget
     ? memoMap.get(chartMemoKey(modalTarget.snapshotDate, modalTarget.chartType, modalTarget.symbol))?.content || ''
     : '';
+
+  const modalDataValues = useMemo(() => {
+    if (!modalTarget) return undefined;
+    const snap = data.find(d => d.snapshotDate === modalTarget.snapshotDate);
+    if (!snap) return undefined;
+
+    const fmt = (v: number) => `${formatPrice(Math.round(v))}円`;
+
+    switch (modalTarget.chartType) {
+      case 'value':
+        return [
+          { label: '評価額', value: fmt(snap.totalValue), color: 'text-blue-300' },
+          { label: '投資額', value: fmt(snap.totalInvestment) },
+          { label: '現金', value: fmt(snap.cashAmount) },
+        ];
+      case 'netAssets':
+        return [
+          { label: '純資産', value: fmt(snap.netAssets), color: 'text-emerald-300' },
+          { label: '評価額', value: fmt(snap.totalValue), color: 'text-blue-300' },
+          { label: '現金', value: fmt(snap.cashAmount) },
+        ];
+      case 'profitLoss':
+        return [
+          {
+            label: '損益',
+            value: `${snap.profitLoss >= 0 ? '+' : ''}${fmt(snap.profitLoss)}`,
+            color: snap.profitLoss >= 0 ? 'text-green-300' : 'text-red-300',
+          },
+          { label: '評価額', value: fmt(snap.totalValue), color: 'text-blue-300' },
+          { label: '投資額', value: fmt(snap.totalInvestment) },
+        ];
+      case 'stocks': {
+        const ss = modalTarget.symbol
+          ? snap.stockSnapshots.find(s => s.symbol === modalTarget.symbol)
+          : undefined;
+        if (!ss) return undefined;
+        return [
+          { label: '株価', value: ss.currentPrice != null ? `${formatPrice(ss.currentPrice)}円` : '-' },
+          { label: '保有数', value: `${ss.shares}株` },
+          { label: '評価額', value: fmt(ss.value) },
+        ];
+      }
+      default:
+        return undefined;
+    }
+  }, [modalTarget, data]);
 
   return (
     <>
@@ -159,6 +206,7 @@ export default function PortfolioHistory({
           chartType={modalTarget.chartType}
           symbol={modalTarget.symbol}
           existingContent={existingContent}
+          dataValues={modalDataValues}
           onSave={handleSave}
           onDelete={handleDelete}
         />
