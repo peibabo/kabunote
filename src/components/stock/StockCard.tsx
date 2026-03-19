@@ -52,7 +52,7 @@ function StockCard({ symbol, onRemove, favoriteGroups, onFavoriteGroupsChange, i
     activeTab, setActiveTab, tabs,
     memo, updateMemo, isMemoLoading, isMemoSaving, memoError, memoLastSaved,
     positionSummary, profitLossInfo,
-    currentPrice, targetPrice, stopLoss, per, pbr, setCurrentPrice, setTargetPrice, setStopLoss, setPer, setPbr,
+    currentPrice, targetPrice, stopLoss, per, pbr, setCurrentPrice, setTargetPrice, setStopLoss, setPer, setPbr, flushPriceSave,
     customTags, addTag, removeTagFromDB,
     earningsDate, shareholderMeetingSettings, updateEarningsDate, updateShareholderMeetingSettings,
     nextActionPlan, updateNap, deleteNap, isNapLoading, isNapSaving,
@@ -196,6 +196,7 @@ function StockCard({ symbol, onRemove, favoriteGroups, onFavoriteGroupsChange, i
               onTargetPriceChange={setTargetPrice}
               onStopLossChange={setStopLoss}
               onCurrentPriceChange={setCurrentPrice}
+              onPriceBlur={flushPriceSave}
               positionSummary={positionSummary}
               profitLossInfo={profitLossInfo}
               nextActionPlan={nextActionPlan}
