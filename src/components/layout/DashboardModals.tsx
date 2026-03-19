@@ -1,6 +1,7 @@
 'use client';
 
 import { ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import FavoriteGroupManager from '@/components/tag/FavoriteGroupManager';
 import TagManager from '@/components/tag/TagManager';
 import AlertSummaryPage from '@/components/alert/AlertSummaryPage';
@@ -27,12 +28,12 @@ interface FullScreenModalProps {
   children: ReactNode;
 }
 
-function FullScreenModal({ isOpen, onClose, title, maxWidth = 'max-w-6xl', children }: FullScreenModalProps) {
+export function FullScreenModal({ isOpen, onClose, title, maxWidth = 'max-w-6xl', children }: FullScreenModalProps) {
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className={`bg-gray-900 rounded-lg p-4 ${maxWidth} w-full mx-4 max-h-[90vh] overflow-hidden`}>
+  return createPortal(
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={onClose}>
+      <div className={`bg-gray-900 rounded-lg p-4 ${maxWidth} w-full mx-4 max-h-[90vh] overflow-hidden`} onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-bold text-white">{title}</h2>
           <button
@@ -46,7 +47,8 @@ function FullScreenModal({ isOpen, onClose, title, maxWidth = 'max-w-6xl', child
           {children}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
