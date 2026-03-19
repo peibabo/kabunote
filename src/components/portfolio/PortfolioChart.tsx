@@ -203,7 +203,7 @@ export default function PortfolioChart({ data, memoMap: propMemoMap, onDotClick 
   return (
     <div>
       {/* グラフ種別タブ */}
-      <div className="flex gap-1 mb-4 flex-wrap">
+      <div className="flex gap-1 mb-4 flex-wrap items-center">
         {CHART_TABS.map(tab => (
           <button
             key={tab.key}
@@ -217,6 +217,9 @@ export default function PortfolioChart({ data, memoMap: propMemoMap, onDotClick 
             {tab.icon} {tab.label}
           </button>
         ))}
+        <span className="ml-auto text-xs text-gray-500">
+          📝 チャートの点をクリックでメモ
+        </span>
       </div>
 
       {/* グラフ描画 */}
