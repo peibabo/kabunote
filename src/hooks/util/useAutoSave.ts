@@ -18,23 +18,32 @@ export function useAutoSave<T>({ value, delay, isLoading, onSave }: UseAutoSaveO
   useEffect(() => { onSaveRef.current = onSave }, [onSave])
   useEffect(() => { latestValueRef.current = value }, [value])
 
-  const doSave = useCallback(() => {
-    if (!hasUserInputRef.current) return
-    if (isSavingRef.current) {
-      pendingSaveRef.current = true
-      return
-    }
+  const executeSave = useCallback(() => {
     hasUserInputRef.current = false
     pendingSaveRef.current = false
     isSavingRef.current = true
 
     onSaveRef.current(latestValueRef.current).finally(() => {
       isSavingRef.current = false
-      if (pendingSaveRef.current) {
-        doSave()
+      if (pendingSaveRef.current && hasUserInputRef.current) {
+        pendingSaveRef.current = false
+        hasUserInputRef.current = false
+        isSavingRef.current = true
+        onSaveRef.current(latestValueRef.current).finally(() => {
+          isSavingRef.current = false
+        })
       }
     })
   }, [])
+
+  const doSave = useCallback(() => {
+    if (!hasUserInputRef.current) return
+    if (isSavingRef.current) {
+      pendingSaveRef.current = true
+      return
+    }
+    executeSave()
+  }, [executeSave])
 
   // デバウンスタイマー: value変更時にリセット
   useEffect(() => {
