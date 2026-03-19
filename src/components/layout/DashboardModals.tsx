@@ -27,7 +27,7 @@ interface FullScreenModalProps {
   children: ReactNode;
 }
 
-function FullScreenModal({ isOpen, onClose, title, maxWidth = 'max-w-6xl', children }: FullScreenModalProps) {
+export function FullScreenModal({ isOpen, onClose, title, maxWidth = 'max-w-6xl', children }: FullScreenModalProps) {
   if (!isOpen) return null;
 
   return (
