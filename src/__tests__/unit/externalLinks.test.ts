@@ -69,11 +69,11 @@ describe('isValidExternalLinksCount', () => {
   it('0〜8は許可', () => {
     expect(isValidExternalLinksCount(0)).toBe(true);
     expect(isValidExternalLinksCount(4)).toBe(true);
-    expect(isValidExternalLinksCount(8)).toBe(true);
+    expect(isValidExternalLinksCount(12)).toBe(true);
   });
 
   it('上限超過は拒否', () => {
-    expect(isValidExternalLinksCount(9)).toBe(false);
+    expect(isValidExternalLinksCount(13)).toBe(false);
   });
 
   it('負数・小数は拒否', () => {
