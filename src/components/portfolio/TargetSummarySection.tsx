@@ -47,7 +47,7 @@ export default function TargetSummarySection({
       </button>
 
       {/* アコーディオンコンテンツ */}
-      <div className={`overflow-hidden transition-all duration-300 ease-in-out ${
+      <div className={`mt-1 overflow-hidden transition-all duration-300 ease-in-out ${
         isTargetSummaryExpanded
           ? 'max-h-[2000px] opacity-100'
           : 'max-h-0 opacity-0'
@@ -62,7 +62,7 @@ export default function TargetSummarySection({
               </div>
               {targetSummary.totalTargetProfit > 0 && (
                 <div className="text-sm text-green-200 mt-1">
-                  税引後 {formatProfitLoss(Math.round(targetSummary.totalTargetProfit * 0.79685))}円
+                  税引後 {formatProfitLoss(Math.round(targetSummary.totalAfterTaxTargetProfit))}円
                 </div>
               )}
               <div className="text-sm text-green-400 mt-1">

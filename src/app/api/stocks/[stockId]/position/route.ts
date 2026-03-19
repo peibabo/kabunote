@@ -31,6 +31,7 @@ export const GET = withAuth(async ({ user, params }) => {
     purchasePrice: Number(p.purchasePrice),
     purchaseDate: p.purchaseDate ?? '',
     memo: p.memo ?? '',
+    taxRate: Number(p.taxRate),
     createdAt: p.createdAt.toISOString()
   }))
 
@@ -39,7 +40,7 @@ export const GET = withAuth(async ({ user, params }) => {
 
 // POST: 新規ポジションを追加
 export const POST = withStock(async ({ stockId, request }) => {
-  const { shares, purchasePrice, purchaseDate, memo } = await request.json()
+  const { shares, purchasePrice, purchaseDate, memo, taxRate } = await request.json()
 
   if (!isValidRequiredShares(shares)) {
     return NextResponse.json(
@@ -60,7 +61,8 @@ export const POST = withStock(async ({ stockId, request }) => {
       shares,
       purchasePrice,
       purchaseDate: purchaseDate || null,
-      memo: memo || null
+      memo: memo || null,
+      taxRate: taxRate ?? 0.20315
     }
   })
 
@@ -72,6 +74,7 @@ export const POST = withStock(async ({ stockId, request }) => {
       purchasePrice: Number(position.purchasePrice),
       purchaseDate: position.purchaseDate ?? '',
       memo: position.memo ?? '',
+      taxRate: Number(position.taxRate),
       createdAt: position.createdAt.toISOString()
     }
   })

@@ -1,6 +1,7 @@
 // 配当計算・フォーマット用のヘルパー関数
 
 import type { DividendCalculation } from '@/types/dividend';
+import { DEFAULT_TAX_RATE } from '@/lib/taxCalc';
 
 // 配当利回りを計算
 export const calculateDividendYield = (
@@ -21,10 +22,9 @@ export const calculateAnnualDividend = (
   return dividendPerShare * dividendFrequency * totalShares;
 };
 
-// 税引後配当金額を計算（日本の税率20.315%）
-export const calculateAfterTaxDividend = (grossAmount: number): number => {
-  const TAX_RATE = 0.20315;
-  return grossAmount * (1 - TAX_RATE);
+// 税引後配当金額を計算
+export const calculateAfterTaxDividend = (grossAmount: number, taxRate: number = DEFAULT_TAX_RATE): number => {
+  return grossAmount * (1 - taxRate);
 };
 
 // 配当関連の計算をまとめて実行
@@ -32,11 +32,12 @@ export const calculateDividendInfo = (
   dividendPerShare: number,
   dividendFrequency: number,
   totalShares: number,
-  averagePrice: number
+  averagePrice: number,
+  taxRate: number = DEFAULT_TAX_RATE
 ): DividendCalculation => {
   const annualDividend = calculateAnnualDividend(dividendPerShare, dividendFrequency, totalShares);
   const dividendYield = calculateDividendYield(dividendPerShare, dividendFrequency, averagePrice);
-  const afterTaxAmount = calculateAfterTaxDividend(annualDividend);
+  const afterTaxAmount = calculateAfterTaxDividend(annualDividend, taxRate);
   const taxAmount = annualDividend - afterTaxAmount;
 
   return {

@@ -2,6 +2,7 @@
 
 import { OverallSummary } from '@/hooks/portfolio/usePortfolioSummary';
 import { formatPrice, formatShares } from '@/lib/positionCalc';
+import { calculateAfterTax } from '@/lib/taxCalc';
 import { formatDividendAmount, formatDividendYield } from '@/lib/dividendCalc';
 import { formatBenefitValue, formatBenefitYield } from '@/lib/shareholderCalc';
 
@@ -77,7 +78,7 @@ export default function PortfolioOverviewGrid({ overallSummary }: PortfolioOverv
               {overallSummary.totalProfitLoss > 0 && (
                 <div className="text-sm text-green-200 mt-1 font-medium">
                   税引後 {overallSummary.totalProfitLoss >= 0 ? '+' : ''}
-                  {formatPrice(Math.round(overallSummary.totalProfitLoss * 0.79685))}円
+                  {formatPrice(Math.round(calculateAfterTax(overallSummary.totalProfitLoss, overallSummary.weightedTaxRate)))}円
                 </div>
               )}
             </div>

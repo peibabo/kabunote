@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getStockData } from '@/data/stockNames';
 import { StockData } from '@/hooks/stock/useStockData';
+import { calculateWeightedTaxRate } from '@/lib/taxCalc';
 import { DividendInfo } from '@/types/dividend';
 import { ShareholderBenefitInfo } from '@/types/shareholder';
 import {
@@ -15,7 +16,7 @@ export type DividendBenefitStockData = {
   shareholderBenefitInfo?: ShareholderBenefitInfo;
   dividendRightsSettings: DividendRightsSettings;
   shareholderRightsSettings: ShareholderRightsSettings;
-  position?: { totalShares: number; averagePrice: number; purchaseDate: string; notes: string };
+  position?: { totalShares: number; averagePrice: number; weightedTaxRate: number; purchaseDate: string; notes: string };
 };
 
 interface UseDividendBenefitDataReturn {
@@ -77,6 +78,7 @@ export function useDividendBenefitData(
           position = {
             totalShares,
             averagePrice,
+            weightedTaxRate: calculateWeightedTaxRate(positions),
             purchaseDate: positions[0].purchaseDate,
             notes: positions.map(p => p.memo).filter(Boolean).join(', ')
           };

@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from 'react';
 import { Position } from '@/types/positions';
 import { calculatePositionSummary, formatShares } from '@/lib/positionCalc';
+import { calculateAfterTax } from '@/lib/taxCalc';
 import { getCompanyNameSync } from '@/data/stockNames';
 import { StockData } from '@/hooks/stock/useStockData';
 
@@ -44,6 +45,7 @@ export default function PortfolioPositionsPage({ stockData = [] }: PortfolioPosi
         purchasePrice: p.purchasePrice,
         purchaseDate: p.purchaseDate,
         memo: p.memo,
+        taxRate: p.taxRate,
         createdAt: p.createdAt,
       }));
 
@@ -55,7 +57,7 @@ export default function PortfolioPositionsPage({ stockData = [] }: PortfolioPosi
       const currentValue = currentPrice > 0 ? currentPrice * positionSummary.totalShares : 0;
       const profitLoss = currentValue - positionSummary.totalCost;
       const profitLossRate = positionSummary.totalCost > 0 ? (profitLoss / positionSummary.totalCost) * 100 : 0;
-      const profitLossAfterTax = profitLoss > 0 ? profitLoss * 0.79685 : profitLoss;
+      const profitLossAfterTax = profitLoss > 0 ? calculateAfterTax(profitLoss, positionSummary.weightedTaxRate) : profitLoss;
 
       data.push({
         symbol: stock.symbol,

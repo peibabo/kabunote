@@ -18,13 +18,15 @@ interface PositionForm {
   purchasePrice: string;
   purchaseDate: string;
   memo: string;
+  isNisa: boolean;
 }
 
 const emptyForm: PositionForm = {
   shares: '',
   purchasePrice: '',
   purchaseDate: '',
-  memo: ''
+  memo: '',
+  isNisa: false
 };
 
 export default function PositionsManagement({
@@ -54,7 +56,8 @@ export default function PositionsManagement({
       shares: pos.shares.toString(),
       purchasePrice: pos.purchasePrice.toString(),
       purchaseDate: pos.purchaseDate || '',
-      memo: pos.memo || ''
+      memo: pos.memo || '',
+      isNisa: pos.taxRate === 0
     });
   };
 
@@ -76,7 +79,8 @@ export default function PositionsManagement({
       shares,
       purchasePrice,
       purchaseDate: form.purchaseDate || '',
-      memo: form.memo || undefined
+      memo: form.memo || undefined,
+      taxRate: form.isNisa ? 0 : 0.20315
     });
     setIsAdding(false);
     setForm(emptyForm);
@@ -94,7 +98,8 @@ export default function PositionsManagement({
       shares,
       purchasePrice,
       purchaseDate: form.purchaseDate || '',
-      memo: form.memo || undefined
+      memo: form.memo || undefined,
+      taxRate: form.isNisa ? 0 : 0.20315
     });
     setEditingId(null);
     setForm(emptyForm);
@@ -194,7 +199,13 @@ export default function PositionsManagement({
               ) : (
                 // 表示モード
                 <div className="space-y-2">
-                  <div className="flex justify-end gap-2">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      {pos.taxRate === 0 && (
+                        <span className="text-xs bg-green-900 text-green-300 border border-green-700 px-1.5 py-0.5 rounded">NISA</span>
+                      )}
+                    </div>
+                    <div className="flex gap-2">
                     <button
                       onClick={() => handleEditClick(pos)}
                       className="cursor-pointer text-xs text-blue-400 hover:text-blue-300 transition-colors"
@@ -208,6 +219,7 @@ export default function PositionsManagement({
                     >
                       削除
                     </button>
+                    </div>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm">
                     <div>
@@ -322,6 +334,24 @@ function PositionFormFields({
             className="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded text-white text-sm focus:border-blue-500 focus:outline-none"
           />
         </div>
+      </div>
+
+      {/* NISA口座トグル */}
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={() => onChange({ ...form, isNisa: !form.isNisa })}
+          className={`cursor-pointer relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+            form.isNisa ? 'bg-green-600' : 'bg-gray-600'
+          }`}
+        >
+          <span
+            className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
+              form.isNisa ? 'translate-x-4.5' : 'translate-x-0.5'
+            }`}
+          />
+        </button>
+        <span className="text-sm text-gray-300">NISA口座（非課税）</span>
       </div>
 
       {/* プレビュー */}

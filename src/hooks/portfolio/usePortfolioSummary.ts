@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { PortfolioTargetSummary, StockTargetInfo, Position } from '@/types/positions';
 import { calculatePortfolioTargetSummary, calculatePositionSummary, calculateProfitLoss, evaluateCashRatio, type CashRatioEvaluation } from '@/lib/positionCalc';
+import { calculateWeightedTaxRate } from '@/lib/taxCalc';
 import { PortfolioDividendSummary } from '@/types/dividend';
 import { calculateDividendInfo } from '@/lib/dividendCalc';
 import { PortfolioShareholderSummary } from '@/types/shareholder';
@@ -52,6 +53,7 @@ export interface OverallSummary {
   stockRatio: number;
   cashRatio: number;
   cashRatioEvaluation: CashRatioEvaluation;
+  weightedTaxRate: number;
   dividendSummary: PortfolioDividendSummary;
   shareholderSummary: PortfolioShareholderSummary;
   targetSummary: PortfolioTargetSummary;
@@ -81,6 +83,7 @@ export function usePortfolioSummary(portfolioData: StockData[], cashAmount: stri
     const cashAmountNum = parseFloat(cashAmount) || 0;
 
     let totalAnnualDividend = 0;
+    let totalAfterTaxDividend = 0;
     let totalDividendInvestment = 0;
     let stocksWithDividend = 0;
 
@@ -119,9 +122,11 @@ export function usePortfolioSummary(portfolioData: StockData[], cashAmount: stri
           perShare,
           (frequency || 1) as 1 | 2 | 4,
           summary.totalShares,
-          summary.averagePrice
+          summary.averagePrice,
+          summary.weightedTaxRate
         );
         totalAnnualDividend += dividendCalculation.annualDividend;
+        totalAfterTaxDividend += dividendCalculation.afterTaxAmount;
         totalDividendInvestment += summary.totalCost;
       }
 
@@ -154,7 +159,7 @@ export function usePortfolioSummary(portfolioData: StockData[], cashAmount: stri
     const dividendSummary: PortfolioDividendSummary = {
       totalAnnualDividend,
       averageDividendYield,
-      totalAfterTaxAmount: totalAnnualDividend * (1 - 0.20315),
+      totalAfterTaxAmount: totalAfterTaxDividend,
       stocksWithDividend,
       totalStocksWithPositions: stocksWithPositions
     };
@@ -192,6 +197,10 @@ export function usePortfolioSummary(portfolioData: StockData[], cashAmount: stri
 
     const targetSummary = calculatePortfolioTargetSummary(stocksTargetData);
 
+    // ポートフォリオ全体の株数加重平均税率を計算
+    const allPositions = portfolioData.flatMap(stock => stock.positions || []);
+    const portfolioWeightedTaxRate = calculateWeightedTaxRate(allPositions);
+
     const evaluationValue = totalCurrentValue > 0 ? totalCurrentValue : totalInvestmentAll;
     const totalAssetsValue = evaluationValue + cashAmountNum;
     const stockRatioValue = totalAssetsValue > 0 ? (evaluationValue / totalAssetsValue) * 100 : 0;
@@ -212,6 +221,7 @@ export function usePortfolioSummary(portfolioData: StockData[], cashAmount: stri
       stockRatio: stockRatioValue,
       cashRatio: cashRatioValue,
       cashRatioEvaluation: cashRatioEvaluationValue,
+      weightedTaxRate: portfolioWeightedTaxRate,
       dividendSummary,
       shareholderSummary,
       targetSummary

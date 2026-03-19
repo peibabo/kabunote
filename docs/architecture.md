@@ -10,7 +10,7 @@ app_users (ユーザー管理)
   │     @@unique([userId, symbol])
   │     ├── stock_memos        1:1  content
   │     ├── stock_prices       1:1  current_price, target_price, stop_loss_price, per, pbr
-  │     ├── stock_positions    1:N  shares, purchase_price, purchase_date, memo
+  │     ├── stock_positions    1:N  shares, purchase_price, purchase_date, memo, tax_rate(0=NISA/0.20315=特定口座)
   │     ├── stock_events       1:N  event_type(ENUM), event_date, event_month, event_day, is_recurring, is_active
   │     │                           @@unique([stockId, eventType])
   │     ├── stock_dividends    1:1  dividend_per_share, frequency, rights_month, rights_day
