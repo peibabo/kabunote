@@ -39,7 +39,7 @@ export const GET = withAuth(async ({ user, request }) => {
       where: { userId: user.id, symbol: { in: stockSymbols } },
       select: { symbol: true, name: true },
     })
-    stocks.forEach(s => stockNameMap.set(s.symbol, s.name))
+    stocks.forEach(s => { if (s.name) stockNameMap.set(s.symbol, s.name) })
   }
 
   const items = memos.map(m => ({
