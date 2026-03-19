@@ -33,6 +33,8 @@ export const STORAGE_KEYS = {
   DIVIDEND_RANKING_EXPANDED: 'kabunote-dividend-ranking-expanded',
   /** 投資スケジュールウィジェットのアクティブタブ */
   SCHEDULE_WIDGET_TAB: 'kabunote-schedule-widget-tab',
+  /** ポートフォリオ推移ウィジェットのアコーディオン展開状態 */
+  PORTFOLIO_HISTORY_EXPANDED: 'kabunote-portfolio-history-expanded',
 } as const;
 
 // ─────────────────────────────────────────

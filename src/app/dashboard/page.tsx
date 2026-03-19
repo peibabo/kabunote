@@ -10,6 +10,7 @@ import LevelBadge from '@/components/settings/LevelBadge';
 import LevelUpCelebration from '@/components/settings/LevelUpCelebration';
 import TitleUnlockedToast from '@/components/settings/TitleUnlockedToast';
 import PortfolioSummary from '@/components/portfolio/PortfolioSummary';
+import PortfolioHistoryWidget from '@/components/portfolio/PortfolioHistoryWidget';
 import FloatingAddButton from '@/components/stock/FloatingAddButton';
 import FloatingSnapshotButton from '@/components/settings/FloatingSnapshotButton';
 import DashboardHeader from '@/components/layout/DashboardHeader';
@@ -124,13 +125,17 @@ export default function Home() {
           <LevelBadge />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-4 items-start">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2 items-start">
           <DailyChecklist />
           <InvestmentDiary />
         </div>
 
         <LevelUpCelebration />
         <TitleUnlockedToast />
+
+        {hasPortfolioData && (
+          <PortfolioHistoryWidget />
+        )}
 
         <div className="portfolio-summary">
           <PortfolioSummary portfolioData={stockData} />
