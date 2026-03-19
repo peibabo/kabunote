@@ -82,9 +82,11 @@ export function useMonthlyDividendData(
 
       const paymentMonths = getPaymentMonths(rightsMonth, frequency);
 
+      const taxRate = data.position?.weightedTaxRate ?? 0.20315;
+
       for (const month of paymentMonths) {
         const entry = monthData[month - 1];
-        const afterTax = calculateAfterTaxDividend(perPayment);
+        const afterTax = calculateAfterTaxDividend(perPayment, taxRate);
         entry.grossAmount += perPayment;
         entry.afterTaxAmount += afterTax;
         entry.stocks.push({

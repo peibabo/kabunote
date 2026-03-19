@@ -12,6 +12,7 @@ export function createPosition(overrides?: Partial<Position>): Position {
     shares: 100,
     purchasePrice: 1500,
     purchaseDate: '2024-06-01',
+    taxRate: 0.20315,
     createdAt: '2024-06-01T00:00:00Z',
     ...overrides,
   }
@@ -23,6 +24,7 @@ export function createPositionSummary(overrides?: Partial<PositionSummary>): Pos
     averagePrice: 1500,
     totalCost: 150000,
     positionCount: 1,
+    weightedTaxRate: 0.20315,
     ...overrides,
   }
 }

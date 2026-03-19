@@ -138,7 +138,8 @@ export default function DividendManagement({
       perShare,
       frequency,
       positionSummary.totalShares,
-      positionSummary.averagePrice
+      positionSummary.averagePrice,
+      positionSummary.weightedTaxRate
     );
   })();
 
@@ -326,7 +327,7 @@ export default function DividendManagement({
                     <span className="text-gray-400">税引後受取額：</span>
                     <div className="text-blue-300 font-medium">{formatDividendAmount(dividendCalculation.afterTaxAmount)}円</div>
                     <div className="text-xs text-gray-400">
-                      税率20.315%控除後
+                      税率{(positionSummary.weightedTaxRate * 100).toFixed(3)}%控除後
                     </div>
                   </div>
                   <div>

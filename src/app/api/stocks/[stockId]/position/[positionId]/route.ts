@@ -6,7 +6,7 @@ import { isValidRequiredShares, isValidRequiredPrice } from '@/lib/validation'
 // PUT: 特定ポジションの更新
 export const PUT = withAuth(async ({ user, request, params }) => {
   const { positionId } = params
-  const { shares, purchasePrice, purchaseDate, memo } = await request.json()
+  const { shares, purchasePrice, purchaseDate, memo, taxRate } = await request.json()
 
   if (!isValidRequiredShares(shares)) {
     return NextResponse.json(
@@ -38,7 +38,8 @@ export const PUT = withAuth(async ({ user, request, params }) => {
       shares,
       purchasePrice,
       purchaseDate: purchaseDate || null,
-      memo: memo || null
+      memo: memo || null,
+      ...(taxRate !== undefined && { taxRate })
     }
   })
 
@@ -50,6 +51,7 @@ export const PUT = withAuth(async ({ user, request, params }) => {
       purchasePrice: Number(updated.purchasePrice),
       purchaseDate: updated.purchaseDate ?? '',
       memo: updated.memo ?? '',
+      taxRate: Number(updated.taxRate),
       createdAt: updated.createdAt.toISOString()
     }
   })

@@ -22,6 +22,7 @@ export interface StockData {
     purchasePrice: number;
     purchaseDate: string;
     memo: string;
+    taxRate: number;
     createdAt: string;
   }>;
   events: Array<{

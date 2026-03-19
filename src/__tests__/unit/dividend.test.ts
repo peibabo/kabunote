@@ -50,6 +50,15 @@ describe('calculateAfterTaxDividend', () => {
   it('0円の場合0を返す', () => {
     expect(calculateAfterTaxDividend(0)).toBe(0)
   })
+
+  it('NISA口座（税率0%）の場合、全額受取', () => {
+    expect(calculateAfterTaxDividend(10000, 0)).toBe(10000)
+  })
+
+  it('カスタム税率が適用される', () => {
+    const result = calculateAfterTaxDividend(10000, 0.1)
+    expect(result).toBe(9000)
+  })
 })
 
 describe('calculateDividendInfo', () => {
@@ -64,6 +73,13 @@ describe('calculateDividendInfo', () => {
   it('税額の整合性（税引前 = 税引後 + 税額）', () => {
     const result = calculateDividendInfo(100, 1, 200, 5000)
     expect(result.annualDividend).toBeCloseTo(result.afterTaxAmount + result.taxAmount, 5)
+  })
+
+  it('NISA口座（税率0%）の場合、税引後=税引前', () => {
+    const result = calculateDividendInfo(50, 2, 100, 2000, 0)
+    expect(result.annualDividend).toBe(10000)
+    expect(result.afterTaxAmount).toBe(10000)
+    expect(result.taxAmount).toBe(0)
   })
 })
 

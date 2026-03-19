@@ -19,6 +19,7 @@ import {
 interface IntegratedPosition {
   totalShares: number;
   averagePrice: number;
+  weightedTaxRate: number;
   purchaseDate: string;
   notes: string;
 }

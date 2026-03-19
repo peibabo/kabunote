@@ -40,6 +40,7 @@ export const GET = withAuth(async ({ user }) => {
         purchasePrice: Number(p.purchasePrice),
         purchaseDate: p.purchaseDate ?? '',
         memo: p.memo ?? '',
+        taxRate: Number(p.taxRate),
         createdAt: p.createdAt.toISOString()
       })),
       events: stock.events.map(e => ({

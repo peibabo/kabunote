@@ -34,7 +34,8 @@ export function useDividendRanking(dividendBenefitData: Record<string, DividendB
       const totalShares = data.position.totalShares;
       const averagePrice = data.position.averagePrice;
       if (averagePrice <= 0) continue;
-      const calc = calculateDividendInfo(dividendPerShare, frequency, totalShares, averagePrice);
+      const taxRate = data.position.weightedTaxRate ?? 0.20315;
+      const calc = calculateDividendInfo(dividendPerShare, frequency, totalShares, averagePrice, taxRate);
       items.push({
         symbol, name: data.name,
         dividendYield: calc.dividendYield, dividendPerShare: dividendPerShare * frequency,
