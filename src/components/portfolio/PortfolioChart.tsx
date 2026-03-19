@@ -151,6 +151,9 @@ function CustomTooltipContent({
           ))}
         </div>
       )}
+      <p className="mt-2 pt-1.5 border-t border-gray-700 text-xs text-gray-500">
+        📝 クリックでメモを残せます
+      </p>
     </div>
   );
 }
@@ -203,7 +206,7 @@ export default function PortfolioChart({ data, memoMap: propMemoMap, onDotClick 
   return (
     <div>
       {/* グラフ種別タブ */}
-      <div className="flex gap-1 mb-4 flex-wrap items-center">
+      <div className="flex gap-1 mb-4 flex-wrap">
         {CHART_TABS.map(tab => (
           <button
             key={tab.key}
@@ -217,9 +220,6 @@ export default function PortfolioChart({ data, memoMap: propMemoMap, onDotClick 
             {tab.icon} {tab.label}
           </button>
         ))}
-        <span className="ml-auto text-xs text-gray-500">
-          📝 チャートの点をクリックでメモ
-        </span>
       </div>
 
       {/* グラフ描画 */}
