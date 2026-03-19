@@ -164,7 +164,7 @@ function useUpcomingEvents(eventMap: EventSummary): UpcomingEvent[] {
 
     for (const [dateStr, events] of Object.entries(eventMap)) {
       const days = calculateDaysUntil(dateStr);
-      if (days < 0 || days > 60) continue;
+      if (days < 0 || days > 7) continue;
       for (const event of events) {
         upcoming.push({ event, daysUntil: days });
       }
@@ -177,7 +177,7 @@ function useUpcomingEvents(eventMap: EventSummary): UpcomingEvent[] {
 // 直近イベントタブのコンテンツ
 function UpcomingEventsContent({ events, onStockClick }: { events: UpcomingEvent[]; onStockClick: (symbol: string) => void }) {
   if (events.length === 0) {
-    return <div className="text-sm text-gray-500 text-center py-4">60日以内に予定されているイベントはありません</div>;
+    return <div className="text-sm text-gray-500 text-center py-4">7日以内に予定されているイベントはありません</div>;
   }
 
   return (
