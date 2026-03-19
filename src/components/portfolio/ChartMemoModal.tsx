@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { playSound } from '@/lib/sound';
 import type { ChartType } from '@/types/portfolio';
+import { formatPrice } from '@/lib/positionCalc';
 
 interface ChartMemoModalProps {
   isOpen: boolean;
@@ -11,6 +12,7 @@ interface ChartMemoModalProps {
   chartType: ChartType;
   symbol?: string;
   existingContent: string;
+  dataValues?: { label: string; value: string; color?: string }[];
   onSave: (content: string) => Promise<boolean>;
   onDelete: () => Promise<boolean>;
 }
@@ -36,6 +38,7 @@ export default function ChartMemoModal({
   chartType,
   symbol,
   existingContent,
+  dataValues,
   onSave,
   onDelete,
 }: ChartMemoModalProps) {
@@ -137,6 +140,18 @@ export default function ChartMemoModal({
               ✕
             </button>
           </div>
+
+          {/* データ値表示 */}
+          {dataValues && dataValues.length > 0 && (
+            <div className="mb-4 bg-gray-900 rounded-lg p-3 space-y-1">
+              {dataValues.map((item, i) => (
+                <div key={i} className="flex items-center justify-between text-sm">
+                  <span className="text-gray-400">{item.label}</span>
+                  <span className={`font-medium ${item.color || 'text-white'}`}>{item.value}</span>
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* テキストエリア */}
           <div className="mb-4">

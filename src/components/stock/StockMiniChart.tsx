@@ -108,6 +108,16 @@ export default function StockMiniChart({
     ? memoMap.get(chartMemoKey(modalDate, 'stocks', symbol))?.content || ''
     : '';
 
+  const modalDataValues = modalDate
+    ? (() => {
+        const item = data.find(d => d.date === modalDate);
+        if (!item || item.price == null) return undefined;
+        return [
+          { label: '株価', value: `${formatPrice(item.price)}円` },
+        ];
+      })()
+    : undefined;
+
   if (!stockId) return null;
 
   if (isLoading) {
@@ -264,6 +274,7 @@ export default function StockMiniChart({
           chartType="stocks"
           symbol={symbol}
           existingContent={existingContent}
+          dataValues={modalDataValues}
           onSave={handleSave}
           onDelete={handleDelete}
         />
