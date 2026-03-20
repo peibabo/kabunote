@@ -143,7 +143,7 @@ export default function StockNewsDialog({
               onChange={e => setNewUrl(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter') handleAdd() }}
               placeholder="https://..."
-              className="w-full bg-gray-900/50 text-sm text-gray-200 placeholder-gray-600 border border-gray-700/50 rounded-md px-3 py-2 focus:outline-none focus:border-orange-500/50 transition-colors"
+              className="w-full bg-gray-900/50 text-base md:text-sm text-gray-200 placeholder-gray-600 border border-gray-700/50 rounded-md px-3 py-2 focus:outline-none focus:border-orange-500/50 transition-colors"
             />
             <div className="flex gap-2">
               <input
@@ -153,7 +153,7 @@ export default function StockNewsDialog({
                 onKeyDown={e => { if (e.key === 'Enter') handleAdd() }}
                 placeholder="コメント（任意）"
                 maxLength={500}
-                className="flex-1 bg-gray-900/50 text-sm text-gray-200 placeholder-gray-600 border border-gray-700/50 rounded-md px-3 py-2 focus:outline-none focus:border-orange-500/50 transition-colors"
+                className="flex-1 bg-gray-900/50 text-base md:text-sm text-gray-200 placeholder-gray-600 border border-gray-700/50 rounded-md px-3 py-2 focus:outline-none focus:border-orange-500/50 transition-colors"
               />
               <button
                 onClick={handleAdd}

@@ -99,25 +99,28 @@ export default function BulkTabSwitcher({ stockSymbols }: Props) {
 
   return (
     <div className="bg-slate-800 border-b border-gray-700 px-4 py-2 rounded-lg mb-2">
-      <div className="container mx-auto flex items-center gap-1 overflow-x-auto scrollbar-hide">
-        <span className="text-gray-400 text-xs mr-2 whitespace-nowrap shrink-0">全カード切替:</span>
-        {TAB_OPTIONS.map(option => {
-          const isActive = activeOption?.label === option.label;
-          return (
-            <button
-              key={option.label}
-              onClick={() => { playSound('toggle'); handleClick(option); }}
-              title={option.label}
-              className={`cursor-pointer text-xs px-3 py-1 md:px-3 md:py-1 rounded transition-all duration-150 whitespace-nowrap md:flex-1 md:text-center ${
-                isActive
-                  ? 'bg-blue-600 text-white font-medium shadow-sm'
-                  : 'bg-slate-700 text-gray-300 hover:bg-slate-600 hover:text-white'
-              }`}
-            >
-              {option.icon}<span className="hidden md:inline"> {option.label}</span>
-            </button>
-          );
-        })}
+      <div className="relative">
+        <div className="container mx-auto flex items-center gap-1 overflow-x-auto scrollbar-hide">
+          <span className="text-gray-400 text-xs mr-2 whitespace-nowrap shrink-0">全カード切替:</span>
+          {TAB_OPTIONS.map(option => {
+            const isActive = activeOption?.label === option.label;
+            return (
+              <button
+                key={option.label}
+                onClick={() => { playSound('toggle'); handleClick(option); }}
+                title={option.label}
+                className={`cursor-pointer text-xs px-3 py-2 md:py-1 rounded transition-all duration-150 whitespace-nowrap md:flex-1 md:text-center ${
+                  isActive
+                    ? 'bg-blue-600 text-white font-medium shadow-sm'
+                    : 'bg-slate-700 text-gray-300 hover:bg-slate-600 hover:text-white'
+                }`}
+              >
+                {option.icon}<span className="hidden md:inline"> {option.label}</span>
+              </button>
+            );
+          })}
+        </div>
+        <div className="absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-slate-800 to-transparent pointer-events-none md:hidden" />
       </div>
     </div>
   );

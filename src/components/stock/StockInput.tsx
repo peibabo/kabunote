@@ -176,7 +176,7 @@ export default function StockInput({ onAddStock, isDisabled }: StockInputProps) 
               onKeyDown={handleKeyDown}
               onFocus={() => inputValue.trim().length >= 2 && setShowSuggestions(suggestions.length > 0)}
               placeholder="銘柄コード（例：7203）または会社名（例：トヨタ）で検索"
-              className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
+              className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-base text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
               disabled={isDisabled}
               autoComplete="off"
             />

@@ -30,13 +30,13 @@ export default function LevelBadge() {
       }}
     >
       {/* レベル・ランク・XPプログレス */}
-      <div className="flex items-center gap-3 flex-wrap">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 sm:flex-wrap">
         {/* レベルバッジ */}
         <div className="flex items-center gap-2 shrink-0">
           <span className="text-purple-400 font-bold text-sm">
             Lv.{level}
           </span>
-          <span className="text-gray-300 text-xs">
+          <span className="text-gray-300 text-sm sm:text-xs">
             {levelName}
           </span>
         </div>

@@ -114,7 +114,7 @@ export default function FloatingAddButton({
           onClick={handleCloseModal}
         >
           <div
-            className="bg-gray-800 rounded-lg p-6 max-w-2xl w-full mx-4 shadow-xl border border-gray-600"
+            className="bg-gray-800 rounded-lg p-4 md:p-6 max-w-2xl w-full mx-2 md:mx-4 shadow-xl border border-gray-600"
             onClick={(e) => e.stopPropagation()}
           >
             {/* モーダルヘッダー */}

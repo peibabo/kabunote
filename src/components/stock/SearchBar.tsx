@@ -65,7 +65,7 @@ export default function SearchBar({
           value={localQuery}
           onChange={handleInputChange}
           placeholder={placeholder}
-          className="w-full pl-10 pr-10 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          className="w-full pl-10 pr-10 py-2 bg-gray-700 border border-gray-600 rounded-lg text-base text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
         />
 
         {/* クリアボタン */}

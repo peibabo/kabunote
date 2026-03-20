@@ -163,7 +163,7 @@ export default function SlideOutMenu({ isOpen, onClose, alertCounts, onMenuItemC
                   {/* レベル一覧 */}
                   <div className="px-3">
                     <div className="text-xs text-gray-500 mb-2">投資家ランク</div>
-                    <div className="space-y-1 max-h-32 overflow-y-auto">
+                    <div className="space-y-1 max-h-48 md:max-h-32 overflow-y-auto">
                       {Array.from({ length: 20 }, (_, i) => i + 1).map(lv => (
                         <div
                           key={lv}
