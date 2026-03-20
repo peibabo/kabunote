@@ -171,7 +171,7 @@ export default function ChartMemoModal({
               placeholder="この日のメモを入力..."
               disabled={isSaving || isDeleting}
               rows={3}
-              className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 disabled:opacity-50 resize-none"
+              className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg px-3 py-2 text-base focus:outline-none focus:border-blue-500 disabled:opacity-50 resize-none"
               autoFocus
             />
             <div className={`text-xs text-right mt-1 ${
