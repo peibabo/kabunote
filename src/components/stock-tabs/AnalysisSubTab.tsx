@@ -21,6 +21,7 @@ interface AnalysisSubTabProps {
   onTargetPriceChange: (value: string) => void;
   onStopLossChange: (value: string) => void;
   onCurrentPriceChange: (value: string) => void;
+  onPriceBlur?: () => void;
   positionSummary: PositionSummary;
   profitLossInfo: ProfitLossInfo | null;
 }
@@ -77,6 +78,7 @@ export default function AnalysisSubTab({
   onTargetPriceChange,
   onStopLossChange,
   onCurrentPriceChange,
+  onPriceBlur,
   positionSummary,
   profitLossInfo
 }: AnalysisSubTabProps) {
@@ -101,6 +103,7 @@ export default function AnalysisSubTab({
                 type="number"
                 value={stopLoss}
                 onChange={(e) => { onStopLossChange(e.target.value); onChangeSound(); }}
+                onBlur={onPriceBlur}
                 placeholder="0"
                 className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-red-500 focus:outline-none text-base md:text-sm pr-8"
               />
@@ -119,6 +122,7 @@ export default function AnalysisSubTab({
                 type="number"
                 value={currentPrice}
                 onChange={(e) => { onCurrentPriceChange(e.target.value); onChangeSound(); }}
+                onBlur={onPriceBlur}
                 placeholder="0"
                 className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none text-base md:text-sm pr-8"
               />
@@ -137,6 +141,7 @@ export default function AnalysisSubTab({
                 type="number"
                 value={targetPrice}
                 onChange={(e) => { onTargetPriceChange(e.target.value); onChangeSound(); }}
+                onBlur={onPriceBlur}
                 placeholder="0"
                 className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-green-500 focus:outline-none text-base md:text-sm pr-8"
               />

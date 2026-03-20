@@ -107,10 +107,10 @@ export default function FloatingSnapshotButton() {
           style={{
             boxShadow: '0 0 20px rgba(59, 130, 246, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3)',
           }}
-          title="今日のポートフォリオを記録"
+          title="本日の終値を確定"
         >
           <span className="text-lg">📸</span>
-          {isCreating ? '記録中...' : '今日の記録を確定'}
+          {isCreating ? '記録中...' : '本日の終値を確定'}
         </button>
       )}
     </div>

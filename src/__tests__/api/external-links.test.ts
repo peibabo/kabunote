@@ -70,8 +70,8 @@ describe('PUT /api/external-links', () => {
     expect(res.status).toBe(400)
   })
 
-  it('400: 9個以上', async () => {
-    const links = Array(9).fill({
+  it('400: 13個以上', async () => {
+    const links = Array(13).fill({
       url: 'https://example.com',
       label: 'Test',
       icon: '📈',

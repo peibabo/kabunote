@@ -79,7 +79,7 @@ export function isValidCashAmount(value: string): boolean {
 }
 
 // --- 外部リンクバリデーション ---
-const MAX_EXTERNAL_LINKS = 8;
+const MAX_EXTERNAL_LINKS = 12;
 const MAX_LINK_LABEL_LENGTH = 30;
 const MAX_LINK_ICON_LENGTH = 4;
 const MAX_LINK_URL_LENGTH = 2000;

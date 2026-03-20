@@ -10,6 +10,7 @@ import { getStockData } from '@/data/stockNames';
 interface IntegratedPosition {
   totalShares: number;
   averagePrice: number;
+  weightedTaxRate: number;
   purchaseDate: string;
   notes: string;
 }
@@ -147,7 +148,7 @@ export function useDividendBenefitList(stockSymbols: string[], stockData: StockD
         const totalShares = position!.totalShares;
         const averagePrice = position!.averagePrice;
 
-        dividendCalc = calculateDividendInfo(dividendPerShare, frequency, totalShares, averagePrice);
+        dividendCalc = calculateDividendInfo(dividendPerShare, frequency, totalShares, averagePrice, position!.weightedTaxRate);
       }
 
       // 優待情報処理

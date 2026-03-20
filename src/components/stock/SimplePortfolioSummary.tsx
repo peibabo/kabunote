@@ -3,6 +3,7 @@
 import { useMemo } from 'react';
 import { Position } from '@/types/positions';
 import { calculatePositionSummary, formatPrice, formatShares } from '@/lib/positionCalc';
+import { calculateAfterTax, calculateWeightedTaxRate } from '@/lib/taxCalc';
 
 interface StockData {
   id: string;
@@ -26,6 +27,7 @@ interface PortfolioSummary {
   stocksWithPositions: number;
   stocksWithPrices: number;
   stocksWithoutPrices: number;
+  weightedTaxRate: number;
 }
 
 export default function SimplePortfolioSummary({ portfolioData }: SimplePortfolioSummaryProps) {
@@ -67,6 +69,9 @@ export default function SimplePortfolioSummary({ portfolioData }: SimplePortfoli
     const totalProfitLoss = totalCurrentValue - totalInvestmentWithPrice;
     const totalProfitLossRate = totalInvestmentWithPrice > 0 ? (totalProfitLoss / totalInvestmentWithPrice) * 100 : 0;
 
+    const allPositions = portfolioData.flatMap(stock => (stock.positions || []) as Position[]);
+    const weightedTaxRate = calculateWeightedTaxRate(allPositions);
+
     return {
       totalInvestment: totalInvestmentAll,
       totalCurrentValue,
@@ -75,7 +80,8 @@ export default function SimplePortfolioSummary({ portfolioData }: SimplePortfoli
       totalShares: totalSharesAll,
       stocksWithPositions,
       stocksWithPrices,
-      stocksWithoutPrices
+      stocksWithoutPrices,
+      weightedTaxRate
     };
   }, [portfolioData]);
 
@@ -156,7 +162,7 @@ export default function SimplePortfolioSummary({ portfolioData }: SimplePortfoli
               {summary.totalProfitLoss > 0 && (
                 <div className="text-sm text-green-200 mt-1 font-medium">
                   税引後 {summary.totalProfitLoss >= 0 ? '+' : ''}
-                  {formatPrice(Math.round(summary.totalProfitLoss * 0.79685))}円
+                  {formatPrice(Math.round(calculateAfterTax(summary.totalProfitLoss, summary.weightedTaxRate)))}円
                 </div>
               )}
             </div>

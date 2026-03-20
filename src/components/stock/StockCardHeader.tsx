@@ -59,9 +59,13 @@ export default function StockCardHeader({
       {/* 上部: 銘柄コード・ステータス・タグ・操作ボタン */}
       <div className="flex items-start justify-between">
         <div className="flex-1 min-w-0 max-w-[calc(100%-80px)]">
+          {earningsDate && (
+            <div className="mb-1">
+              <EarningsBadge earningsDate={earningsDate} />
+            </div>
+          )}
           <div className="flex items-center gap-2 mb-1">
             <h3 className="text-base md:text-lg font-bold text-white">{symbol}</h3>
-            {earningsDate && <EarningsBadge earningsDate={earningsDate} />}
             {isLoading ? (
               <span className="text-xs bg-gray-600 text-gray-300 px-2 py-0.5 rounded-full">
                 読込中
@@ -72,28 +76,14 @@ export default function StockCardHeader({
               </span>
             ) : (
               <div className="space-y-2">
-                {/* 業種・市場（上部） */}
+                {/* 業種・市場（プレーンテキスト） */}
                 {(stockData?.sector || stockData?.market) && (
-                  <div className="flex flex-wrap gap-1 items-center">
-                    {stockData?.sector && (
-                      <span className="text-xs bg-blue-600 text-blue-100 px-2 py-0.5 rounded-full">
-                        📊 {stockData.sector}
-                      </span>
-                    )}
-                    {stockData?.market && (
-                      <span className="text-xs bg-green-600 text-green-100 px-2 py-0.5 rounded-full">
-                        🏛️ {stockData.market}
-                      </span>
-                    )}
-                  </div>
+                  <span className="text-xs text-gray-400">
+                    {stockData?.sector}{stockData?.sector && stockData?.market && ' / '}{stockData?.market}
+                  </span>
                 )}
 
-                {/* 区切り線（業種・市場がある場合に表示） */}
-                {(stockData?.sector || stockData?.market) && (
-                  <div className="border-t border-gray-700 my-2"></div>
-                )}
-
-                {/* タグ・グループ（下部） */}
+                {/* タグ・グループ */}
                 {(customTags.length > 0 || belongingGroups.length > 0) && (
                   <div className="flex flex-wrap gap-1 items-center">
                     {customTags.map((tag) => (
@@ -130,14 +120,14 @@ export default function StockCardHeader({
                 <div className="flex flex-wrap gap-1">
                   <button
                     onClick={onTagEditorOpen}
-                    className="cursor-pointer text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 px-2 py-0.5 rounded-full transition-colors"
+                    className="cursor-pointer text-xs text-gray-500 hover:text-gray-300 transition-colors"
                     title="タグを編集"
                   >
                     + タグ
                   </button>
                   <button
                     onClick={onFavoriteGroupSelectorOpen}
-                    className="cursor-pointer text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 px-2 py-0.5 rounded-full transition-colors"
+                    className="cursor-pointer text-xs text-gray-500 hover:text-gray-300 transition-colors"
                     title="お気に入りグループを編集"
                   >
                     + お気に入り

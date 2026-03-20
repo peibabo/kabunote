@@ -17,6 +17,7 @@ describe('calculatePositionSummary', () => {
       averagePrice: 0,
       totalCost: 0,
       positionCount: 0,
+      weightedTaxRate: 0.20315,
     })
   })
 
@@ -109,6 +110,7 @@ describe('calculatePortfolioTargetSummary', () => {
   it('空配列の場合', () => {
     const result = calculatePortfolioTargetSummary([])
     expect(result.totalTargetProfit).toBe(0)
+    expect(result.totalAfterTaxTargetProfit).toBe(0)
     expect(result.totalStopLoss).toBe(0)
     expect(result.riskRewardRatio).toBeNull()
     expect(result.targetSetCount).toBe(0)

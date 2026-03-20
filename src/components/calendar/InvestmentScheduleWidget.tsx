@@ -13,6 +13,7 @@ import InvestmentTimeline from './InvestmentTimeline';
 import MonthlyCalendar from './MonthlyCalendar';
 import MonthlyDividendChart from './MonthlyDividendChart';
 import DividendYieldRanking from './DividendYieldRanking';
+import { FullScreenModal } from '@/components/layout/DashboardModals';
 
 type TabId = 'events' | 'timeline' | 'calendar' | 'dividend';
 
@@ -164,7 +165,7 @@ function useUpcomingEvents(eventMap: EventSummary): UpcomingEvent[] {
 
     for (const [dateStr, events] of Object.entries(eventMap)) {
       const days = calculateDaysUntil(dateStr);
-      if (days < 0 || days > 60) continue;
+      if (days < 0 || days > 7) continue;
       for (const event of events) {
         upcoming.push({ event, daysUntil: days });
       }
@@ -174,40 +175,74 @@ function useUpcomingEvents(eventMap: EventSummary): UpcomingEvent[] {
   }, [eventMap]);
 }
 
-// 直近イベントタブのコンテンツ
-function UpcomingEventsContent({ events, onStockClick }: { events: UpcomingEvent[]; onStockClick: (symbol: string) => void }) {
-  if (events.length === 0) {
-    return <div className="text-sm text-gray-500 text-center py-4">60日以内に予定されているイベントはありません</div>;
-  }
+// イベントカードの共通レンダリング
+function EventCard({ event, daysUntil, onStockClick }: { event: InvestmentEvent; daysUntil: number; onStockClick: (symbol: string) => void }) {
+  const style = getUrgencyStyle(daysUntil);
+  const icon = getEventIcon(event.type);
 
   return (
-    <div className="space-y-1.5">
-      {events.map(({ event, daysUntil }) => {
-        const style = getUrgencyStyle(daysUntil);
-        const icon = getEventIcon(event.type);
+    <button
+      key={event.id}
+      onClick={() => onStockClick(event.symbol)}
+      className={`cursor-pointer w-full text-left p-2.5 rounded-lg border ${style.border} ${style.bg} transition-all duration-200 hover:scale-[1.01] ${style.pulse ? 'animate-pulse' : ''}`}
+      style={{ boxShadow: style.glow }}
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="text-sm">{icon}</span>
+          <span className={`text-sm font-bold ${style.text} shrink-0`}>
+            {daysUntil === 0 ? '本日' : daysUntil === 1 ? '明日' : `${daysUntil}日後`}
+          </span>
+          <span className="text-xs text-gray-400 shrink-0">{getEventLabel(event.type)}</span>
+          <span className="text-xs text-gray-300 truncate font-medium">{event.companyName}({event.symbol})</span>
+        </div>
+        <span className="text-xs text-gray-500 shrink-0 ml-2">{formatDate(event.date)}</span>
+      </div>
+    </button>
+  );
+}
 
-        return (
+const MAX_VISIBLE_EVENTS = 5;
+
+// 直近イベントタブのコンテンツ
+function UpcomingEventsContent({ events, onStockClick }: { events: UpcomingEvent[]; onStockClick: (symbol: string) => void }) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  if (events.length === 0) {
+    return <div className="text-sm text-gray-500 text-center py-4">7日以内に予定されているイベントはありません</div>;
+  }
+
+  const visibleEvents = events.slice(0, MAX_VISIBLE_EVENTS);
+  const hasMore = events.length > MAX_VISIBLE_EVENTS;
+
+  return (
+    <>
+      <div className="space-y-1.5">
+        {visibleEvents.map(({ event, daysUntil }) => (
+          <EventCard key={event.id} event={event} daysUntil={daysUntil} onStockClick={onStockClick} />
+        ))}
+        {hasMore && (
           <button
-            key={event.id}
-            onClick={() => onStockClick(event.symbol)}
-            className={`cursor-pointer w-full text-left p-2.5 rounded-lg border ${style.border} ${style.bg} transition-all duration-200 hover:scale-[1.01] ${style.pulse ? 'animate-pulse' : ''}`}
-            style={{ boxShadow: style.glow }}
+            onClick={() => setIsModalOpen(true)}
+            className="cursor-pointer w-full text-center py-2 text-sm text-cyan-400 hover:text-cyan-300 transition-colors"
           >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 min-w-0">
-                <span className="text-sm">{icon}</span>
-                <span className={`text-sm font-bold ${style.text} shrink-0`}>
-                  {daysUntil === 0 ? '本日' : daysUntil === 1 ? '明日' : `${daysUntil}日後`}
-                </span>
-                <span className="text-xs text-gray-400 shrink-0">{getEventLabel(event.type)}</span>
-                <span className="text-xs text-gray-300 truncate font-medium">{event.companyName}({event.symbol})</span>
-              </div>
-              <span className="text-xs text-gray-500 shrink-0 ml-2">{formatDate(event.date)}</span>
-            </div>
+            すべて表示（{events.length}件）
           </button>
-        );
-      })}
-    </div>
+        )}
+      </div>
+      <FullScreenModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title="🔔 直近のイベント"
+        maxWidth="max-w-2xl"
+      >
+        <div className="space-y-1.5">
+          {events.map(({ event, daysUntil }) => (
+            <EventCard key={event.id} event={event} daysUntil={daysUntil} onStockClick={onStockClick} />
+          ))}
+        </div>
+      </FullScreenModal>
+    </>
   );
 }
 

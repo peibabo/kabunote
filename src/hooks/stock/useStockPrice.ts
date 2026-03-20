@@ -25,6 +25,7 @@ interface UseStockPriceReturn {
   setStopLoss: (value: string) => void
   setPer: (value: string) => void
   setPbr: (value: string) => void
+  flushSave: () => void
 }
 
 interface UseStockPriceOptions {
@@ -68,7 +69,7 @@ export function useStockPrice(stockId: string, options?: UseStockPriceOptions): 
 
   useEffect(() => { if (!hasInitialData) loadPrices() }, [loadPrices, hasInitialData])
 
-  const { markDirty } = useAutoSave({
+  const { markDirty, flush } = useAutoSave({
     value: prices,
     delay: 300,
     isLoading,
@@ -138,5 +139,6 @@ export function useStockPrice(stockId: string, options?: UseStockPriceOptions): 
     setStopLoss,
     setPer,
     setPbr,
+    flushSave: flush,
   }
 }

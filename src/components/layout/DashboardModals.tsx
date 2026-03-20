@@ -1,6 +1,7 @@
 'use client';
 
 import { ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import FavoriteGroupManager from '@/components/tag/FavoriteGroupManager';
 import TagManager from '@/components/tag/TagManager';
 import AlertSummaryPage from '@/components/alert/AlertSummaryPage';
@@ -13,6 +14,7 @@ import FeedbackModal from '@/components/modal/FeedbackModal';
 import OnboardingWizard from '@/components/onboarding/OnboardingWizard';
 import SlideOutMenu from '@/components/layout/SlideOutMenu';
 import NewsListPage from '@/components/news/NewsListPage';
+import ChartMemoListPage from '@/components/portfolio/ChartMemoListPage';
 import { FavoriteGroup } from '@/types/favorites';
 import { AlertCounts } from '@/hooks/alert/useAlertCounts';
 import { StockData } from '@/hooks/stock/useStockData';
@@ -27,12 +29,12 @@ interface FullScreenModalProps {
   children: ReactNode;
 }
 
-function FullScreenModal({ isOpen, onClose, title, maxWidth = 'max-w-6xl', children }: FullScreenModalProps) {
+export function FullScreenModal({ isOpen, onClose, title, maxWidth = 'max-w-6xl', children }: FullScreenModalProps) {
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end md:items-center justify-center z-50">
-      <div className={`bg-gray-900 rounded-t-lg md:rounded-lg p-4 ${maxWidth} w-full mx-0 md:mx-4 max-h-dvh md:max-h-[90vh] overflow-hidden`}>
+  return createPortal(
+    <div className="fixed inset-0 bg-black/50 flex items-end md:items-center justify-center z-50" onClick={onClose}>
+      <div className={`bg-gray-900 rounded-t-lg md:rounded-lg p-4 ${maxWidth} w-full mx-0 md:mx-4 max-h-dvh md:max-h-[90vh] overflow-hidden`} onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg md:text-xl font-bold text-white">{title}</h2>
           <button
@@ -46,7 +48,8 @@ function FullScreenModal({ isOpen, onClose, title, maxWidth = 'max-w-6xl', child
           {children}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -72,6 +75,8 @@ interface DashboardModalsProps {
     setIsFeedbackOpen: (v: boolean) => void;
     isNewsListOpen: boolean;
     setIsNewsListOpen: (v: boolean) => void;
+    isChartMemoListOpen: boolean;
+    setIsChartMemoListOpen: (v: boolean) => void;
     isMenuOpen: boolean;
     setIsMenuOpen: (v: boolean) => void;
     handleMenuItemClick: (item: string) => void;
@@ -196,6 +201,15 @@ export default function DashboardModals({
         title="📰 ニュース一覧"
       >
         <NewsListPage isOpen={modals.isNewsListOpen} />
+      </FullScreenModal>
+
+      {/* チャートメモ一覧モーダル */}
+      <FullScreenModal
+        isOpen={modals.isChartMemoListOpen}
+        onClose={() => modals.setIsChartMemoListOpen(false)}
+        title="📝 チャートメモ一覧"
+      >
+        <ChartMemoListPage isOpen={modals.isChartMemoListOpen} />
       </FullScreenModal>
 
       {/* 目安箱モーダル */}

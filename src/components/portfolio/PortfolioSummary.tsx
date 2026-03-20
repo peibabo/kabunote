@@ -4,7 +4,6 @@ import InvestmentPieChart from '@/components/portfolio/InvestmentPieChart';
 import PortfolioOverviewGrid from '@/components/portfolio/PortfolioOverviewGrid';
 import CashPositionSection from '@/components/portfolio/CashPositionSection';
 import TargetSummarySection from '@/components/portfolio/TargetSummarySection';
-import PortfolioHistory from '@/components/portfolio/PortfolioHistory';
 import { usePortfolioSummary, StockData } from '@/hooks/portfolio/usePortfolioSummary';
 import { useCash } from '@/hooks/auth/useCash';
 import { useAccordionState } from '@/hooks/util/useAccordionState';
@@ -66,7 +65,7 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
 
       {/* 円グラフセクション（アコーディオン） */}
       {overallSummary.stocksWithPositions > 0 && (
-        <div className="mt-2">
+        <div className="mt-1">
           <button
             onClick={toggleCharts}
             className="w-full flex items-center justify-between p-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors cursor-pointer"
@@ -105,9 +104,6 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
         </div>
       )}
 
-      {hasPositions && (
-        <PortfolioHistory />
-      )}
     </div>
   );
 }

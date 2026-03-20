@@ -16,7 +16,7 @@ interface SlideOutMenuProps {
 }
 
 export default function SlideOutMenu({ isOpen, onClose, alertCounts, onMenuItemClick }: SlideOutMenuProps) {
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['analysis']));
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
   const { gamification } = useGamification();
   const { titles } = useTitles();
   const [activityLogs, setActivityLogs] = useState<XpActivityLogEntry[]>([]);
@@ -70,7 +70,7 @@ export default function SlideOutMenu({ isOpen, onClose, alertCounts, onMenuItemC
         </div>
 
         {/* メニュー項目 */}
-        <nav className="p-4 space-y-2">
+        <nav className="p-4 space-y-2 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 64px)' }}>
           {/* 開発者にフィードバックを送る */}
           <button
             onClick={() => handleMenuClick('feedback')}
@@ -308,6 +308,13 @@ export default function SlideOutMenu({ isOpen, onClose, alertCounts, onMenuItemC
                 >
                   <span className="text-lg">📰</span>
                   <span className="text-gray-300">ニュース一覧</span>
+                </button>
+                <button
+                  onClick={() => handleMenuClick('chartMemos')}
+                  className="w-full flex items-center space-x-3 p-2 text-left hover:bg-gray-700 rounded-lg transition-colors cursor-pointer"
+                >
+                  <span className="text-lg">📝</span>
+                  <span className="text-gray-300">チャートメモ一覧</span>
                 </button>
               </div>
             )}

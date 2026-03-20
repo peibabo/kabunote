@@ -10,7 +10,7 @@ app_users (ユーザー管理)
   │     @@unique([userId, symbol])
   │     ├── stock_memos        1:1  content
   │     ├── stock_prices       1:1  current_price, target_price, stop_loss_price, per, pbr
-  │     ├── stock_positions    1:N  shares, purchase_price, purchase_date, memo
+  │     ├── stock_positions    1:N  shares, purchase_price, purchase_date, memo, tax_rate(0=NISA/0.20315=特定口座)
   │     ├── stock_events       1:N  event_type(ENUM), event_date, event_month, event_day, is_recurring, is_active
   │     │                           @@unique([stockId, eventType])
   │     ├── stock_dividends    1:1  dividend_per_share, frequency, rights_month, rights_day
@@ -105,6 +105,7 @@ app_users (ユーザー管理)
 | `/api/portfolio/chart-memos` | GET | チャートメモ一覧取得（?range=1W/1M/3M/6M/1Y/2Y） |
 | `/api/portfolio/chart-memos` | PUT | チャートメモ作成/更新（snapshotDate, chartType, symbol?, content） |
 | `/api/portfolio/chart-memos` | DELETE | チャートメモ削除（?snapshotDate&chartType&symbol） |
+| `/api/portfolio/chart-memos/list` | GET | チャートメモ一覧取得（?limit&offset&chartType=all/value/netAssets/profitLoss/stocks） |
 
 ### ゲーミフィケーション
 | パス | メソッド | 説明 |
@@ -185,6 +186,7 @@ app_users (ユーザー管理)
 | `usePieChartData` | 円グラフデータ生成 |
 | `usePortfolioHistory` | ポートフォリオ日次スナップショット履歴（期間切替・作成・todayRecorded） |
 | `useChartMemos` | チャートメモ管理（memoMap・saveMemo・deleteMemo） |
+| `useChartMemoList` | チャートメモ一覧（ページネーション・フィルタ・削除） |
 
 ### `hooks/calendar/` — カレンダー
 | フック | 説明 |

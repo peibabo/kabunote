@@ -10,6 +10,7 @@ import LevelBadge from '@/components/settings/LevelBadge';
 import LevelUpCelebration from '@/components/settings/LevelUpCelebration';
 import TitleUnlockedToast from '@/components/settings/TitleUnlockedToast';
 import PortfolioSummary from '@/components/portfolio/PortfolioSummary';
+import PortfolioHistoryWidget from '@/components/portfolio/PortfolioHistoryWidget';
 import FloatingAddButton from '@/components/stock/FloatingAddButton';
 import FloatingSnapshotButton from '@/components/settings/FloatingSnapshotButton';
 import DashboardHeader from '@/components/layout/DashboardHeader';
@@ -116,6 +117,13 @@ export default function Home() {
       />
 
       <main className="container mx-auto px-4 py-4">
+        {isStockDataLoading ? (
+          <div className="flex flex-col justify-center items-center py-20">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400" />
+            <span className="mt-3 text-gray-400">読み込み中...</span>
+          </div>
+        ) : (
+        <>
         <div className="mb-4">
           <ExternalLinksArea />
         </div>
@@ -124,13 +132,17 @@ export default function Home() {
           <LevelBadge />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-4 items-start">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2 items-start">
           <DailyChecklist />
           <InvestmentDiary />
         </div>
 
         <LevelUpCelebration />
         <TitleUnlockedToast />
+
+        {hasPortfolioData && (
+          <PortfolioHistoryWidget />
+        )}
 
         <div className="portfolio-summary">
           <PortfolioSummary portfolioData={stockData} />
@@ -393,6 +405,8 @@ export default function Home() {
             setForceOpenAdd(true);
           }}
         />
+        </>
+        )}
       </main>
     </div>
   );

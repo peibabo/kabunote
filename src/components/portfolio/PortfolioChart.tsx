@@ -78,6 +78,8 @@ function CustomDot({ cx, cy, payload, fill, chartType, symbol, memoMap, onClick 
       onClick={(e) => { e.stopPropagation(); onClick(fullDate, chartType, symbol); }}
       style={{ cursor: 'pointer' }}
     >
+      {/* 透明なヒットエリア（クリック領域拡大） */}
+      <circle cx={cx} cy={cy} r={12} fill="transparent" stroke="none" />
       {hasMemo ? (
         <>
           <circle cx={cx} cy={cy} r={6} fill="#fbbf24" stroke="#f59e0b" strokeWidth={2} />
@@ -149,6 +151,9 @@ function CustomTooltipContent({
           ))}
         </div>
       )}
+      <p className="mt-2 pt-1.5 border-t border-gray-700 text-xs text-gray-500">
+        📝 クリックでメモを残せます
+      </p>
     </div>
   );
 }
@@ -192,7 +197,7 @@ export default function PortfolioChart({ data, memoMap: propMemoMap, onDotClick 
     return (
       <div className="text-center py-8 text-gray-400 text-sm leading-relaxed">
         毎日の株価を記録して、ポートフォリオの推移をグラフで振り返れます。<br />
-        「今日の記録を確定」を押すと、現在の評価額・損益・純資産が保存されます。<br />
+        「本日の終値を確定」を押すと、現在の評価額・損益・純資産が保存されます。<br />
         <span className="text-gray-500">15時以降に画面右下のボタンからも記録できます。</span>
       </div>
     );
@@ -239,7 +244,7 @@ export default function PortfolioChart({ data, memoMap: propMemoMap, onDotClick 
                 stroke="#60a5fa"
                 strokeWidth={2}
                 dot={<CustomDot chartType="profitLoss" memoMap={memoMap} onClick={handleDotClick} fill="#60a5fa" />}
-                activeDot={{ r: 5 }}
+                activeDot={<CustomDot chartType="profitLoss" memoMap={memoMap} onClick={handleDotClick} fill="#60a5fa" />}
               />
             </LineChart>
           ) : chartType === 'stocks' ? (
@@ -265,6 +270,7 @@ export default function PortfolioChart({ data, memoMap: propMemoMap, onDotClick 
                   stroke={STOCK_COLORS[i % STOCK_COLORS.length]}
                   strokeWidth={2}
                   dot={<CustomDot chartType="stocks" symbol={symbol} memoMap={memoMap} onClick={handleDotClick} fill={STOCK_COLORS[i % STOCK_COLORS.length]} />}
+                  activeDot={<CustomDot chartType="stocks" symbol={symbol} memoMap={memoMap} onClick={handleDotClick} fill={STOCK_COLORS[i % STOCK_COLORS.length]} />}
                   connectNulls
                 />
               ))}
@@ -299,6 +305,7 @@ export default function PortfolioChart({ data, memoMap: propMemoMap, onDotClick 
                     stroke="#3b82f6"
                     strokeWidth={2}
                     fill="url(#gradValue)"
+                    activeDot={false}
                   />
                   <Area
                     type="monotone"
@@ -308,6 +315,7 @@ export default function PortfolioChart({ data, memoMap: propMemoMap, onDotClick 
                     strokeWidth={1}
                     strokeDasharray="4 4"
                     fill="none"
+                    activeDot={false}
                   />
                   {/* クリック可能なドット用の透明Line */}
                   <Line
@@ -329,6 +337,7 @@ export default function PortfolioChart({ data, memoMap: propMemoMap, onDotClick 
                     stroke="#10b981"
                     strokeWidth={2}
                     fill="url(#gradNetAssets)"
+                    activeDot={false}
                   />
                   <Area
                     type="monotone"
@@ -338,6 +347,7 @@ export default function PortfolioChart({ data, memoMap: propMemoMap, onDotClick 
                     strokeWidth={1}
                     strokeDasharray="4 4"
                     fill="none"
+                    activeDot={false}
                   />
                   {/* クリック可能なドット用の透明Line */}
                   <Line

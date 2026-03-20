@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { playSound } from '@/lib/sound';
 import type { ChartType } from '@/types/portfolio';
+import { formatPrice } from '@/lib/positionCalc';
 
 interface ChartMemoModalProps {
   isOpen: boolean;
@@ -11,6 +12,7 @@ interface ChartMemoModalProps {
   chartType: ChartType;
   symbol?: string;
   existingContent: string;
+  dataValues?: { label: string; value: string; color?: string }[];
   onSave: (content: string) => Promise<boolean>;
   onDelete: () => Promise<boolean>;
 }
@@ -36,19 +38,26 @@ export default function ChartMemoModal({
   chartType,
   symbol,
   existingContent,
+  dataValues,
   onSave,
   onDelete,
 }: ChartMemoModalProps) {
   const [content, setContent] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
     if (isOpen) {
       setContent(existingContent);
       setError('');
+      setConfirmDelete(false);
+      document.body.style.overflow = 'hidden';
     }
+    return () => {
+      document.body.style.overflow = '';
+    };
   }, [isOpen, existingContent]);
 
   const canSubmit = content.trim().length > 0 && content.length <= MAX_LENGTH && content.trim() !== existingContent.trim();
@@ -78,7 +87,11 @@ export default function ChartMemoModal({
     }
   };
 
-  const handleDelete = async () => {
+  const handleDeleteClick = () => {
+    setConfirmDelete(true);
+  };
+
+  const handleDeleteConfirm = async () => {
     if (isDeleting) return;
     setIsDeleting(true);
     setError('');
@@ -138,6 +151,18 @@ export default function ChartMemoModal({
             </button>
           </div>
 
+          {/* データ値表示 */}
+          {dataValues && dataValues.length > 0 && (
+            <div className="mb-4 bg-gray-900 rounded-lg p-3 space-y-1">
+              {dataValues.map((item, i) => (
+                <div key={i} className="flex items-center justify-between text-sm">
+                  <span className="text-gray-400">{item.label}</span>
+                  <span className={`font-medium ${item.color || 'text-white'}`}>{item.value}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
           {/* テキストエリア */}
           <div className="mb-4">
             <textarea
@@ -146,7 +171,7 @@ export default function ChartMemoModal({
               placeholder="この日のメモを入力..."
               disabled={isSaving || isDeleting}
               rows={3}
-              className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500 disabled:opacity-50 resize-none"
+              className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg px-3 py-2 text-base focus:outline-none focus:border-blue-500 disabled:opacity-50 resize-none"
               autoFocus
             />
             <div className={`text-xs text-right mt-1 ${
@@ -163,15 +188,38 @@ export default function ChartMemoModal({
             </div>
           )}
 
+          {/* 削除確認 */}
+          {confirmDelete && (
+            <div className="mb-4 bg-red-900 bg-opacity-30 border border-red-700 rounded-lg p-3">
+              <p className="text-red-300 text-sm mb-2">このメモを削除しますか？</p>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleDeleteConfirm}
+                  disabled={isDeleting}
+                  className="cursor-pointer px-3 py-1.5 bg-red-700 hover:bg-red-600 text-white rounded text-xs transition-colors disabled:opacity-50"
+                >
+                  {isDeleting ? '削除中...' : '削除する'}
+                </button>
+                <button
+                  onClick={() => setConfirmDelete(false)}
+                  disabled={isDeleting}
+                  className="cursor-pointer px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-white rounded text-xs transition-colors disabled:opacity-50"
+                >
+                  キャンセル
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* ボタン */}
           <div className="flex gap-3">
-            {isExisting && (
+            {isExisting && !confirmDelete && (
               <button
-                onClick={handleDelete}
+                onClick={handleDeleteClick}
                 disabled={isSaving || isDeleting}
                 className="cursor-pointer px-4 py-2 bg-red-900 bg-opacity-50 hover:bg-red-800 text-red-300 rounded-lg text-sm transition-colors disabled:opacity-50"
               >
-                {isDeleting ? '削除中...' : '削除'}
+                削除
               </button>
             )}
             <div className="flex-1" />

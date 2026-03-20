@@ -112,6 +112,7 @@ model StockPosition {
   purchasePrice Decimal   @map("purchase_price")  // 取得単価（1株あたり）
   purchaseDate  String?   @map("purchase_date")   // 取得日（YYYY-MM-DD）
   memo          String?                            // メモ
+  taxRate       Decimal   @default(0.20315) @map("tax_rate")  // 税率（0=NISA, 0.20315=特定口座）
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime  @updatedAt @map("updated_at")
 

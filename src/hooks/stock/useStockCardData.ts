@@ -55,6 +55,7 @@ export function useStockCardData(symbol: string, favoriteGroups: FavoriteGroup[]
     setStopLoss,
     setPer,
     setPbr,
+    flushSave: flushPriceSave,
   } = useStockPrice(`stock-${symbol}`, initialStockData ? {
     initialData: {
       currentPrice: initialStockData.currentPrice,
@@ -254,6 +255,7 @@ export function useStockCardData(symbol: string, favoriteGroups: FavoriteGroup[]
     setStopLoss,
     setPer,
     setPbr,
+    flushPriceSave,
 
     // タグ
     customTags,

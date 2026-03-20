@@ -1,6 +1,7 @@
 // ポジション計算・フォーマット用のヘルパー関数
 
 import type { Position, PositionSummary, StockTargetInfo, ProfitLossInfo } from '@/types/positions';
+import { calculateWeightedTaxRate, calculateAfterTax, DEFAULT_TAX_RATE } from '@/lib/taxCalc';
 
 // ポジションサマリーを計算
 export const calculatePositionSummary = (positions: Position[]): PositionSummary => {
@@ -9,19 +10,22 @@ export const calculatePositionSummary = (positions: Position[]): PositionSummary
       totalShares: 0,
       averagePrice: 0,
       totalCost: 0,
-      positionCount: 0
+      positionCount: 0,
+      weightedTaxRate: DEFAULT_TAX_RATE
     };
   }
 
   const totalShares = positions.reduce((sum, pos) => sum + pos.shares, 0);
   const totalCost = positions.reduce((sum, pos) => sum + (pos.shares * pos.purchasePrice), 0);
   const averagePrice = totalShares > 0 ? totalCost / totalShares : 0;
+  const weightedTaxRate = calculateWeightedTaxRate(positions);
 
   return {
     totalShares,
     averagePrice,
     totalCost,
-    positionCount: positions.length
+    positionCount: positions.length,
+    weightedTaxRate
   };
 };
 
@@ -77,6 +81,7 @@ export const formatProfitLoss = (amount: number): string => {
 // ポートフォリオ全体の損益目標を計算
 export const calculatePortfolioTargetSummary = (stocksData: StockTargetInfo[]) => {
   let totalTargetProfit = 0;
+  let totalAfterTaxTargetProfit = 0;
   let totalStopLoss = 0;
   let targetSetCount = 0;
   let stopLossSetCount = 0;
@@ -88,6 +93,10 @@ export const calculatePortfolioTargetSummary = (stocksData: StockTargetInfo[]) =
 
       if (stock.targetPrice && stock.targetPrice > 0) {
         totalTargetProfit += stock.profitLossInfo.targetProfit;
+        const profit = stock.profitLossInfo.targetProfit;
+        totalAfterTaxTargetProfit += profit > 0
+          ? calculateAfterTax(profit, stock.positionSummary.weightedTaxRate)
+          : profit;
         targetSetCount++;
       }
 
@@ -103,6 +112,7 @@ export const calculatePortfolioTargetSummary = (stocksData: StockTargetInfo[]) =
 
   return {
     totalTargetProfit,
+    totalAfterTaxTargetProfit,
     totalStopLoss,
     riskRewardRatio,
     targetSetCount,

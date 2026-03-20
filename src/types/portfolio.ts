@@ -39,3 +39,17 @@ export function chartMemoKey(date: string, chartType: ChartType, symbol?: string
 }
 
 export const VALID_CHART_TYPES: ChartType[] = ['value', 'netAssets', 'profitLoss', 'stocks'];
+
+// チャートメモ一覧関連
+export type ChartMemoFilter = 'all' | ChartType;
+
+export interface ChartMemoListItem extends ChartMemoData {
+  stockName: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ChartMemoListResponse {
+  items: ChartMemoListItem[];
+  total: number;
+}
