@@ -6,6 +6,7 @@ import { useSoundOnChange } from '@/hooks/auth/useSoundOnChange';
 import { calculateRightsDateFromSettings } from '@/types/rightsDate';
 import { calculateDividendInfo, formatDividendAmount, formatDividendYield } from '@/lib/dividendCalc';
 import { useStockDividend } from '@/hooks/stock/useStockDividend';
+import { calculateRightsLastDay, getDayOfWeek } from '@/lib/investmentCalendarCalc';
 
 interface EarningsCountdown {
   text: string;
@@ -22,36 +23,6 @@ interface DividendManagementProps {
     rightsDay: number | null;
   } | null;
 }
-
-// 土日を除いた営業日前を計算する関数
-const calculateBusinessDaysBefore = (date: Date, businessDays: number): Date => {
-  const result = new Date(date);
-  let remainingDays = businessDays;
-
-  while (remainingDays > 0) {
-    result.setDate(result.getDate() - 1);
-    const dayOfWeek = result.getDay();
-    // 土曜日(6)と日曜日(0)以外の場合にカウント
-    if (dayOfWeek !== 0 && dayOfWeek !== 6) {
-      remainingDays--;
-    }
-  }
-
-  return result;
-};
-
-// 曜日を取得する関数
-const getDayOfWeek = (date: Date): string => {
-  const days = ['日', '月', '火', '水', '木', '金', '土'];
-  return days[date.getDay()];
-};
-
-// 権利付き最終日（権利確定日の2営業日前）を計算
-const calculateRightsLastDay = (rightsDate: string): Date | null => {
-  if (!rightsDate) return null;
-  const confirmationDate = new Date(rightsDate);
-  return calculateBusinessDaysBefore(confirmationDate, 2);
-};
 
 // 権利付き最終日カウントダウン計算ロジック（権利確定日ベース）
 const getRightsCountdown = (rightsDate: string): EarningsCountdown | null => {

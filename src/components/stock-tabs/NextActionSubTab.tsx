@@ -9,6 +9,7 @@ import {
 } from '@/types/nextActionPlan';
 import { analyzeNextActionPlan, hasNextActionPlan, isCompleteNextActionPlan } from '@/lib/nextActionPlanCalc';
 import { PositionSummary } from '@/types/positions';
+import { formatPrice, formatProfitLoss } from '@/lib/positionCalc';
 import { useCash } from '@/hooks/auth/useCash';
 
 interface NextActionSubTabProps {
@@ -75,16 +76,6 @@ export default function NextActionSubTab({
 
   const hasPlan = nextActionPlan ? hasNextActionPlan(nextActionPlan) : false;
   const isComplete = nextActionPlan ? isCompleteNextActionPlan(nextActionPlan) : false;
-
-  // フォーマット関数
-  const formatPrice = (price: number): string => {
-    return new Intl.NumberFormat('ja-JP').format(Math.round(price));
-  };
-
-  const formatAmount = (amount: number): string => {
-    const formatted = new Intl.NumberFormat('ja-JP').format(Math.abs(Math.round(amount)));
-    return amount >= 0 ? `+${formatted}` : `-${formatted}`;
-  };
 
   return (
     <div className="relative space-y-4">
@@ -210,7 +201,7 @@ export default function NextActionSubTab({
             <div>
               <span className="text-gray-400">価格差：</span>
               <span className={`ml-2 ${analysis.priceGap >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                {formatAmount(analysis.priceGap)}円
+                {formatProfitLoss(analysis.priceGap)}円
               </span>
             </div>
 

@@ -7,7 +7,7 @@ import { NextActionPlan, NextActionPlanAnalysis } from '@/types/nextActionPlan';
 import { analyzeNextActionPlan, hasNextActionPlan } from '@/lib/nextActionPlanCalc';
 import { getIntegratedAlert, AlertType } from '@/utils/alertSystem';
 import { getCompanyNameSync } from '@/data/stockNames';
-import { calculatePositionSummary } from '@/lib/positionCalc';
+import { calculatePositionSummary, formatPrice } from '@/lib/positionCalc';
 
 interface StrategyRowData {
   symbol: string;
@@ -132,10 +132,6 @@ export default function StrategySummaryPage({ stockData = [] }: StrategySummaryP
       setSortBy(key);
       setSortOrder('desc');
     }
-  };
-
-  const formatPrice = (price: number): string => {
-    return new Intl.NumberFormat('ja-JP').format(Math.round(price));
   };
 
   const getAlertDisplay = (alertType: AlertType) => {
