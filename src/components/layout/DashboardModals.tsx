@@ -31,18 +31,18 @@ function FullScreenModal({ isOpen, onClose, title, maxWidth = 'max-w-6xl', child
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className={`bg-gray-900 rounded-lg p-4 ${maxWidth} w-full mx-4 max-h-[90vh] overflow-hidden`}>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end md:items-center justify-center z-50">
+      <div className={`bg-gray-900 rounded-t-lg md:rounded-lg p-4 ${maxWidth} w-full mx-0 md:mx-4 max-h-dvh md:max-h-[90vh] overflow-hidden`}>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-white">{title}</h2>
+          <h2 className="text-lg md:text-xl font-bold text-white">{title}</h2>
           <button
             onClick={onClose}
-            className="cursor-pointer text-gray-400 hover:text-white transition-colors p-2 rounded"
+            className="cursor-pointer text-gray-400 hover:text-white transition-colors p-2 rounded min-w-[44px] min-h-[44px] flex items-center justify-center"
           >
             ✕
           </button>
         </div>
-        <div className="overflow-auto max-h-[calc(90vh-8rem)]">
+        <div className="overflow-auto max-h-[calc(100dvh-8rem)] md:max-h-[calc(90vh-8rem)]">
           {children}
         </div>
       </div>

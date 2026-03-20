@@ -86,7 +86,7 @@ export default function FloatingSnapshotButton() {
   if (!shouldShow) return null;
 
   return (
-    <div className={`fixed bottom-24 right-6 z-40 transition-all duration-500 ${
+    <div className={`fixed bottom-28 md:bottom-24 right-6 z-40 transition-all duration-500 ${
       isHiding ? 'opacity-0 scale-90' : 'opacity-100 scale-100'
     }`}>
       {showSuccess ? (

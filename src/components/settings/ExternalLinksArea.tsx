@@ -10,21 +10,24 @@ export default function ExternalLinksArea() {
 
   return (
     <div className="flex items-center gap-4 mb-4 min-w-0">
-      <div className="flex overflow-x-auto gap-1.5 md:gap-3 min-w-0 pt-1 -mt-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-        {!isLoading && links.map((link) => (
-          <a
-            key={link.label + link.url}
-            href={link.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex-shrink-0 w-14 flex flex-col items-center gap-1 group transition-transform duration-300 ease-out hover:-translate-y-1"
-          >
-            <span className={`w-9 h-9 rounded-full bg-gradient-to-r ${link.gradient} flex items-center justify-center text-lg shadow-lg transition-shadow duration-300 group-hover:shadow-xl group-hover:shadow-white/20`}>
-              {link.icon}
-            </span>
-            <span className="text-[10px] text-gray-400 w-full text-center truncate transition-colors duration-300 group-hover:text-gray-200">{link.label}</span>
-          </a>
-        ))}
+      <div className="relative flex-1 min-w-0">
+        <div className="flex overflow-x-auto gap-1.5 md:gap-3 min-w-0 pt-1 -mt-1" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          {!isLoading && links.map((link) => (
+            <a
+              key={link.label + link.url}
+              href={link.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-shrink-0 w-14 flex flex-col items-center gap-1 group transition-transform duration-300 ease-out hover:-translate-y-1"
+            >
+              <span className={`w-9 h-9 rounded-full bg-gradient-to-r ${link.gradient} flex items-center justify-center text-lg shadow-lg transition-shadow duration-300 group-hover:shadow-xl group-hover:shadow-white/20`}>
+                {link.icon}
+              </span>
+              <span className="text-xs text-gray-400 w-full text-center truncate transition-colors duration-300 group-hover:text-gray-200">{link.label}</span>
+            </a>
+          ))}
+        </div>
+        <div className="absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-gray-900 to-transparent pointer-events-none md:hidden" />
       </div>
       <button
         onClick={() => setIsModalOpen(true)}

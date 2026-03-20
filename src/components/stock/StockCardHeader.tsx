@@ -107,7 +107,7 @@ export default function StockCardHeader({
                             e.stopPropagation();
                             onTagRemove(tag.id);
                           }}
-                          className="cursor-pointer bg-black bg-opacity-30 hover:bg-opacity-50 rounded-full w-4 h-4 flex items-center justify-center text-xs leading-none transition-all hover:scale-110"
+                          className="cursor-pointer bg-black bg-opacity-30 hover:bg-opacity-50 rounded-full w-6 h-6 md:w-4 md:h-4 flex items-center justify-center text-xs leading-none transition-all hover:scale-110"
                           title={`${tag.label}タグを削除`}
                           style={{ lineHeight: '1', transform: 'translateY(1px)' }}
                         >
@@ -150,7 +150,7 @@ export default function StockCardHeader({
         <div className="flex gap-1 flex-shrink-0">
           <button
             {...listeners}
-            className="bg-gray-600 hover:bg-gray-500 text-white rounded-full w-7 h-7 flex items-center justify-center text-sm transition-colors cursor-grab active:cursor-grabbing"
+            className="bg-gray-600 hover:bg-gray-500 text-white rounded-full w-9 h-9 md:w-7 md:h-7 flex items-center justify-center text-sm transition-colors cursor-grab active:cursor-grabbing"
             aria-label="カードを移動"
             title="ドラッグして順序を変更"
           >
@@ -158,7 +158,7 @@ export default function StockCardHeader({
           </button>
           <button
             onClick={handleDeleteClick}
-            className="cursor-pointer bg-red-600 hover:bg-red-700 text-white rounded-full w-7 h-7 flex items-center justify-center text-sm font-bold transition-colors"
+            className="cursor-pointer bg-red-600 hover:bg-red-700 text-white rounded-full w-9 h-9 md:w-7 md:h-7 flex items-center justify-center text-sm font-bold transition-colors"
             aria-label="銘柄カードを削除"
           >
             ×

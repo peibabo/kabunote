@@ -38,7 +38,7 @@ export default function HamburgerMenuButton({ onClick, alertCounts }: HamburgerM
   return (
     <button
       onClick={onClick}
-      className="cursor-pointer relative p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
+      className="cursor-pointer relative p-3 md:p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
       title="メニューを開く"
     >
       {/* ハンバーガーアイコン */}
