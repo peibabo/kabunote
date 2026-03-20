@@ -53,7 +53,11 @@ export default function ChartMemoModal({
       setContent(existingContent);
       setError('');
       setConfirmDelete(false);
+      document.body.style.overflow = 'hidden';
     }
+    return () => {
+      document.body.style.overflow = '';
+    };
   }, [isOpen, existingContent]);
 
   const canSubmit = content.trim().length > 0 && content.length <= MAX_LENGTH && content.trim() !== existingContent.trim();
