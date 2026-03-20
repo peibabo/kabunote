@@ -5,6 +5,7 @@ import LevelDetailSection from './LevelDetailSection';
 import AnalysisSection from './AnalysisSection';
 import SettingsSection from './SettingsSection';
 import type { XpActivityLogEntry } from '@/types/gamification';
+import type { TitlesResponse } from '@/types/titles';
 
 interface GamificationData {
   level: number;
@@ -18,15 +19,9 @@ interface GamificationData {
   longestStreak: number;
 }
 
-interface TitlesData {
-  titles: { id: string; name: string; description: string; unlockedAt: string | null }[];
-  unlockedCount: number;
-  totalCount: number;
-}
-
 interface MenuItemsProps {
   gamification: GamificationData | null;
-  titles: TitlesData | null;
+  titles: TitlesResponse | null;
   activityLogs: XpActivityLogEntry[];
   alertCounts: { total: number; urgent: number };
   expandedSections: Set<string>;
