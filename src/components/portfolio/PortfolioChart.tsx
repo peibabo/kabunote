@@ -15,8 +15,9 @@ import {
   Legend,
 } from 'recharts';
 import type { PortfolioSnapshotData, ChartType, ChartMemoMap } from '@/types/portfolio';
-import { chartMemoKey } from '@/types/portfolio';
 import { formatPrice } from '@/lib/positionCalc';
+import ChartTooltip from './chart/ChartTooltip';
+import CustomDot from './chart/CustomDot';
 
 interface PortfolioChartProps {
   data: PortfolioSnapshotData[];
@@ -48,114 +49,6 @@ function formatYAxisValue(value: number): string {
   if (Math.abs(value) >= 10000000) return `${(value / 10000000).toFixed(1)}千万`;
   if (Math.abs(value) >= 10000) return `${Math.round(value / 10000)}万`;
   return String(Math.round(value));
-}
-
-// カスタムドット: メモがあるデータポイントを黄色マーカーで表示
-interface CustomDotProps {
-  cx?: number;
-  cy?: number;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  payload?: any;
-  fill?: string;
-  r?: number;
-  chartType: ChartType;
-  symbol?: string;
-  memoMap: ChartMemoMap;
-  onClick: (snapshotDate: string, chartType: ChartType, symbol?: string) => void;
-}
-
-function CustomDot({ cx, cy, payload, fill, chartType, symbol, memoMap, onClick }: CustomDotProps) {
-  if (cx == null || cy == null || !payload) return null;
-
-  const fullDate = payload.fullDate as string;
-  if (!fullDate) return null;
-
-  const key = chartMemoKey(fullDate, chartType, symbol);
-  const hasMemo = memoMap.has(key);
-
-  return (
-    <g
-      onClick={(e) => { e.stopPropagation(); onClick(fullDate, chartType, symbol); }}
-      style={{ cursor: 'pointer' }}
-    >
-      {/* 透明なヒットエリア（クリック領域拡大） */}
-      <circle cx={cx} cy={cy} r={12} fill="transparent" stroke="none" />
-      {hasMemo ? (
-        <>
-          <circle cx={cx} cy={cy} r={6} fill="#fbbf24" stroke="#f59e0b" strokeWidth={2} />
-          <circle cx={cx} cy={cy} r={2} fill="#fff" />
-        </>
-      ) : (
-        <circle cx={cx} cy={cy} r={3} fill={fill || '#60a5fa'} />
-      )}
-    </g>
-  );
-}
-
-// カスタムツールチップ: メモプレビュー付き
-function CustomTooltipContent({
-  active,
-  payload,
-  label,
-  memoMap,
-  chartType,
-}: {
-  active?: boolean;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  payload?: any[];
-  label?: string;
-  memoMap: ChartMemoMap;
-  chartType: ChartType;
-}) {
-  if (!active || !payload?.length) return null;
-
-  const fullDate = payload[0]?.payload?.fullDate as string | undefined;
-
-  // メモ収集
-  const memoEntries: { label: string; content: string }[] = [];
-  if (fullDate) {
-    if (chartType === 'stocks') {
-      for (const p of payload) {
-        const sym = (p.dataKey as string).replace('price_', '');
-        const memo = memoMap.get(chartMemoKey(fullDate, chartType, sym));
-        if (memo) memoEntries.push({ label: sym, content: memo.content });
-      }
-    } else {
-      const memo = memoMap.get(chartMemoKey(fullDate, chartType));
-      if (memo) memoEntries.push({ label: '', content: memo.content });
-    }
-  }
-
-  return (
-    <div className="bg-gray-800 border border-gray-600 rounded-lg p-3 shadow-lg max-w-xs">
-      <p className="text-xs text-gray-400 mb-2">{label}</p>
-      {payload.map((entry: { name: string; value: number; color: string }, i: number) => (
-        <div key={i} className="flex items-center gap-2 text-sm">
-          <span className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
-          <span className="text-gray-300">{entry.name}:</span>
-          <span className="text-white font-medium">
-            {entry.value >= 0 ? '' : '-'}{formatPrice(Math.abs(entry.value))}円
-          </span>
-        </div>
-      ))}
-      {memoEntries.length > 0 && (
-        <div className="mt-2 pt-2 border-t border-gray-600">
-          {memoEntries.map((entry, i) => (
-            <div key={i} className="flex items-start gap-1.5 text-xs">
-              <span className="text-yellow-400 mt-0.5">📝</span>
-              <span className="text-yellow-200">
-                {entry.label && <span className="text-gray-400">{entry.label}: </span>}
-                {entry.content.length > 50 ? entry.content.slice(0, 50) + '…' : entry.content}
-              </span>
-            </div>
-          ))}
-        </div>
-      )}
-      <p className="mt-2 pt-1.5 border-t border-gray-700 text-xs text-gray-500">
-        📝 クリックでメモを残せます
-      </p>
-    </div>
-  );
 }
 
 export default function PortfolioChart({ data, memoMap: propMemoMap, onDotClick }: PortfolioChartProps) {
@@ -234,7 +127,7 @@ export default function PortfolioChart({ data, memoMap: propMemoMap, onDotClick 
                 tickFormatter={formatYAxisValue}
               />
               <Tooltip content={
-                <CustomTooltipContent memoMap={memoMap} chartType={chartType} />
+                <ChartTooltip memoMap={memoMap} chartType={chartType} />
               } />
               <ReferenceLine y={0} stroke="#6b7280" strokeDasharray="3 3" />
               <Line
@@ -256,7 +149,7 @@ export default function PortfolioChart({ data, memoMap: propMemoMap, onDotClick 
                 tickFormatter={formatYAxisValue}
               />
               <Tooltip content={
-                <CustomTooltipContent memoMap={memoMap} chartType={chartType} />
+                <ChartTooltip memoMap={memoMap} chartType={chartType} />
               } />
               <Legend
                 wrapperStyle={{ fontSize: '11px', color: '#9ca3af' }}
@@ -294,7 +187,7 @@ export default function PortfolioChart({ data, memoMap: propMemoMap, onDotClick 
                 tickFormatter={formatYAxisValue}
               />
               <Tooltip content={
-                <CustomTooltipContent memoMap={memoMap} chartType={chartType} />
+                <ChartTooltip memoMap={memoMap} chartType={chartType} />
               } />
               {chartType === 'value' ? (
                 <>

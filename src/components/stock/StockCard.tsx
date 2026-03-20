@@ -12,13 +12,10 @@ import { stockKey } from '@/lib/storageKeys';
 // Components
 import StockCardHeader from './StockCardHeader';
 import BasicTab from '../stock-tabs/BasicTab';
-import MemoTemplateSelector from '../stock-tabs/MemoTemplateSelector';
 import InvestmentStrategyTab from '../stock-tabs/InvestmentStrategyTab';
 import ManagementTab from '../stock-tabs/ManagementTab';
 import AlertDisplay from '../alert/AlertDisplay';
-import TagEditor from '../tag/TagEditor';
-import FavoriteGroupSelector from '../tag/FavoriteGroupSelector';
-import StockNewsDialog from '../stock-tabs/StockNewsDialog';
+import StockCardModals from './card/StockCardModals';
 
 interface StockCardProps {
   symbol: string;
@@ -223,93 +220,33 @@ function StockCard({ symbol, onRemove, favoriteGroups, onFavoriteGroupsChange, i
           )}
         </div>
 
-        {/* メモ拡大モーダル */}
-        {isMemoModalOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={() => setIsMemoModalOpen(false)}>
-            <div className="bg-gray-800 rounded-lg p-6 w-full max-w-4xl max-h-[95vh] m-4" onClick={(e) => e.stopPropagation()}>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-                  <span>📝</span>
-                  <span>{companyName || symbol} - 株ノオト</span>
-                </h3>
-                <button
-                  onClick={() => setIsMemoModalOpen(false)}
-                  className="cursor-pointer text-gray-400 hover:text-white text-xl"
-                >
-                  ×
-                </button>
-              </div>
-
-              <div className="space-y-3">
-                <textarea
-                  value={memo}
-                  onChange={(e) => updateMemo(e.target.value)}
-                  placeholder="この銘柄について詳しく思考を整理しましょう..."
-                  maxLength={2000}
-                  className="w-full h-[70vh] px-4 py-3 bg-slate-100 border border-slate-300 rounded-lg text-slate-800 placeholder-slate-500 focus:border-blue-500 focus:outline-none resize-none font-mono leading-6 shadow-inner"
-                  style={{
-                    backgroundImage: `url("data:image/svg+xml,%3csvg width='100' height='24' xmlns='http://www.w3.org/2000/svg'%3e%3cline x1='0' y1='17' x2='100' y2='17' stroke='%23a1a1aa' stroke-width='1' stroke-dasharray='3,3' opacity='0.4'/%3e%3c/svg%3e")`,
-                    backgroundSize: '100px 24px',
-                    backgroundPosition: '0 3px'
-                  }}
-                  autoFocus
-                />
-
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <p className="text-xs text-gray-400">
-                      自動保存されます
-                    </p>
-                    <MemoTemplateSelector
-                      onSelect={(content) => updateMemo(content)}
-                      currentMemo={memo}
-                    />
-                  </div>
-                  <span className={`text-xs ${memo.length > 1800 ? 'text-orange-400' : memo.length > 1900 ? 'text-red-400' : 'text-gray-400'}`}>
-                    {memo.length}/2000文字
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* 銘柄ニュースダイアログ */}
-        {isNewsDialogOpen && (
-          <StockNewsDialog
-            symbol={symbol}
-            companyName={companyName}
-            newsItems={newsItems}
-            onAdd={addNewsItem}
-            onRemove={removeNewsItem}
-            onUpdate={updateNewsItem}
-            isSaving={isNewsSaving}
-            lastSaved={newsLastSaved}
-            onClose={() => setIsNewsDialogOpen(false)}
-          />
-        )}
-
-        {/* タグエディター */}
-        {isTagEditorOpen && (
-          <TagEditor
-            symbol={symbol}
-            currentTags={customTags}
-            onAddTag={addTag}
-            onRemoveTag={removeTagFromDB}
-            onClose={() => setIsTagEditorOpen(false)}
-          />
-        )}
-
-        {/* お気に入りグループセレクター */}
-        {isFavoriteGroupSelectorOpen && (
-          <FavoriteGroupSelector
-            symbol={symbol}
-            groups={favoriteGroups}
-            selectedGroupIds={belongingGroups.map(g => g.id)}
-            onGroupsChange={handleFavoriteGroupsChange}
-            onClose={() => setIsFavoriteGroupSelectorOpen(false)}
-          />
-        )}
+        {/* モーダル群 */}
+        <StockCardModals
+          symbol={symbol}
+          companyName={companyName}
+          isMemoModalOpen={isMemoModalOpen}
+          onMemoModalClose={() => setIsMemoModalOpen(false)}
+          memo={memo}
+          updateMemo={updateMemo}
+          isNewsDialogOpen={isNewsDialogOpen}
+          onNewsDialogClose={() => setIsNewsDialogOpen(false)}
+          newsItems={newsItems}
+          addNewsItem={addNewsItem}
+          removeNewsItem={removeNewsItem}
+          updateNewsItem={updateNewsItem}
+          isNewsSaving={isNewsSaving}
+          newsLastSaved={newsLastSaved}
+          isTagEditorOpen={isTagEditorOpen}
+          onTagEditorClose={() => setIsTagEditorOpen(false)}
+          customTags={customTags}
+          addTag={addTag}
+          removeTagFromDB={removeTagFromDB}
+          isFavoriteGroupSelectorOpen={isFavoriteGroupSelectorOpen}
+          onFavoriteGroupSelectorClose={() => setIsFavoriteGroupSelectorOpen(false)}
+          favoriteGroups={favoriteGroups}
+          belongingGroupIds={belongingGroups.map(g => g.id)}
+          onGroupsChange={handleFavoriteGroupsChange}
+        />
       </div>
     </>
   );
