@@ -19,7 +19,7 @@ interface DiaryNewsSectionProps {
   onNewCommentChange: (comment: string) => void
   onAddNews: () => void
   onRemoveNews: (index: number) => void
-  onUpdateNewsItem: (index: number, field: string, value: string) => void
+  onUpdateNewsItem: (index: number, field: 'url' | 'comment', value: string) => void
 }
 
 export default function DiaryNewsSection({
