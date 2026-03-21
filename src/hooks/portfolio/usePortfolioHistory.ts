@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import type { PortfolioSnapshotData, HistoryRange } from '@/types/portfolio';
 import { grantXp } from '@/lib/gamification';
+import { getTodayJST } from '@/lib/dateJst';
 
 export function usePortfolioHistory() {
   const [range, setRange] = useState<HistoryRange>('1M');
@@ -25,10 +26,7 @@ export function usePortfolioHistory() {
       const snapshots: PortfolioSnapshotData[] = json.data || [];
       setData(snapshots);
 
-      const now = new Date();
-      const jstOffset = 9 * 60;
-      const jstDate = new Date(now.getTime() + (jstOffset + now.getTimezoneOffset()) * 60000);
-      const todayStr = `${jstDate.getFullYear()}-${String(jstDate.getMonth() + 1).padStart(2, '0')}-${String(jstDate.getDate()).padStart(2, '0')}`;
+      const todayStr = getTodayJST();
       const found = snapshots.some(s => s.snapshotDate === todayStr);
       // 一度 true になったら false に戻さない（記録直後のDB遅延対策）
       if (found) {
