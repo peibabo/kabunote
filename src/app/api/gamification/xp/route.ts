@@ -5,6 +5,7 @@ import {
   XP_VALUES, XP_DESCRIPTIONS, DAILY_XP_CAP,
   xpForLevel, levelFromXp, LEVEL_NAMES, getStreakBonus,
 } from '@/lib/gamification'
+import { isTSEBusinessDayStr, getPreviousBusinessDayStr } from '@/lib/jpBusinessDay'
 import type { XpActionType } from '@/types/gamification'
 
 /** 日次1回制限のアクション */
@@ -67,14 +68,19 @@ export const POST = withAuth(async ({ user, request }) => {
   let newLongestStreak = gamification.longestStreak
 
   if (actionType === 'LOGIN' && isNewDay) {
-    const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10)
     const lastActive = gamification.lastActiveDate?.toISOString().slice(0, 10)
 
-    if (lastActive === yesterday) {
-      newStreak = gamification.currentStreak + 1
-    } else if (lastActive !== today) {
-      newStreak = 1
+    if (isTSEBusinessDayStr(today)) {
+      // 営業日: lastActiveが前営業日〜昨日の間にあればストリーク継続
+      const previousBusinessDay = getPreviousBusinessDayStr(today)
+      if (lastActive && lastActive >= previousBusinessDay && lastActive < today) {
+        newStreak = gamification.currentStreak + 1
+      } else if (lastActive !== today) {
+        newStreak = 1
+      }
     }
+    // 非営業日: ストリーク変更なし（維持）
+
     newLongestStreak = Math.max(newLongestStreak, newStreak)
     streakBonus = getStreakBonus(newStreak)
   }
