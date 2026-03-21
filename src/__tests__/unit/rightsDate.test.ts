@@ -40,23 +40,18 @@ describe('calculateRightsDateFromSettings', () => {
 
   it('未来の日付はそのまま返す', () => {
     const settings = createRightsDateSettings({ month: 6, day: 30, isRecurring: true })
-    // toISOString()はUTC基準のため、JSTの6/30がUTCでは6/29になる可能性
     const result = calculateRightsDateFromSettings(settings)
-    // ローカル日付で6月30日を作成→UTC変換で1日ずれる場合がある
-    const expected = new Date(2026, 5, 30).toISOString().split('T')[0]
-    expect(result).toBe(expected)
+    expect(result).toBe('2026-06-30')
   })
 
   it('recurring=trueで過去の場合は翌年に設定', () => {
     const settings = createRightsDateSettings({ month: 1, day: 15, isRecurring: true })
-    const expected = new Date(2027, 0, 15).toISOString().split('T')[0]
-    expect(calculateRightsDateFromSettings(settings)).toBe(expected)
+    expect(calculateRightsDateFromSettings(settings)).toBe('2027-01-15')
   })
 
   it('recurring=falseの場合は今年のまま', () => {
     const settings = createRightsDateSettings({ month: 1, day: 15, isRecurring: false })
-    const expected = new Date(2026, 0, 15).toISOString().split('T')[0]
-    expect(calculateRightsDateFromSettings(settings)).toBe(expected)
+    expect(calculateRightsDateFromSettings(settings)).toBe('2026-01-15')
   })
 })
 

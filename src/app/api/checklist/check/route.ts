@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withAuth } from '@/lib/apiHandler'
+import { getTodayJST, dateStrToUTCMidnight } from '@/lib/dateJst'
 
 /** POST: チェック登録 */
 export const POST = withAuth(async ({ user, request }) => {
@@ -18,7 +19,7 @@ export const POST = withAuth(async ({ user, request }) => {
     )
   }
 
-  const today = new Date(new Date().toISOString().slice(0, 10))
+  const today = dateStrToUTCMidnight(getTodayJST())
 
   // upsertで重複防止
   await prisma.checklistCheck.upsert({
@@ -43,7 +44,7 @@ export const POST = withAuth(async ({ user, request }) => {
 export const DELETE = withAuth(async ({ user, request }) => {
   const { checklistId } = await request.json() as { checklistId: string }
 
-  const today = new Date(new Date().toISOString().slice(0, 10))
+  const today = dateStrToUTCMidnight(getTodayJST())
 
   // ユーザーの項目か確認してから削除
   await prisma.checklistCheck.deleteMany({

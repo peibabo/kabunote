@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withAuth } from '@/lib/apiHandler'
 import { evaluateTitles, TOTAL_TITLE_COUNT } from '@/lib/titles'
+import { getTodayJST, getJSTDateDaysAgo, formatDateJST } from '@/lib/dateJst'
 import type { TitleCheckData } from '@/types/titles'
 
 export const GET = withAuth(async ({ user }) => {
@@ -48,17 +49,17 @@ export const GET = withAuth(async ({ user }) => {
       })
       if (logs.length === 0) return 0
       // 日付の重複を除去して降順ソート
-      const dates = [...new Set(logs.map(l => l.createdAt.toISOString().slice(0, 10)))].sort().reverse()
-      const today = new Date().toISOString().slice(0, 10)
+      const dates = [...new Set(logs.map(l => formatDateJST(l.createdAt)))].sort().reverse()
+      const today = getTodayJST()
       let streak = 0
       for (let i = 0; i < dates.length; i++) {
-        const expected = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10)
+        const expected = getJSTDateDaysAgo(i)
         // 初日は今日または昨日から開始可能
         if (i === 0 && dates[0] !== today) {
-          const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10)
+          const yesterday = getJSTDateDaysAgo(1)
           if (dates[0] !== yesterday) break
           // 昨日から開始
-          const expectedFromYesterday = new Date(Date.now() - (i + 1) * 86400000).toISOString().slice(0, 10)
+          const expectedFromYesterday = getJSTDateDaysAgo(i + 1)
           if (dates[i] === expectedFromYesterday) { streak++; continue }
           break
         }

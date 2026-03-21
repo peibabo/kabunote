@@ -35,10 +35,8 @@ export const getDayOfWeek = (date: Date): string => {
   return days[date.getDay()];
 };
 
-// 日付文字列をフォーマット
-export const formatDateString = (date: Date): string => {
-  return date.toISOString().split('T')[0];
-};
+// 日付文字列をフォーマット（JST基準）
+export { formatDateJST as formatDateString } from '@/lib/dateJst';
 
 // 月/日から現在年または翌年の完全な日付を計算
 export const calculateFullDateFromMonthDay = (month: number, day: number, isRecurring: boolean = true): Date => {
