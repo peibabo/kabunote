@@ -3,11 +3,12 @@
 import { useState } from 'react';
 import WelcomeStep from './WelcomeStep';
 import AddStockStep from './AddStockStep';
-import StockCardStep from './StockCardStep';
+import DailyHabitsStep from './DailyHabitsStep';
+import GamificationStep from './GamificationStep';
 import DashboardStep from './DashboardStep';
 import GetStartedStep from './GetStartedStep';
 
-const TOTAL_STEPS = 5;
+const TOTAL_STEPS = 6;
 
 interface OnboardingWizardProps {
   onComplete: () => void;
@@ -44,7 +45,8 @@ export default function OnboardingWizard({ onComplete, onClose }: OnboardingWiza
   const steps = [
     <WelcomeStep key="welcome" />,
     <AddStockStep key="add-stock" />,
-    <StockCardStep key="stock-card" />,
+    <DailyHabitsStep key="daily-habits" />,
+    <GamificationStep key="gamification" />,
     <DashboardStep key="dashboard" />,
     <GetStartedStep key="get-started" onGetStarted={handleGetStarted} onLater={handleLater} />,
   ];

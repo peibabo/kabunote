@@ -6,6 +6,7 @@ import Image from 'next/image'
 
 const navLinks = [
   { href: '#features', label: '機能紹介' },
+  { href: '#daily', label: '毎日の習慣' },
   { href: '#how-it-works', label: '使い方' },
   { href: '#why-kabunote', label: '特徴' },
   { href: '#faq', label: 'FAQ' },

@@ -13,7 +13,7 @@ export default function GetStartedStep({ onGetStarted, onLater }: GetStartedStep
       <p className="text-gray-300 mb-8">
         投資の思考を整理して、より良い投資判断を。
         <br />
-        まずは最初の銘柄を追加してみましょう。
+        銘柄を追加して、最初のXPを獲得しましょう！
       </p>
 
       <button
@@ -24,7 +24,7 @@ export default function GetStartedStep({ onGetStarted, onLater }: GetStartedStep
           boxShadow: '0 0 15px rgba(52, 211, 153, 0.5), 0 0 30px rgba(52, 211, 153, 0.3)',
         }}
       >
-        最初の銘柄を追加する
+        さっそく始める
       </button>
 
       <button
