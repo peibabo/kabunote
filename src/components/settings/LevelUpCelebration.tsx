@@ -12,8 +12,8 @@ interface LevelUpDetail {
 export default function LevelUpCelebration() {
   const [celebration, setCelebration] = useState<LevelUpDetail | null>(null)
   const [isVisible, setIsVisible] = useState(false)
-  const hideTimer = useRef<ReturnType<typeof setTimeout>>()
-  const clearTimer = useRef<ReturnType<typeof setTimeout>>()
+  const hideTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
+  const clearTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
 
   useEffect(() => {
     const handler = (e: Event) => {
