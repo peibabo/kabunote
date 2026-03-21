@@ -94,21 +94,19 @@ export const PUT = withAuth(async ({ user, request }) => {
   }
 
   // 全項目がこのユーザーのものか確認
-  const existingItems = await prisma.userChecklist.findMany({
-    where: { userId: user.id },
-    select: { id: true },
+  const requestIds = items.map(i => i.id)
+  const validCount = await prisma.userChecklist.count({
+    where: { userId: user.id, id: { in: requestIds } },
   })
-  const existingIds = new Set(existingItems.map(i => i.id))
-  const allValid = items.every(i => existingIds.has(i.id))
-  if (!allValid) {
+  if (validCount !== items.length) {
     return NextResponse.json(
       { error: 'Forbidden', message: '不正な項目が含まれています' },
       { status: 403 }
     )
   }
 
-  // 一括更新
-  await Promise.all(
+  // 一括更新（トランザクションで一貫性を保証）
+  await prisma.$transaction(
     items.map(item =>
       prisma.userChecklist.update({
         where: { id: item.id },

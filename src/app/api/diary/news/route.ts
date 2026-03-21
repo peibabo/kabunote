@@ -72,9 +72,10 @@ export const GET = withAuth(async ({ user, request }) => {
   }
 
   // source === 'all': 両方取得してマージ
+  const fetchCount = offset + limit
   const [diary, stock] = await Promise.all([
-    fetchDiaryNews(user.id, limit, 0),
-    fetchStockNews(user.id, limit, 0),
+    fetchDiaryNews(user.id, fetchCount, 0),
+    fetchStockNews(user.id, fetchCount, 0),
   ])
 
   const merged = [...diary.items, ...stock.items]
