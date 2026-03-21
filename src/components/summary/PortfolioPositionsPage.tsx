@@ -2,26 +2,13 @@
 
 import React, { useState, useMemo } from 'react';
 import { Position } from '@/types/positions';
-import { calculatePositionSummary, formatShares } from '@/lib/positionCalc';
+import { calculatePositionSummary, formatPrice } from '@/lib/positionCalc';
 import { calculateAfterTax } from '@/lib/taxCalc';
 import { getCompanyNameSync } from '@/data/stockNames';
 import { StockData } from '@/hooks/stock/useStockData';
-
-interface PositionRowData {
-  symbol: string;
-  companyName: string;
-  totalShares: number;
-  averagePrice: number;
-  totalCost: number;
-  currentPrice: number;
-  currentValue: number;
-  profitLoss: number;
-  profitLossRate: number;
-  profitLossAfterTax: number;
-  portfolioWeight: number;
-}
-
-type SortKey = 'symbol' | 'totalShares' | 'averagePrice' | 'totalCost' | 'currentValue' | 'profitLoss' | 'profitLossRate';
+import type { PositionRowData, SortKey } from './positions/types';
+import PositionTable from './positions/PositionTable';
+import PositionCardList from './positions/PositionCardList';
 
 interface PortfolioPositionsPageProps {
   stockData?: StockData[];
@@ -144,10 +131,6 @@ export default function PortfolioPositionsPage({ stockData = [] }: PortfolioPosi
     return 'text-gray-300';
   };
 
-  const formatPriceValue = (price: number): string => {
-    return new Intl.NumberFormat('ja-JP').format(Math.round(price));
-  };
-
   const summary = useMemo(() => {
     const totalInvestment = positionsData.reduce((sum, row) => sum + row.totalCost, 0);
     const totalCurrentValue = positionsData.reduce((sum, row) => sum + (row.currentValue > 0 ? row.currentValue : row.totalCost), 0);
@@ -231,14 +214,14 @@ export default function PortfolioPositionsPage({ stockData = [] }: PortfolioPosi
           <div className="bg-gray-800 rounded-lg p-4">
             <div className="text-sm text-gray-400 mb-1">総投資額</div>
             <div className="text-lg font-bold text-white">
-              {formatPriceValue(summary.totalInvestment)}円
+              {formatPrice(summary.totalInvestment)}円
             </div>
           </div>
 
           <div className="bg-gray-800 rounded-lg p-4">
             <div className="text-sm text-gray-400 mb-1">総評価額</div>
             <div className="text-lg font-bold text-white">
-              {formatPriceValue(summary.totalCurrentValue)}円
+              {formatPrice(summary.totalCurrentValue)}円
             </div>
             {summary.stocksWithoutPrices > 0 && (
               <div className="text-xs text-gray-400">
@@ -251,11 +234,11 @@ export default function PortfolioPositionsPage({ stockData = [] }: PortfolioPosi
             <div className="text-sm text-gray-400 mb-1">総損益</div>
             <div className={`text-lg font-bold ${getProfitLossColor(summary.totalProfitLoss)}`}>
               {summary.totalProfitLoss >= 0 ? '+' : ''}
-              {formatPriceValue(summary.totalProfitLoss)}円
+              {formatPrice(summary.totalProfitLoss)}円
             </div>
             {summary.totalProfitLoss > 0 && (
               <div className="text-sm text-blue-300 font-medium">
-                税引後 +{formatPriceValue(summary.totalProfitLossAfterTax)}円
+                税引後 +{formatPrice(summary.totalProfitLossAfterTax)}円
               </div>
             )}
             <div className={`text-xs ${getProfitLossColor(summary.totalProfitLoss)}`}>
@@ -266,164 +249,10 @@ export default function PortfolioPositionsPage({ stockData = [] }: PortfolioPosi
         </div>
 
         {/* モバイルカードレイアウト */}
-        <div className="md:hidden space-y-3">
-          {sortedData.map((row) => (
-            <div key={row.symbol} className="bg-gray-800 rounded-lg p-3">
-              {/* 1行目: 銘柄コード + 会社名 */}
-              <div className="flex items-center gap-2 mb-2">
-                <span className="font-medium text-white text-sm">{row.symbol}</span>
-                <span className="text-xs text-gray-400 truncate">{row.companyName}</span>
-              </div>
-              {/* 2行目: 保有株数 + 平均取得価額 */}
-              <div className="grid grid-cols-2 gap-2 text-xs mb-1.5">
-                <div>
-                  <span className="text-gray-400">保有: </span>
-                  <span className="text-white">{formatShares(row.totalShares)}株</span>
-                </div>
-                <div>
-                  <span className="text-gray-400">平均: </span>
-                  <span className="text-white">{formatPriceValue(row.averagePrice)}円</span>
-                </div>
-              </div>
-              {/* 3行目: 投資額 + 評価額 */}
-              <div className="grid grid-cols-2 gap-2 text-xs mb-1.5">
-                <div>
-                  <span className="text-gray-400">投資額: </span>
-                  <span className="text-white">{formatPriceValue(row.totalCost)}円</span>
-                </div>
-                <div>
-                  <span className="text-gray-400">評価額: </span>
-                  <span className="text-white">{row.currentValue > 0 ? `${formatPriceValue(row.currentValue)}円` : '算出不可'}</span>
-                </div>
-              </div>
-              {/* 4行目: 損益額 + 損益率 */}
-              <div className="grid grid-cols-2 gap-2 text-xs mb-1.5">
-                <div>
-                  <span className="text-gray-400">損益: </span>
-                  {row.currentPrice > 0 ? (
-                    <span className={`font-medium ${getProfitLossColor(row.profitLoss)}`}>
-                      {row.profitLoss >= 0 ? '+' : ''}{formatPriceValue(row.profitLoss)}円
-                    </span>
-                  ) : (
-                    <span className="text-gray-500">算出不可</span>
-                  )}
-                  {row.profitLoss > 0 && (
-                    <div className="text-blue-300 mt-0.5">税引後 +{formatPriceValue(row.profitLossAfterTax)}円</div>
-                  )}
-                </div>
-                <div>
-                  <span className="text-gray-400">損益率: </span>
-                  {row.currentPrice > 0 ? (
-                    <span className={`font-medium ${getProfitLossColor(row.profitLoss)}`}>
-                      {row.profitLossRate >= 0 ? '+' : ''}{row.profitLossRate.toFixed(2)}%
-                    </span>
-                  ) : (
-                    <span className="text-gray-500">算出不可</span>
-                  )}
-                </div>
-              </div>
-              {/* 5行目: 構成比プログレスバー */}
-              <div className="flex items-center gap-2 text-xs">
-                <span className="text-gray-400">構成比:</span>
-                <span className="text-white">{row.portfolioWeight.toFixed(1)}%</span>
-                <div className="flex-1 bg-gray-600 rounded-full h-1.5">
-                  <div
-                    className="bg-blue-500 h-1.5 rounded-full"
-                    style={{ width: `${Math.min(row.portfolioWeight, 100)}%` }}
-                  ></div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+        <PositionCardList sortedData={sortedData} getProfitLossColor={getProfitLossColor} />
 
         {/* デスクトップテーブル */}
-        <div className="hidden md:block bg-gray-800 rounded-lg overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-700">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-300">銘柄</th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-300">保有株数</th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-300">平均取得価額</th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-300">総投資額</th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-300">現在株価</th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-300">現在評価額</th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-300">損益額</th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-300">損益率</th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-300">構成比</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-700">
-              {sortedData.map((row) => (
-                <tr key={row.symbol} className="hover:bg-gray-750">
-                  <td className="px-4 py-3">
-                    <div>
-                      <div className="font-medium text-white">{row.symbol}</div>
-                      <div className="text-xs text-gray-400 truncate max-w-[150px]">{row.companyName}</div>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-center text-white">
-                    {formatShares(row.totalShares)}株
-                  </td>
-                  <td className="px-4 py-3 text-center text-white">
-                    {formatPriceValue(row.averagePrice)}円
-                  </td>
-                  <td className="px-4 py-3 text-center text-white">
-                    {formatPriceValue(row.totalCost)}円
-                  </td>
-                  <td className="px-4 py-3 text-center text-white">
-                    {row.currentPrice > 0 ? `${formatPriceValue(row.currentPrice)}円` : (
-                      <span className="text-gray-500 text-xs">未設定</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-center text-white">
-                    {row.currentValue > 0 ? `${formatPriceValue(row.currentValue)}円` : (
-                      <span className="text-gray-500 text-xs">算出不可</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    {row.currentPrice > 0 ? (
-                      <div>
-                        <div className={`font-medium ${getProfitLossColor(row.profitLoss)}`}>
-                          {row.profitLoss >= 0 ? '+' : ''}
-                          {formatPriceValue(row.profitLoss)}円
-                        </div>
-                        {row.profitLoss > 0 && (
-                          <div className="text-xs text-blue-300">
-                            税引後 +{formatPriceValue(row.profitLossAfterTax)}円
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <span className="text-gray-500 text-xs">算出不可</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    {row.currentPrice > 0 ? (
-                      <div className={`font-medium ${getProfitLossColor(row.profitLoss)}`}>
-                        {row.profitLossRate >= 0 ? '+' : ''}
-                        {row.profitLossRate.toFixed(2)}%
-                      </div>
-                    ) : (
-                      <span className="text-gray-500 text-xs">算出不可</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <div className="text-white text-sm">
-                      {row.portfolioWeight.toFixed(1)}%
-                    </div>
-                    <div className="w-full bg-gray-600 rounded-full h-1.5 mt-1">
-                      <div
-                        className="bg-blue-500 h-1.5 rounded-full"
-                        style={{ width: `${Math.min(row.portfolioWeight, 100)}%` }}
-                      ></div>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <PositionTable sortedData={sortedData} getProfitLossColor={getProfitLossColor} />
       </div>
     </div>
   );

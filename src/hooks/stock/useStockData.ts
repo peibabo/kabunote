@@ -1,73 +1,11 @@
 import { useState, useEffect, useMemo } from 'react';
 import { createClient } from '@/lib/supabase-client';
 import { toast } from '@/lib/toast';
-import { grantXp } from '@/lib/gamification';
+import { useStockCrud } from '@/hooks/stock/useStockCrud';
 
-export interface StockData {
-  id: string;
-  symbol: string;
-  name: string;
-  sector: string | null;
-  market: string | null;
-  order: number;
-  currentPrice: number | null;
-  targetPrice: number | null;
-  stopLossPrice: number | null;
-  per: number | null;
-  pbr: number | null;
-  memo: string;
-  positions: Array<{
-    id: string;
-    shares: number;
-    purchasePrice: number;
-    purchaseDate: string;
-    memo: string;
-    taxRate: number;
-    createdAt: string;
-  }>;
-  events: Array<{
-    id: string;
-    eventType: string;
-    eventDate: string | null;
-    eventMonth: number | null;
-    eventDay: number | null;
-    isRecurring: boolean;
-    isActive: boolean;
-  }>;
-  dividend: {
-    dividendPerShare: number;
-    frequency: number;
-    rightsMonth: number;
-    rightsDay: number;
-  } | null;
-  benefit: {
-    description: string;
-    minimumShares: number;
-    estimatedValue: number;
-    rightsMonth: number;
-    rightsDay: number;
-  } | null;
-  tags: Array<{
-    id: string;
-    label: string;
-    color: string;
-    createdAt: string;
-  }>;
-  nextActionPlan: {
-    actionType: string;
-    priority: string;
-    targetPrice: number | null;
-    targetShares: number | null;
-    strategyMemo: string;
-  } | null;
-  newsItems?: Array<{
-    id: string;
-    url: string;
-    comment: string;
-  }>;
-  createdAt: string;
-  updatedAt: string;
-}
+// 後方互換: StockData を types/stock.ts から再エクスポート
+export type { StockData } from '@/types/stock';
+import type { StockData } from '@/types/stock';
 
 interface UseStockDataReturn {
   stockData: StockData[];
@@ -94,6 +32,9 @@ export function useStockData(): UseStockDataReturn {
   const [stockSymbols, setStockSymbols] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // addStock ロジックを useStockCrud に委譲
+  const { addStock } = useStockCrud({ setStockData, setStockSymbols });
 
   // データベースからデータを取得
   const loadDataFromDatabase = async (): Promise<void> => {
@@ -168,70 +109,6 @@ export function useStockData(): UseStockDataReturn {
         return { ...stock, events: newEvents };
       })
     );
-  };
-
-  // 新規銘柄を追加（楽観的更新 + DB INSERT）
-  const addStock = async (symbol: string, name?: string, sector?: string, market?: string): Promise<void> => {
-    // 楽観的更新：まずローカルステートに追加
-    const tempId = `stock-${symbol}`;
-    setStockData(prev => {
-      if (prev.some(s => s.symbol === symbol)) return prev;
-      const tempEntry: StockData = {
-        id: tempId,
-        symbol,
-        name: name || symbol,
-        sector: sector || null,
-        market: market || null,
-        order: prev.length,
-        currentPrice: null,
-        targetPrice: null,
-        stopLossPrice: null,
-        per: null,
-        pbr: null,
-        memo: '',
-        positions: [],
-        events: [],
-        dividend: null,
-        benefit: null,
-        tags: [],
-        nextActionPlan: null,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-      return [...prev, tempEntry];
-    });
-    setStockSymbols(prev => {
-      if (prev.includes(symbol)) return prev;
-      return [...prev, symbol];
-    });
-
-    // バックグラウンドでDB INSERT
-    try {
-      const response = await fetch('/api/stocks', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ symbol, name, sector, market }),
-      });
-      if (!response.ok) {
-        const errorBody = await response.json().catch(() => ({}));
-        console.error('❌ POST /api/stocks レスポンス:', response.status, errorBody);
-        throw new Error(errorBody.message || '銘柄の保存に失敗しました');
-      }
-      const result = await response.json();
-      // DB UUIDでローカルステートのIDを差し替え
-      if (result.success && result.data?.id) {
-        setStockData(prev =>
-          prev.map(s => s.id === tempId ? { ...s, id: result.data.id } : s)
-        );
-      }
-      grantXp('STOCK_ADD')
-    } catch (err) {
-      console.error('❌ 銘柄のDB保存に失敗:', err);
-      // ロールバック
-      setStockData(prev => prev.filter(s => s.id !== tempId));
-      setStockSymbols(prev => prev.filter(s => s !== symbol));
-      toast.error('銘柄の追加がうまくいきませんでした。再度お試しください');
-    }
   };
 
   // データを読み込む

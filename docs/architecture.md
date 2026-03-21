@@ -157,7 +157,8 @@ app_users (ユーザー管理)
 ### `hooks/stock/` — 銘柄データ
 | フック | 説明 |
 |--------|------|
-| `useStockData` | 銘柄データ一括取得（stocks/list API） |
+| `useStockData` | 銘柄データ一括取得（stocks/list API）、ファサード |
+| `useStockCrud` | 銘柄追加ロジック（楽観的更新 + DB INSERT） |
 | `useStockCardData` | 銘柄カード統合データ（10+フックのファサード） |
 | `useStockMemo` | 株ノオト（デバウンス自動保存） |
 | `useStockNews` | 銘柄ニュース管理（URL+コメント、300msデバウンス自動保存） |
@@ -246,12 +247,13 @@ app_users (ユーザー管理)
 
 ---
 
-## 型定義ファイル一覧（14ファイル）
+## 型定義ファイル一覧（15ファイル）
 
 型定義のみ。計算ロジック・フォーマット関数は `src/lib/*Calc.ts` に分離済み。
 
 | ファイル | 内容 |
 |---------|------|
+| `stock.ts` | StockData（銘柄データ統合型） |
 | `positions.ts` | Position, PositionSummary（totalCost, positionCount等） |
 | `tags.ts` | CustomTag, プリセットタグ定義 |
 | `favorites.ts` | FavoriteGroup, お気に入りグループ |
@@ -356,6 +358,8 @@ app_users (ユーザー管理)
 | `nextActionPlanCalc.ts` | Next Action Plan分析・判定関数 |
 | `snapshotCalc.ts` | ポートフォリオスナップショット計算（buildSnapshotData, RANGE_DAYS） |
 | `stockMiniChartCalc.ts` | 個別銘柄ミニチャート計算（YAxis domain計算・日付フォーマット・データ変換） |
+| `dividendBenefitCalc.ts` | 配当・優待一覧計算（データ処理・フィルタ・ソート・サマリー） |
+| `portfolioSummaryCalc.ts` | ポートフォリオサマリー計算（投資額・損益・配当・優待・現金比率） |
 | `dateFormat.ts` | 日付フォーマット共通関数（ISO形式・M/D形式） |
 
 ## ユーティリティ（src/utils/）

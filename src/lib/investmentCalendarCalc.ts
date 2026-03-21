@@ -22,6 +22,19 @@ export const calculateRightsLastDate = (rightsConfirmationDate: Date): Date => {
   return calculateBusinessDaysBefore(rightsConfirmationDate, 2);
 };
 
+// 権利付き最終日を文字列の権利確定日から計算
+export const calculateRightsLastDay = (rightsDate: string): Date | null => {
+  if (!rightsDate) return null;
+  const confirmationDate = new Date(rightsDate);
+  return calculateBusinessDaysBefore(confirmationDate, 2);
+};
+
+// 曜日を取得する関数
+export const getDayOfWeek = (date: Date): string => {
+  const days = ['日', '月', '火', '水', '木', '金', '土'];
+  return days[date.getDay()];
+};
+
 // 日付文字列をフォーマット
 export const formatDateString = (date: Date): string => {
   return date.toISOString().split('T')[0];

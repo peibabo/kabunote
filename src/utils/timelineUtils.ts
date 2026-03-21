@@ -105,26 +105,9 @@ export const shouldShowDateLabel = (date: Date, index: number): boolean => {
 };
 
 // ─────────────────────────────────────────
-// 営業日計算
+// 営業日計算（investmentCalendarCalcから再エクスポート）
 // ─────────────────────────────────────────
-
-/**
- * 指定した営業日数前の日付を返す（土日を除外して遡る）
- */
-export const calculateBusinessDaysBefore = (date: Date, businessDays: number): Date => {
-  const result = new Date(date);
-  let remainingDays = businessDays;
-
-  while (remainingDays > 0) {
-    result.setDate(result.getDate() - 1);
-    const dayOfWeek = result.getDay();
-    if (dayOfWeek !== 0 && dayOfWeek !== 6) {
-      remainingDays--;
-    }
-  }
-
-  return result;
-};
+export { calculateBusinessDaysBefore } from '@/lib/investmentCalendarCalc';
 
 // ─────────────────────────────────────────
 // イベントドット色

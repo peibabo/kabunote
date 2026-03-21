@@ -1,46 +1,24 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
-} from '@dnd-kit/core';
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-  useSortable,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
+import { arrayMove } from '@dnd-kit/sortable';
+import { DragEndEvent } from '@dnd-kit/core';
 import { playSound } from '@/lib/sound';
 import {
   DEFAULT_EXTERNAL_LINKS,
   GRADIENT_PRESETS,
   ICON_PRESETS,
   MAX_EXTERNAL_LINKS,
-  MAX_LINK_LABEL_LENGTH,
-  MAX_LINK_URL_LENGTH,
   type ExternalLink,
 } from '@/lib/defaultExternalLinks';
+import LinkList from './external-links/LinkList';
+import LinkEditForm, { type EditingLink } from './external-links/LinkEditForm';
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
   links: ExternalLink[];
   onSave: (links: ExternalLink[]) => Promise<void>;
-}
-
-interface EditingLink {
-  url: string;
-  label: string;
-  icon: string;
-  gradient: string;
 }
 
 const EMPTY_LINK: EditingLink = {
@@ -50,66 +28,6 @@ const EMPTY_LINK: EditingLink = {
   gradient: GRADIENT_PRESETS[0].value,
 };
 
-function SortableItem({ link, index, onEdit, onDelete }: {
-  link: ExternalLink;
-  index: number;
-  onEdit: (index: number) => void;
-  onDelete: (index: number) => void;
-}) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: link.id || `link-${index}` });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-  };
-
-  return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className="flex items-center gap-2 bg-gray-700 rounded-lg p-3"
-    >
-      <button
-        {...attributes}
-        {...listeners}
-        className="cursor-grab text-gray-400 hover:text-gray-200 touch-none"
-        title="ドラッグして並べ替え"
-      >
-        ⠿
-      </button>
-      <span className={`w-8 h-8 rounded-full bg-gradient-to-r ${link.gradient} flex items-center justify-center text-base flex-shrink-0`}>
-        {link.icon}
-      </span>
-      <div className="flex-1 min-w-0">
-        <div className="text-sm text-white truncate">{link.label}</div>
-        <div className="text-xs text-gray-400 truncate">{link.url}</div>
-      </div>
-      <button
-        onClick={() => onEdit(index)}
-        className="cursor-pointer text-gray-400 hover:text-blue-400 transition-colors p-1 text-sm flex-shrink-0"
-        title="編集"
-      >
-        編集
-      </button>
-      <button
-        onClick={() => onDelete(index)}
-        className="cursor-pointer text-gray-400 hover:text-red-400 transition-colors p-1 text-sm flex-shrink-0"
-        title="削除"
-      >
-        ✕
-      </button>
-    </div>
-  );
-}
-
 export default function ExternalLinksSettingsModal({ isOpen, onClose, links, onSave }: Props) {
   const [editingLinks, setEditingLinks] = useState<ExternalLink[]>([]);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
@@ -117,11 +35,6 @@ export default function ExternalLinksSettingsModal({ isOpen, onClose, links, onS
   const [isAdding, setIsAdding] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
-  );
 
   // モーダルを開いたときにリンクをコピー
   const handleOpen = useCallback(() => {
@@ -172,24 +85,7 @@ export default function ExternalLinksSettingsModal({ isOpen, onClose, links, onS
     setEditForm(EMPTY_LINK);
   };
 
-  const isFormValid = () => {
-    try {
-      const url = new URL(editForm.url);
-      if (url.protocol !== 'http:' && url.protocol !== 'https:') return false;
-    } catch {
-      return false;
-    }
-    return (
-      editForm.url.length <= MAX_LINK_URL_LENGTH &&
-      editForm.label.trim().length > 0 &&
-      editForm.label.length <= MAX_LINK_LABEL_LENGTH &&
-      editForm.icon.trim().length > 0
-    );
-  };
-
   const handleSaveEdit = () => {
-    if (!isFormValid()) return;
-
     if (isAdding) {
       setEditingLinks([...editingLinks, {
         url: editForm.url,
@@ -284,103 +180,22 @@ export default function ExternalLinksSettingsModal({ isOpen, onClose, links, onS
           </p>
 
           {/* リンク一覧 */}
-          <div className="space-y-2 mb-4">
-            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-              <SortableContext
-                items={editingLinks.map((l, i) => l.id || `link-${i}`)}
-                strategy={verticalListSortingStrategy}
-              >
-                {editingLinks.map((link, index) => (
-                  <SortableItem
-                    key={link.id || `link-${index}`}
-                    link={link}
-                    index={index}
-                    onEdit={handleStartEdit}
-                    onDelete={handleDelete}
-                  />
-                ))}
-              </SortableContext>
-            </DndContext>
-
-            {editingLinks.length === 0 && (
-              <p className="text-gray-500 text-sm text-center py-4">リンクがありません</p>
-            )}
-          </div>
+          <LinkList
+            links={editingLinks}
+            onDragEnd={handleDragEnd}
+            onEdit={handleStartEdit}
+            onDelete={handleDelete}
+          />
 
           {/* 編集フォーム */}
           {isEditMode && (
-            <div className="bg-gray-700 rounded-lg p-4 mb-4 space-y-3">
-              <div className="text-sm font-medium text-gray-300 mb-2">
-                {isAdding ? 'リンクを追加' : 'リンクを編集'}
-              </div>
-              <div>
-                <label className="block text-xs text-gray-400 mb-1">ラベル</label>
-                <input
-                  type="text"
-                  value={editForm.label}
-                  onChange={(e) => setEditForm({ ...editForm, label: e.target.value })}
-                  placeholder="例: Yahoo!ファイナンス"
-                  maxLength={MAX_LINK_LABEL_LENGTH}
-                  className="w-full bg-gray-600 text-white border border-gray-500 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-gray-400 mb-1">URL</label>
-                <input
-                  type="url"
-                  value={editForm.url}
-                  onChange={(e) => setEditForm({ ...editForm, url: e.target.value })}
-                  placeholder="https://..."
-                  className="w-full bg-gray-600 text-white border border-gray-500 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-gray-400 mb-1">アイコン</label>
-                <div className="flex flex-wrap gap-1.5">
-                  {ICON_PRESETS.map((icon) => (
-                    <button
-                      key={icon}
-                      onClick={() => setEditForm({ ...editForm, icon })}
-                      className={`cursor-pointer w-9 h-9 rounded-lg flex items-center justify-center text-lg transition-all ${
-                        editForm.icon === icon ? 'bg-gray-500 ring-2 ring-white scale-110' : 'bg-gray-600 hover:bg-gray-500 opacity-60 hover:opacity-100'
-                      }`}
-                    >
-                      {icon}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs text-gray-400 mb-1">カラー</label>
-                <div className="flex flex-wrap gap-2">
-                  {GRADIENT_PRESETS.map((preset) => (
-                    <button
-                      key={preset.value}
-                      onClick={() => setEditForm({ ...editForm, gradient: preset.value })}
-                      className={`cursor-pointer w-8 h-8 rounded-full bg-gradient-to-r ${preset.value} transition-all ${
-                        editForm.gradient === preset.value ? 'ring-2 ring-white ring-offset-2 ring-offset-gray-700 scale-110' : 'opacity-60 hover:opacity-100'
-                      }`}
-                      title={preset.label}
-                    />
-                  ))}
-                </div>
-              </div>
-              <div className="flex gap-2 pt-1">
-                <button
-                  onClick={handleCancelEdit}
-                  className="cursor-pointer px-3 py-1.5 bg-gray-600 hover:bg-gray-500 text-white text-sm rounded transition-colors"
-                >
-                  キャンセル
-                </button>
-                <button
-                  onClick={handleSaveEdit}
-                  disabled={!isFormValid()}
-                  className="cursor-pointer px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isAdding ? '追加' : '更新'}
-                </button>
-              </div>
-            </div>
+            <LinkEditForm
+              isAdding={isAdding}
+              editForm={editForm}
+              onEditFormChange={setEditForm}
+              onSave={handleSaveEdit}
+              onCancel={handleCancelEdit}
+            />
           )}
 
           {/* アクションボタン */}

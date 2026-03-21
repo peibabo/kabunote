@@ -1,5 +1,21 @@
 # Kabunote - プロジェクトマイルストーン
 
+## リファクタリング Phase 4: 巨大フックの分割（2026年3月21日）
+**3つの巨大フックを分割し、計算ロジックを純粋関数として抽出**
+
+### 実施内容
+- `useStockData`（297行）: `StockData` 型を `src/types/stock.ts` に移動、`addStock` ロジックを `useStockCrud` に抽出
+- `useDividendBenefitList`（294行）: 計算ロジックを `src/lib/dividendBenefitCalc.ts` に純粋関数として抽出
+- `usePortfolioSummary`（266行）: サマリー計算ロジックを `src/lib/portfolioSummaryCalc.ts` に純粋関数として抽出
+
+### 技術的成果
+- 新規ファイル5つ: `types/stock.ts`, `hooks/stock/useStockCrud.ts`, `lib/dividendBenefitCalc.ts`, `lib/portfolioSummaryCalc.ts`
+- 新規テスト2ファイル: `dividendBenefitCalc.test.ts`（29テスト）, `portfolioSummaryCalc.test.ts`（11テスト）
+- 全既存importの後方互換を再エクスポートで維持
+- 全719テストパス
+
+---
+
 ## 決算カウントダウン強化・配当カレンダー強化（2026年3月18日）
 **5つの新ウィジェットでダッシュボードの投資スケジュール・配当情報を大幅強化**
 

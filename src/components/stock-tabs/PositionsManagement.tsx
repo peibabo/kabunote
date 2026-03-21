@@ -5,6 +5,8 @@ import { playSound } from '@/lib/sound';
 import { useStockPosition } from '@/hooks/stock/useStockPosition';
 import { Position } from '@/types/positions';
 import { calculatePositionSummary, formatPrice, formatShares } from '@/lib/positionCalc';
+import PositionFormFields, { PositionForm, emptyForm } from './positions/PositionFormFields';
+import PositionListItem from './positions/PositionListItem';
 
 interface PositionsManagementProps {
   symbol: string;
@@ -12,22 +14,6 @@ interface PositionsManagementProps {
   onPositionManagerOpen: () => void;
   initialPositions?: Position[];
 }
-
-interface PositionForm {
-  shares: string;
-  purchasePrice: string;
-  purchaseDate: string;
-  memo: string;
-  isNisa: boolean;
-}
-
-const emptyForm: PositionForm = {
-  shares: '',
-  purchasePrice: '',
-  purchaseDate: '',
-  memo: '',
-  isNisa: false
-};
 
 export default function PositionsManagement({
   stockId,
@@ -40,7 +26,6 @@ export default function PositionsManagement({
 
   const summary = calculatePositionSummary(positions);
 
-  // フォームを開いて追加モード
   const handleAddClick = () => {
     playSound('buttonAction');
     setEditingId(null);
@@ -48,7 +33,6 @@ export default function PositionsManagement({
     setIsAdding(true);
   };
 
-  // 編集モードを開始
   const handleEditClick = (pos: Position) => {
     setIsAdding(false);
     setEditingId(pos.id);
@@ -61,14 +45,12 @@ export default function PositionsManagement({
     });
   };
 
-  // キャンセル
   const handleCancel = () => {
     setIsAdding(false);
     setEditingId(null);
     setForm(emptyForm);
   };
 
-  // 新規ポジション保存
   const handleAddSave = async () => {
     const shares = parseInt(form.shares);
     const purchasePrice = parseFloat(form.purchasePrice);
@@ -86,7 +68,6 @@ export default function PositionsManagement({
     setForm(emptyForm);
   };
 
-  // 既存ポジション更新
   const handleEditSave = async () => {
     if (!editingId) return;
     const shares = parseInt(form.shares);
@@ -105,7 +86,6 @@ export default function PositionsManagement({
     setForm(emptyForm);
   };
 
-  // 削除確認
   const handleDelete = async (id: string) => {
     if (!confirm('このポジションを削除しますか？')) return;
     playSound('buttonDelete');
@@ -135,14 +115,14 @@ export default function PositionsManagement({
       {/* エラー表示 */}
       {error && (
         <div className="text-xs text-red-400 bg-red-900 bg-opacity-20 rounded px-2 py-1">
-          ❌ {error}
+          {'\u274C'} {error}
         </div>
       )}
 
       {/* ローディング */}
       {isLoading ? (
         <div className="bg-gray-700 rounded-lg p-4 text-center text-gray-400">
-          📊 読み込み中...
+          {'\u{1F4CA}'} 読み込み中...
         </div>
       ) : (
         <>
@@ -170,7 +150,7 @@ export default function PositionsManagement({
           {/* ポジション一覧 */}
           {positions.length === 0 && !isAdding && (
             <div className="bg-gray-700 rounded-lg p-4 text-center">
-              <div className="text-gray-400 mb-2">📊 ポジションが未登録です</div>
+              <div className="text-gray-400 mb-2">{'\u{1F4CA}'} ポジションが未登録です</div>
               <p className="text-xs text-gray-500 mb-3">
                 保有株式を登録すると損益シミュレーションなどが利用できます
               </p>
@@ -184,66 +164,19 @@ export default function PositionsManagement({
           )}
 
           {positions.map(pos => (
-            <div key={pos.id} className="bg-gray-700 rounded-lg p-3">
-              {editingId === pos.id ? (
-                // 編集フォーム
-                <PositionFormFields
-                  form={form}
-                  onChange={setForm}
-                  onSave={handleEditSave}
-                  onCancel={handleCancel}
-                  isSaving={isSaving}
-                  isValid={isFormValid()}
-                  label="ポジションを更新"
-                />
-              ) : (
-                // 表示モード
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      {pos.taxRate === 0 && (
-                        <span className="text-xs bg-green-900 text-green-300 border border-green-700 px-1.5 py-0.5 rounded">NISA</span>
-                      )}
-                    </div>
-                    <div className="flex gap-2">
-                    <button
-                      onClick={() => handleEditClick(pos)}
-                      className="cursor-pointer text-xs text-blue-400 hover:text-blue-300 transition-colors"
-                    >
-                      編集
-                    </button>
-                    <button
-                      onClick={() => handleDelete(pos.id)}
-                      disabled={isSaving}
-                      className="cursor-pointer text-xs text-red-400 hover:text-red-300 disabled:text-gray-500 disabled:cursor-not-allowed transition-colors"
-                    >
-                      削除
-                    </button>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm">
-                    <div>
-                      <div className="text-gray-400 text-xs">株数</div>
-                      <div className="text-white">{pos.shares.toLocaleString()}株</div>
-                    </div>
-                    <div>
-                      <div className="text-gray-400 text-xs">単価</div>
-                      <div className="text-green-300">{formatPrice(pos.purchasePrice)}円</div>
-                    </div>
-                    <div>
-                      <div className="text-gray-400 text-xs">計</div>
-                      <div className="text-blue-300">{formatPrice(pos.shares * pos.purchasePrice)}円</div>
-                    </div>
-                  </div>
-                  {pos.purchaseDate && (
-                    <div className="text-xs text-gray-400">取得日: {pos.purchaseDate}</div>
-                  )}
-                  {pos.memo && (
-                    <div className="text-xs text-gray-400 truncate">メモ: {pos.memo}</div>
-                  )}
-                </div>
-              )}
-            </div>
+            <PositionListItem
+              key={pos.id}
+              pos={pos}
+              editingId={editingId}
+              form={form}
+              onFormChange={setForm}
+              onEditClick={handleEditClick}
+              onEditSave={handleEditSave}
+              onCancel={handleCancel}
+              onDelete={handleDelete}
+              isSaving={isSaving}
+              isFormValid={isFormValid()}
+            />
           ))}
 
           {/* 追加フォーム */}
@@ -263,119 +196,6 @@ export default function PositionsManagement({
           )}
         </>
       )}
-    </div>
-  );
-}
-
-// フォームフィールドの共通コンポーネント
-function PositionFormFields({
-  form,
-  onChange,
-  onSave,
-  onCancel,
-  isSaving,
-  isValid,
-  label
-}: {
-  form: PositionForm;
-  onChange: (f: PositionForm) => void;
-  onSave: () => void;
-  onCancel: () => void;
-  isSaving: boolean;
-  isValid: boolean;
-  label: string;
-}) {
-  return (
-    <div className="space-y-3">
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="block text-xs font-medium text-gray-300 mb-1">
-            株数 <span className="text-red-400">*</span>
-          </label>
-          <input
-            type="number"
-            value={form.shares}
-            onChange={(e) => onChange({ ...form, shares: e.target.value })}
-            placeholder="100"
-            min="1"
-            className="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded text-white text-sm focus:border-blue-500 focus:outline-none"
-          />
-        </div>
-        <div>
-          <label className="block text-xs font-medium text-gray-300 mb-1">
-            取得単価（円） <span className="text-red-400">*</span>
-          </label>
-          <input
-            type="number"
-            step="0.01"
-            value={form.purchasePrice}
-            onChange={(e) => onChange({ ...form, purchasePrice: e.target.value })}
-            placeholder="1500"
-            min="0.01"
-            className="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded text-white text-sm focus:border-blue-500 focus:outline-none"
-          />
-        </div>
-        <div>
-          <label className="block text-xs font-medium text-gray-300 mb-1">取得日</label>
-          <input
-            type="date"
-            value={form.purchaseDate}
-            onChange={(e) => onChange({ ...form, purchaseDate: e.target.value })}
-            className="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded text-white text-sm focus:border-blue-500 focus:outline-none"
-          />
-        </div>
-        <div>
-          <label className="block text-xs font-medium text-gray-300 mb-1">メモ</label>
-          <input
-            type="text"
-            value={form.memo}
-            onChange={(e) => onChange({ ...form, memo: e.target.value })}
-            placeholder="任意のメモ"
-            className="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded text-white text-sm focus:border-blue-500 focus:outline-none"
-          />
-        </div>
-      </div>
-
-      {/* NISA口座トグル */}
-      <div className="flex items-center gap-3">
-        <button
-          type="button"
-          onClick={() => onChange({ ...form, isNisa: !form.isNisa })}
-          className={`cursor-pointer relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-            form.isNisa ? 'bg-green-600' : 'bg-gray-600'
-          }`}
-        >
-          <span
-            className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
-              form.isNisa ? 'translate-x-4.5' : 'translate-x-0.5'
-            }`}
-          />
-        </button>
-        <span className="text-sm text-gray-300">NISA口座（非課税）</span>
-      </div>
-
-      {/* プレビュー */}
-      {form.shares && form.purchasePrice && (
-        <div className="text-xs text-gray-400 bg-gray-800 rounded px-2 py-1">
-          投資額: {formatPrice(parseInt(form.shares || '0') * parseFloat(form.purchasePrice || '0'))}円
-        </div>
-      )}
-
-      <div className="flex gap-2">
-        <button
-          onClick={onSave}
-          disabled={isSaving || !isValid}
-          className="cursor-pointer px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white text-sm rounded transition-colors"
-        >
-          {isSaving ? '保存中...' : label}
-        </button>
-        <button
-          onClick={onCancel}
-          className="cursor-pointer px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white text-sm rounded transition-colors"
-        >
-          キャンセル
-        </button>
-      </div>
     </div>
   );
 }
