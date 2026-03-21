@@ -5,8 +5,9 @@ import { createRequest, getJson } from '../helpers/apiTestHelper'
 import { GET } from '@/app/api/gamification/route'
 import { POST } from '@/app/api/gamification/xp/route'
 import { GET as GET_ACTIVITY } from '@/app/api/gamification/activity/route'
+import { getTodayJST, dateStrToUTCMidnight } from '@/lib/dateJst'
 
-const today = new Date().toISOString().slice(0, 10)
+const today = getTodayJST()
 
 const mockGamification = {
   id: 'gam-1',
@@ -14,10 +15,10 @@ const mockGamification = {
   totalXp: 500,
   level: 3,
   dailyXp: 30,
-  dailyXpDate: new Date(today),
+  dailyXpDate: dateStrToUTCMidnight(today),
   currentStreak: 5,
   longestStreak: 10,
-  lastActiveDate: new Date(today),
+  lastActiveDate: dateStrToUTCMidnight(today),
   createdAt: new Date(),
   updatedAt: new Date(),
 }

@@ -1,5 +1,23 @@
 # Kabunote - プロジェクトマイルストーン
 
+## SEO・集客基盤の強化（2026年3月21日）
+**JSON-LD構造化データ、メタデータ最適化、SNS共有ボタンを追加し、検索エンジンとSNSからの集客基盤を整備**
+
+### 実施内容
+- JSON-LD構造化データ: Organization（全ページ）、WebApplication + FAQPage（ランディング）
+- メタデータ最適化: titleテンプレート（`%s | カブノオト`）、canonical URL、各ページdescription
+- SNS共有ボタン: レベルアップ・称号獲得時にX/LINEシェアボタン表示
+- フッターにX(Twitter)アカウントリンク追加
+- 集客戦略ドキュメント `docs/user-acquisition-strategy.md` 作成
+
+### 技術的成果
+- 新規ファイル3つ: `lib/share.ts`, `components/common/ShareButtons.tsx`, `docs/user-acquisition-strategy.md`
+- 修正ファイル6つ: `layout.tsx`, `page.tsx`, `help/page.tsx`, `privacy/page.tsx`, `terms/page.tsx`, `LevelUpCelebration.tsx`, `TitleUnlockedToast.tsx`, `LandingFooter.tsx`
+- CSP変更なし（`window.open`ベースのインテントリンク使用）
+- 全769テストパス
+
+---
+
 ## リファクタリング Phase 4: 巨大フックの分割（2026年3月21日）
 **3つの巨大フックを分割し、計算ロジックを純粋関数として抽出**
 

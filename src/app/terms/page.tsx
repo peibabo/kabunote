@@ -2,7 +2,10 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
-  title: '利用規約 | カブノオト',
+  title: '利用規約',
+  alternates: {
+    canonical: 'https://kabunote.jp/terms',
+  },
 }
 
 export default function TermsPage() {

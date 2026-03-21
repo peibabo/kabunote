@@ -28,8 +28,19 @@ export default function LandingFooter() {
             <Link href="/privacy" className="text-sm text-gray-500 hover:text-gray-300 transition-colors">プライバシーポリシー</Link>
           </div>
 
-          {/* Copyright */}
-          <div className="md:text-right">
+          {/* SNS & Copyright */}
+          <div className="md:text-right space-y-3">
+            <a
+              href="https://x.com/kabunote_jp"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-300 transition-colors"
+            >
+              <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+              </svg>
+              @kabunote_jp
+            </a>
             <p className="text-sm text-gray-600">
               &copy; 2025 カブノオト
             </p>
