@@ -37,8 +37,8 @@ export default function TitleUnlockedToast() {
     playSound('accordionOpen')
   }, [queue, current])
 
-  const hideTimerRef = useRef<ReturnType<typeof setTimeout>>()
-  const clearTimerRef = useRef<ReturnType<typeof setTimeout>>()
+  const hideTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined)
+  const clearTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined)
 
   // 自動消去タイマー
   useEffect(() => {
