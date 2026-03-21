@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { playSound } from '@/lib/sound'
+import ShareButtons from '@/components/common/ShareButtons'
 import type { TitleStatus } from '@/types/titles'
 
 const RARITY_COLORS = {
@@ -36,14 +37,17 @@ export default function TitleUnlockedToast() {
     playSound('accordionOpen')
   }, [queue, current])
 
+  const hideTimerRef = useRef<ReturnType<typeof setTimeout>>()
+  const clearTimerRef = useRef<ReturnType<typeof setTimeout>>()
+
   // 自動消去タイマー
   useEffect(() => {
     if (!current) return
-    const hideTimer = setTimeout(() => setIsVisible(false), 3000)
-    const clearTimer = setTimeout(() => setCurrent(null), 3500)
+    hideTimerRef.current = setTimeout(() => setIsVisible(false), 5000)
+    clearTimerRef.current = setTimeout(() => setCurrent(null), 5500)
     return () => {
-      clearTimeout(hideTimer)
-      clearTimeout(clearTimer)
+      clearTimeout(hideTimerRef.current)
+      clearTimeout(clearTimerRef.current)
     }
   }, [current])
 
@@ -74,6 +78,11 @@ export default function TitleUnlockedToast() {
         <div>
           <p className="text-gray-400 text-[10px] tracking-wider">TITLE UNLOCKED</p>
           <p className="text-white text-sm font-medium">{current.name}</p>
+        </div>
+        <div className="ml-2">
+          <ShareButtons
+            text={`称号「${current.name}」をアンロックしました！`}
+          />
         </div>
       </div>
     </div>

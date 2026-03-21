@@ -24,8 +24,14 @@ const mPlus1p = M_PLUS_1p({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://kabunote.jp"),
-  title: "カブノオト - 投資家の思考を整理するダッシュボード",
+  title: {
+    template: "%s | カブノオト",
+    default: "カブノオト - 投資家の思考を整理するダッシュボード",
+  },
   description: "日本株の投資情報と投資メモを一元管理。思考の整理で賢い投資判断を。",
+  alternates: {
+    canonical: "https://kabunote.jp",
+  },
 };
 
 export default function RootLayout({
@@ -38,6 +44,24 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${mPlus1p.variable} antialiased bg-gray-900 text-white`}
       >
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              name: "カブノオト",
+              url: "https://kabunote.jp",
+              logo: "https://kabunote.jp/kabunote-logo.png",
+              contactPoint: {
+                "@type": "ContactPoint",
+                email: "support@kabunote.jp",
+                contactType: "customer support",
+                availableLanguage: "Japanese",
+              },
+            }),
+          }}
+        />
         {children}
         <CookieConsentBanner />
         <ToastContainer />

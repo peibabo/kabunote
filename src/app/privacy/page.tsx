@@ -2,7 +2,10 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
-  title: 'プライバシーポリシー | カブノオト',
+  title: 'プライバシーポリシー',
+  alternates: {
+    canonical: 'https://kabunote.jp/privacy',
+  },
 }
 
 export default function PrivacyPage() {

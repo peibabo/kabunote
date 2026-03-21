@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { playSound } from '@/lib/sound'
+import ShareButtons from '@/components/common/ShareButtons'
 
 interface LevelUpDetail {
   level: number
@@ -11,6 +12,8 @@ interface LevelUpDetail {
 export default function LevelUpCelebration() {
   const [celebration, setCelebration] = useState<LevelUpDetail | null>(null)
   const [isVisible, setIsVisible] = useState(false)
+  const hideTimer = useRef<ReturnType<typeof setTimeout>>()
+  const clearTimer = useRef<ReturnType<typeof setTimeout>>()
 
   useEffect(() => {
     const handler = (e: Event) => {
@@ -19,14 +22,17 @@ export default function LevelUpCelebration() {
       setIsVisible(true)
       playSound('levelUp')
 
-      // 3秒後にフェードアウト
-      setTimeout(() => setIsVisible(false), 3000)
-      // フェードアウト後にクリア
-      setTimeout(() => setCelebration(null), 3500)
+      // 5秒後にフェードアウト（シェアボタン操作時間を確保）
+      hideTimer.current = setTimeout(() => setIsVisible(false), 5000)
+      clearTimer.current = setTimeout(() => setCelebration(null), 5500)
     }
 
     window.addEventListener('kabunote-level-up', handler)
-    return () => window.removeEventListener('kabunote-level-up', handler)
+    return () => {
+      window.removeEventListener('kabunote-level-up', handler)
+      clearTimeout(hideTimer.current)
+      clearTimeout(clearTimer.current)
+    }
   }, [])
 
   if (!celebration) return null
@@ -77,6 +83,12 @@ export default function LevelUpCelebration() {
           <p className="text-amber-200 text-base font-medium">
             {celebration.levelName}
           </p>
+        </div>
+
+        <div className="mt-2">
+          <ShareButtons
+            text={`投資家レベルが Lv.${celebration.level}「${celebration.levelName}」に上がりました！`}
+          />
         </div>
       </div>
     </div>
