@@ -48,7 +48,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
     "jsdom": "^29.0.1",
-    "msw": "^2.12.10",
+    "msw": "^2.12.14",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^4.0.18",
