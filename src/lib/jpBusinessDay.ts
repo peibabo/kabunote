@@ -38,25 +38,22 @@ export function getPreviousBusinessDay(date: Date): Date {
   return result
 }
 
-/**
- * 指定日(YYYY-MM-DD)の前営業日をYYYY-MM-DD文字列で返す
- * JSTオフセット付きで解釈し、祝日判定が正しく動作するようにする
- */
+/** YYYY-MM-DD文字列からローカルタイムのDateを生成（タイムゾーンに依存しない） */
+function parseDateStr(dateStr: string): Date {
+  const [year, month, day] = dateStr.split('-').map(Number)
+  return new Date(year, month - 1, day)
+}
+
+/** 指定日(YYYY-MM-DD)の前営業日をYYYY-MM-DD文字列で返す */
 export function getPreviousBusinessDayStr(dateStr: string): string {
-  const date = new Date(dateStr + 'T00:00:00+09:00')
-  const prev = getPreviousBusinessDay(date)
-  // YYYY-MM-DD を JST基準で取得
+  const prev = getPreviousBusinessDay(parseDateStr(dateStr))
   const year = prev.getFullYear()
   const month = String(prev.getMonth() + 1).padStart(2, '0')
   const day = String(prev.getDate()).padStart(2, '0')
   return `${year}-${month}-${day}`
 }
 
-/**
- * 指定日(YYYY-MM-DD)が東証営業日かどうかを判定
- * JSTオフセット付きで解釈
- */
+/** 指定日(YYYY-MM-DD)が東証営業日かどうかを判定 */
 export function isTSEBusinessDayStr(dateStr: string): boolean {
-  const date = new Date(dateStr + 'T00:00:00+09:00')
-  return isTSEBusinessDay(date)
+  return isTSEBusinessDay(parseDateStr(dateStr))
 }
