@@ -5,6 +5,7 @@ import { useDiary } from '@/hooks/dashboard/useDiary'
 import { useAccordionState } from '@/hooks/util/useAccordionState'
 import { STORAGE_KEYS } from '@/lib/storageKeys'
 import { playSound } from '@/lib/sound'
+import { getTodayJST } from '@/lib/dateJst'
 import type { DiaryTextField } from '@/types/diary'
 import DiaryDateNav from './investment-diary/DiaryDateNav'
 import DiaryNewsSection from './investment-diary/DiaryNewsSection'
@@ -37,10 +38,7 @@ export default function InvestmentDiary() {
   const [newUrl, setNewUrl] = useState('')
   const [newComment, setNewComment] = useState('')
 
-  const today = useMemo(() => {
-    const d = new Date()
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-  }, [])
+  const today = useMemo(() => getTodayJST(), [])
   const isToday = selectedDate === today
   const isFutureDate = selectedDate > today
 

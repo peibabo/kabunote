@@ -2,20 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { playSound } from '@/lib/sound';
-
-function getJSTHour(): number {
-  const now = new Date();
-  const jstOffset = 9 * 60;
-  const jstDate = new Date(now.getTime() + (jstOffset + now.getTimezoneOffset()) * 60000);
-  return jstDate.getHours();
-}
-
-function getTodayJST(): string {
-  const now = new Date();
-  const jstOffset = 9 * 60;
-  const jstDate = new Date(now.getTime() + (jstOffset + now.getTimezoneOffset()) * 60000);
-  return `${jstDate.getFullYear()}-${String(jstDate.getMonth() + 1).padStart(2, '0')}-${String(jstDate.getDate()).padStart(2, '0')}`;
-}
+import { getJSTHour, getTodayJST } from '@/lib/dateJst';
 
 export default function FloatingSnapshotButton() {
   const [isAfter15, setIsAfter15] = useState(() => getJSTHour() >= 15);

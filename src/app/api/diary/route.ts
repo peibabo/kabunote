@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withAuth } from '@/lib/apiHandler'
+import { dateStrToUTCMidnight } from '@/lib/dateJst'
 
 /** 日付文字列のバリデーション (YYYY-MM-DD) */
 function isValidDate(s: string): boolean {
@@ -34,7 +35,7 @@ export const GET = withAuth(async ({ user, request }) => {
 
     const diary = await prisma.investmentDiary.findUnique({
       where: {
-        userId_diaryDate: { userId: user.id, diaryDate: new Date(date) },
+        userId_diaryDate: { userId: user.id, diaryDate: dateStrToUTCMidnight(date) },
       },
       include: {
         newsItems: { orderBy: { order: 'asc' } },
@@ -85,10 +86,10 @@ export const GET = withAuth(async ({ user, request }) => {
       )
     }
 
-    const startDate = new Date(`${month}-01`)
-    const year = startDate.getFullYear()
-    const m = startDate.getMonth()
-    const endDate = new Date(year, m + 1, 1)
+    const startDate = dateStrToUTCMidnight(`${month}-01`)
+    const [y, mo] = month.split('-').map(Number)
+    const nextMonth = mo === 12 ? `${y + 1}-01-01` : `${y}-${String(mo + 1).padStart(2, '0')}-01`
+    const endDate = dateStrToUTCMidnight(nextMonth)
 
     const diaries = await prisma.investmentDiary.findMany({
       where: {
@@ -171,7 +172,7 @@ export const PUT = withAuth(async ({ user, request }) => {
     }
   }
 
-  const diaryDate = new Date(body.date)
+  const diaryDate = dateStrToUTCMidnight(body.date)
   const data = {
     marketOverview: body.marketOverview ?? '',
     newsMemo: body.newsMemo ?? '',

@@ -2,17 +2,18 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withAuth } from '@/lib/apiHandler'
 import { MAX_CHECKLIST_ITEMS } from '@/lib/checklistPresets'
+import { getTodayJST, dateStrToUTCMidnight } from '@/lib/dateJst'
 
 /** GET: チェックリスト項目一覧 + 今日のチェック状態 */
 export const GET = withAuth(async ({ user }) => {
-  const today = new Date().toISOString().slice(0, 10)
+  const today = getTodayJST()
 
   const items = await prisma.userChecklist.findMany({
     where: { userId: user.id },
     orderBy: { order: 'asc' },
     include: {
       checks: {
-        where: { checkedDate: new Date(today) },
+        where: { checkedDate: dateStrToUTCMidnight(today) },
         take: 1,
       },
     },

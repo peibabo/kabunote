@@ -1,3 +1,5 @@
+import { formatDateJST } from '@/lib/dateJst';
+
 // 権利確定日の設定型定義（共通）
 
 export interface RightsDateSettings {
@@ -37,7 +39,7 @@ export const calculateRightsDateFromSettings = (settings: RightsDateSettings): s
     targetDate = new Date(currentYear + 1, settings.month - 1, settings.day);
   }
 
-  return targetDate.toISOString().split('T')[0];
+  return formatDateJST(targetDate);
 };
 
 // 設定から表示用の月/日文字列を生成

@@ -1,10 +1,12 @@
 // 日付フォーマット関連のユーティリティ
 
+import { formatDateJST } from '@/lib/dateJst';
+
 /**
- * DateオブジェクトをISO形式の日付文字列（YYYY-MM-DD）に変換
+ * DateオブジェクトをJST基準の日付文字列（YYYY-MM-DD）に変換
  */
 export const formatDateString = (date: Date): string => {
-  return date.toISOString().split('T')[0];
+  return formatDateJST(date);
 };
 
 /**

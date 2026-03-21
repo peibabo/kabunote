@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withAuth } from '@/lib/apiHandler'
 import { buildSnapshotData } from '@/lib/snapshotCalc'
+import { getTodayJST, dateStrToUTCMidnight } from '@/lib/dateJst'
 import type { Position } from '@/types/positions'
 
 // POST: 今日のポートフォリオスナップショットを作成/更新
@@ -50,11 +51,7 @@ export const POST = withAuth(async ({ user }) => {
   }
 
   // 今日の日付（JST基準、UTC midnightとして保存）
-  const now = new Date()
-  const jstOffset = 9 * 60
-  const jstDate = new Date(now.getTime() + (jstOffset + now.getTimezoneOffset()) * 60000)
-  const todayStr = `${jstDate.getFullYear()}-${String(jstDate.getMonth() + 1).padStart(2, '0')}-${String(jstDate.getDate()).padStart(2, '0')}`
-  const today = new Date(todayStr + 'T00:00:00.000Z')
+  const today = dateStrToUTCMidnight(getTodayJST())
 
   // トランザクションでupsert
   const snapshot = await prisma.$transaction(async (tx) => {

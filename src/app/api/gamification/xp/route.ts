@@ -6,6 +6,7 @@ import {
   xpForLevel, levelFromXp, LEVEL_NAMES, getStreakBonus,
 } from '@/lib/gamification'
 import { isTSEBusinessDayStr, getPreviousBusinessDayStr } from '@/lib/jpBusinessDay'
+import { getTodayJST, formatDateJST, dateStrToUTCMidnight } from '@/lib/dateJst'
 import type { XpActionType } from '@/types/gamification'
 
 /** 日次1回制限のアクション */
@@ -23,17 +24,17 @@ export const POST = withAuth(async ({ user, request }) => {
   }
 
   const xpAmount = XP_VALUES[actionType as XpActionType]
-  const today = new Date().toISOString().slice(0, 10)
+  const today = getTodayJST()
 
   // ゲーミフィケーション状態を取得/作成
   let gamification = await prisma.userGamification.upsert({
     where: { userId: user.id },
-    create: { userId: user.id, dailyXpDate: new Date(today) },
+    create: { userId: user.id, dailyXpDate: dateStrToUTCMidnight(today) },
     update: {},
   })
 
   // daily_xp_date リセット判定
-  const isNewDay = gamification.dailyXpDate.toISOString().slice(0, 10) !== today
+  const isNewDay = formatDateJST(gamification.dailyXpDate) !== today
   const currentDailyXp = isNewDay ? 0 : gamification.dailyXp
 
   // 日次1回制限チェック
@@ -42,7 +43,7 @@ export const POST = withAuth(async ({ user, request }) => {
       where: {
         userId: user.id,
         actionType,
-        createdAt: { gte: new Date(today) },
+        createdAt: { gte: dateStrToUTCMidnight(today) },
       },
     })
     if (existingToday) {
@@ -68,7 +69,7 @@ export const POST = withAuth(async ({ user, request }) => {
   let newLongestStreak = gamification.longestStreak
 
   if (actionType === 'LOGIN' && isNewDay) {
-    const lastActive = gamification.lastActiveDate?.toISOString().slice(0, 10)
+    const lastActive = gamification.lastActiveDate ? formatDateJST(gamification.lastActiveDate) : undefined
 
     if (isTSEBusinessDayStr(today)) {
       // 営業日: lastActiveが前営業日〜昨日の間にあればストリーク継続
@@ -115,10 +116,10 @@ export const POST = withAuth(async ({ user, request }) => {
       totalXp: newTotalXp,
       level: newLevel,
       dailyXp: (isNewDay ? 0 : currentDailyXp) + Math.max(0, effectiveXp),
-      dailyXpDate: new Date(today),
+      dailyXpDate: dateStrToUTCMidnight(today),
       currentStreak: newStreak,
       longestStreak: newLongestStreak,
-      lastActiveDate: new Date(today),
+      lastActiveDate: dateStrToUTCMidnight(today),
     },
   })
 
