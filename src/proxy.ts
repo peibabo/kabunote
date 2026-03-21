@@ -3,27 +3,6 @@ import type { NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 
 export async function proxy(request: NextRequest) {
-  // Basic認証チェック（環境変数が設定されている場合のみ有効）
-  const basicUser = process.env.BASIC_AUTH_USERNAME
-  const basicPass = process.env.BASIC_AUTH_PASSWORD
-
-  if (basicUser && basicPass) {
-    const auth = request.headers.get('authorization')
-    if (!auth || !auth.startsWith('Basic ')) {
-      return new NextResponse('Authentication required', {
-        status: 401,
-        headers: { 'WWW-Authenticate': 'Basic realm="Restricted"' },
-      })
-    }
-    const [user, pass] = atob(auth.split(' ')[1]).split(':')
-    if (user !== basicUser || pass !== basicPass) {
-      return new NextResponse('Invalid credentials', {
-        status: 401,
-        headers: { 'WWW-Authenticate': 'Basic realm="Restricted"' },
-      })
-    }
-  }
-
   const { pathname } = request.nextUrl
 
   // 公開パス: そのまま通過
