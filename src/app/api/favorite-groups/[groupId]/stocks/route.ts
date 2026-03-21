@@ -14,9 +14,10 @@ export const POST = withAuth(async ({ user, request, params }) => {
     )
   }
 
-  const group = await prisma.favoriteGroup.findFirst({
-    where: { id: groupId, userId: user.id }
-  })
+  const [group, stock] = await Promise.all([
+    prisma.favoriteGroup.findFirst({ where: { id: groupId, userId: user.id } }),
+    prisma.stock.findFirst({ where: { userId: user.id, symbol } }),
+  ])
 
   if (!group) {
     return NextResponse.json(
@@ -24,10 +25,6 @@ export const POST = withAuth(async ({ user, request, params }) => {
       { status: 404 }
     )
   }
-
-  const stock = await prisma.stock.findFirst({
-    where: { userId: user.id, symbol }
-  })
 
   if (!stock) {
     return NextResponse.json(
@@ -57,9 +54,10 @@ export const DELETE = withAuth(async ({ user, request, params }) => {
     )
   }
 
-  const group = await prisma.favoriteGroup.findFirst({
-    where: { id: groupId, userId: user.id }
-  })
+  const [group, stock] = await Promise.all([
+    prisma.favoriteGroup.findFirst({ where: { id: groupId, userId: user.id } }),
+    prisma.stock.findFirst({ where: { userId: user.id, symbol } }),
+  ])
 
   if (!group) {
     return NextResponse.json(
@@ -67,10 +65,6 @@ export const DELETE = withAuth(async ({ user, request, params }) => {
       { status: 404 }
     )
   }
-
-  const stock = await prisma.stock.findFirst({
-    where: { userId: user.id, symbol }
-  })
 
   if (!stock) {
     return NextResponse.json({ success: true })
