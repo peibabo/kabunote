@@ -6,6 +6,8 @@ import { useAccordionState } from '@/hooks/util/useAccordionState'
 import { STORAGE_KEYS } from '@/lib/storageKeys'
 import { playSound } from '@/lib/sound'
 import type { DiaryTextField } from '@/types/diary'
+import DiaryDateNav from './investment-diary/DiaryDateNav'
+import DiaryNewsSection from './investment-diary/DiaryNewsSection'
 
 const TEXT_SECTIONS: { field: DiaryTextField; icon: string; title: string; placeholder: string }[] = [
   { field: 'marketOverview', icon: '📊', title: 'マーケット概況', placeholder: '日経平均、米国株の動向など...' },
@@ -17,21 +19,6 @@ function formatDateJP(dateStr: string): string {
   const d = new Date(dateStr + 'T00:00:00')
   const days = ['日', '月', '火', '水', '木', '金', '土']
   return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日（${days[d.getDay()]}）`
-}
-
-function addDays(dateStr: string, n: number): string {
-  const d = new Date(dateStr + 'T00:00:00')
-  d.setDate(d.getDate() + n)
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
-
-/** URLからドメイン名を取得 */
-function getDomain(url: string): string {
-  try {
-    return new URL(url).hostname.replace(/^www\./, '')
-  } catch {
-    return url
-  }
 }
 
 export default function InvestmentDiary() {
@@ -109,57 +96,15 @@ export default function InvestmentDiary() {
       {/* 展開時コンテンツ */}
       {isExpanded && (
         <div className="px-4 pb-3">
-          {/* 日付ナビゲーション */}
-          <div className="flex items-center justify-between mb-3">
-            <button
-              onClick={() => changeDate(addDays(selectedDate, -1))}
-              className="cursor-pointer text-gray-400 hover:text-white text-sm px-2 py-1 transition-colors"
-            >
-              ◀
-            </button>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-200">
-                {formatDateJP(selectedDate)}
-              </span>
-              {!isToday && (
-                <button
-                  onClick={() => changeDate(today)}
-                  className="cursor-pointer text-xs text-orange-400 hover:text-orange-300 px-2 py-0.5 border border-orange-400/30 rounded transition-colors"
-                >
-                  今日
-                </button>
-              )}
-            </div>
-            <button
-              onClick={() => changeDate(addDays(selectedDate, 1))}
-              disabled={isToday || isFutureDate}
-              className="cursor-pointer text-gray-400 hover:text-white text-sm px-2 py-1 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-            >
-              ▶
-            </button>
-          </div>
+          <DiaryDateNav
+            selectedDate={selectedDate}
+            today={today}
+            isToday={isToday}
+            isFutureDate={isFutureDate}
+            diaryDates={diaryDates}
+            onChangeDate={changeDate}
+          />
 
-          {/* 月のドット */}
-          {diaryDates.length > 0 && (
-            <div className="flex flex-wrap gap-1 mb-3 justify-center">
-              {diaryDates.map(d => (
-                <button
-                  key={d}
-                  onClick={() => changeDate(d)}
-                  className={`cursor-pointer w-6 h-6 rounded text-xs transition-colors ${
-                    d === selectedDate
-                      ? 'bg-orange-500 text-white'
-                      : 'bg-gray-700/50 text-gray-400 hover:bg-gray-600/50'
-                  }`}
-                  title={formatDateJP(d)}
-                >
-                  {new Date(d + 'T00:00:00').getDate()}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {/* ローディング */}
           {isLoading ? (
             <div className="text-center py-4">
               <span className="text-gray-500 text-sm">読込中...</span>
@@ -182,84 +127,17 @@ export default function InvestmentDiary() {
                   />
                 </div>
 
-                {/* 気になったニュース（構造化） */}
-                <div>
-                  <label className="flex items-center gap-1.5 text-xs text-gray-400 mb-1">
-                    <span>📰</span>
-                    <span>気になったニュース</span>
-                    {diary.newsItems.length > 0 && (
-                      <span className="text-gray-600">({diary.newsItems.length})</span>
-                    )}
-                  </label>
-
-                  {/* ニュースアイテムリスト */}
-                  {diary.newsItems.length > 0 && (
-                    <div className="space-y-1.5 mb-2">
-                      {diary.newsItems.map((item, i) => (
-                        <div key={i} className="flex items-start gap-2 bg-gray-900/30 rounded-md px-2 py-1.5">
-                          <span className="text-xs text-orange-400 mt-0.5 shrink-0">🔗</span>
-                          <div className="flex-1 min-w-0">
-                            <a
-                              href={item.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs text-blue-400 hover:text-blue-300 truncate block"
-                              title={item.url}
-                            >
-                              {getDomain(item.url)}
-                            </a>
-                            <input
-                              type="text"
-                              value={item.comment}
-                              onChange={e => updateNewsItem(i, 'comment', e.target.value)}
-                              placeholder="コメント..."
-                              maxLength={500}
-                              className="w-full bg-transparent text-xs text-gray-300 placeholder-gray-600 border-none outline-none mt-0.5"
-                            />
-                          </div>
-                          <button
-                            onClick={() => { removeNewsItem(i); playSound('buttonDelete') }}
-                            className="cursor-pointer text-gray-600 hover:text-red-400 text-xs shrink-0 transition-colors"
-                          >
-                            ✕
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* 追加フォーム */}
-                  {diary.newsItems.length < 20 && (
-                    <div className="space-y-1.5">
-                      <input
-                        type="url"
-                        value={newUrl}
-                        onChange={e => setNewUrl(e.target.value)}
-                        onKeyDown={e => { if (e.key === 'Enter') handleAddNews() }}
-                        placeholder="https://..."
-                        className="w-full bg-gray-900/50 text-xs text-gray-200 placeholder-gray-600 border border-gray-700/50 rounded-md px-2 py-1.5 focus:outline-none focus:border-orange-500/50 transition-colors"
-                      />
-                      <div className="flex gap-1.5">
-                        <input
-                          type="text"
-                          value={newComment}
-                          onChange={e => setNewComment(e.target.value)}
-                          onKeyDown={e => { if (e.key === 'Enter') handleAddNews() }}
-                          placeholder="コメント（任意）"
-                          maxLength={500}
-                          className="flex-1 bg-gray-900/50 text-xs text-gray-200 placeholder-gray-600 border border-gray-700/50 rounded-md px-2 py-1.5 focus:outline-none focus:border-orange-500/50 transition-colors"
-                        />
-                        <button
-                          onClick={handleAddNews}
-                          disabled={!newUrl.trim() || !/^https?:\/\/.+/.test(newUrl.trim())}
-                          className="cursor-pointer text-xs text-orange-400 hover:text-orange-300 px-2 py-1 disabled:opacity-30 disabled:cursor-not-allowed transition-colors shrink-0"
-                        >
-                          追加
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
+                {/* 気になったニュース */}
+                <DiaryNewsSection
+                  newsItems={diary.newsItems}
+                  newUrl={newUrl}
+                  newComment={newComment}
+                  onNewUrlChange={setNewUrl}
+                  onNewCommentChange={setNewComment}
+                  onAddNews={handleAddNews}
+                  onRemoveNews={removeNewsItem}
+                  onUpdateNewsItem={updateNewsItem}
+                />
 
                 {/* 残りのテキストセクション */}
                 {TEXT_SECTIONS.filter(s => s.field !== 'marketOverview').map(({ field, icon, title, placeholder }) => (
