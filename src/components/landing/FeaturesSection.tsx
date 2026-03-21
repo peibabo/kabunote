@@ -122,9 +122,9 @@ const featureGroups: FeatureGroup[] = [
   },
   {
     badge: '1日1記録',
-    title: '投資日記 & ニュース',
-    description: 'マーケット概況・ニュース・振り返り・明日の注目の4セクションで、毎日の投資思考を構造化。ニュース一覧で過去の記録も横断検索。',
-    highlights: ['自動保存', '日付ナビゲーション', 'URL+コメント構造化', 'ニュース横断一覧'],
+    title: '投資日記 & ニュースクリップ',
+    description: 'マーケット概況・気になるニュース・振り返り・明日の注目の4セクションで、毎日の投資思考を構造化。気になった記事のURLとコメントを保存して、あとから一覧で振り返り。',
+    highlights: ['自動保存', '日付ナビゲーション', '記事URL+コメントで記録', 'クリップ一覧で振り返り'],
     gradient: 'from-amber-500 to-yellow-500',
     badgeBg: 'bg-amber-500/20 text-amber-300',
     direction: 'left',
@@ -136,7 +136,7 @@ const featureGroups: FeatureGroup[] = [
         </div>
         {[
           { label: 'マーケット概況', color: 'border-blue-500', text: '日経平均は小幅反発、米国市場の...' },
-          { label: 'ニュース', color: 'border-amber-500', text: 'トヨタ、EV新モデル発表で注目...' },
+          { label: '気になるニュース', color: 'border-amber-500', text: 'トヨタ、EV新モデル発表で注目...' },
           { label: '今日の振り返り', color: 'border-green-500', text: '利確タイミングを逃した反省...' },
         ].map((item) => (
           <div key={item.label} className={`bg-gray-900/50 rounded-lg p-3 border-l-2 ${item.color}`}>
