@@ -38,7 +38,7 @@ app_users (ユーザー管理)
   │     id, user_id, snapshot_date, chart_type, symbol, content
   │     @@unique([userId, snapshotDate, chartType, symbol])
   ├── user_gamification (ゲーミフィケーション状態)
-  │     id, user_id(UNIQUE), total_xp, level, daily_xp, daily_xp_date, current_streak, longest_streak, last_active_date
+  │     id, user_id(UNIQUE), total_xp, level, daily_xp, daily_xp_date, current_streak, longest_streak, last_active_date, notified_title_ids
   ├── xp_activity_logs (XPアクティビティログ)
   │     id, user_id, action_type, xp_earned, description
   │     @@index([userId, createdAt DESC])

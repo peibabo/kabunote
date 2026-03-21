@@ -1,14 +1,11 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import type { TitlesResponse, TitleStatus } from '@/types/titles'
-
-const STORAGE_KEY = 'kabunote-unlocked-title-ids'
 
 export function useTitles() {
   const [titles, setTitles] = useState<TitlesResponse | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const prevUnlockedRef = useRef<Set<string> | null>(null)
 
   const fetchTitles = useCallback(async () => {
     try {
@@ -18,38 +15,31 @@ export function useTitles() {
       const data = json.data as TitlesResponse
       setTitles(data)
 
-      // 新規獲得検知
-      const currentUnlocked = new Set(
-        data.titles.filter((t: TitleStatus) => t.unlocked).map((t: TitleStatus) => t.id)
-      )
-
-      // 初回はlocalStorageから前回値を復元
-      if (!prevUnlockedRef.current) {
-        try {
-          const stored = localStorage.getItem(STORAGE_KEY)
-          prevUnlockedRef.current = stored ? new Set(JSON.parse(stored) as string[]) : new Set()
-        } catch {
-          prevUnlockedRef.current = new Set()
-        }
-      }
-
-      // 差分検知
-      const prev = prevUnlockedRef.current
+      // DB管理の通知済みIDで差分検知
+      const notifiedSet = new Set(data.notifiedTitleIds)
       const newlyUnlocked = data.titles.filter(
-        (t: TitleStatus) => t.unlocked && !prev.has(t.id)
+        (t: TitleStatus) => t.unlocked && !notifiedSet.has(t.id)
       )
 
       if (newlyUnlocked.length > 0) {
+        // トースト表示
         for (const title of newlyUnlocked) {
           window.dispatchEvent(
             new CustomEvent('kabunote-title-unlocked', { detail: title })
           )
         }
-      }
 
-      // 更新
-      prevUnlockedRef.current = currentUnlocked
-      localStorage.setItem(STORAGE_KEY, JSON.stringify([...currentUnlocked]))
+        // 通知済みIDをDB更新（全獲得済みIDを送信）
+        const allUnlockedIds = data.titles
+          .filter((t: TitleStatus) => t.unlocked)
+          .map((t: TitleStatus) => t.id)
+
+        fetch('/api/gamification/titles', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ titleIds: allUnlockedIds }),
+        }).catch(() => { /* 更新失敗は無視（次回再通知されるだけ） */ })
+      }
     } catch {
       // 取得失敗は無視
     } finally {

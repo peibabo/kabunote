@@ -338,9 +338,10 @@ model UserGamification {
   dailyXpDate    DateTime  @default(now()) @map("daily_xp_date") @db.Date
   currentStreak  Int       @default(0) @map("current_streak")
   longestStreak  Int       @default(0) @map("longest_streak")
-  lastActiveDate DateTime? @map("last_active_date") @db.Date
-  createdAt      DateTime  @default(now()) @map("created_at")
-  updatedAt      DateTime  @updatedAt @map("updated_at")
+  lastActiveDate   DateTime? @map("last_active_date") @db.Date
+  notifiedTitleIds String[]  @default([]) @map("notified_title_ids")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
