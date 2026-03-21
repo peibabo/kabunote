@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import HelpPage from '@/app/help/page'
 
 describe('HelpPage', () => {
@@ -37,5 +37,51 @@ describe('HelpPage', () => {
     expect(screen.getByText('アカウントを削除するとどうなりますか？')).toBeInTheDocument()
     expect(screen.getByText('スマートフォンでも使えますか？')).toBeInTheDocument()
     expect(screen.getByText('利用料金はかかりますか？')).toBeInTheDocument()
+  })
+
+  it('検索バーが表示される', () => {
+    render(<HelpPage />)
+    expect(screen.getByPlaceholderText('ヘルプ内を検索...')).toBeInTheDocument()
+  })
+
+  it('検索するとマッチする項目のみ表示される', () => {
+    render(<HelpPage />)
+    const input = screen.getByPlaceholderText('ヘルプ内を検索...')
+    fireEvent.change(input, { target: { value: 'チェックリスト' } })
+
+    expect(screen.getByText('デイリーチェックリスト')).toBeInTheDocument()
+    expect(screen.getByText(/1件の項目が見つかりました/)).toBeInTheDocument()
+    // 無関係なセクションは非表示
+    expect(screen.queryByText('価格アラート')).not.toBeInTheDocument()
+  })
+
+  it('検索結果が0件のときメッセージが表示される', () => {
+    render(<HelpPage />)
+    const input = screen.getByPlaceholderText('ヘルプ内を検索...')
+    fireEvent.change(input, { target: { value: 'ありえないキーワード' } })
+
+    expect(screen.getByText('該当する項目が見つかりませんでした')).toBeInTheDocument()
+  })
+
+  it('検索中は目次・カブノオトとは・はじめかた・Aboutが非表示になる', () => {
+    render(<HelpPage />)
+    const input = screen.getByPlaceholderText('ヘルプ内を検索...')
+    fireEvent.change(input, { target: { value: 'アラート' } })
+
+    expect(screen.queryByText('目次')).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'About' })).not.toBeInTheDocument()
+  })
+
+  it('クリアボタンで検索をリセットできる', () => {
+    render(<HelpPage />)
+    const input = screen.getByPlaceholderText('ヘルプ内を検索...')
+    fireEvent.change(input, { target: { value: 'アラート' } })
+
+    const clearButton = screen.getByText('×')
+    fireEvent.click(clearButton)
+
+    expect(input).toHaveValue('')
+    // 目次が再表示される
+    expect(screen.getByText('目次')).toBeInTheDocument()
   })
 })
