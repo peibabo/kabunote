@@ -4,6 +4,7 @@ const checkpoints = [
   { text: '銘柄カードで情報を一か所に集約', color: 'text-blue-400' },
   { text: 'タグとメモで思考を構造化', color: 'text-cyan-400' },
   { text: 'カレンダーとアラートで見逃しゼロ', color: 'text-green-400' },
+  { text: 'ゲーミフィケーションで毎日の投資が楽しく', color: 'text-violet-400' },
 ]
 
 export default function SolutionSection() {

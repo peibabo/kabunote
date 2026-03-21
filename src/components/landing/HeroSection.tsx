@@ -34,6 +34,8 @@ export default function HeroSection() {
             散らばる銘柄情報・メモ・戦略・スケジュール。
             <br className="hidden md:block" />
             カブノオトなら、すべてを一つのダッシュボードで整理できます。
+            <br className="hidden md:block" />
+            <span className="text-gray-400">毎日の投資習慣が、レベルアップの楽しさに変わります。</span>
           </p>
           <div className="flex flex-col items-center gap-4">
             <Link
@@ -56,14 +58,16 @@ export default function HeroSection() {
                 <div className="w-3 h-3 rounded-full bg-green-500/80" />
                 <span className="ml-3 text-xs text-gray-500">カブノオト ダッシュボード</span>
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {[
                   { label: '登録銘柄', value: '12', color: 'text-blue-400' },
                   { label: '投資メモ', value: '48', color: 'text-cyan-400' },
                   { label: 'アラート', value: '3', color: 'text-amber-400' },
-                  { label: '戦略設定', value: '8', color: 'text-purple-400' },
-                  { label: '配当予定', value: '5', color: 'text-green-400' },
                   { label: 'イベント', value: '7', color: 'text-pink-400' },
+                  { label: '投資家Lv', value: '12', color: 'text-violet-400' },
+                  { label: 'ストリーク', value: '7日', color: 'text-orange-400' },
+                  { label: '称号', value: '8/28', color: 'text-fuchsia-400' },
+                  { label: '配当予定', value: '5', color: 'text-green-400' },
                 ].map((item) => (
                   <div key={item.label} className="bg-gray-900/60 rounded-lg p-3 text-center">
                     <div className={`text-2xl font-bold ${item.color}`}>{item.value}</div>

@@ -18,7 +18,7 @@ export default function FinalCTASection() {
                 今日から始めよう
               </h2>
               <p className="text-gray-300 mb-10 text-lg">
-                完全無料。アカウント登録だけですぐに使えます。
+                完全無料。今日から投資家レベルを上げていこう。
               </p>
               <Link
                 href="/login"

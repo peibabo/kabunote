@@ -14,9 +14,9 @@ interface FeatureGroup {
 const featureGroups: FeatureGroup[] = [
   {
     badge: '最大20銘柄管理',
-    title: '銘柄管理 & メモ',
+    title: '銘柄管理 & 株ノオト',
     description: '会社名・コード・ローマ字で瞬時に検索。カスタムタグ8色、お気に入りグループ、AND検索で思考を整理。',
-    highlights: ['フローティング追加UI', '自動保存メモ', 'ドラッグ&ドロップ並べ替え'],
+    highlights: ['フローティング追加UI', '自動保存メモ', 'ドラッグ&ドロップ並べ替え', '5種メモテンプレート', '銘柄ニュース管理'],
     gradient: 'from-blue-500 to-cyan-500',
     badgeBg: 'bg-blue-500/20 text-blue-300',
     direction: 'left',
@@ -36,10 +36,10 @@ const featureGroups: FeatureGroup[] = [
     ),
   },
   {
-    badge: '4種の円グラフ',
-    title: '投資戦略 & 分析',
-    description: 'タブ式管理で分析・次の一手・損益目標を記録。ポートフォリオ全体を円グラフとダッシュボードで俯瞰。',
-    highlights: ['戦略一覧ダッシュボード', 'ネオンライト可視化', '損益目標管理'],
+    badge: '5種の円グラフ',
+    title: '投資戦略 & ポートフォリオ',
+    description: 'タブ式管理で分析・次の一手・損益目標を記録。ポートフォリオ全体を円グラフとダッシュボードで俯瞰。日次スナップショットで資産推移を可視化。',
+    highlights: ['戦略一覧ダッシュボード', '日次スナップショット', '推移グラフ4種', 'チャートメモ', 'NISA/特定口座対応'],
     gradient: 'from-purple-500 to-pink-500',
     badgeBg: 'bg-purple-500/20 text-purple-300',
     direction: 'right',
@@ -65,7 +65,7 @@ const featureGroups: FeatureGroup[] = [
     badge: '6段階アラート',
     title: 'カレンダー & アラート',
     description: '決算日・権利確定日・配当日など6種イベントをカレンダーとタイムラインで一覧管理。スヌーズ機能付き。',
-    highlights: ['カウントダウン表示', 'スマートナビゲーション', 'リアルタイム更新'],
+    highlights: ['決算カウントダウンウィジェット', '緊急度別ネオン演出', 'スマートナビゲーション', '銘柄カード決算バッジ'],
     gradient: 'from-green-500 to-emerald-500',
     badgeBg: 'bg-green-500/20 text-green-300',
     direction: 'left',
@@ -92,7 +92,7 @@ const featureGroups: FeatureGroup[] = [
     badge: '利回り自動計算',
     title: '配当・優待 & 資産管理',
     description: '配当シミュレーション・税引後計算・優待の取得資格判定。投資余力と現金比率もリアルタイムで把握。',
-    highlights: ['配当優待一覧ダッシュボード', '現金比率可視化', 'Next Actionメモ'],
+    highlights: ['月別配当カレンダー', '配当利回りランキング', '現金比率可視化', '権利確定日カウントダウン'],
     gradient: 'from-orange-500 to-red-500',
     badgeBg: 'bg-orange-500/20 text-orange-300',
     direction: 'right',
@@ -116,6 +116,67 @@ const featureGroups: FeatureGroup[] = [
           <div className="w-full bg-gray-700 rounded-full h-2">
             <div className="bg-gradient-to-r from-orange-500 to-red-500 h-2 rounded-full" style={{ width: '35%' }} />
           </div>
+        </div>
+      </div>
+    ),
+  },
+  {
+    badge: '1日1記録',
+    title: '投資日記 & ニュース',
+    description: 'マーケット概況・ニュース・振り返り・明日の注目の4セクションで、毎日の投資思考を構造化。ニュース一覧で過去の記録も横断検索。',
+    highlights: ['自動保存', '日付ナビゲーション', 'URL+コメント構造化', 'ニュース横断一覧'],
+    gradient: 'from-amber-500 to-yellow-500',
+    badgeBg: 'bg-amber-500/20 text-amber-300',
+    direction: 'left',
+    mockContent: (
+      <div className="space-y-3">
+        <div className="flex items-center justify-between mb-1">
+          <span className="text-xs text-gray-500">2026/03/21</span>
+          <span className="text-xs text-green-400">保存完了</span>
+        </div>
+        {[
+          { label: 'マーケット概況', color: 'border-blue-500', text: '日経平均は小幅反発、米国市場の...' },
+          { label: 'ニュース', color: 'border-amber-500', text: 'トヨタ、EV新モデル発表で注目...' },
+          { label: '今日の振り返り', color: 'border-green-500', text: '利確タイミングを逃した反省...' },
+        ].map((item) => (
+          <div key={item.label} className={`bg-gray-900/50 rounded-lg p-3 border-l-2 ${item.color}`}>
+            <div className="text-xs text-gray-500 mb-1">{item.label}</div>
+            <div className="text-sm text-gray-300 truncate">{item.text}</div>
+          </div>
+        ))}
+      </div>
+    ),
+  },
+  {
+    badge: '20段階レベルアップ',
+    title: 'ゲーミフィケーション & 習慣化',
+    description: 'メモを書く、日記をつける、チェックリストを完了する。投資活動がXP経験値になり、投資家レベルが上がっていく。28種の称号コレクションも。',
+    highlights: ['14種XPアクティビティ', '連続ストリーク', 'デイリーチェックリスト', '称号コレクション28種'],
+    gradient: 'from-violet-500 to-fuchsia-500',
+    badgeBg: 'bg-violet-500/20 text-violet-300',
+    direction: 'right',
+    mockContent: (
+      <div className="space-y-3">
+        <div className="flex items-center gap-3">
+          <div className="bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-lg px-3 py-1.5 text-white font-bold text-sm">
+            Lv.12
+          </div>
+          <div>
+            <div className="text-sm text-white font-medium">マーケット探偵</div>
+            <div className="text-xs text-gray-500">次のレベルまで 240 XP</div>
+          </div>
+        </div>
+        <div className="w-full bg-gray-700 rounded-full h-2">
+          <div className="bg-gradient-to-r from-violet-500 to-fuchsia-500 h-2 rounded-full" style={{ width: '65%' }} />
+        </div>
+        <div className="flex items-center gap-4 text-xs">
+          <span className="text-orange-400">🔥 7日連続</span>
+          <span className="text-gray-500">今日 +45 XP</span>
+        </div>
+        <div className="flex gap-2">
+          <span className="px-2 py-1 bg-violet-500/20 text-violet-300 rounded text-xs">📈 上限マスター</span>
+          <span className="px-2 py-1 bg-amber-500/20 text-amber-300 rounded text-xs">📝 筆まめ投資家</span>
+          <span className="px-2 py-1 bg-gray-700/50 text-gray-500 rounded text-xs">🔒 ???</span>
         </div>
       </div>
     ),

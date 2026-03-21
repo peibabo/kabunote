@@ -28,6 +28,15 @@ const problems = [
     title: '重要日程を見逃す',
     description: '決算発表日、配当の権利確定日、株主優待の期限...気づいた時にはもう遅い。',
   },
+  {
+    icon: (
+      <svg className="w-8 h-8 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" />
+      </svg>
+    ),
+    title: '投資の習慣が続かない',
+    description: '市場チェックや振り返りが大事だとわかっていても、忙しい日々の中で継続するのは難しい。',
+  },
 ]
 
 export default function ProblemSection() {
@@ -40,7 +49,7 @@ export default function ProblemSection() {
           </h2>
         </ScrollAnimationWrapper>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
           {problems.map((problem, i) => (
             <ScrollAnimationWrapper key={problem.title} delay={i * 150}>
               <div className="bg-gray-800/40 border border-gray-700/40 rounded-2xl p-8 text-center hover:border-gray-600/60 transition-all">

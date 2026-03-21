@@ -14,6 +14,8 @@ export default function DashboardStep() {
           { icon: '🎯', label: '戦略一覧', desc: '全銘柄の戦略を俯瞰' },
           { icon: '💼', label: 'ポジション一覧', desc: '保有銘柄の損益分析' },
           { icon: '💰', label: '配当・優待', desc: '配当利回り・優待情報' },
+          { icon: '📓', label: '投資日記', desc: '毎日の振り返りを記録' },
+          { icon: '🏆', label: 'レベル・称号', desc: '経験値と称号を確認' },
         ].map((item) => (
           <div key={item.label} className="bg-gray-700 bg-opacity-50 rounded-lg p-3 text-left">
             <div className="text-lg mb-1">{item.icon}</div>
