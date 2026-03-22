@@ -6,6 +6,10 @@ export const metadata: Metadata = {
   alternates: {
     canonical: 'https://kabunote.jp/privacy',
   },
+  openGraph: {
+    title: 'プライバシーポリシー | カブノオト',
+    url: 'https://kabunote.jp/privacy',
+  },
 }
 
 export default function PrivacyPage() {

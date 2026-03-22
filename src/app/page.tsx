@@ -26,11 +26,20 @@ export const metadata: Metadata = {
     locale: 'ja_JP',
     siteName: 'カブノオト',
     url: 'https://kabunote.jp',
+    images: [
+      {
+        url: '/opengraph-image',
+        width: 1200,
+        height: 630,
+        alt: 'カブノオト - 投資の思考を、ひとつに。',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'カブノオト - 投資の思考を、ひとつに。',
     description: '散らばる銘柄情報・メモ・戦略・スケジュールを一つのダッシュボードで整理。投資家レベルで毎日の投資が楽しくなる無料Webアプリ。',
+    images: ['/opengraph-image'],
   },
 }
 
