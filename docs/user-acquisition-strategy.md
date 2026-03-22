@@ -11,6 +11,8 @@
 
 **整備済み:**
 - SEO基礎（robots.txt, sitemap, メタデータ, OGP設定）
+- JSON-LD構造化データ（WebApplication, FAQPage, Organization）
+- SNS共有ボタン（X・LINE対応、レベルアップ・称号獲得・ランディングページ）
 - Google Analytics 4（Cookie同意バナー付き）
 - Sentry（エラー監視）
 - 充実したランディングページ（11セクション構成）
@@ -20,7 +22,6 @@
 
 **未整備:**
 - OGP画像（og:image）未設定
-- SNS共有ボタン未実装
 - リファラル機能なし
 - ブログ・コンテンツページなし
 - メール送信機能なし（ウェルカムメール等）
@@ -36,7 +37,7 @@
 - `/help`, `/privacy`, `/terms` にも設定
 - **効果:** SNS共有時のCTR 2-3倍向上。全てのSNS施策の前提条件
 
-### S2. JSON-LD 構造化データの追加
+### S2. JSON-LD 構造化データの追加 ✅完了
 - `src/app/page.tsx` に `WebApplication` スキーマ（無料、FinanceApplication カテゴリ）
 - `src/app/help/page.tsx` に `FAQPage` スキーマ（既存の7つのQ&Aを活用）
 - `src/app/layout.tsx` に `Organization` スキーマ
@@ -48,7 +49,7 @@
 - Google Search Console の verification コード設定
 - **効果:** 検索インデックスの正規化
 
-### S4. SNS共有ボタン — ゲーミフィケーション連携
+### S4. SNS共有ボタン — ゲーミフィケーション連携 ✅完了
 - レベルアップ時・称号獲得時に「Xでシェア」ボタンを表示
 - 共有テンプレート: `投資家レベルが○に上がりました！称号「○○」を獲得！ #カブノオト #投資`
 - X(Twitter) と LINE の2プラットフォームに絞る（`window.open` ベース、外部SDK不要でCSP変更なし）
@@ -139,9 +140,9 @@
 |---|---|---|---|
 | 1 | S1. OGP画像 | 2-3h | SNS共有の大前提 |
 | 2 | S5. Search Console | 1h | インデックス加速 |
-| 3 | S2. JSON-LD | 2-3h | リッチリザルト |
+| 3 | ~~S2. JSON-LD~~ | ~~2-3h~~ | ✅完了 |
 | 4 | S3. メタデータ最適化 | 1-2h | 検索順位改善 |
-| 5 | S4. SNS共有ボタン | 3-4h | バイラル基盤 |
+| 5 | ~~S4. SNS共有ボタン~~ | ~~3-4h~~ | ✅完了 |
 | 6 | M2. X運用開始 | 15-30分/日 | 認知拡大 |
 | 7 | M1. ブログ構築 | 初期8h+記事執筆 | 検索流入の柱 |
 | 8 | M4. 社会的証明 | 2-3h | CVR向上 |
@@ -179,7 +180,10 @@
 
 ## 実装時の技術的注意点
 
-- SNS共有は `window.open` ベースのインテントリンクで実装（外部SDK不要、CSP変更なし）
+- SNS共有は `window.open` ベースのインテントリンクで実装済み（外部SDK不要、CSP変更なし）
+  - 実装: `src/components/common/ShareButtons.tsx`（X・LINE対応）
+  - レベルアップ時: `LevelUpCelebration.tsx`、称号獲得時: `TitleUnlockedToast.tsx`、ランディングページ: `ShareSection.tsx`
+- JSON-LD構造化データ実装済み: `WebApplication`（`page.tsx`）、`FAQPage`（`help/page.tsx`）、`Organization`（`layout.tsx`）
 - ブログはMDXベース、`sitemap.ts` を動的拡張
 - OGP動的生成は `next/og` の `ImageResponse` を使用
 - 主要修正ファイル: `layout.tsx`, `page.tsx`, `sitemap.ts`, `FAQSection.tsx`, `next.config.ts`
