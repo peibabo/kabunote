@@ -256,7 +256,8 @@ xpForLevel(n) = floor(50 * (n-1) * n / 2 + 50 * (n-1))
 
 - **オンザフライ計算**: 新テーブル不要。APIで集計→条件判定
 - **API**: `GET /api/gamification/titles` で集計データ取得+全称号判定
-- **獲得検知**: localStorage前回値比較 → `kabunote-title-unlocked` CustomEvent発火
+- **獲得検知**: DB管理（`user_gamification.notified_title_ids`）で通知済みID管理 → 差分検知 → `kabunote-title-unlocked` CustomEvent発火
+- **通知済み更新**: `PATCH /api/gamification/titles` で通知済みIDをDB更新
 - **通知**: トースト方式（画面下部にスライドイン、3秒で自動消去）
 
 | ファイル | 役割 |

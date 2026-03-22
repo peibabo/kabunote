@@ -24,6 +24,7 @@ export interface TitlesResponse {
   titles: TitleStatus[]
   unlockedCount: number
   totalCount: number
+  notifiedTitleIds: string[]
 }
 
 /** 称号判定に必要な集計データ */

@@ -89,6 +89,17 @@ export const GET = withAuth(async ({ user }) => {
 
   const titles = evaluateTitles(data)
   const unlockedCount = titles.filter(t => t.unlocked).length
+  const unlockedIds = titles.filter(t => t.unlocked).map(t => t.id)
+
+  // 既存ユーザーマイグレーション: notifiedTitleIdsがnullなら獲得済みを全て通知済みとして登録
+  let notifiedTitleIds = gamification?.notifiedTitleIds ?? null
+  if (notifiedTitleIds === null && gamification) {
+    await prisma.userGamification.update({
+      where: { userId },
+      data: { notifiedTitleIds: unlockedIds },
+    })
+    notifiedTitleIds = unlockedIds
+  }
 
   return NextResponse.json({
     success: true,
@@ -96,6 +107,28 @@ export const GET = withAuth(async ({ user }) => {
       titles,
       unlockedCount,
       totalCount: TOTAL_TITLE_COUNT,
+      notifiedTitleIds: notifiedTitleIds ?? [],
     },
   })
 }, '称号取得')
+
+export const PATCH = withAuth(async ({ user, request }) => {
+  const userId = user.id
+  const { titleIds } = await request.json()
+
+  if (!Array.isArray(titleIds) || !titleIds.every((id: unknown) => typeof id === 'string')) {
+    return NextResponse.json({ success: false, error: '無効なtitleIds' }, { status: 400 })
+  }
+
+  const gamification = await prisma.userGamification.findUnique({ where: { userId } })
+  if (!gamification) {
+    return NextResponse.json({ success: false, error: 'ゲーミフィケーション未初期化' }, { status: 404 })
+  }
+
+  await prisma.userGamification.update({
+    where: { userId },
+    data: { notifiedTitleIds: titleIds },
+  })
+
+  return NextResponse.json({ success: true })
+}, '通知済み称号更新')
