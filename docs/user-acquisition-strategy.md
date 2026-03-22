@@ -13,6 +13,7 @@
 - SEO基礎（robots.txt, sitemap, メタデータ, OGP設定）
 - JSON-LD構造化データ（WebApplication, FAQPage, Organization）
 - SNS共有ボタン（X・LINE対応、レベルアップ・称号獲得・ランディングページ）
+- OGP画像設定（動的生成 + 全ページmetadata設定）
 - Google Analytics 4（Cookie同意バナー付き）
 - Sentry（エラー監視）
 - 充実したランディングページ（11セクション構成）
@@ -21,7 +22,6 @@
 - フィードバック目安箱（Slack通知可能）
 
 **未整備:**
-- OGP画像（og:image）未設定
 - リファラル機能なし
 - ブログ・コンテンツページなし
 - メール送信機能なし（ウェルカムメール等）
@@ -31,10 +31,10 @@
 
 ## 短期施策（1-2週間）— 技術的な集客基盤整備
 
-### S1. OGP画像の作成と設定 ⭐最優先
-- `public/og-image.png`（1200x630px）を作成
-- `src/app/layout.tsx` と `src/app/page.tsx` の metadata に `openGraph.images` / `twitter.images` を追加
-- `/help`, `/privacy`, `/terms` にも設定
+### S1. OGP画像の作成と設定 ✅完了
+- `src/app/opengraph-image.tsx` で動的OGP画像生成（1200x630px、ロゴ+タイトル+説明）
+- `src/app/layout.tsx` に `openGraph.images` / `twitter` をデフォルト設定（全ページ継承）
+- `src/app/page.tsx`, `/help`, `/privacy`, `/terms` に個別の `openGraph` 設定
 - **効果:** SNS共有時のCTR 2-3倍向上。全てのSNS施策の前提条件
 
 ### S2. JSON-LD 構造化データの追加 ✅完了
@@ -138,7 +138,7 @@
 
 | # | 施策 | 工数 | 期待効果 |
 |---|---|---|---|
-| 1 | S1. OGP画像 | 2-3h | SNS共有の大前提 |
+| 1 | ~~S1. OGP画像~~ | ~~2-3h~~ | ✅完了 |
 | 2 | S5. Search Console | 1h | インデックス加速 |
 | 3 | ~~S2. JSON-LD~~ | ~~2-3h~~ | ✅完了 |
 | 4 | S3. メタデータ最適化 | 1-2h | 検索順位改善 |
@@ -184,6 +184,6 @@
   - 実装: `src/components/common/ShareButtons.tsx`（X・LINE対応）
   - レベルアップ時: `LevelUpCelebration.tsx`、称号獲得時: `TitleUnlockedToast.tsx`、ランディングページ: `ShareSection.tsx`
 - JSON-LD構造化データ実装済み: `WebApplication`（`page.tsx`）、`FAQPage`（`help/page.tsx`）、`Organization`（`layout.tsx`）
+- OGP動的生成は `next/og` の `ImageResponse` を使用（`src/app/opengraph-image.tsx`）
 - ブログはMDXベース、`sitemap.ts` を動的拡張
-- OGP動的生成は `next/og` の `ImageResponse` を使用
 - 主要修正ファイル: `layout.tsx`, `page.tsx`, `sitemap.ts`, `FAQSection.tsx`, `next.config.ts`

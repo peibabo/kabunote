@@ -7,6 +7,11 @@ export const metadata: Metadata = {
   alternates: {
     canonical: 'https://kabunote.jp/help',
   },
+  openGraph: {
+    title: 'ヘルプ | カブノオト',
+    description: 'カブノオトの使い方ガイド。銘柄管理・投資メモ・ポートフォリオ・配当カレンダー・ゲーミフィケーションなど、各機能の詳しい使い方を解説。',
+    url: 'https://kabunote.jp/help',
+  },
 }
 
 export default function HelpPage() {

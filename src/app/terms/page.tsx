@@ -6,6 +6,10 @@ export const metadata: Metadata = {
   alternates: {
     canonical: 'https://kabunote.jp/terms',
   },
+  openGraph: {
+    title: '利用規約 | カブノオト',
+    url: 'https://kabunote.jp/terms',
+  },
 }
 
 export default function TermsPage() {
