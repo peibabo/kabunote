@@ -63,7 +63,7 @@ export default function NewsListPage({ isOpen }: NewsListPageProps) {
           <h3 className="text-lg font-medium text-white mb-2">ニュースがまだありません</h3>
           <p className="text-gray-400 text-sm">
             {source === 'stock'
-              ? '銘柄カードの基本タブからニュースを追加できます'
+              ? '銘柄カードの基本タブからニュースクリップを追加できます'
               : source === 'diary'
               ? '投資日記の「気になったニュース」にURLを追加すると、ここに一覧表示されます'
               : '投資日記や銘柄カードからニュースを追加すると、ここに一覧表示されます'}

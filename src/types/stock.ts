@@ -14,6 +14,8 @@ export interface StockData {
   stopLossPrice: number | null;
   per: number | null;
   pbr: number | null;
+  fairPer: number | null;
+  fairPbr: number | null;
   memo: string;
   positions: Array<{
     id: string;

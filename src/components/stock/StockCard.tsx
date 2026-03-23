@@ -49,7 +49,7 @@ function StockCard({ symbol, onRemove, favoriteGroups, onFavoriteGroupsChange, i
     activeTab, setActiveTab, tabs,
     memo, updateMemo, isMemoLoading, isMemoSaving, memoError, memoLastSaved,
     positionSummary, profitLossInfo,
-    currentPrice, targetPrice, stopLoss, per, pbr, setCurrentPrice, setTargetPrice, setStopLoss, setPer, setPbr, flushPriceSave,
+    currentPrice, targetPrice, stopLoss, per, pbr, fairPer, fairPbr, setCurrentPrice, setTargetPrice, setStopLoss, setPer, setPbr, setFairPer, setFairPbr, flushPriceSave,
     snapshotPrice, snapshotDate,
     customTags, addTag, removeTagFromDB,
     earningsDate, shareholderMeetingSettings, updateEarningsDate, updateShareholderMeetingSettings,
@@ -176,8 +176,13 @@ function StockCard({ symbol, onRemove, favoriteGroups, onFavoriteGroupsChange, i
               memoLastSaved={memoLastSaved}
               per={per}
               pbr={pbr}
+              fairPer={fairPer}
+              fairPbr={fairPbr}
+              currentPrice={currentPrice}
               onPerChange={setPer}
               onPbrChange={setPbr}
+              onFairPerChange={setFairPer}
+              onFairPbrChange={setFairPbr}
               newsItems={newsItems}
               onNewsDialogOpen={() => setIsNewsDialogOpen(true)}
               isNewsLoading={isNewsLoading}

@@ -121,30 +121,94 @@ export const calculatePortfolioTargetSummary = (stocksData: StockTargetInfo[]) =
   };
 };
 
-// PER（株価収益率）評価
+// PER/PBR バリュエーション評価
 export interface ValuationEvaluation {
   label: string;
   color: string;
+  deviationPercent: number | null;
+  theoreticalPrice: number | null;
+  hasFairValue: boolean;
 }
 
-export function evaluatePer(per: number): ValuationEvaluation {
-  if (per <= 15) {
-    return { label: '割安', color: 'text-green-400' };
-  } else if (per <= 25) {
-    return { label: '適正', color: 'text-yellow-400' };
+// 乖離率の閾値（±10%以内を適正とする）
+const DEVIATION_THRESHOLD = 10;
+
+// 乖離率: (現在値 - 適正値) / 適正値 × 100
+export function calculateDeviation(current: number, fair: number): number {
+  if (fair <= 0) return 0;
+  return ((current - fair) / fair) * 100;
+}
+
+// EPS逆算: EPS = 現在株価 / 現在PER
+export function calculateEps(currentPrice: number, currentPer: number): number | null {
+  if (currentPer <= 0) return null;
+  return currentPrice / currentPer;
+}
+
+// BPS逆算: BPS = 現在株価 / 現在PBR
+export function calculateBps(currentPrice: number, currentPbr: number): number | null {
+  if (currentPbr <= 0) return null;
+  return currentPrice / currentPbr;
+}
+
+// PER理論株価: 適正PER × EPS
+export function calculateTheoreticalPriceByPer(
+  currentPrice: number, currentPer: number, fairPer: number
+): number | null {
+  const eps = calculateEps(currentPrice, currentPer);
+  if (eps === null) return null;
+  return fairPer * eps;
+}
+
+// PBR理論株価: 適正PBR × BPS
+export function calculateTheoreticalPriceByPbr(
+  currentPrice: number, currentPbr: number, fairPbr: number
+): number | null {
+  const bps = calculateBps(currentPrice, currentPbr);
+  if (bps === null) return null;
+  return fairPbr * bps;
+}
+
+function evaluateByDeviation(current: number, fair: number): { label: string; color: string; deviation: number } {
+  const deviation = calculateDeviation(current, fair);
+  if (deviation <= -DEVIATION_THRESHOLD) {
+    return { label: '割安', color: 'text-green-400', deviation };
+  } else if (deviation <= DEVIATION_THRESHOLD) {
+    return { label: '適正', color: 'text-yellow-400', deviation };
   } else {
-    return { label: '割高', color: 'text-red-400' };
+    return { label: '割高', color: 'text-red-400', deviation };
+  }
+}
+
+// PER（株価収益率）評価
+export function evaluatePer(per: number, fairPer?: number | null): ValuationEvaluation {
+  if (fairPer != null && fairPer > 0) {
+    const { label, color, deviation } = evaluateByDeviation(per, fairPer);
+    return { label, color, deviationPercent: deviation, theoreticalPrice: null, hasFairValue: true };
+  }
+  // 固定閾値（後方互換）
+  if (per <= 15) {
+    return { label: '割安', color: 'text-green-400', deviationPercent: null, theoreticalPrice: null, hasFairValue: false };
+  } else if (per <= 25) {
+    return { label: '適正', color: 'text-yellow-400', deviationPercent: null, theoreticalPrice: null, hasFairValue: false };
+  } else {
+    return { label: '割高', color: 'text-red-400', deviationPercent: null, theoreticalPrice: null, hasFairValue: false };
   }
 }
 
 // PBR（株価純資産倍率）評価
-export function evaluatePbr(pbr: number): ValuationEvaluation {
+export function evaluatePbr(pbr: number, fairPbr?: number | null): ValuationEvaluation {
+  if (fairPbr != null && fairPbr > 0) {
+    const { label, color, deviation } = evaluateByDeviation(pbr, fairPbr);
+    return { label, color, deviationPercent: deviation, theoreticalPrice: null, hasFairValue: true };
+  }
+  // 固定閾値（後方互換）
   if (pbr < 1.0) {
-    return { label: '割安', color: 'text-green-400' };
+    return { label: '割安', color: 'text-green-400', deviationPercent: null, theoreticalPrice: null, hasFairValue: false };
   } else if (pbr <= 2.0) {
-    return { label: '適正', color: 'text-yellow-400' };
+    return { label: '適正', color: 'text-yellow-400', deviationPercent: null, theoreticalPrice: null, hasFairValue: false };
   } else {
-    return { label: '割高', color: 'text-red-400' };
+    return { label: '割高', color: 'text-red-400', deviationPercent: null, theoreticalPrice: null, hasFairValue: false };
   }
 }
 

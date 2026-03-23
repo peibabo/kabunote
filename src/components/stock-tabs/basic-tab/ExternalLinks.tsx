@@ -50,6 +50,27 @@ const getExternalLinks = (symbol: string): ExternalLink[] => [
     url: `https://irbank.net/td/search?q=${symbol}`,
     bgColor: 'rgb(71,85,105)',
     hoverBgColor: 'rgb(51,65,85)'
+  },
+  {
+    name: 'IR BANK',
+    icon: '🏦',
+    url: `https://irbank.net/${symbol}`,
+    bgColor: 'rgb(30,64,110)',
+    hoverBgColor: 'rgb(22,48,83)'
+  },
+  {
+    name: '四季報',
+    icon: '📕',
+    url: `https://shikiho.toyokeizai.net/stocks/${symbol}`,
+    bgColor: 'rgb(180,30,30)',
+    hoverBgColor: 'rgb(140,24,24)'
+  },
+  {
+    name: '日経',
+    icon: '📰',
+    url: `https://www.nikkei.com/nkd/company/?scode=${symbol}`,
+    bgColor: 'rgb(0,102,51)',
+    hoverBgColor: 'rgb(0,77,38)'
   }
 ];
 

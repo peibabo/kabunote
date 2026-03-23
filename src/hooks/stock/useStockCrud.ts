@@ -26,6 +26,8 @@ export function useStockCrud({ setStockData, setStockSymbols }: UseStockCrudPara
         stopLossPrice: null,
         per: null,
         pbr: null,
+        fairPer: null,
+        fairPbr: null,
         memo: '',
         positions: [],
         events: [],

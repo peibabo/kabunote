@@ -38,7 +38,7 @@ const SECTIONS: HelpSection[] = [
             <p><span className="text-white">テンプレート:</span> ファンダメンタル・テクニカル・配当優待・銘柄調査・売買判断の5種類のテンプレートから選んでメモを作成できます。</p>
             <p><span className="text-white">タグ:</span> 銘柄にカスタムタグ（8色）を付けて分類できます。</p>
             <p><span className="text-white">グループ:</span> お気に入りグループを作成して銘柄をグループ分けできます。</p>
-            <p><span className="text-white">ニュース:</span> 銘柄ごとにニュース記事のURLとコメントを記録できます。</p>
+            <p><span className="text-white">ニュースクリップ:</span> 銘柄ごとにニュース記事のURLとコメントを記録できます。</p>
           </div>
         ),
       },
@@ -52,7 +52,7 @@ const SECTIONS: HelpSection[] = [
             <p><span className="text-white">基本タブ:</span> 銘柄の基本情報と株ノオト（メモ）を管理します。</p>
             <p><span className="text-white">投資戦略タブ:</span> 分析メモ・バリュエーション指標（PER/PBR）・「次の一手」（Next Action）を記録できます。</p>
             <p><span className="text-white">管理タブ:</span> 保有ポジション・イベント・配当・株主優待の4つのサブタブで詳細情報を管理します。</p>
-            <p><span className="text-white">ニュースタブ:</span> 銘柄に関するニュース記事をURL＋コメントで構造化して記録・管理できます。</p>
+            <p><span className="text-white">ニュースクリップ:</span> 銘柄に関するニュース記事をURL＋コメントで構造化して記録・管理できます。</p>
           </div>
         ),
       },

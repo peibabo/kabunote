@@ -11,7 +11,7 @@ export const GET = withAuth(async ({ user, params }) => {
   if (!stockId) {
     return NextResponse.json({
       success: true,
-      data: { currentPrice: null, targetPrice: null, stopLossPrice: null, per: null, pbr: null }
+      data: { currentPrice: null, targetPrice: null, stopLossPrice: null, per: null, pbr: null, fairPer: null, fairPbr: null }
     })
   }
 
@@ -25,6 +25,8 @@ export const GET = withAuth(async ({ user, params }) => {
       stopLossPrice: toNumber(price?.stopLossPrice),
       per: toNumber(price?.per),
       pbr: toNumber(price?.pbr),
+      fairPer: toNumber(price?.fairPer),
+      fairPbr: toNumber(price?.fairPbr),
       updatedAt: price?.updatedAt?.toISOString() ?? null
     }
   })
@@ -32,7 +34,7 @@ export const GET = withAuth(async ({ user, params }) => {
 
 // PUT: 株価情報更新
 export const PUT = withStock(async ({ stockId, request }) => {
-  const { currentPrice, targetPrice, stopLossPrice, per, pbr } = await request.json()
+  const { currentPrice, targetPrice, stopLossPrice, per, pbr, fairPer, fairPbr } = await request.json()
 
   if (!isValidPrice(currentPrice) || !isValidPrice(targetPrice) || !isValidPrice(stopLossPrice)) {
     return NextResponse.json(
@@ -41,7 +43,7 @@ export const PUT = withStock(async ({ stockId, request }) => {
     )
   }
 
-  if (!isValidRatio(per) || !isValidRatio(pbr)) {
+  if (!isValidRatio(per) || !isValidRatio(pbr) || !isValidRatio(fairPer) || !isValidRatio(fairPbr)) {
     return NextResponse.json(
       { error: 'Bad Request', message: 'PER/PBRは0以上の有効な数値である必要があります' },
       { status: 400 }
@@ -56,6 +58,8 @@ export const PUT = withStock(async ({ stockId, request }) => {
       stopLossPrice: stopLossPrice !== undefined ? (stopLossPrice || null) : undefined,
       per: per !== undefined ? (per || null) : undefined,
       pbr: pbr !== undefined ? (pbr || null) : undefined,
+      fairPer: fairPer !== undefined ? (fairPer || null) : undefined,
+      fairPbr: fairPbr !== undefined ? (fairPbr || null) : undefined,
     },
     create: {
       stockId,
@@ -64,6 +68,8 @@ export const PUT = withStock(async ({ stockId, request }) => {
       stopLossPrice: stopLossPrice || null,
       per: per || null,
       pbr: pbr || null,
+      fairPer: fairPer || null,
+      fairPbr: fairPbr || null,
     }
   })
 
@@ -75,6 +81,8 @@ export const PUT = withStock(async ({ stockId, request }) => {
       stopLossPrice: toNumber(price.stopLossPrice),
       per: toNumber(price.per),
       pbr: toNumber(price.pbr),
+      fairPer: toNumber(price.fairPer),
+      fairPbr: toNumber(price.fairPbr),
       updatedAt: price.updatedAt.toISOString()
     }
   })

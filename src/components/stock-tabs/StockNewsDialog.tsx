@@ -60,7 +60,7 @@ export default function StockNewsDialog({
         <div className="flex items-center justify-between mb-4">
           <div>
             <h3 className="text-lg font-bold text-white">
-              📰 銘柄ニュース
+              📰 ニュースクリップ
             </h3>
             <p className="text-xs text-gray-400 mt-0.5">
               {symbol} {companyName}
@@ -92,7 +92,7 @@ export default function StockNewsDialog({
           {newsItems.length === 0 && (
             <div className="text-center py-8">
               <span className="text-3xl block mb-2">📰</span>
-              <p className="text-sm text-gray-400">まだニュースがありません</p>
+              <p className="text-sm text-gray-400">まだクリップがありません</p>
               <p className="text-xs text-gray-500 mt-1">下のフォームからURLを追加してください</p>
             </div>
           )}
@@ -135,7 +135,7 @@ export default function StockNewsDialog({
         {newsItems.length < 20 && (
           <div className="border-t border-gray-700 pt-4 space-y-2">
             <div className="text-xs text-gray-400 mb-1">
-              ニュースを追加（{newsItems.length}/20）
+              クリップを追加（{newsItems.length}/20）
             </div>
             <input
               type="url"

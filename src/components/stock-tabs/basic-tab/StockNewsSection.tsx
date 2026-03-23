@@ -25,7 +25,7 @@ export default function StockNewsSection({
     <div className="space-y-1">
       <div className="flex items-center justify-between">
         <span className="text-xs font-medium text-orange-300">
-          📰 銘柄ニュース
+          📰 ニュースクリップ
           {newsItems.length > 0 && (
             <span className="text-gray-400 ml-1">({newsItems.length})</span>
           )}
@@ -71,7 +71,7 @@ export default function StockNewsSection({
           )}
         </div>
       ) : (
-        <p className="text-xs text-gray-600">ニュースを追加するには「管理」をクリック</p>
+        <p className="text-xs text-gray-600">クリップを追加するには「管理」をクリック</p>
       )}
     </div>
   );

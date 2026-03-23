@@ -18,8 +18,13 @@ interface BasicTabProps {
   memoLastSaved?: Date | null;
   per: string;
   pbr: string;
+  fairPer: string;
+  fairPbr: string;
+  currentPrice: string;
   onPerChange: (value: string) => void;
   onPbrChange: (value: string) => void;
+  onFairPerChange: (value: string) => void;
+  onFairPbrChange: (value: string) => void;
   newsItems?: NewsItem[];
   onNewsDialogOpen?: () => void;
   isNewsLoading?: boolean;
@@ -36,8 +41,13 @@ export default function BasicTab({
   memoLastSaved = null,
   per,
   pbr,
+  fairPer,
+  fairPbr,
+  currentPrice,
   onPerChange,
   onPbrChange,
+  onFairPerChange,
+  onFairPbrChange,
   newsItems = [],
   onNewsDialogOpen,
   isNewsLoading = false,
@@ -51,8 +61,13 @@ export default function BasicTab({
         symbol={symbol}
         per={per}
         pbr={pbr}
+        fairPer={fairPer}
+        fairPbr={fairPbr}
+        currentPrice={currentPrice}
         onPerChange={onPerChange}
         onPbrChange={onPbrChange}
+        onFairPerChange={onFairPerChange}
+        onFairPbrChange={onFairPbrChange}
         onChangeSound={onChangeSound}
       />
 

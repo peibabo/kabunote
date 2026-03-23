@@ -96,6 +96,8 @@ model StockPrice {
   stopLossPrice Decimal?  @map("stop_loss_price") // 損切り価格
   per           Decimal?                          // PER（株価収益率）
   pbr           Decimal?                          // PBR（株価純資産倍率）
+  fairPer       Decimal?  @map("fair_per")        // 適正PER（ユーザー設定）
+  fairPbr       Decimal?  @map("fair_pbr")        // 適正PBR（ユーザー設定）
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime  @updatedAt @map("updated_at")
 
