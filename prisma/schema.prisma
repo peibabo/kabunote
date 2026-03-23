@@ -39,6 +39,7 @@ model User {
   diaries            InvestmentDiary[]
   diaryNewsItems     DiaryNewsItem[]
   stockNewsItems     StockNewsItem[]
+  stockLinkSetting   UserStockLinkSetting?
 
   @@map("app_users")
 }
@@ -517,4 +518,17 @@ model Feedback {
 
   @@index([userId])
   @@map("feedbacks")
+}
+
+// 銘柄カード外部リンク設定（表示/非表示・順番）
+model UserStockLinkSetting {
+  id        String   @id @default(cuid())
+  userId    String   @unique @map("user_id")
+  settings  Json     @default("[]")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_stock_link_settings")
 }

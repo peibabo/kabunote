@@ -1,6 +1,6 @@
 # Kabunote - アーキテクチャリファレンス
 
-## データベーススキーマ（25テーブル）
+## データベーススキーマ（26テーブル）
 
 ```
 app_users (ユーザー管理)
@@ -57,6 +57,8 @@ app_users (ユーザー管理)
               id, diary_id, user_id, url, comment, order
               @@index([diaryId])
               @@index([userId, createdAt DESC])
+  └── user_stock_link_settings (銘柄カード外部リンク設定)
+        id, user_id(UNIQUE), settings(JSONB: [{key, visible, order}])
 ```
 
 ### Enum定義
@@ -77,6 +79,7 @@ app_users (ユーザー管理)
 | `/api/cash` | GET/PUT | 投資余力現金・Next Actionメモの取得・更新 |
 | `/api/onboarding` | GET/POST | オンボーディング完了状態の取得・更新 |
 | `/api/external-links` | GET/PUT | 外部リンク設定の取得・一括更新（最大8個） |
+| `/api/stock-link-settings` | GET/PUT | 銘柄カード外部リンクの表示/非表示・順番設定 |
 
 ### 銘柄
 | パス | メソッド | 説明 |
@@ -211,6 +214,7 @@ app_users (ユーザー管理)
 | `useDiary` | 投資日記（自動保存・日付ナビゲーション・XP連携） |
 | `useFavoriteGroups` | お気に入りグループ（楽観的更新・差分同期） |
 | `useExternalLinks` | 外部リンク設定（モジュールキャッシュ・デフォルトフォールバック） |
+| `useStockLinkSettings` | 銘柄カード外部リンク表示設定（モジュールキャッシュ・CustomEvent同期） |
 
 ### `hooks/auth/` — 認証・グローバル
 | フック | 説明 |

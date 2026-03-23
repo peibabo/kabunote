@@ -1,134 +1,114 @@
 'use client';
 
-interface ExternalLink {
-  name: string;
-  icon: string;
-  url: string;
-  bgColor: string;
-  hoverBgColor: string;
-}
-
-const getExternalLinks = (symbol: string): ExternalLink[] => [
-  {
-    name: 'Yahoo!',
-    icon: '🟣',
-    url: `https://finance.yahoo.co.jp/quote/${symbol}.T`,
-    bgColor: '#ff0033',
-    hoverBgColor: '#cc0029'
-  },
-  {
-    name: '株探',
-    icon: '🔍',
-    url: `https://kabutan.jp/stock/chart?code=${symbol}`,
-    bgColor: 'rgb(5,47,109)',
-    hoverBgColor: 'rgb(3,35,82)'
-  },
-  {
-    name: 'TradingView',
-    icon: '📊',
-    url: `https://jp.tradingview.com/symbols/TSE-${symbol}/`,
-    bgColor: '#131722',
-    hoverBgColor: '#0e1117'
-  },
-  {
-    name: 'みんかぶ',
-    icon: '🧑‍💼',
-    url: `https://minkabu.jp/stock/${symbol}`,
-    bgColor: 'rgb(255,111,97)',
-    hoverBgColor: 'rgb(255,87,69)'
-  },
-  {
-    name: 'バフェット・コード',
-    icon: '💰',
-    url: `https://www.buffett-code.com/company/${symbol}/`,
-    bgColor: 'rgb(14,102,164)',
-    hoverBgColor: 'rgb(11,82,131)'
-  },
-  {
-    name: '適時開示',
-    icon: '📋',
-    url: `https://irbank.net/td/search?q=${symbol}`,
-    bgColor: 'rgb(71,85,105)',
-    hoverBgColor: 'rgb(51,65,85)'
-  },
-  {
-    name: 'IR BANK',
-    icon: '🏦',
-    url: `https://irbank.net/${symbol}`,
-    bgColor: 'rgb(30,64,110)',
-    hoverBgColor: 'rgb(22,48,83)'
-  },
-  {
-    name: '四季報',
-    icon: '📕',
-    url: `https://shikiho.toyokeizai.net/stocks/${symbol}`,
-    bgColor: 'rgb(180,30,30)',
-    hoverBgColor: 'rgb(140,24,24)'
-  },
-  {
-    name: '日経',
-    icon: '📰',
-    url: `https://www.nikkei.com/nkd/company/?scode=${symbol}`,
-    bgColor: 'rgb(0,102,51)',
-    hoverBgColor: 'rgb(0,77,38)'
-  }
-];
+import { useState, useMemo } from 'react';
+import {
+  STOCK_EXTERNAL_LINKS,
+  DEFAULT_STOCK_LINK_SETTINGS,
+  buildStockLinkUrl,
+  getStockLinkDef,
+  type StockExternalLinkDef,
+} from '@/lib/stockExternalLinks';
+import { useStockLinkSettings } from '@/hooks/dashboard/useStockLinkSettings';
+import StockLinkSettingsModal from '@/components/settings/StockLinkSettingsModal';
 
 interface ExternalLinksProps {
   symbol: string;
 }
 
 export default function ExternalLinks({ symbol }: ExternalLinksProps) {
-  const externalLinks = getExternalLinks(symbol);
+  const { settings, isLoading, saveSettings } = useStockLinkSettings();
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
+  const visibleLinks = useMemo(() => {
+    const activeSettings = settings.length > 0 ? settings : DEFAULT_STOCK_LINK_SETTINGS;
+    return [...activeSettings]
+      .sort((a, b) => a.order - b.order)
+      .filter(s => s.visible)
+      .map(s => getStockLinkDef(s.key))
+      .filter((def): def is StockExternalLinkDef => def !== undefined);
+  }, [settings]);
+
+  // ローディング中はデフォルト全表示
+  const linksToShow = isLoading ? STOCK_EXTERNAL_LINKS : visibleLinks;
 
   return (
     <div className="space-y-2">
-      {/* モバイル: 横スクロール円形アイコン */}
-      <div className="flex overflow-x-auto scrollbar-hide gap-3 pb-1 md:hidden">
-        {externalLinks.map((link) => (
-          <a
-            key={link.name}
-            href={link.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex flex-col items-center gap-0.5 flex-shrink-0 w-14"
-            title={link.name}
-          >
-            <div
-              className="w-11 h-11 rounded-full flex items-center justify-center text-white text-lg transition-all hover:scale-105"
-              style={{ backgroundColor: link.bgColor }}
-            >
-              {link.icon}
-            </div>
-            <span className="text-[10px] text-gray-400 truncate w-full text-center">{link.name}</span>
-          </a>
-        ))}
+      {/* ヘッダー: 歯車アイコン */}
+      <div className="flex justify-end">
+        <button
+          onClick={() => setIsSettingsOpen(true)}
+          className="cursor-pointer text-gray-500 hover:text-gray-300 transition-colors p-1 rounded"
+          title="外部リンク設定"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+        </button>
       </div>
-      {/* デスクトップ: 既存の3列グリッド */}
-      <div className="hidden md:grid grid-cols-3 gap-2">
-        {externalLinks.map((link) => (
-          <a
-            key={link.name}
-            href={link.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-white text-xs py-2 px-1 rounded-lg transition-all text-center flex flex-col items-center gap-1 hover:scale-105 transform"
-            style={{
-              backgroundColor: link.bgColor,
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = link.hoverBgColor;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = link.bgColor;
-            }}
-            title={link.name}
-          >
-            <span className="text-sm">{link.icon}</span>
-            <span className="leading-tight">{link.name}</span>
-          </a>
-        ))}
-      </div>
+
+      {linksToShow.length === 0 ? (
+        <p className="text-gray-500 text-sm text-center py-2">
+          表示するリンクがありません
+        </p>
+      ) : (
+        <>
+          {/* モバイル: 横スクロール円形アイコン */}
+          <div className="flex overflow-x-auto scrollbar-hide gap-3 pb-1 md:hidden">
+            {linksToShow.map((link) => (
+              <a
+                key={link.key}
+                href={buildStockLinkUrl(link.urlTemplate, symbol)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex flex-col items-center gap-0.5 flex-shrink-0 w-14"
+                title={link.name}
+              >
+                <div
+                  className="w-11 h-11 rounded-full flex items-center justify-center text-white text-lg transition-all hover:scale-105"
+                  style={{ backgroundColor: link.bgColor }}
+                >
+                  {link.icon}
+                </div>
+                <span className="text-[10px] text-gray-400 truncate w-full text-center">{link.name}</span>
+              </a>
+            ))}
+          </div>
+          {/* デスクトップ: 3列グリッド */}
+          <div className="hidden md:grid grid-cols-3 gap-2">
+            {linksToShow.map((link) => (
+              <a
+                key={link.key}
+                href={buildStockLinkUrl(link.urlTemplate, symbol)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-white text-xs py-2 px-1 rounded-lg transition-all text-center flex flex-col items-center gap-1 hover:scale-105 transform"
+                style={{
+                  backgroundColor: link.bgColor,
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = link.hoverBgColor;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = link.bgColor;
+                }}
+                title={link.name}
+              >
+                <span className="text-sm">{link.icon}</span>
+                <span className="leading-tight">{link.name}</span>
+              </a>
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* 設定モーダル */}
+      <StockLinkSettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        settings={settings.length > 0 ? settings : DEFAULT_STOCK_LINK_SETTINGS}
+        onSave={saveSettings}
+      />
     </div>
   );
 }
