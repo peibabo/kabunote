@@ -74,9 +74,9 @@ export default function PortfolioOverviewGrid({ overallSummary, portfolioSnapsho
             }
           </div>
           {overallSummary.totalCurrentValue > 0 && valueChange && (
-            <div className={`text-xs mt-1 ${getProfitLossColor(valueChange.diff)}`}
+            <div className={`text-sm font-medium mt-1 ${getProfitLossColor(valueChange.diff)}`}
               title={portfolioSnapshot ? `前回記録: ${portfolioSnapshot.snapshotDate}` : undefined}>
-              前回比 {formatPriceChange(valueChange).diffText}円 ({formatPriceChange(valueChange).rateText})
+              {formatPriceChange(valueChange).diffText}円 ({formatPriceChange(valueChange).rateText})
             </div>
           )}
         </div>
@@ -97,9 +97,9 @@ export default function PortfolioOverviewGrid({ overallSummary, portfolioSnapsho
                 </div>
               )}
               {profitLossChange && (
-                <div className={`text-xs mt-1 ${getProfitLossColor(profitLossChange.diff)}`}
+                <div className={`text-sm font-medium mt-1 ${getProfitLossColor(profitLossChange.diff)}`}
                   title={portfolioSnapshot ? `前回記録: ${portfolioSnapshot.snapshotDate}` : undefined}>
-                  前回比 {formatPriceChange(profitLossChange).diffText}円
+                  {formatPriceChange(profitLossChange).diffText}円
                 </div>
               )}
             </div>
@@ -120,7 +120,7 @@ export default function PortfolioOverviewGrid({ overallSummary, portfolioSnapsho
                 {overallSummary.totalProfitLossRate.toFixed(2)}%
               </div>
               {snapshotProfitLossRate != null && (
-                <div className="text-xs text-gray-500 mt-1"
+                <div className="text-sm font-medium text-gray-400 mt-1"
                   title={portfolioSnapshot ? `前回記録: ${portfolioSnapshot.snapshotDate}` : undefined}>
                   前回 {snapshotProfitLossRate >= 0 ? '+' : ''}{snapshotProfitLossRate.toFixed(2)}%
                 </div>
