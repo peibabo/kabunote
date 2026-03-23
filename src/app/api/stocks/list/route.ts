@@ -109,6 +109,14 @@ export const GET = withAuth(async ({ user }) => {
   return NextResponse.json({
     success: true,
     data: formattedStocks,
-    count: formattedStocks.length
+    count: formattedStocks.length,
+    portfolioSnapshot: latestSnapshot ? {
+      totalValue: Number(latestSnapshot.totalValue),
+      totalInvestment: Number(latestSnapshot.totalInvestment),
+      profitLoss: Number(latestSnapshot.profitLoss),
+      cashAmount: Number(latestSnapshot.cashAmount),
+      netAssets: Number(latestSnapshot.netAssets),
+      snapshotDate: latestSnapshot.snapshotDate.toISOString().split('T')[0],
+    } : null,
   })
 }, '株式データの取得')

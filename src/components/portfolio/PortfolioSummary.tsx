@@ -8,12 +8,14 @@ import { usePortfolioSummary, StockData } from '@/hooks/portfolio/usePortfolioSu
 import { useCash } from '@/hooks/auth/useCash';
 import { useAccordionState } from '@/hooks/util/useAccordionState';
 import { STORAGE_KEYS } from '@/lib/storageKeys';
+import { PortfolioSnapshotData } from '@/hooks/stock/useStockData';
 
 interface PortfolioSummaryProps {
   portfolioData: StockData[];
+  portfolioSnapshot?: PortfolioSnapshotData | null;
 }
 
-export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProps) {
+export default function PortfolioSummary({ portfolioData, portfolioSnapshot }: PortfolioSummaryProps) {
   const { isExpanded: isChartsExpanded, toggle: toggleCharts } = useAccordionState();
   const { isExpanded: isTargetSummaryExpanded, toggle: toggleTargetSummary } = useAccordionState();
   const { isExpanded: isCashSectionExpanded, toggle: toggleCashSection } = useAccordionState({
@@ -44,7 +46,7 @@ export default function PortfolioSummary({ portfolioData }: PortfolioSummaryProp
       </div>
 
       {hasPositions && (
-        <PortfolioOverviewGrid overallSummary={overallSummary} />
+        <PortfolioOverviewGrid overallSummary={overallSummary} portfolioSnapshot={portfolioSnapshot} />
       )}
 
       <CashPositionSection

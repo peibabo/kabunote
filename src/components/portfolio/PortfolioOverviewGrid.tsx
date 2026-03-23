@@ -5,9 +5,12 @@ import { formatPrice, formatShares } from '@/lib/positionCalc';
 import { calculateAfterTax } from '@/lib/taxCalc';
 import { formatDividendAmount, formatDividendYield } from '@/lib/dividendCalc';
 import { formatBenefitValue, formatBenefitYield } from '@/lib/shareholderCalc';
+import { calcPriceChange, formatPriceChange } from '@/lib/priceChangeCalc';
+import { PortfolioSnapshotData } from '@/hooks/stock/useStockData';
 
 interface PortfolioOverviewGridProps {
   overallSummary: OverallSummary;
+  portfolioSnapshot?: PortfolioSnapshotData | null;
 }
 
 function getProfitLossColor(value: number) {
@@ -22,7 +25,18 @@ function getProfitLossBgColor(rate: number) {
   return 'bg-gray-800 border-gray-600';
 }
 
-export default function PortfolioOverviewGrid({ overallSummary }: PortfolioOverviewGridProps) {
+export default function PortfolioOverviewGrid({ overallSummary, portfolioSnapshot }: PortfolioOverviewGridProps) {
+  const valueChange = calcPriceChange(
+    overallSummary.totalCurrentValue > 0 ? overallSummary.totalCurrentValue : null,
+    portfolioSnapshot?.totalValue ?? null
+  );
+  const profitLossChange = calcPriceChange(
+    overallSummary.totalCurrentValue > 0 ? overallSummary.totalProfitLoss : null,
+    portfolioSnapshot?.profitLoss ?? null
+  );
+  const snapshotProfitLossRate = portfolioSnapshot && portfolioSnapshot.totalInvestment > 0
+    ? ((portfolioSnapshot.profitLoss / portfolioSnapshot.totalInvestment) * 100)
+    : null;
   return (
     <>
       {/* 現在の株価未設定の誘導メッセージ */}
@@ -59,9 +73,10 @@ export default function PortfolioOverviewGrid({ overallSummary }: PortfolioOverv
               : '未設定'
             }
           </div>
-          {overallSummary.totalCurrentValue > 0 && (
-            <div className="text-xs text-gray-500 mt-1">
-              現在の株価ベース
+          {overallSummary.totalCurrentValue > 0 && valueChange && (
+            <div className={`text-xs mt-1 ${getProfitLossColor(valueChange.diff)}`}
+              title={portfolioSnapshot ? `前回記録: ${portfolioSnapshot.snapshotDate}` : undefined}>
+              前回比 {formatPriceChange(valueChange).diffText}円 ({formatPriceChange(valueChange).rateText})
             </div>
           )}
         </div>
@@ -81,6 +96,12 @@ export default function PortfolioOverviewGrid({ overallSummary }: PortfolioOverv
                   {formatPrice(Math.round(calculateAfterTax(overallSummary.totalProfitLoss, overallSummary.weightedTaxRate)))}円
                 </div>
               )}
+              {profitLossChange && (
+                <div className={`text-xs mt-1 ${getProfitLossColor(profitLossChange.diff)}`}
+                  title={portfolioSnapshot ? `前回記録: ${portfolioSnapshot.snapshotDate}` : undefined}>
+                  前回比 {formatPriceChange(profitLossChange).diffText}円
+                </div>
+              )}
             </div>
           ) : (
             <div className="text-base sm:text-lg font-medium text-gray-500">
@@ -93,10 +114,18 @@ export default function PortfolioOverviewGrid({ overallSummary }: PortfolioOverv
         <div className={`rounded-lg p-3 border ${getProfitLossBgColor(overallSummary.totalProfitLossRate)}`}>
           <div className="text-xs text-gray-300 mb-1">損益率</div>
           {overallSummary.totalCurrentValue > 0 ? (
-            <div className={`text-base sm:text-lg font-medium ${getProfitLossColor(overallSummary.totalProfitLoss)}`}>
-              {overallSummary.totalProfitLossRate >= 0 ? '+' : ''}
-              {overallSummary.totalProfitLossRate.toFixed(2)}%
-            </div>
+            <>
+              <div className={`text-base sm:text-lg font-medium ${getProfitLossColor(overallSummary.totalProfitLoss)}`}>
+                {overallSummary.totalProfitLossRate >= 0 ? '+' : ''}
+                {overallSummary.totalProfitLossRate.toFixed(2)}%
+              </div>
+              {snapshotProfitLossRate != null && (
+                <div className="text-xs text-gray-500 mt-1"
+                  title={portfolioSnapshot ? `前回記録: ${portfolioSnapshot.snapshotDate}` : undefined}>
+                  前回 {snapshotProfitLossRate >= 0 ? '+' : ''}{snapshotProfitLossRate.toFixed(2)}%
+                </div>
+              )}
+            </>
           ) : (
             <div className="text-base sm:text-lg font-medium text-gray-500">
               未設定
