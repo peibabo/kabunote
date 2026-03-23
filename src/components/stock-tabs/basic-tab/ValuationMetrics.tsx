@@ -91,7 +91,7 @@ export default function ValuationMetrics({
               step="0.1"
               value={fairPer}
               onChange={(e) => { onFairPerChange(e.target.value); onChangeSound(); }}
-              placeholder="例: 15"
+              placeholder="適正"
               className={inputClassName}
             />
             <span className="absolute right-3 top-2 text-xs text-gray-400">倍</span>
@@ -156,7 +156,7 @@ export default function ValuationMetrics({
               step="0.01"
               value={fairPbr}
               onChange={(e) => { onFairPbrChange(e.target.value); onChangeSound(); }}
-              placeholder="例: 1.0"
+              placeholder="適正"
               className={inputClassName}
             />
             <span className="absolute right-3 top-2 text-xs text-gray-400">倍</span>
