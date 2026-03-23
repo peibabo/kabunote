@@ -7,10 +7,20 @@ import { useStockCrud } from '@/hooks/stock/useStockCrud';
 export type { StockData } from '@/types/stock';
 import type { StockData } from '@/types/stock';
 
+export interface PortfolioSnapshotData {
+  totalValue: number;
+  totalInvestment: number;
+  profitLoss: number;
+  cashAmount: number;
+  netAssets: number;
+  snapshotDate: string;
+}
+
 interface UseStockDataReturn {
   stockData: StockData[];
   stockDataMap: Map<string, StockData>;
   stockSymbols: string[];
+  portfolioSnapshot: PortfolioSnapshotData | null;
   isLoading: boolean;
   error: string | null;
   isLoggedIn: boolean;
@@ -30,6 +40,7 @@ interface UseStockDataReturn {
 export function useStockData(): UseStockDataReturn {
   const [stockData, setStockData] = useState<StockData[]>([]);
   const [stockSymbols, setStockSymbols] = useState<string[]>([]);
+  const [portfolioSnapshot, setPortfolioSnapshot] = useState<PortfolioSnapshotData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -54,6 +65,7 @@ export function useStockData(): UseStockDataReturn {
       if (result.success) {
         setStockData(result.data);
         setStockSymbols(result.data.map((stock: StockData) => stock.symbol));
+        setPortfolioSnapshot(result.portfolioSnapshot ?? null);
       } else {
         throw new Error('APIレスポンスが無効です');
       }
@@ -161,6 +173,7 @@ export function useStockData(): UseStockDataReturn {
     stockData,
     stockDataMap,
     stockSymbols,
+    portfolioSnapshot,
     isLoading,
     error,
     isLoggedIn: true, // ミドルウェアで認証必須化済み

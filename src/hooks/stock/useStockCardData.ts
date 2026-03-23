@@ -66,6 +66,10 @@ export function useStockCardData(symbol: string, favoriteGroups: FavoriteGroup[]
     }
   } : undefined);
 
+  // スナップショット株価（前回比表示用）
+  const snapshotPrice = initialStockData?.snapshotPrice ?? null;
+  const snapshotDate = initialStockData?.snapshotDate ?? null;
+
   // 銘柄ニュース
   const {
     newsItems,
@@ -274,6 +278,10 @@ export function useStockCardData(symbol: string, favoriteGroups: FavoriteGroup[]
     deleteNap,
     isNapLoading,
     isNapSaving,
+
+    // スナップショット株価（前回比）
+    snapshotPrice,
+    snapshotDate,
 
     // アラート
     targetPriceAlert,

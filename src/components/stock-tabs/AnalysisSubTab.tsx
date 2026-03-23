@@ -3,6 +3,7 @@
 import { PositionSummary, ProfitLossInfo } from '@/types/positions';
 import { useSoundOnChange } from '@/hooks/auth/useSoundOnChange';
 import StockMiniChart from '@/components/stock/StockMiniChart';
+import PriceChangeLabel from '@/components/stock/PriceChangeLabel';
 import { calculateProgress, calculateRiskRewardRatio } from './analysis/analysisCalc';
 import PriceProgressBar from './analysis/PriceProgressBar';
 
@@ -18,6 +19,8 @@ interface AnalysisSubTabProps {
   onPriceBlur?: () => void;
   positionSummary: PositionSummary;
   profitLossInfo: ProfitLossInfo | null;
+  snapshotPrice: number | null;
+  snapshotDate: string | null;
 }
 
 export default function AnalysisSubTab({
@@ -31,7 +34,9 @@ export default function AnalysisSubTab({
   onCurrentPriceChange,
   onPriceBlur,
   positionSummary,
-  profitLossInfo
+  profitLossInfo,
+  snapshotPrice,
+  snapshotDate,
 }: AnalysisSubTabProps) {
   const progressData = calculateProgress(targetPrice, stopLoss, currentPrice);
   const riskRewardRatio = calculateRiskRewardRatio(profitLossInfo);
@@ -79,6 +84,13 @@ export default function AnalysisSubTab({
               />
               <span className="absolute right-3 top-2 text-xs text-gray-400">円</span>
             </div>
+            <PriceChangeLabel
+              currentPrice={currentPrice}
+              snapshotPrice={snapshotPrice}
+              snapshotDate={snapshotDate}
+              size="xs"
+              showPrevPrice
+            />
           </div>
 
           {/* 利確目標 */}

@@ -64,6 +64,8 @@ export interface StockData {
     url: string;
     comment: string;
   }>;
+  snapshotPrice: number | null;
+  snapshotDate: string | null;
   createdAt: string;
   updatedAt: string;
 }

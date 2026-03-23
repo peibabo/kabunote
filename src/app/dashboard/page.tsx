@@ -43,7 +43,8 @@ import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 
 export default function Home() {
   const {
-    stockData, stockDataMap, stockSymbols, isLoading: isStockDataLoading,
+    stockData, stockDataMap, stockSymbols, portfolioSnapshot,
+    isLoading: isStockDataLoading,
     refreshData, reorderStocks, addStock,
     updateStockPrice, updateStockData, updateStockEvent,
   } = useStockData();
@@ -141,7 +142,7 @@ export default function Home() {
         )}
 
         <div className="portfolio-summary">
-          <PortfolioSummary portfolioData={stockData} />
+          <PortfolioSummary portfolioData={stockData} portfolioSnapshot={portfolioSnapshot} />
         </div>
 
         {stockSymbols.length > 0 && (
