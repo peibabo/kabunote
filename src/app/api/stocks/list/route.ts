@@ -19,6 +19,22 @@ export const GET = withAuth(async ({ user }) => {
     }
   })
 
+  // 最新スナップショットの株価を取得（前回比表示用）
+  const latestSnapshot = await prisma.portfolioSnapshot.findFirst({
+    where: { userId: user.id },
+    orderBy: { snapshotDate: 'desc' },
+    include: { stockSnapshots: true },
+  })
+  const snapshotPriceMap = new Map<string, { price: number; date: string }>()
+  if (latestSnapshot) {
+    const dateStr = latestSnapshot.snapshotDate.toISOString().split('T')[0]
+    for (const ss of latestSnapshot.stockSnapshots) {
+      if (ss.currentPrice != null) {
+        snapshotPriceMap.set(ss.stockId, { price: Number(ss.currentPrice), date: dateStr })
+      }
+    }
+  }
+
   const formattedStocks = stocks.map(stock => {
     const price = stock.prices[0] ?? null
     return {
@@ -83,6 +99,8 @@ export const GET = withAuth(async ({ user }) => {
         url: n.url,
         comment: n.comment,
       })),
+      snapshotPrice: snapshotPriceMap.get(stock.id)?.price ?? null,
+      snapshotDate: snapshotPriceMap.get(stock.id)?.date ?? null,
       createdAt: stock.createdAt.toISOString(),
       updatedAt: stock.updatedAt.toISOString()
     }
