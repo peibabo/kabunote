@@ -50,11 +50,15 @@ export function useStockCardData(symbol: string, favoriteGroups: FavoriteGroup[]
     stopLoss,
     per,
     pbr,
+    fairPer,
+    fairPbr,
     setCurrentPrice,
     setTargetPrice,
     setStopLoss,
     setPer,
     setPbr,
+    setFairPer,
+    setFairPbr,
     flushSave: flushPriceSave,
   } = useStockPrice(`stock-${symbol}`, initialStockData ? {
     initialData: {
@@ -63,6 +67,8 @@ export function useStockCardData(symbol: string, favoriteGroups: FavoriteGroup[]
       stopLossPrice: initialStockData.stopLossPrice,
       per: initialStockData.per ?? null,
       pbr: initialStockData.pbr ?? null,
+      fairPer: initialStockData.fairPer ?? null,
+      fairPbr: initialStockData.fairPbr ?? null,
     }
   } : undefined);
 
@@ -254,11 +260,15 @@ export function useStockCardData(symbol: string, favoriteGroups: FavoriteGroup[]
     stopLoss,
     per,
     pbr,
+    fairPer,
+    fairPbr,
     setCurrentPrice,
     setTargetPrice,
     setStopLoss,
     setPer,
     setPbr,
+    setFairPer,
+    setFairPbr,
     flushPriceSave,
 
     // タグ

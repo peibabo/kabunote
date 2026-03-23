@@ -11,8 +11,13 @@ describe('BasicTab', () => {
     onMemoModalOpen: vi.fn(),
     per: '',
     pbr: '',
+    fairPer: '',
+    fairPbr: '',
+    currentPrice: '',
     onPerChange: vi.fn(),
     onPbrChange: vi.fn(),
+    onFairPerChange: vi.fn(),
+    onFairPbrChange: vi.fn(),
   }
 
   it('メモテキストエリアを表示する', () => {

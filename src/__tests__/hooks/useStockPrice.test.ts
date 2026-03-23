@@ -21,6 +21,8 @@ describe('useStockPrice', () => {
       stopLossPrice: 2200,
       per: 12.5,
       pbr: 0.8,
+      fairPer: 15.0,
+      fairPbr: 1.0,
     })
   })
 
@@ -36,19 +38,23 @@ describe('useStockPrice', () => {
     expect(result.current.stopLoss).toBe('2200')
     expect(result.current.per).toBe('12.5')
     expect(result.current.pbr).toBe('0.8')
+    expect(result.current.fairPer).toBe('15')
+    expect(result.current.fairPbr).toBe('1')
   })
 
   it('initialDataがある場合APIを呼ばない', () => {
     mockApiFetch.mockReset()
     const { result } = renderHook(() =>
       useStockPrice('stock-7203', {
-        initialData: { currentPrice: 1500, targetPrice: 1600, stopLossPrice: 1400, per: 15.2, pbr: 1.1 },
+        initialData: { currentPrice: 1500, targetPrice: 1600, stopLossPrice: 1400, per: 15.2, pbr: 1.1, fairPer: 12.0, fairPbr: 0.8 },
       })
     )
 
     expect(result.current.currentPrice).toBe('1500')
     expect(result.current.per).toBe('15.2')
     expect(result.current.pbr).toBe('1.1')
+    expect(result.current.fairPer).toBe('12')
+    expect(result.current.fairPbr).toBe('0.8')
     expect(result.current.isLoading).toBe(false)
     expect(mockApiFetch).not.toHaveBeenCalled()
   })
@@ -56,7 +62,7 @@ describe('useStockPrice', () => {
   it('setCurrentPriceで値を更新', () => {
     const { result } = renderHook(() =>
       useStockPrice('stock-7203', {
-        initialData: { currentPrice: 1500, targetPrice: null, stopLossPrice: null, per: null, pbr: null },
+        initialData: { currentPrice: 1500, targetPrice: null, stopLossPrice: null, per: null, pbr: null, fairPer: null, fairPbr: null },
       })
     )
 
@@ -67,7 +73,7 @@ describe('useStockPrice', () => {
   it('setPer/setPbrで値を更新', () => {
     const { result } = renderHook(() =>
       useStockPrice('stock-7203', {
-        initialData: { currentPrice: 1500, targetPrice: null, stopLossPrice: null, per: null, pbr: null },
+        initialData: { currentPrice: 1500, targetPrice: null, stopLossPrice: null, per: null, pbr: null, fairPer: null, fairPbr: null },
       })
     )
 
@@ -76,6 +82,20 @@ describe('useStockPrice', () => {
 
     act(() => { result.current.setPbr('1.2') })
     expect(result.current.pbr).toBe('1.2')
+  })
+
+  it('setFairPer/setFairPbrで値を更新', () => {
+    const { result } = renderHook(() =>
+      useStockPrice('stock-7203', {
+        initialData: { currentPrice: 1500, targetPrice: null, stopLossPrice: null, per: null, pbr: null, fairPer: null, fairPbr: null },
+      })
+    )
+
+    act(() => { result.current.setFairPer('15') })
+    expect(result.current.fairPer).toBe('15')
+
+    act(() => { result.current.setFairPbr('1.0') })
+    expect(result.current.fairPbr).toBe('1.0')
   })
 
   it('APIエラー時', async () => {
@@ -89,5 +109,7 @@ describe('useStockPrice', () => {
     expect(result.current.currentPrice).toBe('')
     expect(result.current.per).toBe('')
     expect(result.current.pbr).toBe('')
+    expect(result.current.fairPer).toBe('')
+    expect(result.current.fairPbr).toBe('')
   })
 })

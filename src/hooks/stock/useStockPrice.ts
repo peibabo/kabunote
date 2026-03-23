@@ -10,6 +10,8 @@ interface PriceState {
   stopLoss: string
   per: string
   pbr: string
+  fairPer: string
+  fairPbr: string
 }
 
 interface UseStockPriceReturn {
@@ -18,6 +20,8 @@ interface UseStockPriceReturn {
   stopLoss: string
   per: string
   pbr: string
+  fairPer: string
+  fairPbr: string
   isLoading: boolean
   isSaving: boolean
   setCurrentPrice: (value: string) => void
@@ -25,6 +29,8 @@ interface UseStockPriceReturn {
   setStopLoss: (value: string) => void
   setPer: (value: string) => void
   setPbr: (value: string) => void
+  setFairPer: (value: string) => void
+  setFairPbr: (value: string) => void
   flushSave: () => void
 }
 
@@ -35,6 +41,8 @@ interface UseStockPriceOptions {
     stopLossPrice: number | null
     per: number | null
     pbr: number | null
+    fairPer: number | null
+    fairPbr: number | null
   }
 }
 
@@ -50,20 +58,24 @@ export function useStockPrice(stockId: string, options?: UseStockPriceOptions): 
         stopLoss: d.stopLossPrice != null ? String(d.stopLossPrice) : '',
         per: d.per != null ? String(d.per) : '',
         pbr: d.pbr != null ? String(d.pbr) : '',
+        fairPer: d.fairPer != null ? String(d.fairPer) : '',
+        fairPbr: d.fairPbr != null ? String(d.fairPbr) : '',
       }
     }
-    return { currentPrice: '', targetPrice: '', stopLoss: '', per: '', pbr: '' }
+    return { currentPrice: '', targetPrice: '', stopLoss: '', per: '', pbr: '', fairPer: '', fairPbr: '' }
   })
   const { isLoading, isSaving, withLoading, withSaving } = useAsyncState(!hasInitialData)
 
   const loadPrices = useCallback(() => withLoading(async () => {
-    const data = await apiFetch<{ currentPrice: number | null; targetPrice: number | null; stopLossPrice: number | null; per: number | null; pbr: number | null }>(`/api/stocks/${stockId}/price`)
+    const data = await apiFetch<{ currentPrice: number | null; targetPrice: number | null; stopLossPrice: number | null; per: number | null; pbr: number | null; fairPer: number | null; fairPbr: number | null }>(`/api/stocks/${stockId}/price`)
     setPrices({
       currentPrice: data.currentPrice != null ? String(data.currentPrice) : '',
       targetPrice: data.targetPrice != null ? String(data.targetPrice) : '',
       stopLoss: data.stopLossPrice != null ? String(data.stopLossPrice) : '',
       per: data.per != null ? String(data.per) : '',
       pbr: data.pbr != null ? String(data.pbr) : '',
+      fairPer: data.fairPer != null ? String(data.fairPer) : '',
+      fairPbr: data.fairPbr != null ? String(data.fairPbr) : '',
     })
   }), [stockId, withLoading])
 
@@ -84,6 +96,8 @@ export function useStockPrice(stockId: string, options?: UseStockPriceOptions): 
             stopLossPrice: latest.stopLoss ? parseFloat(latest.stopLoss) : null,
             per: latest.per ? parseFloat(latest.per) : null,
             pbr: latest.pbr ? parseFloat(latest.pbr) : null,
+            fairPer: latest.fairPer ? parseFloat(latest.fairPer) : null,
+            fairPbr: latest.fairPbr ? parseFloat(latest.fairPbr) : null,
           })
         })
         if (response.ok) {
@@ -126,12 +140,24 @@ export function useStockPrice(stockId: string, options?: UseStockPriceOptions): 
     markDirty()
   }, [markDirty])
 
+  const setFairPer = useCallback((value: string) => {
+    setPrices(prev => ({ ...prev, fairPer: value }))
+    markDirty()
+  }, [markDirty])
+
+  const setFairPbr = useCallback((value: string) => {
+    setPrices(prev => ({ ...prev, fairPbr: value }))
+    markDirty()
+  }, [markDirty])
+
   return {
     currentPrice: prices.currentPrice,
     targetPrice: prices.targetPrice,
     stopLoss: prices.stopLoss,
     per: prices.per,
     pbr: prices.pbr,
+    fairPer: prices.fairPer,
+    fairPbr: prices.fairPbr,
     isLoading,
     isSaving,
     setCurrentPrice,
@@ -139,6 +165,8 @@ export function useStockPrice(stockId: string, options?: UseStockPriceOptions): 
     setStopLoss,
     setPer,
     setPbr,
+    setFairPer,
+    setFairPbr,
     flushSave: flush,
   }
 }

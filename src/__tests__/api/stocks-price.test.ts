@@ -11,6 +11,8 @@ const mockPrice = {
   stopLossPrice: 2200,
   per: 15.5,
   pbr: 1.2,
+  fairPer: 12.0,
+  fairPbr: 0.9,
   updatedAt: new Date('2024-06-01'),
 }
 
@@ -26,6 +28,8 @@ describe('GET /api/stocks/[stockId]/price', () => {
     expect(json.data.currentPrice).toBe(2500)
     expect(json.data.per).toBe(15.5)
     expect(json.data.pbr).toBe(1.2)
+    expect(json.data.fairPer).toBe(12.0)
+    expect(json.data.fairPbr).toBe(0.9)
   })
 
   it('銘柄未発見時はnullデータ返却', async () => {
@@ -38,6 +42,8 @@ describe('GET /api/stocks/[stockId]/price', () => {
     expect(json.data.currentPrice).toBeNull()
     expect(json.data.per).toBeNull()
     expect(json.data.pbr).toBeNull()
+    expect(json.data.fairPer).toBeNull()
+    expect(json.data.fairPbr).toBeNull()
   })
 
   it('priceレコードなしの場合nullを返す', async () => {
@@ -50,6 +56,8 @@ describe('GET /api/stocks/[stockId]/price', () => {
     expect(json.data.currentPrice).toBeNull()
     expect(json.data.per).toBeNull()
     expect(json.data.pbr).toBeNull()
+    expect(json.data.fairPer).toBeNull()
+    expect(json.data.fairPbr).toBeNull()
   })
 })
 
@@ -113,6 +121,30 @@ describe('PUT /api/stocks/[stockId]/price', () => {
     )
   })
 
+  it('適正PER/PBRを更新', async () => {
+    prismaMock.stockPrice.upsert.mockResolvedValue({
+      ...mockPrice,
+      fairPer: 14.0,
+      fairPbr: 1.1,
+    } as never)
+
+    const req = createRequest('PUT', 'http://localhost:3000/api/stocks/stock-7203/price', {
+      fairPer: 14.0,
+      fairPbr: 1.1,
+    })
+    const res = await PUT(req, createParams({ stockId: 'stock-7203' }))
+    const json = await getJson(res)
+    expect(json.success).toBe(true)
+    expect(prismaMock.stockPrice.upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        update: expect.objectContaining({
+          fairPer: 14.0,
+          fairPbr: 1.1,
+        }),
+      })
+    )
+  })
+
   it('不正なPER/PBR値を拒否', async () => {
     const req = createRequest('PUT', 'http://localhost:3000/api/stocks/stock-7203/price', {
       per: -5,
@@ -121,5 +153,13 @@ describe('PUT /api/stocks/[stockId]/price', () => {
     const json = await getJson(res)
     expect(res.status).toBe(400)
     expect(json.error).toBe('Bad Request')
+  })
+
+  it('不正な適正PER値を拒否', async () => {
+    const req = createRequest('PUT', 'http://localhost:3000/api/stocks/stock-7203/price', {
+      fairPer: -3,
+    })
+    const res = await PUT(req, createParams({ stockId: 'stock-7203' }))
+    expect(res.status).toBe(400)
   })
 })

@@ -49,6 +49,8 @@ export const GET = withAuth(async ({ user }) => {
       stopLossPrice: price?.stopLossPrice != null ? Number(price.stopLossPrice) : null,
       per: price?.per != null ? Number(price.per) : null,
       pbr: price?.pbr != null ? Number(price.pbr) : null,
+      fairPer: price?.fairPer != null ? Number(price.fairPer) : null,
+      fairPbr: price?.fairPbr != null ? Number(price.fairPbr) : null,
       memo: stock.memo?.content ?? '',
       positions: stock.positions.map(p => ({
         id: p.id,
