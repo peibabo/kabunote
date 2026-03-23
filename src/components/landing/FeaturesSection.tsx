@@ -16,7 +16,7 @@ const featureGroups: FeatureGroup[] = [
     badge: '最大20銘柄管理',
     title: '銘柄管理 & 株ノオト',
     description: '会社名・コード・ローマ字で瞬時に検索。カスタムタグ8色、お気に入りグループ、AND検索で思考を整理。',
-    highlights: ['フローティング追加UI', '自動保存メモ', 'ドラッグ&ドロップ並べ替え', '5種メモテンプレート', '銘柄ニュース管理'],
+    highlights: ['フローティング追加UI', '自動保存メモ', 'ドラッグ&ドロップ並べ替え', '5種メモテンプレート', 'ニュースクリップ'],
     gradient: 'from-blue-500 to-cyan-500',
     badgeBg: 'bg-blue-500/20 text-blue-300',
     direction: 'left',
