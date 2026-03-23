@@ -91,14 +91,24 @@ export default function ValuationMetrics({
               step="0.1"
               value={fairPer}
               onChange={(e) => { onFairPerChange(e.target.value); onChangeSound(); }}
-              placeholder="適正"
+              placeholder="例: 15"
               className={inputClassName}
             />
             <span className="absolute right-3 top-2 text-xs text-gray-400">倍</span>
           </div>
-          <span className="text-xs text-gray-500 whitespace-nowrap">適正</span>
+          {fairPer ? (
+            <span className="text-xs text-gray-500 whitespace-nowrap">適正</span>
+          ) : (
+            <button
+              type="button"
+              onClick={() => { onFairPerChange('15'); onChangeSound(); }}
+              className="text-xs text-purple-400 hover:text-purple-300 whitespace-nowrap cursor-pointer transition-colors"
+            >
+              目安15倍
+            </button>
+          )}
         </div>
-        {perEval?.hasFairValue && perEval.deviationPercent != null && (
+        {perEval?.hasFairValue && perEval.deviationPercent != null ? (
           <div className="text-xs space-y-0.5 pl-1">
             <div className={perEval.color}>
               適正{fairPer}倍比で {formatDeviation(perEval.deviationPercent)}
@@ -109,6 +119,8 @@ export default function ValuationMetrics({
               </div>
             )}
           </div>
+        ) : !fairPer && (
+          <p className="text-xs text-gray-500 pl-1">日本市場平均: 約15倍（業種により異なります）</p>
         )}
       </div>
 
@@ -144,14 +156,24 @@ export default function ValuationMetrics({
               step="0.01"
               value={fairPbr}
               onChange={(e) => { onFairPbrChange(e.target.value); onChangeSound(); }}
-              placeholder="適正"
+              placeholder="例: 1.0"
               className={inputClassName}
             />
             <span className="absolute right-3 top-2 text-xs text-gray-400">倍</span>
           </div>
-          <span className="text-xs text-gray-500 whitespace-nowrap">適正</span>
+          {fairPbr ? (
+            <span className="text-xs text-gray-500 whitespace-nowrap">適正</span>
+          ) : (
+            <button
+              type="button"
+              onClick={() => { onFairPbrChange('1'); onChangeSound(); }}
+              className="text-xs text-purple-400 hover:text-purple-300 whitespace-nowrap cursor-pointer transition-colors"
+            >
+              目安1.0倍
+            </button>
+          )}
         </div>
-        {pbrEval?.hasFairValue && pbrEval.deviationPercent != null && (
+        {pbrEval?.hasFairValue && pbrEval.deviationPercent != null ? (
           <div className="text-xs space-y-0.5 pl-1">
             <div className={pbrEval.color}>
               適正{fairPbr}倍比で {formatDeviation(pbrEval.deviationPercent)}
@@ -162,6 +184,8 @@ export default function ValuationMetrics({
               </div>
             )}
           </div>
+        ) : !fairPbr && (
+          <p className="text-xs text-gray-500 pl-1">1.0倍=解散価値。業種平均を参考に</p>
         )}
       </div>
     </div>
