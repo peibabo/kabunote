@@ -5,7 +5,7 @@ import { NextActionPlan } from '@/types/nextActionPlan';
 import { useInvestmentTabState } from '@/hooks/tab/useInvestmentTabState';
 import AnalysisSubTab from '@/components/stock-tabs/AnalysisSubTab';
 import NextActionSubTab from '@/components/stock-tabs/NextActionSubTab';
-import PriceChangeLabel from '@/components/stock/PriceChangeLabel';
+
 
 interface InvestmentStrategyTabProps {
   symbol: string;
@@ -75,14 +75,8 @@ export default function InvestmentStrategyTab({
         {currentPrice && parseFloat(currentPrice) > 0 && (
           <>
             <span className="text-gray-600 text-xs">|</span>
-            <span className="px-2 py-1 text-xs text-gray-300 bg-gray-700/50 rounded-full inline-flex items-center gap-1.5">
-              <span>📈 ¥{parseFloat(currentPrice).toLocaleString()}</span>
-              <PriceChangeLabel
-                currentPrice={currentPrice}
-                snapshotPrice={snapshotPrice ?? null}
-                snapshotDate={snapshotDate ?? null}
-                size="xs"
-              />
+            <span className="px-2 py-1 text-xs text-gray-300 bg-gray-700/50 rounded-full">
+              📈 ¥{parseFloat(currentPrice).toLocaleString()}
             </span>
           </>
         )}

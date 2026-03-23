@@ -7,7 +7,6 @@ interface PriceChangeLabelProps {
   snapshotPrice: number | null;
   snapshotDate: string | null;
   size?: 'sm' | 'xs';
-  showPrevPrice?: boolean;
 }
 
 export default function PriceChangeLabel({
@@ -15,7 +14,6 @@ export default function PriceChangeLabel({
   snapshotPrice,
   snapshotDate,
   size = 'sm',
-  showPrevPrice = false,
 }: PriceChangeLabelProps) {
   const current = parseFloat(currentPrice);
   if (!current || current <= 0) return null;
@@ -33,14 +31,6 @@ export default function PriceChangeLabel({
 
   const sizeClass = size === 'xs' ? 'text-xs' : 'text-xs';
   const tooltip = snapshotDate ? `前回記録: ${snapshotDate}` : undefined;
-
-  if (showPrevPrice && snapshotPrice != null) {
-    return (
-      <span className={`${sizeClass} ${colorClass}`} title={tooltip}>
-        前回 ¥{snapshotPrice.toLocaleString()} → {diffText} ({rateText})
-      </span>
-    );
-  }
 
   return (
     <span className={`${sizeClass} ${colorClass}`} title={tooltip}>
