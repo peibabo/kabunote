@@ -76,7 +76,7 @@ export default function PortfolioOverviewGrid({ overallSummary, portfolioSnapsho
           {overallSummary.totalCurrentValue > 0 && valueChange && (
             <div className={`text-sm font-medium mt-1 ${getProfitLossColor(valueChange.diff)}`}
               title={portfolioSnapshot ? `前回記録: ${portfolioSnapshot.snapshotDate}` : undefined}>
-              {formatPriceChange(valueChange).diffText}円 ({formatPriceChange(valueChange).rateText})
+              前回比 {formatPriceChange(valueChange).diffText}円 ({formatPriceChange(valueChange).rateText})
             </div>
           )}
         </div>
@@ -99,7 +99,7 @@ export default function PortfolioOverviewGrid({ overallSummary, portfolioSnapsho
               {profitLossChange && (
                 <div className={`text-sm font-medium mt-1 ${getProfitLossColor(profitLossChange.diff)}`}
                   title={portfolioSnapshot ? `前回記録: ${portfolioSnapshot.snapshotDate}` : undefined}>
-                  {formatPriceChange(profitLossChange).diffText}円
+                  前回比 {formatPriceChange(profitLossChange).diffText}円
                 </div>
               )}
             </div>
