@@ -55,15 +55,16 @@ export default function StockCardHeader({
   };
 
   return (
-    <div>
+    <div className="relative">
+      {/* 決算バッジ（絶対配置でカード左上にオーバーレイ） */}
+      {earningsDate && (
+        <div className="absolute -top-4 -left-3 z-10">
+          <EarningsBadge earningsDate={earningsDate} />
+        </div>
+      )}
       {/* 上部: 銘柄コード・ステータス・タグ・操作ボタン */}
       <div className="flex items-start justify-between">
         <div className="flex-1 min-w-0 max-w-[calc(100%-80px)]">
-          {earningsDate && (
-            <div className="mb-1">
-              <EarningsBadge earningsDate={earningsDate} />
-            </div>
-          )}
           <div className="flex items-center gap-2 mb-1">
             <h3 className="text-base md:text-lg font-bold text-white">{symbol}</h3>
             {isLoading ? (
