@@ -64,6 +64,13 @@ const getExternalLinks = (symbol: string): ExternalLink[] => [
     url: `https://shikiho.toyokeizai.net/stocks/${symbol}`,
     bgColor: 'rgb(180,30,30)',
     hoverBgColor: 'rgb(140,24,24)'
+  },
+  {
+    name: '日経',
+    icon: '📰',
+    url: `https://www.nikkei.com/nkd/company/?scode=${symbol}`,
+    bgColor: 'rgb(0,102,51)',
+    hoverBgColor: 'rgb(0,77,38)'
   }
 ];
 
