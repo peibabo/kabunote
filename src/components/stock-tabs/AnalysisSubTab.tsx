@@ -3,7 +3,7 @@
 import { PositionSummary, ProfitLossInfo } from '@/types/positions';
 import { useSoundOnChange } from '@/hooks/auth/useSoundOnChange';
 import StockMiniChart from '@/components/stock/StockMiniChart';
-import PriceChangeLabel from '@/components/stock/PriceChangeLabel';
+import { calcPriceChange, formatPriceChange } from '@/lib/priceChangeCalc';
 import { calculateProgress, calculateRiskRewardRatio } from './analysis/analysisCalc';
 import PriceProgressBar from './analysis/PriceProgressBar';
 
@@ -84,13 +84,6 @@ export default function AnalysisSubTab({
               />
               <span className="absolute right-3 top-2 text-xs text-gray-400">円</span>
             </div>
-            <PriceChangeLabel
-              currentPrice={currentPrice}
-              snapshotPrice={snapshotPrice}
-              snapshotDate={snapshotDate}
-              size="xs"
-              showPrevPrice
-            />
           </div>
 
           {/* 利確目標 */}
@@ -112,6 +105,33 @@ export default function AnalysisSubTab({
             </div>
           </div>
         </div>
+
+        {/* 前回比サマリーバー */}
+        {(() => {
+          const current = parseFloat(currentPrice);
+          if (!current || current <= 0) return null;
+          const change = calcPriceChange(current, snapshotPrice);
+          if (!change || snapshotPrice == null) return null;
+          const { diffText, rateText } = formatPriceChange(change);
+          const colorClass =
+            change.direction === 'up' ? 'text-green-400'
+            : change.direction === 'down' ? 'text-red-400'
+            : 'text-gray-400';
+          const tooltip = snapshotDate ? `前回記録: ${snapshotDate}` : undefined;
+          return (
+            <div
+              className="bg-gray-700/30 rounded-lg px-3 py-1.5 text-center text-xs"
+              title={tooltip}
+            >
+              <span className="text-gray-400">前回 ¥{snapshotPrice.toLocaleString()}</span>
+              <span className="text-gray-500 mx-1">→</span>
+              <span className="text-gray-300">現在 ¥{current.toLocaleString()}</span>
+              <span className={`ml-1.5 font-medium ${colorClass}`}>
+                （{diffText} / {rateText}）
+              </span>
+            </div>
+          );
+        })()}
 
         {/* ネオンライト株価プログレスバーゲージ・損益分析統合セクション */}
         {progressData && targetPrice && stopLoss && currentPrice && (
