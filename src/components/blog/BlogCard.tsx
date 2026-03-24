@@ -17,11 +17,11 @@ export default function BlogCard({ post }: { post: BlogPostMeta }) {
       <article className="p-6 rounded-xl bg-gray-800/50 border border-gray-700/50 hover:border-blue-500/30 hover:bg-gray-800/80 transition-all duration-200">
         <div className="flex items-center gap-3 mb-3">
           {post.category && (
-            <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${colorClass}`}>
+            <span className={`text-sm font-medium px-2.5 py-1 rounded-full ${colorClass}`}>
               {post.category}
             </span>
           )}
-          <time className="text-xs text-gray-500" dateTime={post.date}>
+          <time className="text-sm text-gray-500" dateTime={post.date}>
             {new Date(post.date).toLocaleDateString('ja-JP', {
               year: 'numeric',
               month: 'long',
@@ -29,10 +29,10 @@ export default function BlogCard({ post }: { post: BlogPostMeta }) {
             })}
           </time>
         </div>
-        <h2 className="text-lg font-bold text-white mb-2 group-hover:text-blue-400 transition-colors">
+        <h2 className="text-xl font-bold text-white mb-2 group-hover:text-blue-400 transition-colors">
           {post.title}
         </h2>
-        <p className="text-sm text-gray-400 line-clamp-2">{post.description}</p>
+        <p className="text-base text-gray-400 line-clamp-2">{post.description}</p>
       </article>
     </Link>
   )

@@ -250,13 +250,13 @@ html {
 /* Blog prose styles */
 .prose {
   color: #d1d5db;
-  line-height: 1.8;
-  font-size: 1rem;
+  line-height: 1.85;
+  font-size: 1.125rem;
 }
 
 .prose h2 {
   color: #fff;
-  font-size: 1.5rem;
+  font-size: 1.625rem;
   font-weight: 700;
   margin-top: 2.5rem;
   margin-bottom: 1rem;
@@ -266,7 +266,7 @@ html {
 
 .prose h3 {
   color: #f3f4f6;
-  font-size: 1.25rem;
+  font-size: 1.375rem;
   font-weight: 600;
   margin-top: 2rem;
   margin-bottom: 0.75rem;
