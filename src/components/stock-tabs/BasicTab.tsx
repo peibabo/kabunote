@@ -56,28 +56,6 @@ export default function BasicTab({
 
   return (
     <div className="space-y-4">
-      {/* PER/PBR バリュエーション指標 */}
-      <ValuationMetrics
-        symbol={symbol}
-        per={per}
-        pbr={pbr}
-        fairPer={fairPer}
-        fairPbr={fairPbr}
-        currentPrice={currentPrice}
-        onPerChange={onPerChange}
-        onPbrChange={onPbrChange}
-        onFairPerChange={onFairPerChange}
-        onFairPbrChange={onFairPbrChange}
-        onChangeSound={onChangeSound}
-      />
-
-      {/* 銘柄ニュース */}
-      <StockNewsSection
-        newsItems={newsItems}
-        onNewsDialogOpen={onNewsDialogOpen}
-        isNewsLoading={isNewsLoading}
-      />
-
       {/* メモ欄 */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
@@ -147,6 +125,28 @@ export default function BasicTab({
 
       {/* 外部リンクボタン */}
       <ExternalLinks symbol={symbol} />
+
+      {/* 銘柄ニュース */}
+      <StockNewsSection
+        newsItems={newsItems}
+        onNewsDialogOpen={onNewsDialogOpen}
+        isNewsLoading={isNewsLoading}
+      />
+
+      {/* PER/PBR バリュエーション指標 */}
+      <ValuationMetrics
+        symbol={symbol}
+        per={per}
+        pbr={pbr}
+        fairPer={fairPer}
+        fairPbr={fairPbr}
+        currentPrice={currentPrice}
+        onPerChange={onPerChange}
+        onPbrChange={onPbrChange}
+        onFairPerChange={onFairPerChange}
+        onFairPbrChange={onFairPbrChange}
+        onChangeSound={onChangeSound}
+      />
     </div>
   );
 }
