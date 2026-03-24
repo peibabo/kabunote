@@ -14,6 +14,7 @@ export default function LandingFooter() {
               width={120}
               height={32}
               className="h-8 w-auto opacity-70 mb-3"
+              style={{ width: 'auto', height: 'auto' }}
             />
             <p className="text-sm text-gray-500">
               投資家の思考を整理するダッシュボード
@@ -23,6 +24,7 @@ export default function LandingFooter() {
           {/* Links */}
           <div className="flex flex-col gap-2">
             <span className="text-sm font-medium text-gray-400 mb-1">リンク</span>
+            <Link href="/blog" className="text-sm text-gray-500 hover:text-gray-300 transition-colors">ブログ</Link>
             <Link href="/help" className="text-sm text-gray-500 hover:text-gray-300 transition-colors">ヘルプ</Link>
             <Link href="/terms" className="text-sm text-gray-500 hover:text-gray-300 transition-colors">利用規約</Link>
             <Link href="/privacy" className="text-sm text-gray-500 hover:text-gray-300 transition-colors">プライバシーポリシー</Link>
