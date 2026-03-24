@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { createClient } from '@/lib/supabase-client';
 
 interface UseModalsReturn {
   isGroupManagerOpen: boolean;
@@ -84,6 +85,13 @@ export function useModals(refreshData: () => Promise<void>, onTutorialClick?: ()
       case 'chartMemos':
         setIsChartMemoListOpen(true);
         break;
+      case 'logout': {
+        const supabase = createClient();
+        supabase.auth.signOut().then(() => {
+          window.location.href = '/login';
+        });
+        break;
+      }
       case 'tutorial':
         if (onTutorialClick) {
           onTutorialClick();
