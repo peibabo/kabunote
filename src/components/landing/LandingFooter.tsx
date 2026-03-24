@@ -14,6 +14,7 @@ export default function LandingFooter() {
               width={120}
               height={32}
               className="h-8 w-auto opacity-70 mb-3"
+              style={{ width: 'auto', height: 'auto' }}
             />
             <p className="text-sm text-gray-500">
               投資家の思考を整理するダッシュボード

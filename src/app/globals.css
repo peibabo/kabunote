@@ -258,9 +258,9 @@ html {
   color: #fff;
   font-size: 1.625rem;
   font-weight: 700;
-  margin-top: 2.5rem;
-  margin-bottom: 1rem;
-  padding-bottom: 0.5rem;
+  margin-top: 3.5rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
   border-bottom: 1px solid rgba(107, 114, 128, 0.3);
 }
 
@@ -268,12 +268,12 @@ html {
   color: #f3f4f6;
   font-size: 1.375rem;
   font-weight: 600;
-  margin-top: 2rem;
-  margin-bottom: 0.75rem;
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
 }
 
 .prose p {
-  margin-bottom: 1.25rem;
+  margin-bottom: 1.5rem;
 }
 
 .prose a {
@@ -293,28 +293,73 @@ html {
 
 .prose ul,
 .prose ol {
-  margin-bottom: 1.25rem;
-  padding-left: 1.5rem;
+  margin-bottom: 1.75rem;
+  padding-left: 1.75rem;
 }
 
 .prose ul {
-  list-style-type: disc;
+  list-style: none;
+  padding-left: 0;
+}
+
+.prose ul > li {
+  position: relative;
+  padding-left: 1.5rem;
+}
+
+.prose ul > li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.65rem;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #3b82f6;
+  box-shadow: 0 0 6px rgba(59, 130, 246, 0.4);
 }
 
 .prose ol {
-  list-style-type: decimal;
+  list-style: none;
+  padding-left: 0;
+  counter-reset: prose-ol;
+}
+
+.prose ol > li {
+  position: relative;
+  padding-left: 2rem;
+  counter-increment: prose-ol;
+}
+
+.prose ol > li::before {
+  content: counter(prose-ol);
+  position: absolute;
+  left: 0;
+  top: 0.1rem;
+  width: 1.4rem;
+  height: 1.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, #3b82f6, #6366f1);
+  border-radius: 50%;
 }
 
 .prose li {
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
 }
 
 .prose blockquote {
   border-left: 3px solid #3b82f6;
-  padding-left: 1rem;
-  margin: 1.5rem 0;
+  padding: 1rem 1.25rem;
+  margin: 2rem 0;
   color: #9ca3af;
   font-style: italic;
+  background: rgba(59, 130, 246, 0.05);
+  border-radius: 0 0.5rem 0.5rem 0;
 }
 
 .prose code {
@@ -326,10 +371,10 @@ html {
 
 .prose pre {
   background: #1f2937;
-  padding: 1rem 1.25rem;
+  padding: 1.25rem 1.5rem;
   border-radius: 0.5rem;
   overflow-x: auto;
-  margin-bottom: 1.25rem;
+  margin: 1.75rem 0;
 }
 
 .prose pre code {
@@ -340,13 +385,13 @@ html {
 .prose table {
   width: 100%;
   border-collapse: collapse;
-  margin-bottom: 1.25rem;
+  margin: 1.75rem 0;
 }
 
 .prose th,
 .prose td {
   border: 1px solid rgba(107, 114, 128, 0.3);
-  padding: 0.5rem 0.75rem;
+  padding: 0.75rem 1rem;
   text-align: left;
 }
 
@@ -358,12 +403,12 @@ html {
 
 .prose hr {
   border-color: rgba(107, 114, 128, 0.3);
-  margin: 2rem 0;
+  margin: 3rem 0;
 }
 
 .prose img {
   border-radius: 0.5rem;
-  margin: 1.5rem 0;
+  margin: 2rem 0;
 }
 
 @media (prefers-reduced-motion: reduce) {

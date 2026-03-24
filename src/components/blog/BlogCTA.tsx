@@ -2,7 +2,7 @@ import Link from 'next/link'
 
 export default function BlogCTA() {
   return (
-    <section className="mt-12 p-8 rounded-xl bg-gradient-to-r from-blue-600/20 to-purple-600/20 border border-blue-500/20 text-center">
+    <section className="mt-16 p-10 rounded-xl bg-gradient-to-r from-blue-600/20 to-purple-600/20 border border-blue-500/20 text-center">
       <h2 className="text-2xl font-bold text-white mb-3">
         投資の思考を、ひとつに。
       </h2>

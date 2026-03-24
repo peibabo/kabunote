@@ -3,7 +3,7 @@ import type { BlogPost } from '@/lib/blog'
 export default function BlogArticle({ post }: { post: BlogPost }) {
   return (
     <article className="max-w-3xl mx-auto">
-      <header className="mb-10">
+      <header className="mb-12">
         <div className="flex items-center gap-3 mb-4">
           {post.category && (
             <span className="text-sm font-medium px-2.5 py-1 rounded-full bg-blue-500/20 text-blue-400">

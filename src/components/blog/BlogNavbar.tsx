@@ -29,8 +29,8 @@ export default function BlogNavbar() {
               alt="カブノオト"
               width={150}
               height={48}
-              className="h-10 md:h-12 w-auto"
-              style={{ filter: 'drop-shadow(0 0 8px rgba(255, 255, 255, 0.4))' }}
+              className="h-10 w-auto md:h-12"
+              style={{ width: 'auto', height: 'auto', filter: 'drop-shadow(0 0 8px rgba(255, 255, 255, 0.4))' }}
             />
           </Link>
 
