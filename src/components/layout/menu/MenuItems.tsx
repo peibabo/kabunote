@@ -4,6 +4,7 @@ import TitleCollection from '../../settings/TitleCollection';
 import LevelDetailSection from './LevelDetailSection';
 import AnalysisSection from './AnalysisSection';
 import SettingsSection from './SettingsSection';
+import PreferencesSection from './PreferencesSection';
 import type { XpActivityLogEntry } from '@/types/gamification';
 import type { TitlesResponse } from '@/types/titles';
 
@@ -138,12 +139,21 @@ export default function MenuItems({
         onMenuClick={onMenuClick}
       />
 
-      {/* 設定・管理 */}
+      {/* 管理 */}
       <SettingsSection
         isExpanded={expandedSections.has('settings')}
         onToggle={() => onToggleSection('settings')}
         onMenuClick={onMenuClick}
       />
+
+      {/* 設定 */}
+      <PreferencesSection
+        isExpanded={expandedSections.has('preferences')}
+        onToggle={() => onToggleSection('preferences')}
+      />
+
+      {/* セパレーター */}
+      <div className="border-t border-gray-700 my-2" />
 
       {/* ヘルプ・About */}
       <a
@@ -177,6 +187,27 @@ export default function MenuItems({
         <span className="text-xl">&#x1F512;</span>
         <span className="text-white">プライバシーポリシー</span>
       </a>
+
+      {/* セパレーター */}
+      <div className="border-t border-gray-700 my-2" />
+
+      {/* アカウント削除 */}
+      <button
+        onClick={() => onMenuClick('deleteAccount')}
+        className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gray-700 rounded-lg transition-colors cursor-pointer"
+      >
+        <span className="text-xl">&#x1F5D1;&#xFE0F;</span>
+        <span className="text-red-400">アカウント削除</span>
+      </button>
+
+      {/* ログアウト */}
+      <button
+        onClick={() => onMenuClick('logout')}
+        className="w-full flex items-center space-x-3 p-3 text-left hover:bg-gray-700 rounded-lg transition-colors cursor-pointer"
+      >
+        <span className="text-xl">&#x1F6AA;</span>
+        <span className="text-red-400">ログアウト</span>
+      </button>
     </>
   );
 }
