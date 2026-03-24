@@ -77,7 +77,7 @@ export default function ValuationMetrics({
             />
             <span className="absolute right-3 top-2 text-xs text-gray-400">倍</span>
           </div>
-          {perEval && (
+          {perEval && perEval.hasFairValue && (
             <span className={`text-xs font-medium whitespace-nowrap ${perEval.color}`}>
               {perEval.label}
             </span>
@@ -142,7 +142,7 @@ export default function ValuationMetrics({
             />
             <span className="absolute right-3 top-2 text-xs text-gray-400">倍</span>
           </div>
-          {pbrEval && (
+          {pbrEval && pbrEval.hasFairValue && (
             <span className={`text-xs font-medium whitespace-nowrap ${pbrEval.color}`}>
               {pbrEval.label}
             </span>
