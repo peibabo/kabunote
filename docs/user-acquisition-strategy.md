@@ -43,10 +43,12 @@
 - `src/app/layout.tsx` に `Organization` スキーマ
 - **効果:** Google検索でのリッチリザルト表示、FAQがSERP上に展開
 
-### S3. メタデータ最適化
+### S3. メタデータ最適化 ✅完了
 - `layout.tsx` に `alternates.canonical` を追加
 - `title` テンプレート設定（`{ template: '%s | カブノオト', default: '...' }`）
-- Google Search Console の verification コード設定
+- Google Search Console の verification コード設定（DNS認証で対応済み）
+- `/login`, `/dashboard` に `robots: noindex` を明示設定（layout.tsx で対応）
+- `robots.txt` を静的ファイルから `robots.ts`（Next.js動的生成）に移行
 - **効果:** 検索インデックスの正規化
 
 ### S4. SNS共有ボタン — ゲーミフィケーション連携 ✅完了
@@ -139,9 +141,9 @@
 | # | 施策 | 工数 | 期待効果 |
 |---|---|---|---|
 | 1 | ~~S1. OGP画像~~ | ~~2-3h~~ | ✅完了 |
-| 2 | S5. Search Console | 1h | インデックス加速 |
+| 2 | ~~S5. Search Console~~ | ~~1h~~ | ✅完了（DNS認証+sitemap登録済み） |
 | 3 | ~~S2. JSON-LD~~ | ~~2-3h~~ | ✅完了 |
-| 4 | S3. メタデータ最適化 | 1-2h | 検索順位改善 |
+| 4 | ~~S3. メタデータ最適化~~ | ~~1-2h~~ | ✅完了 |
 | 5 | ~~S4. SNS共有ボタン~~ | ~~3-4h~~ | ✅完了 |
 | 6 | M2. X運用開始 | 15-30分/日 | 認知拡大 |
 | 7 | M1. ブログ構築 | 初期8h+記事執筆 | 検索流入の柱 |
