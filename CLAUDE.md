@@ -55,6 +55,8 @@ npm run update:stocks    # JPXデータからstocks.csv更新
 ### ルート構成
 ```
 /           → ランディングページ（公開、認証済みなら /dashboard にリダイレクト）
+/blog       → SEOブログ一覧（公開、MDXベース）
+/blog/[slug]→ ブログ記事詳細（公開、SSG）
 /login      → ログイン画面（Google OAuth + Magic Link）
 /dashboard  → メインアプリ（認証必須、未認証なら /login にリダイレクト）
 /help       → ヘルプページ（公開）

@@ -10,6 +10,7 @@ const navLinks = [
   { href: '#how-it-works', label: '使い方' },
   { href: '#why-kabunote', label: '特徴' },
   { href: '#faq', label: 'FAQ' },
+  { href: '/blog', label: 'ブログ' },
 ]
 
 export default function LandingNavbar() {
@@ -45,15 +46,25 @@ export default function LandingNavbar() {
 
           {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-8">
-            {navLinks.map((link) => (
-              <a
-                key={link.href}
-                href={link.href}
-                className="text-gray-300 hover:text-white transition-colors text-sm font-medium"
-              >
-                {link.label}
-              </a>
-            ))}
+            {navLinks.map((link) =>
+              link.href.startsWith('#') ? (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  className="text-gray-300 hover:text-white transition-colors text-sm font-medium"
+                >
+                  {link.label}
+                </a>
+              ) : (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="text-gray-300 hover:text-white transition-colors text-sm font-medium"
+                >
+                  {link.label}
+                </Link>
+              )
+            )}
           </nav>
 
           <div className="flex items-center gap-3">
@@ -85,16 +96,27 @@ export default function LandingNavbar() {
         {menuOpen && (
           <nav className="md:hidden mt-4 pb-4 border-t border-gray-700/50 pt-4">
             <div className="flex flex-col gap-3">
-              {navLinks.map((link) => (
-                <a
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setMenuOpen(false)}
-                  className="text-gray-300 hover:text-white transition-colors text-sm font-medium py-2"
-                >
-                  {link.label}
-                </a>
-              ))}
+              {navLinks.map((link) =>
+                link.href.startsWith('#') ? (
+                  <a
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => setMenuOpen(false)}
+                    className="text-gray-300 hover:text-white transition-colors text-sm font-medium py-2"
+                  >
+                    {link.label}
+                  </a>
+                ) : (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => setMenuOpen(false)}
+                    className="text-gray-300 hover:text-white transition-colors text-sm font-medium py-2"
+                  >
+                    {link.label}
+                  </Link>
+                )
+              )}
               <Link
                 href="/login"
                 onClick={() => setMenuOpen(false)}
