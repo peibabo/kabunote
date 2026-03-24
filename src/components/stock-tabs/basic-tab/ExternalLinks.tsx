@@ -48,7 +48,7 @@ export default function ExternalLinks({ symbol }: ExternalLinksProps) {
           </button>
         </div>
       ) : (
-        <div className="flex overflow-x-auto scrollbar-hide gap-3 pb-1 items-start">
+        <div className="flex overflow-x-auto scrollbar-hide gap-3 pt-1 -mt-1 pb-1 items-start">
           {linksToShow.map((link) => (
             <a
               key={link.key}
