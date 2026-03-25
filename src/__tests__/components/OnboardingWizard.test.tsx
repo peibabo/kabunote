@@ -16,13 +16,13 @@ describe('OnboardingWizard', () => {
   it('「次へ」でステップ2に進む', () => {
     render(<OnboardingWizard {...defaultProps} />)
     fireEvent.click(screen.getByText('次へ'))
-    expect(screen.getByText('銘柄を追加しよう')).toBeDefined()
+    expect(screen.getByText('3ステップで始めよう')).toBeDefined()
   })
 
   it('「戻る」で前のステップに戻る', () => {
     render(<OnboardingWizard {...defaultProps} />)
     fireEvent.click(screen.getByText('次へ'))
-    expect(screen.getByText('銘柄を追加しよう')).toBeDefined()
+    expect(screen.getByText('3ステップで始めよう')).toBeDefined()
     fireEvent.click(screen.getByText('戻る'))
     expect(screen.getByText('カブノオトへようこそ')).toBeDefined()
   })
@@ -32,21 +32,12 @@ describe('OnboardingWizard', () => {
     expect(screen.queryByText('戻る')).toBeNull()
   })
 
-  it('全6ステップを遷移できる', () => {
+  it('全3ステップを遷移できる', () => {
     render(<OnboardingWizard {...defaultProps} />)
     expect(screen.getByText('カブノオトへようこそ')).toBeDefined()
 
     fireEvent.click(screen.getByText('次へ'))
-    expect(screen.getByText('銘柄を追加しよう')).toBeDefined()
-
-    fireEvent.click(screen.getByText('次へ'))
-    expect(screen.getByText('毎日の投資習慣を身につけよう')).toBeDefined()
-
-    fireEvent.click(screen.getByText('次へ'))
-    expect(screen.getByText('投資活動がレベルアップに！')).toBeDefined()
-
-    fireEvent.click(screen.getByText('次へ'))
-    expect(screen.getByText('分析ダッシュボード')).toBeDefined()
+    expect(screen.getByText('3ステップで始めよう')).toBeDefined()
 
     fireEvent.click(screen.getByText('次へ'))
     expect(screen.getByText('さあ、始めましょう！')).toBeDefined()
@@ -54,8 +45,7 @@ describe('OnboardingWizard', () => {
 
   it('最終ステップでは「次へ」ボタンが表示されない', () => {
     render(<OnboardingWizard {...defaultProps} />)
-    // 最終ステップまで進む
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 2; i++) {
       fireEvent.click(screen.getByText('次へ'))
     }
     expect(screen.queryByText('次へ')).toBeNull()
@@ -71,8 +61,7 @@ describe('OnboardingWizard', () => {
   it('最終ステップ「さっそく始める」でonCompleteが呼ばれる', () => {
     const onComplete = vi.fn()
     render(<OnboardingWizard {...defaultProps} onComplete={onComplete} />)
-    // 最終ステップまで進む
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 2; i++) {
       fireEvent.click(screen.getByText('次へ'))
     }
     fireEvent.click(screen.getByText('さっそく始める'))
@@ -82,16 +71,16 @@ describe('OnboardingWizard', () => {
   it('最終ステップ「あとで始める」でonCloseが呼ばれる', () => {
     const onClose = vi.fn()
     render(<OnboardingWizard {...defaultProps} onClose={onClose} />)
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 2; i++) {
       fireEvent.click(screen.getByText('次へ'))
     }
     fireEvent.click(screen.getByText('あとで始める'))
     expect(onClose).toHaveBeenCalledOnce()
   })
 
-  it('進捗ドットが6つ表示される', () => {
+  it('進捗ドットが3つ表示される', () => {
     const { container } = render(<OnboardingWizard {...defaultProps} />)
     const dots = container.querySelectorAll('.rounded-full.w-2\\.5')
-    expect(dots.length).toBe(6)
+    expect(dots.length).toBe(3)
   })
 })

@@ -11,9 +11,9 @@ export default function GetStartedStep({ onGetStarted, onLater }: GetStartedStep
       <div className="text-5xl mb-4">🚀</div>
       <h2 className="text-2xl font-bold text-white mb-3">さあ、始めましょう！</h2>
       <p className="text-gray-300 mb-8">
-        投資の思考を整理して、より良い投資判断を。
+        まず1銘柄追加して、ポジションを登録してみましょう！
         <br />
-        銘柄を追加して、最初のXPを獲得しましょう！
+        損切り/利確ラインを設定すると、損益シミュレーションが使えます。
       </p>
 
       <button
