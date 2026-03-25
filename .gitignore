@@ -48,3 +48,4 @@ next-env.d.ts
 
 # MCP設定（トークン含むため）
 .mcp.json
+.gstack/

@@ -11,6 +11,7 @@ import TitleUnlockedToast from '@/components/settings/TitleUnlockedToast';
 import PortfolioSummary from '@/components/portfolio/PortfolioSummary';
 import PortfolioHistoryWidget from '@/components/portfolio/PortfolioHistoryWidget';
 import FloatingAddButton from '@/components/stock/FloatingAddButton';
+import FloatingFeedbackButton from '@/components/layout/FloatingFeedbackButton';
 import FloatingSnapshotButton from '@/components/settings/FloatingSnapshotButton';
 import DashboardHeader from '@/components/layout/DashboardHeader';
 import DashboardModals from '@/components/layout/DashboardModals';
@@ -161,6 +162,7 @@ export default function Home() {
         )}
 
         <FloatingSnapshotButton />
+        <FloatingFeedbackButton onClick={() => modals.setIsFeedbackOpen(true)} />
 
         <FloatingAddButton
           onAddStock={handleAddStock}
