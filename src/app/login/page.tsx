@@ -55,6 +55,8 @@ export default function LoginPage() {
             width={200}
             height={64}
             className="h-16 w-auto mx-auto"
+            loading="eager"
+            priority
             style={{
               filter: 'drop-shadow(0 0 8px rgba(255, 255, 255, 0.4))'
             }}
