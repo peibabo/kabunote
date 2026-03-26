@@ -31,7 +31,7 @@ const TITLES: TitleWithCondition[] = [
   { id: 'first_position', name: '初ポジション', description: '最初のポジションを登録', hint: '保有株のポジション情報を登録しよう', category: 'asset', icon: '📊', rarity: 'common', check: d => d.positionCount >= 1 },
   { id: 'diversified', name: '分散投資家', description: '5つのポジションを保有', hint: '5つ以上のポジションで分散投資しよう', category: 'asset', icon: '🔀', rarity: 'rare', check: d => d.positionCount >= 5 },
   { id: 'dividend_hunter', name: '配当ハンター', description: '3銘柄の配当を登録', hint: '配当情報を3銘柄分登録しよう', category: 'asset', icon: '💵', rarity: 'rare', check: d => d.dividendCount >= 3 },
-  { id: 'snapshot_habit', name: 'スナップショット習慣', description: '7日分の記録を達成', hint: 'ポートフォリオのスナップショットを7日分記録しよう', category: 'asset', icon: '📸', rarity: 'epic', check: d => d.snapshotCount >= 7 },
+  { id: 'snapshot_habit', name: '記録の習慣', description: '7日分の終値を記録', hint: '「本日の終値を確定」ボタンで7日分記録しよう', category: 'asset', icon: '📸', rarity: 'epic', check: d => d.snapshotCount >= 7 },
 
   // ── 🎯 戦略（4個）──
   { id: 'first_strategy', name: '戦略家', description: '最初の次の一手を登録', hint: '銘柄の「次の一手」を設定してみよう', category: 'strategy', icon: '🎯', rarity: 'common', check: d => d.nextActionCount >= 1 },
