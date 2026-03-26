@@ -41,13 +41,13 @@ const TITLES: TitleWithCondition[] = [
 
   // ── ✅ ルーティン（3個）──
   { id: 'checklist_first', name: 'ルーティン開始', description: 'チェックリスト初回全完了', hint: 'デイリーチェックリストを全項目完了しよう', category: 'streak', icon: '✅', rarity: 'common', check: d => d.checklistCompleteStreak >= 1 },
-  { id: 'checklist_7', name: '朝活投資家', description: 'チェックリスト7日連続全完了', hint: 'チェックリストを7日連続で完了しよう', category: 'streak', icon: '🌅', rarity: 'rare', check: d => d.checklistCompleteStreak >= 7 },
-  { id: 'checklist_30', name: '鉄の規律', description: 'チェックリスト30日連続全完了', hint: '30日連続でチェックリストを完了しよう', category: 'streak', icon: '🛡️', rarity: 'epic', check: d => d.checklistCompleteStreak >= 30 },
+  { id: 'checklist_7', name: '朝活投資家', description: 'チェックリスト7日連続全完了', hint: '毎日チェックリストを完了して7日続けよう', category: 'streak', icon: '🌅', rarity: 'rare', check: d => d.checklistCompleteStreak >= 7 },
+  { id: 'checklist_30', name: '鉄の規律', description: 'チェックリスト30日連続全完了', hint: '毎日チェックリストを完了して30日続けよう', category: 'streak', icon: '🛡️', rarity: 'epic', check: d => d.checklistCompleteStreak >= 30 },
 
   // ── 🔥 継続（5個）──
-  { id: 'streak_3', name: '三日坊主突破', description: '3日連続ログイン', hint: '3日連続でカブノオトにアクセスしよう', category: 'streak', icon: '🔥', rarity: 'common', check: d => d.longestStreak >= 3 },
-  { id: 'streak_7', name: '一週間の習慣', description: '7日連続ログイン', hint: '1週間毎日カブノオトを開こう', category: 'streak', icon: '📆', rarity: 'common', check: d => d.longestStreak >= 7 },
-  { id: 'streak_30', name: '月間投資家', description: '30日連続ログイン', hint: '30日連続ログインを達成しよう', category: 'streak', icon: '🏆', rarity: 'epic', check: d => d.longestStreak >= 30 },
+  { id: 'streak_3', name: '三日坊主突破', description: '営業日3日連続アクセス', hint: '相場が開いている日に3日続けてアクセスしよう（土日祝は途切れません）', category: 'streak', icon: '🔥', rarity: 'common', check: d => d.longestStreak >= 3 },
+  { id: 'streak_7', name: '一週間の習慣', description: '営業日7日連続アクセス', hint: '相場が開いている日に7日続けてアクセスしよう（土日祝は途切れません）', category: 'streak', icon: '📆', rarity: 'common', check: d => d.longestStreak >= 7 },
+  { id: 'streak_30', name: '月間投資家', description: '営業日30日連続アクセス', hint: '相場が開いている日に30日続けてアクセスしよう（土日祝は途切れません）', category: 'streak', icon: '🏆', rarity: 'epic', check: d => d.longestStreak >= 30 },
   { id: 'level_5', name: 'レベル5到達', description: '成長する投資家に到達', hint: 'XPを貯めてレベル5を目指そう', category: 'streak', icon: '⭐', rarity: 'common', check: d => d.level >= 5 },
   { id: 'max_level', name: 'カンスト達成', description: '投資の神に到達', hint: 'レベル20に到達しよう', category: 'streak', icon: '🌟', rarity: 'legendary', check: d => d.level >= 20 },
 
