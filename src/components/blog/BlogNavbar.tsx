@@ -37,7 +37,7 @@ export default function BlogNavbar() {
           <nav className="flex items-center gap-3 md:gap-6">
             <Link
               href="/blog"
-              className="text-gray-300 hover:text-white transition-colors text-sm font-medium"
+              className="text-gray-300 hover:text-white transition-colors text-sm font-medium hidden md:inline-block"
             >
               ブログ
             </Link>
