@@ -103,8 +103,9 @@
 
 ### M3. note / Zenn での発信（月2本） 🔄進行中
 - **note（投資家向け）:** 投資の思考整理法、カブノオトの使い方
-  - 第1弾: 開発ストーリー記事を下書き完了（`content/note/development-story.md`）
+  - 第1弾: 開発ストーリー記事を公開済み（`content/note/development-story.md`）
 - **Zenn（開発者向け）:** Next.js 16 + Supabase + Prisma 7 の技術記事、ゲーミフィケーション設計
+  - 第1弾: ゲーミフィケーション設計パターン記事を下書き完了（`content/zenn/gamification-design-patterns.md`）
 - 開発者にも投資家は多い → 間接的なユーザー獲得 + 被リンクでドメインパワー向上
 
 ### M4. ランディングページの社会的証明強化
