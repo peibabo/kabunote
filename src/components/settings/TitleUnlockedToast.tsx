@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { playSound } from '@/lib/sound'
 import ShareButtons from '@/components/common/ShareButtons'
 import type { TitleStatus } from '@/types/titles'
@@ -37,19 +37,12 @@ export default function TitleUnlockedToast() {
     playSound('accordionOpen')
   }, [queue, current])
 
-  const hideTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined)
-  const clearTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined)
-
-  // 自動消去タイマー
-  useEffect(() => {
-    if (!current) return
-    hideTimerRef.current = setTimeout(() => setIsVisible(false), 5000)
-    clearTimerRef.current = setTimeout(() => setCurrent(null), 5500)
-    return () => {
-      clearTimeout(hideTimerRef.current)
-      clearTimeout(clearTimerRef.current)
-    }
-  }, [current])
+  // 閉じる処理
+  const handleDismiss = useCallback(() => {
+    setIsVisible(false)
+    // フェードアウトアニメーション完了後にcurrentをクリア（次のキューを処理）
+    setTimeout(() => setCurrent(null), 500)
+  }, [])
 
   if (!current) return null
 
@@ -58,9 +51,9 @@ export default function TitleUnlockedToast() {
   return (
     <div
       className={`
-        fixed bottom-6 left-1/2 -translate-x-1/2 z-[9998] pointer-events-none
+        fixed bottom-6 left-1/2 -translate-x-1/2 z-[9998]
         transition-all duration-500
-        ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}
+        ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}
       `}
     >
       <div
@@ -84,6 +77,13 @@ export default function TitleUnlockedToast() {
             text={`称号「${current.name}」をアンロックしました！`}
           />
         </div>
+        <button
+          onClick={handleDismiss}
+          className="ml-1 text-gray-400 hover:text-white transition-colors cursor-pointer min-w-[32px] min-h-[32px] flex items-center justify-center"
+          aria-label="閉じる"
+        >
+          ✕
+        </button>
       </div>
     </div>
   )

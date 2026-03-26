@@ -1,6 +1,5 @@
 'use client';
 
-import TitleCollection from '../../settings/TitleCollection';
 import LevelDetailSection from './LevelDetailSection';
 import AnalysisSection from './AnalysisSection';
 import SettingsSection from './SettingsSection';
@@ -81,37 +80,18 @@ export default function MenuItems({
 
       {/* 称号コレクション */}
       {titles && (
-        <div>
-          <button
-            onClick={() => onToggleSection('titles')}
-            className="w-full flex items-center justify-between p-3 text-left hover:bg-gray-700 rounded-lg transition-colors cursor-pointer"
-          >
-            <div className="flex items-center space-x-3">
-              <span className="text-xl">&#x1F3C6;</span>
-              <span className="text-white">
-                称号コレクション
-              </span>
-              <span className="text-xs text-purple-400/70">
-                {titles.unlockedCount}/{titles.totalCount}
-              </span>
-            </div>
-            <span className={`text-gray-400 transition-transform ${
-              expandedSections.has('titles') ? 'rotate-90' : ''
-            }`}>
-              &#x25B6;
-            </span>
-          </button>
-
-          {expandedSections.has('titles') && (
-            <div className="ml-2 mr-2 mt-2">
-              <TitleCollection
-                titles={titles.titles}
-                unlockedCount={titles.unlockedCount}
-                totalCount={titles.totalCount}
-              />
-            </div>
-          )}
-        </div>
+        <button
+          onClick={() => onMenuClick('titles')}
+          className="w-full flex items-center justify-between p-3 text-left hover:bg-gray-700 rounded-lg transition-colors cursor-pointer"
+        >
+          <div className="flex items-center space-x-3">
+            <span className="text-xl">&#x1F3C6;</span>
+            <span className="text-white">称号コレクション</span>
+          </div>
+          <span className="px-2 py-0.5 text-xs font-medium text-purple-400 bg-purple-400/10 rounded-full">
+            {titles.unlockedCount}/{titles.totalCount}
+          </span>
+        </button>
       )}
 
       {/* アラート一覧 */}
