@@ -26,7 +26,7 @@ export default function LandingNavbar() {
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled
+        scrolled || menuOpen
           ? 'bg-slate-900/95 backdrop-blur-md shadow-lg'
           : 'bg-transparent'
       }`}
