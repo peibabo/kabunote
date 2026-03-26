@@ -15,6 +15,7 @@ import OnboardingWizard from '@/components/onboarding/OnboardingWizard';
 import SlideOutMenu from '@/components/layout/SlideOutMenu';
 import NewsListPage from '@/components/news/NewsListPage';
 import ChartMemoListPage from '@/components/portfolio/ChartMemoListPage';
+import TitleCollectionPage from '@/components/settings/TitleCollectionPage';
 import { FavoriteGroup } from '@/types/favorites';
 import { AlertCounts } from '@/hooks/alert/useAlertCounts';
 import { StockData } from '@/hooks/stock/useStockData';
@@ -77,6 +78,8 @@ interface DashboardModalsProps {
     setIsNewsListOpen: (v: boolean) => void;
     isChartMemoListOpen: boolean;
     setIsChartMemoListOpen: (v: boolean) => void;
+    isTitleCollectionOpen: boolean;
+    setIsTitleCollectionOpen: (v: boolean) => void;
     isMenuOpen: boolean;
     setIsMenuOpen: (v: boolean) => void;
     handleMenuItemClick: (item: string) => void;
@@ -210,6 +213,16 @@ export default function DashboardModals({
         title="📝 チャートメモ一覧"
       >
         <ChartMemoListPage isOpen={modals.isChartMemoListOpen} />
+      </FullScreenModal>
+
+      {/* 称号コレクションモーダル */}
+      <FullScreenModal
+        isOpen={modals.isTitleCollectionOpen}
+        onClose={() => modals.setIsTitleCollectionOpen(false)}
+        title="🏆 称号コレクション"
+        maxWidth="max-w-4xl"
+      >
+        <TitleCollectionPage />
       </FullScreenModal>
 
       {/* 目安箱モーダル */}

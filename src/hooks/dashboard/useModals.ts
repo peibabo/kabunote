@@ -24,6 +24,8 @@ interface UseModalsReturn {
   setIsNewsListOpen: (open: boolean) => void;
   isChartMemoListOpen: boolean;
   setIsChartMemoListOpen: (open: boolean) => void;
+  isTitleCollectionOpen: boolean;
+  setIsTitleCollectionOpen: (open: boolean) => void;
   isMenuOpen: boolean;
   setIsMenuOpen: (open: boolean) => void;
   handleMenuItemClick: (action: string) => void;
@@ -41,6 +43,7 @@ export function useModals(refreshData: () => Promise<void>, onTutorialClick?: ()
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [isNewsListOpen, setIsNewsListOpen] = useState(false);
   const [isChartMemoListOpen, setIsChartMemoListOpen] = useState(false);
+  const [isTitleCollectionOpen, setIsTitleCollectionOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const handleMenuItemClick = useCallback((action: string) => {
@@ -85,6 +88,9 @@ export function useModals(refreshData: () => Promise<void>, onTutorialClick?: ()
       case 'chartMemos':
         setIsChartMemoListOpen(true);
         break;
+      case 'titles':
+        setIsTitleCollectionOpen(true);
+        break;
       case 'logout': {
         const supabase = createClient();
         supabase.auth.signOut().then(() => {
@@ -114,6 +120,7 @@ export function useModals(refreshData: () => Promise<void>, onTutorialClick?: ()
     isFeedbackOpen, setIsFeedbackOpen,
     isNewsListOpen, setIsNewsListOpen,
     isChartMemoListOpen, setIsChartMemoListOpen,
+    isTitleCollectionOpen, setIsTitleCollectionOpen,
     isMenuOpen, setIsMenuOpen,
     handleMenuItemClick,
   };

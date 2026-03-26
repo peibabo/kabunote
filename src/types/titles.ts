@@ -9,6 +9,7 @@ export interface TitleDefinition {
   id: string
   name: string
   description: string
+  hint: string
   category: TitleCategory
   icon: string
   rarity: TitleRarity
