@@ -34,7 +34,7 @@ export default function BlogNavbar() {
             />
           </Link>
 
-          <nav className="flex items-center gap-6">
+          <nav className="flex items-center gap-3 md:gap-6">
             <Link
               href="/blog"
               className="text-gray-300 hover:text-white transition-colors text-sm font-medium"
@@ -49,7 +49,7 @@ export default function BlogNavbar() {
             </Link>
             <Link
               href="/login"
-              className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-all text-sm hover:scale-105"
+              className="px-4 py-2 md:px-5 md:py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-all text-sm hover:scale-105 whitespace-nowrap"
             >
               無料で始める
             </Link>
