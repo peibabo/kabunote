@@ -132,7 +132,7 @@ function StockCard({ symbol, onRemove, favoriteGroups, onFavoriteGroupsChange, i
         />
 
         {/* チャート確認ボタン */}
-        <div className="mb-4">
+        <div className="mb-2">
           <button
             onClick={() => {
               const url = `https://finance.yahoo.co.jp/quote/${symbol}.T?term=1d`;
@@ -142,6 +142,34 @@ function StockCard({ symbol, onRemove, favoriteGroups, onFavoriteGroupsChange, i
           >
             📈 最新チャートを確認
           </button>
+        </div>
+
+        {/* ニュースリンク */}
+        <div className="flex gap-2 mb-1">
+          <a
+            href={`https://finance.yahoo.co.jp/quote/${symbol}.T/news`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 text-center bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white text-xs font-medium py-2 px-2 rounded-lg transition-colors"
+          >
+            Yahoo!ニュース
+          </a>
+          <a
+            href={`https://kabutan.jp/stock/news?code=${symbol}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 text-center bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white text-xs font-medium py-2 px-2 rounded-lg transition-colors"
+          >
+            株探ニュース
+          </a>
+          <a
+            href={`https://minkabu.jp/stock/${symbol}/news`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 text-center bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white text-xs font-medium py-2 px-2 rounded-lg transition-colors"
+          >
+            みんかぶニュース
+          </a>
         </div>
 
         {/* タブナビゲーション */}
