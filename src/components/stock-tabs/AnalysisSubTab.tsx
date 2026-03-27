@@ -152,9 +152,9 @@ export default function AnalysisSubTab({
               </div>
               {plData && (
                 <div className="mt-1">
-                  <span className="text-gray-400">前回損益 ¥{`${plData.plSign(plData.prevPL)}${Math.round(plData.prevPL).toLocaleString()}`}</span>
+                  <span className="text-gray-400">損益 ¥{`${plData.plSign(plData.prevPL)}${Math.round(plData.prevPL).toLocaleString()}`}</span>
                   <span className="text-gray-500 mx-1">→</span>
-                  <span className="text-gray-300">現在損益 ¥{`${plData.plSign(plData.currentPL)}${Math.round(plData.currentPL).toLocaleString()}`}</span>
+                  <span className="text-gray-300">¥{`${plData.plSign(plData.currentPL)}${Math.round(plData.currentPL).toLocaleString()}`}</span>
                   <span className={`ml-1.5 font-medium ${plData.plDiffColor}`}>
                     （{plData.plSign(plData.plDiff)}¥{Math.abs(Math.round(plData.plDiff)).toLocaleString()}）
                   </span>
