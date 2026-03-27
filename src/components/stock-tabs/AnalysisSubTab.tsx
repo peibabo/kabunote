@@ -21,6 +21,8 @@ interface AnalysisSubTabProps {
   profitLossInfo: ProfitLossInfo | null;
   snapshotPrice: number | null;
   snapshotDate: string | null;
+  snapshotValue: number | null;
+  snapshotCost: number | null;
 }
 
 export default function AnalysisSubTab({
@@ -37,6 +39,8 @@ export default function AnalysisSubTab({
   profitLossInfo,
   snapshotPrice,
   snapshotDate,
+  snapshotValue,
+  snapshotCost,
 }: AnalysisSubTabProps) {
   const progressData = calculateProgress(targetPrice, stopLoss, currentPrice);
   const riskRewardRatio = calculateRiskRewardRatio(profitLossInfo);
@@ -118,17 +122,45 @@ export default function AnalysisSubTab({
             : change.direction === 'down' ? 'text-red-400'
             : 'text-gray-400';
           const tooltip = snapshotDate ? `前回記録: ${snapshotDate}` : undefined;
+
+          // 損益比較の計算
+          const prevPL = (snapshotValue != null && snapshotCost != null) ? snapshotValue - snapshotCost : null;
+          const currentPL = positionSummary.totalShares > 0
+            ? current * positionSummary.totalShares - positionSummary.totalCost
+            : null;
+          const showPL = prevPL != null && currentPL != null && positionSummary.totalShares > 0;
+
           return (
-            <div
-              className="bg-gray-700/30 rounded-lg px-3 py-1.5 text-center text-xs"
-              title={tooltip}
-            >
-              <span className="text-gray-400">前回 ¥{snapshotPrice.toLocaleString()}</span>
-              <span className="text-gray-500 mx-1">→</span>
-              <span className="text-gray-300">現在 ¥{current.toLocaleString()}</span>
-              <span className={`ml-1.5 font-medium ${colorClass}`}>
-                （{diffText} / {rateText}）
-              </span>
+            <div className="space-y-1">
+              <div
+                className="bg-gray-700/30 rounded-lg px-3 py-1.5 text-center text-xs"
+                title={tooltip}
+              >
+                <span className="text-gray-400">前回 ¥{snapshotPrice.toLocaleString()}</span>
+                <span className="text-gray-500 mx-1">→</span>
+                <span className="text-gray-300">現在 ¥{current.toLocaleString()}</span>
+                <span className={`ml-1.5 font-medium ${colorClass}`}>
+                  （{diffText} / {rateText}）
+                </span>
+              </div>
+              {showPL && (() => {
+                const plDiff = currentPL - prevPL;
+                const plDiffColor = plDiff > 0 ? 'text-green-400' : plDiff < 0 ? 'text-red-400' : 'text-gray-400';
+                const plSign = (v: number) => v >= 0 ? '+' : '';
+                return (
+                  <div
+                    className="bg-gray-700/30 rounded-lg px-3 py-1.5 text-center text-xs"
+                    title={tooltip}
+                  >
+                    <span className="text-gray-400">前回損益 ¥{`${plSign(prevPL)}${Math.round(prevPL).toLocaleString()}`}</span>
+                    <span className="text-gray-500 mx-1">→</span>
+                    <span className="text-gray-300">現在損益 ¥{`${plSign(currentPL)}${Math.round(currentPL).toLocaleString()}`}</span>
+                    <span className={`ml-1.5 font-medium ${plDiffColor}`}>
+                      （{plSign(plDiff)}¥{Math.abs(Math.round(plDiff)).toLocaleString()}）
+                    </span>
+                  </div>
+                );
+              })()}
             </div>
           );
         })()}
