@@ -152,7 +152,7 @@ function StockCard({ symbol, onRemove, favoriteGroups, onFavoriteGroupsChange, i
             rel="noopener noreferrer"
             className="flex-1 text-center bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white text-xs font-medium py-1.5 px-2 rounded-lg transition-colors"
           >
-            📰 Yahoo!ニュース
+            Yahoo!ニュース
           </a>
           <a
             href={`https://kabutan.jp/stock/news?code=${symbol}`}
@@ -160,7 +160,7 @@ function StockCard({ symbol, onRemove, favoriteGroups, onFavoriteGroupsChange, i
             rel="noopener noreferrer"
             className="flex-1 text-center bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white text-xs font-medium py-1.5 px-2 rounded-lg transition-colors"
           >
-            📋 株探ニュース
+            株探ニュース
           </a>
           <a
             href={`https://minkabu.jp/stock/${symbol}/news`}
@@ -168,7 +168,7 @@ function StockCard({ symbol, onRemove, favoriteGroups, onFavoriteGroupsChange, i
             rel="noopener noreferrer"
             className="flex-1 text-center bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white text-xs font-medium py-1.5 px-2 rounded-lg transition-colors"
           >
-            🗞️ みんかぶニュース
+            みんかぶニュース
           </a>
         </div>
 
