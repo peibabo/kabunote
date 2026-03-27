@@ -144,6 +144,34 @@ function StockCard({ symbol, onRemove, favoriteGroups, onFavoriteGroupsChange, i
           </button>
         </div>
 
+        {/* ニュースリンク */}
+        <div className="flex gap-2 mb-4">
+          <a
+            href={`https://finance.yahoo.co.jp/quote/${symbol}.T/news`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 text-center bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white text-xs font-medium py-1.5 px-2 rounded-lg transition-colors"
+          >
+            📰 Yahoo!ニュース
+          </a>
+          <a
+            href={`https://kabutan.jp/stock/news?code=${symbol}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 text-center bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white text-xs font-medium py-1.5 px-2 rounded-lg transition-colors"
+          >
+            📋 株探ニュース
+          </a>
+          <a
+            href={`https://minkabu.jp/stock/${symbol}/news`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 text-center bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white text-xs font-medium py-1.5 px-2 rounded-lg transition-colors"
+          >
+            🗞️ みんかぶニュース
+          </a>
+        </div>
+
         {/* タブナビゲーション */}
         <div className="flex border-b border-gray-600 mb-4">
           {tabs.map((tab) => (
