@@ -25,12 +25,12 @@ export const GET = withAuth(async ({ user }) => {
     orderBy: { snapshotDate: 'desc' },
     include: { stockSnapshots: true },
   })
-  const snapshotPriceMap = new Map<string, { price: number; date: string }>()
+  const snapshotPriceMap = new Map<string, { price: number; date: string; value: number; cost: number }>()
   if (latestSnapshot) {
     const dateStr = latestSnapshot.snapshotDate.toISOString().split('T')[0]
     for (const ss of latestSnapshot.stockSnapshots) {
       if (ss.currentPrice != null) {
-        snapshotPriceMap.set(ss.stockId, { price: Number(ss.currentPrice), date: dateStr })
+        snapshotPriceMap.set(ss.stockId, { price: Number(ss.currentPrice), date: dateStr, value: Number(ss.value), cost: Number(ss.cost) })
       }
     }
   }
@@ -103,6 +103,8 @@ export const GET = withAuth(async ({ user }) => {
       })),
       snapshotPrice: snapshotPriceMap.get(stock.id)?.price ?? null,
       snapshotDate: snapshotPriceMap.get(stock.id)?.date ?? null,
+      snapshotValue: snapshotPriceMap.get(stock.id)?.value ?? null,
+      snapshotCost: snapshotPriceMap.get(stock.id)?.cost ?? null,
       createdAt: stock.createdAt.toISOString(),
       updatedAt: stock.updatedAt.toISOString()
     }

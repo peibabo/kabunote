@@ -26,6 +26,8 @@ interface InvestmentStrategyTabProps {
   isNapSaving: boolean;
   snapshotPrice?: number | null;
   snapshotDate?: string | null;
+  snapshotValue?: number | null;
+  snapshotCost?: number | null;
 }
 
 export default function InvestmentStrategyTab({
@@ -47,6 +49,8 @@ export default function InvestmentStrategyTab({
   isNapSaving,
   snapshotPrice,
   snapshotDate,
+  snapshotValue,
+  snapshotCost,
 }: InvestmentStrategyTabProps) {
   const { activeTab, setActiveTab, tabs, isLoading } = useInvestmentTabState(symbol, 'analysis');
 
@@ -99,6 +103,8 @@ export default function InvestmentStrategyTab({
             profitLossInfo={profitLossInfo}
             snapshotPrice={snapshotPrice ?? null}
             snapshotDate={snapshotDate ?? null}
+            snapshotValue={snapshotValue ?? null}
+            snapshotCost={snapshotCost ?? null}
           />
         )}
 
