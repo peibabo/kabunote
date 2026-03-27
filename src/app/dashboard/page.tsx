@@ -68,7 +68,7 @@ export default function Home() {
   const { stockCalendarData, hasCalendarData } = useCalendarData(
     stockSymbols, stockDataMap, isInitialized, updateStockPrice, updateStockData, updateStockEvent
   );
-  const { hasPortfolioData } = usePortfolioData(stockData, isInitialized);
+  const { hasPortfolioData, hasSnapshotReady } = usePortfolioData(stockData, isInitialized);
   const { dividendBenefitData } = useDividendBenefitData(
     stockSymbols, stockDataMap, true, isInitialized
   );
@@ -161,7 +161,7 @@ export default function Home() {
           />
         )}
 
-        <FloatingSnapshotButton />
+        <FloatingSnapshotButton hasSnapshotReady={hasSnapshotReady} />
         <FloatingFeedbackButton onClick={() => modals.setIsFeedbackOpen(true)} />
 
         <FloatingAddButton

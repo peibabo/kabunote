@@ -4,7 +4,11 @@ import { useState, useEffect, useCallback } from 'react';
 import { playSound } from '@/lib/sound';
 import { getJSTHour, getTodayJST } from '@/lib/dateJst';
 
-export default function FloatingSnapshotButton() {
+interface FloatingSnapshotButtonProps {
+  hasSnapshotReady: boolean;
+}
+
+export default function FloatingSnapshotButton({ hasSnapshotReady }: FloatingSnapshotButtonProps) {
   const [isAfter15, setIsAfter15] = useState(() => getJSTHour() >= 15);
   const [todayRecorded, setTodayRecorded] = useState<boolean | null>(null); // null = 未確認
   const [isCreating, setIsCreating] = useState(false);
@@ -68,7 +72,7 @@ export default function FloatingSnapshotButton() {
   };
 
   // 表示条件: 15時以降 かつ (本日未記録 or 成功表示中)
-  const shouldShow = isAfter15 && (todayRecorded === false || showSuccess);
+  const shouldShow = isAfter15 && hasSnapshotReady && (todayRecorded === false || showSuccess);
 
   if (!shouldShow) return null;
 
