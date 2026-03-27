@@ -130,12 +130,19 @@ export default function AnalysisSubTab({
             : null;
           const showPL = prevPL != null && currentPL != null && positionSummary.totalShares > 0;
 
+          const plData = showPL ? (() => {
+            const plDiff = currentPL - prevPL;
+            const plDiffColor = plDiff > 0 ? 'text-green-400' : plDiff < 0 ? 'text-red-400' : 'text-gray-400';
+            const plSign = (v: number) => v >= 0 ? '+' : '';
+            return { plDiff, plDiffColor, plSign, prevPL, currentPL };
+          })() : null;
+
           return (
-            <div className="space-y-1">
-              <div
-                className="bg-gray-700/30 rounded-lg px-3 py-1.5 text-center text-xs"
-                title={tooltip}
-              >
+            <div
+              className="bg-gray-700/30 rounded-lg px-3 py-1.5 text-center text-xs"
+              title={tooltip}
+            >
+              <div>
                 <span className="text-gray-400">前回 ¥{snapshotPrice.toLocaleString()}</span>
                 <span className="text-gray-500 mx-1">→</span>
                 <span className="text-gray-300">現在 ¥{current.toLocaleString()}</span>
@@ -143,24 +150,16 @@ export default function AnalysisSubTab({
                   （{diffText} / {rateText}）
                 </span>
               </div>
-              {showPL && (() => {
-                const plDiff = currentPL - prevPL;
-                const plDiffColor = plDiff > 0 ? 'text-green-400' : plDiff < 0 ? 'text-red-400' : 'text-gray-400';
-                const plSign = (v: number) => v >= 0 ? '+' : '';
-                return (
-                  <div
-                    className="bg-gray-700/30 rounded-lg px-3 py-1.5 text-center text-xs"
-                    title={tooltip}
-                  >
-                    <span className="text-gray-400">前回損益 ¥{`${plSign(prevPL)}${Math.round(prevPL).toLocaleString()}`}</span>
-                    <span className="text-gray-500 mx-1">→</span>
-                    <span className="text-gray-300">現在損益 ¥{`${plSign(currentPL)}${Math.round(currentPL).toLocaleString()}`}</span>
-                    <span className={`ml-1.5 font-medium ${plDiffColor}`}>
-                      （{plSign(plDiff)}¥{Math.abs(Math.round(plDiff)).toLocaleString()}）
-                    </span>
-                  </div>
-                );
-              })()}
+              {plData && (
+                <div className="mt-1">
+                  <span className="text-gray-400">前回損益 ¥{`${plData.plSign(plData.prevPL)}${Math.round(plData.prevPL).toLocaleString()}`}</span>
+                  <span className="text-gray-500 mx-1">→</span>
+                  <span className="text-gray-300">現在損益 ¥{`${plData.plSign(plData.currentPL)}${Math.round(plData.currentPL).toLocaleString()}`}</span>
+                  <span className={`ml-1.5 font-medium ${plData.plDiffColor}`}>
+                    （{plData.plSign(plData.plDiff)}¥{Math.abs(Math.round(plData.plDiff)).toLocaleString()}）
+                  </span>
+                </div>
+              )}
             </div>
           );
         })()}
