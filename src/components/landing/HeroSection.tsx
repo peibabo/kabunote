@@ -30,11 +30,11 @@ export default function HeroSection() {
               ひとつに。
             </span>
           </h1>
-          <p className="text-lg md:text-xl text-gray-300 mb-10 leading-relaxed max-w-2xl mx-auto">
+          <p className="text-base md:text-xl text-gray-300 mb-10 leading-relaxed max-w-2xl mx-auto">
             散らばる銘柄情報・メモ・戦略・スケジュール。
-            <br className="hidden md:block" />
+            <br />
             カブノオトなら、すべてを一つのダッシュボードで整理できます。
-            <br className="hidden md:block" />
+            <br />
             <span className="text-gray-400">毎日の投資習慣が、レベルアップの楽しさに変わります。</span>
           </p>
           <div className="flex flex-col items-center gap-4">
@@ -44,7 +44,7 @@ export default function HeroSection() {
             >
               無料で始める
             </Link>
-            <p className="text-sm text-gray-500">
+            <p className="text-xs text-gray-500">
               Google アカウントで30秒で登録 &mdash; クレジットカード不要
             </p>
           </div>

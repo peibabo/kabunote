@@ -44,7 +44,7 @@ export default function ProblemSection() {
     <section className="py-20 md:py-28">
       <div className="container mx-auto px-4">
         <ScrollAnimationWrapper className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+          <h2 className="text-2xl md:text-4xl font-bold text-white mb-4">
             こんな悩み、ありませんか？
           </h2>
         </ScrollAnimationWrapper>
