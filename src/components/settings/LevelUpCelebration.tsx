@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { playSound } from '@/lib/sound'
 import ShareButtons from '@/components/common/ShareButtons'
 
@@ -12,8 +12,11 @@ interface LevelUpDetail {
 export default function LevelUpCelebration() {
   const [celebration, setCelebration] = useState<LevelUpDetail | null>(null)
   const [isVisible, setIsVisible] = useState(false)
-  const hideTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
-  const clearTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
+
+  const handleClose = useCallback(() => {
+    setIsVisible(false)
+    setTimeout(() => setCelebration(null), 500)
+  }, [])
 
   useEffect(() => {
     const handler = (e: Event) => {
@@ -21,17 +24,11 @@ export default function LevelUpCelebration() {
       setCelebration(detail)
       setIsVisible(true)
       playSound('levelUp')
-
-      // 5秒後にフェードアウト（シェアボタン操作時間を確保）
-      hideTimer.current = setTimeout(() => setIsVisible(false), 5000)
-      clearTimer.current = setTimeout(() => setCelebration(null), 5500)
     }
 
     window.addEventListener('kabunote-level-up', handler)
     return () => {
       window.removeEventListener('kabunote-level-up', handler)
-      clearTimeout(hideTimer.current)
-      clearTimeout(clearTimer.current)
     }
   }, [])
 
@@ -40,13 +37,13 @@ export default function LevelUpCelebration() {
   return (
     <div
       className={`
-        fixed inset-0 z-[9999] flex items-center justify-center pointer-events-none
+        fixed inset-0 z-[9999] flex items-center justify-center
         transition-opacity duration-500
         ${isVisible ? 'opacity-100' : 'opacity-0'}
       `}
     >
-      {/* 背景オーバーレイ */}
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+      {/* 背景オーバーレイ（クリックで閉じる） */}
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={handleClose} />
 
       {/* コンテンツ */}
       <div
@@ -61,6 +58,18 @@ export default function LevelUpCelebration() {
           boxShadow: '0 0 40px rgba(251, 191, 36, 0.3), 0 0 80px rgba(251, 191, 36, 0.15)',
         }}
       >
+        {/* 閉じるボタン */}
+        <button
+          onClick={handleClose}
+          className="absolute top-2 right-2 text-amber-300 hover:text-amber-100 transition-colors p-1"
+          aria-label="閉じる"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+
         {/* 星アニメーション */}
         <div className="text-4xl animate-bounce">
           &#x2B50;
