@@ -397,7 +397,7 @@ export const soundStore = {
 
 `AudioContext` はブラウザのAutoplay Policyにより、ユーザー操作（クリックなど）をトリガーにして初めて初期化する必要があります。`initSoundEngine()` を最初のユーザー操作時に呼び出すことで、この制約に対応しています。
 
-実際のレベルアップ演出は動かして体験するのが一番わかりやすいので、興味があれば[カブノオト](https://kabunote.com)で試してみてください。
+実際のレベルアップ演出は動かして体験するのが一番わかりやすいので、興味があれば[カブノオト](https://kabunote.jp)で試してみてください。
 
 ## まとめ：アーキテクチャ全体像
 
@@ -444,6 +444,6 @@ export const soundStore = {
 
 ---
 
-[カブノオト](https://kabunote.com) — 投資家の思考を整理する無料Webアプリ
+[カブノオト](https://kabunote.jp) — 投資家の思考を整理する無料Webアプリ
 
 開発の経緯については [noteの記事](https://note.com/kabunote/n/n0db3ffe128c7) に書いています。バイブコーディング（Claude Code）で2ヶ月で25以上の機能を実装した話です。
