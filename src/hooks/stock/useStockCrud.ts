@@ -36,6 +36,8 @@ export function useStockCrud({ setStockData, setStockSymbols }: UseStockCrudPara
         tags: [],
         nextActionPlan: null,
         snapshotPrice: null,
+        snapshotValue: null,
+        snapshotCost: null,
         snapshotDate: null,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
