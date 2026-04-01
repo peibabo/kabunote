@@ -13,12 +13,12 @@ export default function FinalCTASection() {
 
             <div className="bg-gradient-to-br from-blue-900/40 via-gray-800/40 to-cyan-900/40 border border-gray-700/40 rounded-2xl p-12 md:p-16 text-center">
               <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-                投資の思考整理を、
+                <span className="inline-block">投資の思考整理を、</span>
                 <br />
                 今日から始めよう
               </h2>
               <p className="text-gray-300 mb-10 text-lg">
-                完全無料。今日から投資家レベルを上げていこう。
+                完全無料。<span className="inline-block">今日から投資家レベルを上げていこう。</span>
               </p>
               <Link
                 href="/login"
