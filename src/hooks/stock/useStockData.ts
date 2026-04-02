@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { createClient } from '@/lib/supabase-client';
 import { toast } from '@/lib/toast';
 import { useStockCrud } from '@/hooks/stock/useStockCrud';
@@ -76,7 +76,7 @@ export function useStockData(): UseStockDataReturn {
   };
 
   // ローカルステートの並び順を更新（楽観的更新用）
-  const reorderStocks = (newSymbolOrder: string[]): void => {
+  const reorderStocks = useCallback((newSymbolOrder: string[]): void => {
     setStockSymbols(newSymbolOrder);
     setStockData(prev => {
       const ordered = newSymbolOrder
@@ -84,10 +84,10 @@ export function useStockData(): UseStockDataReturn {
         .filter((s): s is StockData => s !== undefined);
       return ordered;
     });
-  };
+  }, []);
 
   // 特定銘柄の価格データのみを部分更新（全再取得を避けるため）
-  const updateStockPrice = (
+  const updateStockPrice = useCallback((
     symbol: string,
     priceData: { currentPrice: number | null; targetPrice: number | null; stopLossPrice: number | null }
   ): void => {
@@ -98,17 +98,17 @@ export function useStockData(): UseStockDataReturn {
           : stock
       )
     );
-  };
+  }, []);
 
   // 特定銘柄の任意フィールドを部分更新
-  const updateStockData = (symbol: string, updates: Partial<StockData>): void => {
+  const updateStockData = useCallback((symbol: string, updates: Partial<StockData>): void => {
     setStockData(prev =>
       prev.map(stock => stock.symbol === symbol ? { ...stock, ...updates } : stock)
     );
-  };
+  }, []);
 
   // 特定銘柄の特定 eventType のイベントのみ差し替え（null で削除）
-  const updateStockEvent = (
+  const updateStockEvent = useCallback((
     symbol: string,
     eventType: string,
     eventData: StockData['events'][0] | null
@@ -121,7 +121,7 @@ export function useStockData(): UseStockDataReturn {
         return { ...stock, events: newEvents };
       })
     );
-  };
+  }, []);
 
   // データを読み込む
   const refreshData = async (): Promise<void> => {
