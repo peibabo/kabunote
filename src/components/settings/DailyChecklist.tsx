@@ -140,7 +140,7 @@ export default function DailyChecklist() {
           <div className="flex items-center justify-between mt-3">
             {!isEditing && totalCount < MAX_CHECKLIST_ITEMS && (
               <div className="flex items-center gap-2 flex-1">
-                <input ref={inputRef} type="text" value={newItemLabel} onChange={e => setNewItemLabel(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') handleAddItem() }} placeholder="+ 項目を追加" className="flex-1 bg-transparent text-sm text-gray-300 placeholder-gray-600 border-b border-gray-700 focus:border-teal-500 outline-none py-1" maxLength={100} />
+                <input ref={inputRef} type="text" value={newItemLabel} onChange={e => setNewItemLabel(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.nativeEvent.isComposing) handleAddItem() }} placeholder="+ 項目を追加" className="flex-1 bg-transparent text-sm text-gray-300 placeholder-gray-600 border-b border-gray-700 focus:border-teal-500 outline-none py-1" maxLength={100} />
                 {newItemLabel.trim() && (
                   <button onClick={handleAddItem} className="cursor-pointer text-teal-400 hover:text-teal-300 text-xs transition-colors">追加</button>
                 )}

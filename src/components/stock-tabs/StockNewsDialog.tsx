@@ -141,7 +141,7 @@ export default function StockNewsDialog({
               type="url"
               value={newUrl}
               onChange={e => setNewUrl(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter') handleAdd() }}
+              onKeyDown={e => { if (e.key === 'Enter' && !e.nativeEvent.isComposing) handleAdd() }}
               placeholder="https://..."
               className="w-full bg-gray-900/50 text-base md:text-sm text-gray-200 placeholder-gray-600 border border-gray-700/50 rounded-md px-3 py-2 focus:outline-none focus:border-orange-500/50 transition-colors"
             />
@@ -150,7 +150,7 @@ export default function StockNewsDialog({
                 type="text"
                 value={newComment}
                 onChange={e => setNewComment(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter') handleAdd() }}
+                onKeyDown={e => { if (e.key === 'Enter' && !e.nativeEvent.isComposing) handleAdd() }}
                 placeholder="コメント（任意）"
                 maxLength={500}
                 className="flex-1 bg-gray-900/50 text-base md:text-sm text-gray-200 placeholder-gray-600 border border-gray-700/50 rounded-md px-3 py-2 focus:outline-none focus:border-orange-500/50 transition-colors"

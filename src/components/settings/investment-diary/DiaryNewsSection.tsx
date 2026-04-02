@@ -85,7 +85,7 @@ export default function DiaryNewsSection({
             type="url"
             value={newUrl}
             onChange={e => onNewUrlChange(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter') onAddNews() }}
+            onKeyDown={e => { if (e.key === 'Enter' && !e.nativeEvent.isComposing) onAddNews() }}
             placeholder="https://..."
             className="w-full bg-gray-900/50 text-xs text-gray-200 placeholder-gray-600 border border-gray-700/50 rounded-md px-2 py-1.5 focus:outline-none focus:border-orange-500/50 transition-colors"
           />
@@ -94,7 +94,7 @@ export default function DiaryNewsSection({
               type="text"
               value={newComment}
               onChange={e => onNewCommentChange(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter') onAddNews() }}
+              onKeyDown={e => { if (e.key === 'Enter' && !e.nativeEvent.isComposing) onAddNews() }}
               placeholder="コメント（任意）"
               maxLength={500}
               className="flex-1 bg-gray-900/50 text-xs text-gray-200 placeholder-gray-600 border border-gray-700/50 rounded-md px-2 py-1.5 focus:outline-none focus:border-orange-500/50 transition-colors"
