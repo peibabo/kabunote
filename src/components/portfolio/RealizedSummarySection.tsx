@@ -5,10 +5,17 @@ import { usePortfolioRealizedTrades } from '@/hooks/portfolio/useRealizedTrades'
 import { useAccordionState } from '@/hooks/util/useAccordionState';
 import { summarizeRealizedTrades } from '@/lib/realizedTradeCalc';
 import { formatPrice, formatProfitLoss, formatShares } from '@/lib/positionCalc';
+import { playSound } from '@/lib/sound';
 
 export default function RealizedSummarySection() {
-  const { trades, isLoading } = usePortfolioRealizedTrades();
+  const { trades, isLoading, deleteTrade } = usePortfolioRealizedTrades();
   const { isExpanded, toggle } = useAccordionState();
+
+  const handleDelete = async (tradeId: string, stockId: string) => {
+    if (!confirm('この売却記録を削除しますか？\n※ 保有株数は変更されません')) return;
+    playSound('buttonDelete');
+    await deleteTrade(tradeId, stockId);
+  };
 
   // 売却日(YYYY-MM-DD)の先頭4桁から、データのある年を新しい順に列挙
   const yearOptions = useMemo(() => {
@@ -97,13 +104,22 @@ export default function RealizedSummarySection() {
         {yearTrades.length > 0 && (
           <div className="space-y-1.5">
             {yearTrades.map(t => (
-              <div key={t.id} className="bg-gray-700/60 rounded px-3 py-2 text-xs flex items-center justify-between">
+              <div key={t.id} className="bg-gray-700/60 rounded px-3 py-2 text-xs flex items-center justify-between gap-2">
                 <span className="text-gray-300">
                   {t.sellDate} ・ {t.symbol} ・ {formatShares(t.soldShares)}株 @ {formatPrice(t.sellPrice)}円
                 </span>
-                <span className={t.realizedPL >= 0 ? 'text-green-400 font-medium' : 'text-red-400 font-medium'}>
-                  {formatProfitLoss(t.realizedPL)}円
-                </span>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className={t.realizedPL >= 0 ? 'text-green-400 font-medium' : 'text-red-400 font-medium'}>
+                    {formatProfitLoss(t.realizedPL)}円
+                  </span>
+                  <button
+                    onClick={() => handleDelete(t.id, t.stockId)}
+                    aria-label="売却記録を削除"
+                    className="cursor-pointer text-gray-500 hover:text-red-400 transition-colors"
+                  >
+                    {'\u{1F5D1}'}
+                  </button>
+                </div>
               </div>
             ))}
           </div>
