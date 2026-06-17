@@ -1,15 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withAuth } from '@/lib/apiHandler'
-import type { ConsumedLot } from '@/types/realizedTrade'
-
-// consumed_lots(JSON) を ConsumedLot[] に正規化（後方互換: 欠損時は空配列）
-function parseConsumedLots(value: unknown): ConsumedLot[] {
-  if (!Array.isArray(value)) return []
-  return value
-    .filter((v): v is { shares: number; purchaseDate?: string } => typeof v === 'object' && v !== null && typeof (v as { shares?: unknown }).shares === 'number')
-    .map(v => ({ shares: v.shares, purchaseDate: typeof v.purchaseDate === 'string' ? v.purchaseDate : '' }))
-}
+import { parseConsumedLots } from '@/lib/realizedTradeCalc'
 
 // GET: ユーザーの全確定損益履歴を取得。?year=2026 で年フィルタ（sellDateの先頭4桁）
 export const GET = withAuth(async ({ user, request }) => {

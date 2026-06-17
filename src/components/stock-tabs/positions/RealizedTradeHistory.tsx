@@ -38,12 +38,12 @@ export default function RealizedTradeHistory({ stockId }: RealizedTradeHistoryPr
                 </span>
               </div>
               <div className="flex items-center justify-between text-[10px] text-gray-500 mt-0.5">
-                <span>
-                  取得 {formatPrice(t.costBasis)}円{t.taxRate === 0 && ' ・NISA'}
-                  {acquisitionPeriod && ` ・取得日 ${acquisitionPeriod}`}
-                </span>
-                {t.memo && <span className="text-gray-400 truncate ml-2 max-w-[50%]">{t.memo}</span>}
+                <span>平均取得単価 {formatPrice(t.costBasis)}円{t.taxRate === 0 && ' ・NISA'}</span>
+                {t.memo && <span className="text-gray-400 truncate ml-2 max-w-[55%]">{t.memo}</span>}
               </div>
+              {acquisitionPeriod && (
+                <div className="text-[10px] text-gray-500 mt-0.5">保有開始 {acquisitionPeriod}</div>
+              )}
             </div>
           );
         })}

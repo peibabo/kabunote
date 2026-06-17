@@ -5,20 +5,13 @@ import { withAuth, withStock } from '@/lib/apiHandler'
 import { resolveStockId } from '@/lib/resolveStockId'
 import { isValidRequiredShares, isValidRequiredPrice } from '@/lib/validation'
 import { calculatePositionSummary } from '@/lib/positionCalc'
+import { parseConsumedLots } from '@/lib/realizedTradeCalc'
 import { getTodayJST } from '@/lib/dateJst'
 import type { Position } from '@/types/positions'
 import type { ConsumedLot } from '@/types/realizedTrade'
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
 const MAX_MEMO_LENGTH = 500
-
-// consumed_lots(JSON) を ConsumedLot[] に正規化（後方互換: 欠損時は空配列）
-function parseConsumedLots(value: unknown): ConsumedLot[] {
-  if (!Array.isArray(value)) return []
-  return value
-    .filter((v): v is { shares: number; purchaseDate?: string } => typeof v === 'object' && v !== null && typeof (v as { shares?: unknown }).shares === 'number')
-    .map(v => ({ shares: v.shares, purchaseDate: typeof v.purchaseDate === 'string' ? v.purchaseDate : '' }))
-}
 
 // DBレコード → APIレスポンス形式
 function serializeTrade(t: {

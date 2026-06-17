@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { calculateRealizedTrade, summarizeRealizedTrades, formatAcquisitionPeriod } from '@/lib/realizedTradeCalc'
+import { calculateRealizedTrade, summarizeRealizedTrades, formatAcquisitionPeriod, parseConsumedLots } from '@/lib/realizedTradeCalc'
 import type { RealizedTrade } from '@/types/realizedTrade'
 
 const createTrade = (overrides?: Partial<RealizedTrade>): RealizedTrade => ({
@@ -116,5 +116,30 @@ describe('formatAcquisitionPeriod', () => {
   it('取得日が1件も無ければ空文字を返す', () => {
     expect(formatAcquisitionPeriod([{ shares: 100, purchaseDate: '' }])).toBe('')
     expect(formatAcquisitionPeriod([])).toBe('')
+  })
+})
+
+describe('parseConsumedLots', () => {
+  it('正常な配列を正規化する', () => {
+    expect(parseConsumedLots([{ shares: 100, purchaseDate: '2024-01-01' }])).toEqual([
+      { shares: 100, purchaseDate: '2024-01-01' },
+    ])
+  })
+
+  it('purchaseDate欠損は空文字で補完', () => {
+    expect(parseConsumedLots([{ shares: 100 }])).toEqual([{ shares: 100, purchaseDate: '' }])
+  })
+
+  it('sharesが数値でない要素は除去する', () => {
+    expect(parseConsumedLots([{ shares: 'x' }, { shares: 50, purchaseDate: '2024-01-01' }])).toEqual([
+      { shares: 50, purchaseDate: '2024-01-01' },
+    ])
+  })
+
+  it('非配列・null・不正値は空配列を返す', () => {
+    expect(parseConsumedLots(null)).toEqual([])
+    expect(parseConsumedLots(undefined)).toEqual([])
+    expect(parseConsumedLots('foo')).toEqual([])
+    expect(parseConsumedLots({})).toEqual([])
   })
 })
