@@ -1,31 +1,32 @@
 import { useState, useEffect, useCallback } from 'react'
 import { apiFetch } from '@/lib/apiClient'
 import { useAsyncState } from '../util/useAsyncState'
-import { summarizeRealizedTrades } from '@/lib/realizedTradeCalc'
-import type { RealizedTrade, RealizedTradeSummary } from '@/types/realizedTrade'
+import type { RealizedTrade } from '@/types/realizedTrade'
 
 interface UsePortfolioRealizedTradesReturn {
   trades: RealizedTrade[]
-  summary: RealizedTradeSummary
   isLoading: boolean
   error: string | null
   refetch: () => Promise<RealizedTrade[]>
 }
 
-/** ポートフォリオ全体の確定損益履歴を取得するフック（year指定で年フィルタ） */
-export function usePortfolioRealizedTrades(year?: number): UsePortfolioRealizedTradesReturn {
+/**
+ * ポートフォリオ全体の確定損益履歴を取得するフック。
+ * 確定損益は低頻度データのため全件を取得し、年フィルタや集計は呼び出し側で行う。
+ * （年でサーバーフィルタすると「当年は無いが過去年にある」ケースを取りこぼすため）
+ */
+export function usePortfolioRealizedTrades(): UsePortfolioRealizedTradesReturn {
   const [trades, setTrades] = useState<RealizedTrade[]>([])
   const { isLoading, error, withLoading } = useAsyncState(true)
 
   const loadFromDB = useCallback(async (): Promise<RealizedTrade[]> => {
     const result = await withLoading(async () => {
-      const query = year ? `?year=${year}` : ''
-      const data = await apiFetch<RealizedTrade[]>(`/api/portfolio/realized${query}`)
+      const data = await apiFetch<RealizedTrade[]>('/api/portfolio/realized')
       setTrades(data)
       return data
     })
     return result ?? []
-  }, [year, withLoading])
+  }, [withLoading])
 
   useEffect(() => { loadFromDB() }, [loadFromDB])
 
@@ -36,5 +37,5 @@ export function usePortfolioRealizedTrades(year?: number): UsePortfolioRealizedT
     return () => window.removeEventListener('kabunote-db-realized-update', handler)
   }, [loadFromDB])
 
-  return { trades, summary: summarizeRealizedTrades(trades), isLoading, error, refetch: loadFromDB }
+  return { trades, isLoading, error, refetch: loadFromDB }
 }

@@ -1,27 +1,30 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { usePortfolioRealizedTrades } from '@/hooks/portfolio/useRealizedTrades';
 import { useAccordionState } from '@/hooks/util/useAccordionState';
+import { summarizeRealizedTrades } from '@/lib/realizedTradeCalc';
 import { formatPrice, formatProfitLoss, formatShares } from '@/lib/positionCalc';
-import { getTodayJST } from '@/lib/dateJst';
-
-// JST基準の当年を起点に直近5年分の選択肢を作る
-function buildYearOptions(): number[] {
-  const currentYear = parseInt(getTodayJST().slice(0, 4), 10);
-  return Array.from({ length: 5 }, (_, i) => currentYear - i);
-}
 
 export default function RealizedSummarySection() {
-  const yearOptions = buildYearOptions();
-  const [year, setYear] = useState(yearOptions[0]);
-  const { trades, summary, isLoading } = usePortfolioRealizedTrades(year);
+  const { trades, isLoading } = usePortfolioRealizedTrades();
   const { isExpanded, toggle } = useAccordionState();
 
-  // データが一度も無ければセクション自体を出さない（当年に取引が無い場合のみ非表示判定が必要なので年フィルタ前の総数で判定したいが、簡潔さ優先で当年基準）
-  if (!isLoading && trades.length === 0 && year === yearOptions[0]) {
-    return null;
-  }
+  // 売却日(YYYY-MM-DD)の先頭4桁から、データのある年を新しい順に列挙
+  const yearOptions = useMemo(() => {
+    const years = new Set(trades.map(t => t.sellDate.slice(0, 4)));
+    return Array.from(years).sort().reverse();
+  }, [trades]);
+
+  // 初期表示は「データのある最新年」。未選択ならyearOptions[0]に追従
+  const [selectedYear, setSelectedYear] = useState<string | null>(null);
+  const year = selectedYear ?? yearOptions[0] ?? null;
+
+  // 売却実績が一度も無ければセクション自体を出さない（年フィルタ前の全件で判定）
+  if (!isLoading && trades.length === 0) return null;
+
+  const yearTrades = year ? trades.filter(t => t.sellDate.startsWith(`${year}-`)) : [];
+  const summary = summarizeRealizedTrades(yearTrades);
 
   return (
     <div className="mt-2">
@@ -31,7 +34,7 @@ export default function RealizedSummarySection() {
       >
         <div className="flex items-center gap-2">
           <span className="text-lg">📜</span>
-          <h3 className="text-sm font-medium text-gray-200">確定損益（{year}年）</h3>
+          <h3 className="text-sm font-medium text-gray-200">確定損益{year ? `（${year}年）` : ''}</h3>
           {summary.tradeCount > 0 && (
             <span className={`text-xs font-medium ${summary.totalGross >= 0 ? 'text-green-400' : 'text-red-400'}`}>
               {formatProfitLoss(summary.totalGross)}円
@@ -46,20 +49,22 @@ export default function RealizedSummarySection() {
       </button>
 
       <div className={`mt-1 overflow-hidden transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'}`}>
-        {/* 年セレクタ */}
-        <div className="flex gap-1.5 mb-3 flex-wrap">
-          {yearOptions.map(y => (
-            <button
-              key={y}
-              onClick={() => setYear(y)}
-              className={`cursor-pointer text-xs px-2.5 py-1 rounded transition-colors ${
-                y === year ? 'bg-indigo-600 text-white' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
-              }`}
-            >
-              {y}年
-            </button>
-          ))}
-        </div>
+        {/* 年セレクタ（データのある年のみ） */}
+        {yearOptions.length > 0 && (
+          <div className="flex gap-1.5 mb-3 flex-wrap">
+            {yearOptions.map(y => (
+              <button
+                key={y}
+                onClick={() => setSelectedYear(y)}
+                className={`cursor-pointer text-xs px-2.5 py-1 rounded transition-colors ${
+                  y === year ? 'bg-indigo-600 text-white' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                }`}
+              >
+                {y}年
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* 集計カード */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
@@ -89,9 +94,9 @@ export default function RealizedSummarySection() {
         </div>
 
         {/* 明細 */}
-        {trades.length > 0 && (
+        {yearTrades.length > 0 && (
           <div className="space-y-1.5">
-            {trades.map(t => (
+            {yearTrades.map(t => (
               <div key={t.id} className="bg-gray-700/60 rounded px-3 py-2 text-xs flex items-center justify-between">
                 <span className="text-gray-300">
                   {t.sellDate} ・ {t.symbol} ・ {formatShares(t.soldShares)}株 @ {formatPrice(t.sellPrice)}円
@@ -102,10 +107,6 @@ export default function RealizedSummarySection() {
               </div>
             ))}
           </div>
-        )}
-
-        {!isLoading && trades.length === 0 && (
-          <div className="text-xs text-gray-500 text-center py-3">{year}年の確定損益はありません</div>
         )}
       </div>
     </div>

@@ -54,76 +54,75 @@ export const POST = withStock(async ({ stockId, request }) => {
   }
   const resolvedSellDate = (typeof sellDate === 'string' && DATE_PATTERN.test(sellDate)) ? sellDate : getTodayJST()
 
-  // 現在の買いロットを取得（古い順）
-  const lots = await prisma.stockPosition.findMany({
-    where: { stockId },
-    orderBy: { createdAt: 'asc' },
-  })
+  // 取得〜保有超過チェック〜消し込み〜記録を単一トランザクションに閉じる
+  // （同時売却によるオーバーセルを防ぐ）
+  const result = await prisma.$transaction(async (tx) => {
+    const lots = await tx.stockPosition.findMany({
+      where: { stockId },
+      orderBy: { createdAt: 'asc' },
+    })
 
-  // 加重平均で原価・税率を算出
-  const positions: Position[] = lots.map(l => ({
-    id: l.id,
-    shares: l.shares,
-    purchasePrice: Number(l.purchasePrice),
-    purchaseDate: l.purchaseDate ?? '',
-    memo: l.memo ?? '',
-    taxRate: Number(l.taxRate),
-    createdAt: l.createdAt.toISOString(),
-  }))
-  const summary = calculatePositionSummary(positions)
+    // 加重平均で原価・税率を算出
+    const positions: Position[] = lots.map(l => ({
+      id: l.id,
+      shares: l.shares,
+      purchasePrice: Number(l.purchasePrice),
+      purchaseDate: l.purchaseDate ?? '',
+      memo: l.memo ?? '',
+      taxRate: Number(l.taxRate),
+      createdAt: l.createdAt.toISOString(),
+    }))
+    const summary = calculatePositionSummary(positions)
 
-  if (summary.totalShares <= 0) {
-    return NextResponse.json(
-      { error: 'Bad Request', message: '売却可能なポジションがありません' },
-      { status: 400 }
-    )
-  }
-  if (soldShares > summary.totalShares) {
-    return NextResponse.json(
-      { error: 'Bad Request', message: `保有株数（${summary.totalShares}株）を超えて売却することはできません` },
-      { status: 400 }
-    )
-  }
-
-  const costBasis = summary.averagePrice
-  const taxRate = summary.weightedTaxRate
-  const realizedPL = (sellPrice - costBasis) * soldShares
-
-  // 古いロットから消し込む（加重平均法のため順序は実現損益に影響しない）
-  let remaining = soldShares
-  const lotUpdates: Array<{ id: string; shares: number }> = []
-  const lotDeletes: string[] = []
-  for (const lot of lots) {
-    if (remaining <= 0) break
-    if (lot.shares <= remaining) {
-      remaining -= lot.shares
-      lotDeletes.push(lot.id)
-    } else {
-      lotUpdates.push({ id: lot.id, shares: lot.shares - remaining })
-      remaining = 0
+    if (summary.totalShares <= 0) {
+      return { error: { status: 400, message: '売却可能なポジションがありません' } } as const
     }
-  }
+    if (soldShares > summary.totalShares) {
+      return { error: { status: 400, message: `保有株数（${summary.totalShares}株）を超えて売却することはできません` } } as const
+    }
 
-  const [trade] = await prisma.$transaction([
-    prisma.realizedTrade.create({
+    const costBasis = summary.averagePrice
+    const taxRate = summary.weightedTaxRate
+    const realizedPL = (sellPrice - costBasis) * soldShares
+
+    // 古いロットから消し込む（加重平均法のため順序は実現損益に影響しない）
+    let remaining = soldShares
+    for (const lot of lots) {
+      if (remaining <= 0) break
+      if (lot.shares <= remaining) {
+        remaining -= lot.shares
+        await tx.stockPosition.delete({ where: { id: lot.id } })
+      } else {
+        await tx.stockPosition.update({ where: { id: lot.id }, data: { shares: lot.shares - remaining } })
+        remaining = 0
+      }
+    }
+
+    const trade = await tx.realizedTrade.create({
       data: { stockId, soldShares, sellPrice, costBasis, sellDate: resolvedSellDate, realizedPL, taxRate, memo: memo || null },
-    }),
-    ...lotDeletes.map(id => prisma.stockPosition.delete({ where: { id } })),
-    ...lotUpdates.map(u => prisma.stockPosition.update({ where: { id: u.id }, data: { shares: u.shares } })),
-  ])
+    })
 
-  // 更新後のポジション一覧を返す
-  const remainingLots = await prisma.stockPosition.findMany({
-    where: { stockId },
-    orderBy: { createdAt: 'asc' },
+    const remainingLots = await tx.stockPosition.findMany({
+      where: { stockId },
+      orderBy: { createdAt: 'asc' },
+    })
+
+    return { trade, remainingLots } as const
   })
+
+  if ('error' in result && result.error) {
+    return NextResponse.json(
+      { error: 'Bad Request', message: result.error.message },
+      { status: result.error.status }
+    )
+  }
 
   return NextResponse.json({
     success: true,
     data: {
       // symbolは銘柄コンテキスト内で既知のため空文字（横断ビューはGET側でsymbolを付与）
-      trade: serializeTrade(trade, ''),
-      positions: remainingLots.map(p => ({
+      trade: serializeTrade(result.trade, ''),
+      positions: result.remainingLots.map(p => ({
         id: p.id,
         shares: p.shares,
         purchasePrice: Number(p.purchasePrice),
