@@ -7,6 +7,8 @@ import { Position } from '@/types/positions';
 import { calculatePositionSummary, formatPrice, formatShares } from '@/lib/positionCalc';
 import PositionFormFields, { PositionForm, emptyForm } from './positions/PositionFormFields';
 import PositionListItem from './positions/PositionListItem';
+import SellPositionForm from './positions/SellPositionForm';
+import RealizedTradeHistory from './positions/RealizedTradeHistory';
 
 interface PositionsManagementProps {
   symbol: string;
@@ -19,8 +21,9 @@ export default function PositionsManagement({
   stockId,
   initialPositions,
 }: PositionsManagementProps) {
-  const { positions, isLoading, isSaving, error, addPosition, updatePosition, deletePosition } = useStockPosition(stockId, initialPositions ? { initialData: initialPositions } : undefined);
+  const { positions, isLoading, isSaving, error, addPosition, updatePosition, deletePosition, sellPosition } = useStockPosition(stockId, initialPositions ? { initialData: initialPositions } : undefined);
   const [isAdding, setIsAdding] = useState(false);
+  const [isSelling, setIsSelling] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<PositionForm>(emptyForm);
 
@@ -29,8 +32,16 @@ export default function PositionsManagement({
   const handleAddClick = () => {
     playSound('buttonAction');
     setEditingId(null);
+    setIsSelling(false);
     setForm(emptyForm);
     setIsAdding(true);
+  };
+
+  const handleSellClick = () => {
+    playSound('buttonAction');
+    setIsAdding(false);
+    setEditingId(null);
+    setIsSelling(true);
   };
 
   const handleEditClick = (pos: Position) => {
@@ -103,13 +114,24 @@ export default function PositionsManagement({
       {/* サマリーヘッダー */}
       <div className="flex items-center justify-between">
         <h4 className="text-sm font-medium text-gray-300">保有ポジション</h4>
-        <button
-          onClick={handleAddClick}
-          disabled={isSaving}
-          className="cursor-pointer text-xs bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-2 py-1 rounded transition-colors"
-        >
-          ＋ 追加
-        </button>
+        <div className="flex gap-2">
+          {summary.totalShares > 0 && (
+            <button
+              onClick={handleSellClick}
+              disabled={isSaving}
+              className="cursor-pointer text-xs bg-amber-600 hover:bg-amber-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-2 py-1 rounded transition-colors"
+            >
+              {'\u{1F4B0}'} 売却
+            </button>
+          )}
+          <button
+            onClick={handleAddClick}
+            disabled={isSaving}
+            className="cursor-pointer text-xs bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-2 py-1 rounded transition-colors"
+          >
+            ＋ 追加
+          </button>
+        </div>
       </div>
 
       {/* エラー表示 */}
@@ -145,6 +167,16 @@ export default function PositionsManagement({
                 </div>
               </div>
             </div>
+          )}
+
+          {/* 売却フォーム */}
+          {isSelling && summary.totalShares > 0 && (
+            <SellPositionForm
+              summary={summary}
+              isSaving={isSaving}
+              onSell={sellPosition}
+              onClose={() => setIsSelling(false)}
+            />
           )}
 
           {/* ポジション一覧 */}
@@ -194,6 +226,9 @@ export default function PositionsManagement({
               />
             </div>
           )}
+
+          {/* 確定損益履歴 */}
+          <RealizedTradeHistory stockId={stockId} />
         </>
       )}
     </div>

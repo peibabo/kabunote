@@ -32,6 +32,9 @@ const TITLES: TitleWithCondition[] = [
   { id: 'diversified', name: '分散投資家', description: '5つのポジションを保有', hint: '5つ以上のポジションで分散投資しよう', category: 'asset', icon: '🔀', rarity: 'rare', check: d => d.positionCount >= 5 },
   { id: 'dividend_hunter', name: '配当ハンター', description: '3銘柄の配当を登録', hint: '配当情報を3銘柄分登録しよう', category: 'asset', icon: '💵', rarity: 'rare', check: d => d.dividendCount >= 3 },
   { id: 'snapshot_habit', name: '記録の習慣', description: '7日分の終値を記録', hint: '「本日の終値を確定」ボタンで7日分記録しよう', category: 'asset', icon: '📸', rarity: 'epic', check: d => d.snapshotCount >= 7 },
+  { id: 'first_sell', name: '初めての利益確定', description: '最初の売却を記録', hint: '保有ポジションを売却して確定損益を記録しよう', category: 'asset', icon: '🎉', rarity: 'common', check: d => d.realizedTradeCount >= 1 },
+  { id: 'trade_10', name: 'ベテラントレーダー', description: '10回の売却を記録', hint: '売却を重ねて取引経験を積もう', category: 'asset', icon: '📈', rarity: 'rare', check: d => d.realizedTradeCount >= 10 },
+  { id: 'profit_taker', name: '利確マスター', description: '累計実現利益が10万円を突破', hint: '利益を確定させて累計実現損益をプラスに伸ばそう', category: 'asset', icon: '💹', rarity: 'epic', check: d => d.totalRealizedProfit >= 100000 },
 
   // ── 🎯 戦略（4個）──
   { id: 'first_strategy', name: '戦略家', description: '最初の次の一手を登録', hint: '銘柄の「次の一手」を設定してみよう', category: 'strategy', icon: '🎯', rarity: 'common', check: d => d.nextActionCount >= 1 },

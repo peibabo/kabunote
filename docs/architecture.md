@@ -1,6 +1,6 @@
 # Kabunote - アーキテクチャリファレンス
 
-## データベーススキーマ（26テーブル）
+## データベーススキーマ（27テーブル）
 
 ```
 app_users (ユーザー管理)
@@ -11,6 +11,7 @@ app_users (ユーザー管理)
   │     ├── stock_memos        1:1  content
   │     ├── stock_prices       1:1  current_price, target_price, stop_loss_price, per, pbr
   │     ├── stock_positions    1:N  shares, purchase_price, purchase_date, memo, tax_rate(0=NISA/0.20315=特定口座)
+  │     ├── realized_trades     1:N  sold_shares, sell_price, cost_basis(加重平均), sell_date, realized_pl, tax_rate, memo（売却＝確定損益記録）
   │     ├── stock_events       1:N  event_type(ENUM), event_date, event_month, event_day, is_recurring, is_active
   │     │                           @@unique([stockId, eventType])
   │     ├── stock_dividends    1:1  dividend_per_share, frequency, rights_month, rights_day
@@ -91,6 +92,7 @@ app_users (ユーザー管理)
 | `/api/stocks/[stockId]/price` | GET/PUT | 株価情報（現在株価・目標・損切り） |
 | `/api/stocks/[stockId]/position` | GET/POST | ポジション一覧・追加 |
 | `/api/stocks/[stockId]/position/[positionId]` | PUT/DELETE | 個別ポジション編集・削除 |
+| `/api/stocks/[stockId]/position/sell` | POST/GET | ポジション売却（確定損益記録・加重平均原価でロット消し込み）/ 銘柄別確定損益履歴 |
 | `/api/stocks/[stockId]/event` | GET/PUT/DELETE | 決算日・株主総会日 |
 | `/api/stocks/[stockId]/dividend` | GET/PUT/DELETE | 配当情報 |
 | `/api/stocks/[stockId]/benefit` | GET/PUT/DELETE | 株主優待情報 |
@@ -104,6 +106,7 @@ app_users (ユーザー管理)
 | パス | メソッド | 説明 |
 |------|---------|------|
 | `/api/portfolio/snapshot` | POST | ポートフォリオ日次スナップショット作成/更新（同日upsert） |
+| `/api/portfolio/realized` | GET | 確定損益一覧（?year=YYYY で年フィルタ・年間損益サマリー用） |
 | `/api/portfolio/history` | GET | ポートフォリオ履歴取得（?range=1W/1M/3M/6M/1Y/2Y&detail=false で銘柄別スナップショット省略） |
 | `/api/portfolio/chart-memos` | GET | チャートメモ一覧取得（?range=1W/1M/3M/6M/1Y/2Y） |
 | `/api/portfolio/chart-memos` | PUT | チャートメモ作成/更新（snapshotDate, chartType, symbol?, content） |
@@ -155,7 +158,7 @@ app_users (ユーザー管理)
 
 ---
 
-## カスタムフック一覧（46フック）
+## カスタムフック一覧（48フック）
 
 ### `hooks/stock/` — 銘柄データ
 | フック | 説明 |
@@ -166,7 +169,8 @@ app_users (ユーザー管理)
 | `useStockMemo` | 株ノオト（デバウンス自動保存） |
 | `useStockNews` | 銘柄ニュース管理（URL+コメント、300msデバウンス自動保存） |
 | `useStockPrice` | 株価データ（現在株価・利確目標・損切り）300msデバウンス |
-| `useStockPosition` | 複数ポジションCRUD（追加・編集・削除） |
+| `useStockPosition` | 複数ポジションCRUD（追加・編集・削除・売却） |
+| `useRealizedTrades` | 銘柄別の確定損益履歴取得（売却イベント連動） |
 | `useStockEvent` | 決算日・株主総会日（500msデバウンス） |
 | `useStockDividend` | 配当情報（500msデバウンス） |
 | `useStockBenefit` | 株主優待情報（500msデバウンス） |
@@ -189,6 +193,7 @@ app_users (ユーザー管理)
 | `usePortfolioSummary` | ポートフォリオサマリー（投資額・損益・配当・優待） |
 | `usePieChartData` | 円グラフデータ生成 |
 | `usePortfolioHistory` | ポートフォリオ日次スナップショット履歴（期間切替・作成・todayRecorded） |
+| `usePortfolioRealizedTrades` | ポートフォリオ全体の確定損益履歴・年間集計（年フィルタ） |
 | `useChartMemos` | チャートメモ管理（memoMap・saveMemo・deleteMemo） |
 | `useChartMemoList` | チャートメモ一覧（ページネーション・フィルタ・削除） |
 
@@ -251,7 +256,7 @@ app_users (ユーザー管理)
 
 ---
 
-## 型定義ファイル一覧（15ファイル）
+## 型定義ファイル一覧（16ファイル）
 
 型定義のみ。計算ロジック・フォーマット関数は `src/lib/*Calc.ts` に分離済み。
 
@@ -259,6 +264,7 @@ app_users (ユーザー管理)
 |---------|------|
 | `stock.ts` | StockData（銘柄データ統合型） |
 | `positions.ts` | Position, PositionSummary（totalCost, positionCount等） |
+| `realizedTrade.ts` | RealizedTrade, SellPositionInput, RealizedTradeResult, RealizedTradeSummary（確定損益） |
 | `tags.ts` | CustomTag, プリセットタグ定義 |
 | `favorites.ts` | FavoriteGroup, お気に入りグループ |
 | `dividend.ts` | DividendInfo, DividendCalculation, PortfolioDividendSummary |

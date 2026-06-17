@@ -3,6 +3,7 @@ import { apiFetch, apiPost } from '@/lib/apiClient'
 import { useAsyncState } from '../util/useAsyncState'
 import { Position } from '@/types/positions'
 import { grantXp } from '@/lib/gamification'
+import type { RealizedTrade, SellPositionInput } from '@/types/realizedTrade'
 
 interface UseStockPositionReturn {
   positions: Position[]
@@ -12,6 +13,7 @@ interface UseStockPositionReturn {
   addPosition: (data: Omit<Position, 'id' | 'createdAt'>) => Promise<void>
   updatePosition: (id: string, data: Partial<Omit<Position, 'id' | 'createdAt'>>) => Promise<void>
   deletePosition: (id: string) => Promise<void>
+  sellPosition: (data: SellPositionInput) => Promise<RealizedTrade | null>
   refetch: () => Promise<Position[]>
 }
 
@@ -75,5 +77,21 @@ export function useStockPosition(stockId: string, options?: UseStockPositionOpti
     })
   }, [stockId, withSaving, loadFromDB, dispatchUpdate])
 
-  return { positions, isLoading, isSaving, error, addPosition, updatePosition, deletePosition, refetch: loadFromDB }
+  const sellPosition = useCallback(async (data: SellPositionInput): Promise<RealizedTrade | null> => {
+    const result = await withSaving(async () => {
+      const { trade, positions: updated } = await apiPost<{ trade: RealizedTrade; positions: Position[] }>(
+        `/api/stocks/${stockId}/position/sell`,
+        data
+      )
+      setPositions(updated)
+      dispatchUpdate(updated)
+      // 確定損益履歴ビューの再取得をトリガー
+      window.dispatchEvent(new CustomEvent('kabunote-db-realized-update', { detail: { symbol, stockId } }))
+      grantXp('POSITION_SELL')
+      return trade
+    })
+    return result ?? null
+  }, [stockId, symbol, withSaving, dispatchUpdate])
+
+  return { positions, isLoading, isSaving, error, addPosition, updatePosition, deletePosition, sellPosition, refetch: loadFromDB }
 }

@@ -69,6 +69,7 @@ model Stock {
   tabStates      StockTabState[]
   favoriteGroups StockFavoriteGroup[]
   newsItems      StockNewsItem[]
+  realizedTrades RealizedTrade[]
 
   @@unique([userId, symbol])
   @@index([userId, order])
@@ -123,6 +124,25 @@ model StockPosition {
 
   @@index([stockId])
   @@map("stock_positions")
+}
+
+// 確定損益（売却ごとに1レコード・永久保存）
+model RealizedTrade {
+  id          String   @id @default(cuid())
+  stockId     String   @map("stock_id")
+  soldShares  Int      @map("sold_shares")    // 売却株数
+  sellPrice   Decimal  @map("sell_price")     // 売却単価（1株あたり）
+  costBasis   Decimal  @map("cost_basis")     // 売却時点の加重平均取得単価
+  sellDate    String   @map("sell_date")      // 売却日（YYYY-MM-DD, JST）
+  realizedPL  Decimal  @map("realized_pl")    // 実現損益（税引前）= (sellPrice - costBasis) * soldShares
+  taxRate     Decimal  @map("tax_rate")       // 売却時の加重平均税率（0=NISA）
+  memo        String?                          // 売却理由メモ
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  stock       Stock    @relation(fields: [stockId], references: [id], onDelete: Cascade)
+
+  @@index([stockId])
+  @@map("realized_trades")
 }
 
 // 銘柄イベント（決算、株主総会等）

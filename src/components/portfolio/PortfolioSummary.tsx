@@ -4,6 +4,7 @@ import InvestmentPieChart from '@/components/portfolio/InvestmentPieChart';
 import PortfolioOverviewGrid from '@/components/portfolio/PortfolioOverviewGrid';
 import CashPositionSection from '@/components/portfolio/CashPositionSection';
 import TargetSummarySection from '@/components/portfolio/TargetSummarySection';
+import RealizedSummarySection from '@/components/portfolio/RealizedSummarySection';
 import { usePortfolioSummary, StockData } from '@/hooks/portfolio/usePortfolioSummary';
 import { useCash } from '@/hooks/auth/useCash';
 import { useAccordionState } from '@/hooks/util/useAccordionState';
@@ -64,6 +65,8 @@ export default function PortfolioSummary({ portfolioData, portfolioSnapshot }: P
         isTargetSummaryExpanded={isTargetSummaryExpanded}
         toggleTargetSummary={toggleTargetSummary}
       />
+
+      <RealizedSummarySection />
 
       {/* 円グラフセクション（アコーディオン） */}
       {overallSummary.stocksWithPositions > 0 && (

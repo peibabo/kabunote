@@ -21,6 +21,7 @@ export const prismaMock = {
   stockMemo: createMockModel(),
   stockPrice: createMockModel(),
   stockPosition: createMockModel(),
+  realizedTrade: createMockModel(),
   stockEvent: createMockModel(),
   stockDividend: createMockModel(),
   stockBenefit: createMockModel(),
