@@ -11,7 +11,7 @@ app_users (ユーザー管理)
   │     ├── stock_memos        1:1  content
   │     ├── stock_prices       1:1  current_price, target_price, stop_loss_price, per, pbr
   │     ├── stock_positions    1:N  shares, purchase_price, purchase_date, memo, tax_rate(0=NISA/0.20315=特定口座)
-  │     ├── realized_trades     1:N  sold_shares, sell_price, cost_basis(加重平均), sell_date, realized_pl, tax_rate, memo（売却＝確定損益記録）
+  │     ├── realized_trades     1:N  sold_shares, sell_price, cost_basis(加重平均), sell_date, realized_pl, tax_rate, consumed_lots(JSONB:取得日内訳), memo（売却＝確定損益記録）
   │     ├── stock_events       1:N  event_type(ENUM), event_date, event_month, event_day, is_recurring, is_active
   │     │                           @@unique([stockId, eventType])
   │     ├── stock_dividends    1:1  dividend_per_share, frequency, rights_month, rights_day

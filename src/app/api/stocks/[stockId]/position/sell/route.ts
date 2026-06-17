@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { withAuth, withStock } from '@/lib/apiHandler'
 import { resolveStockId } from '@/lib/resolveStockId'
@@ -6,14 +7,23 @@ import { isValidRequiredShares, isValidRequiredPrice } from '@/lib/validation'
 import { calculatePositionSummary } from '@/lib/positionCalc'
 import { getTodayJST } from '@/lib/dateJst'
 import type { Position } from '@/types/positions'
+import type { ConsumedLot } from '@/types/realizedTrade'
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
 const MAX_MEMO_LENGTH = 500
 
+// consumed_lots(JSON) を ConsumedLot[] に正規化（後方互換: 欠損時は空配列）
+function parseConsumedLots(value: unknown): ConsumedLot[] {
+  if (!Array.isArray(value)) return []
+  return value
+    .filter((v): v is { shares: number; purchaseDate?: string } => typeof v === 'object' && v !== null && typeof (v as { shares?: unknown }).shares === 'number')
+    .map(v => ({ shares: v.shares, purchaseDate: typeof v.purchaseDate === 'string' ? v.purchaseDate : '' }))
+}
+
 // DBレコード → APIレスポンス形式
 function serializeTrade(t: {
   id: string; stockId: string; soldShares: number; sellPrice: unknown; costBasis: unknown;
-  sellDate: string; realizedPL: unknown; taxRate: unknown; memo: string | null; createdAt: Date
+  sellDate: string; realizedPL: unknown; taxRate: unknown; consumedLots: unknown; memo: string | null; createdAt: Date
 }, symbol: string) {
   return {
     id: t.id,
@@ -25,6 +35,7 @@ function serializeTrade(t: {
     sellDate: t.sellDate,
     realizedPL: Number(t.realizedPL),
     taxRate: Number(t.taxRate),
+    consumedLots: parseConsumedLots(t.consumedLots),
     memo: t.memo ?? '',
     createdAt: t.createdAt.toISOString(),
   }
@@ -85,10 +96,14 @@ export const POST = withStock(async ({ stockId, request }) => {
     const taxRate = summary.weightedTaxRate
     const realizedPL = (sellPrice - costBasis) * soldShares
 
-    // 古いロットから消し込む（加重平均法のため順序は実現損益に影響しない）
+    // 古いロットから消し込む（加重平均法のため順序は実現損益に影響しない）。
+    // 消し込んだロットの取得日を内訳として保全し、取得日の喪失を防ぐ。
     let remaining = soldShares
+    const consumedLots: ConsumedLot[] = []
     for (const lot of lots) {
       if (remaining <= 0) break
+      const consumed = Math.min(lot.shares, remaining)
+      consumedLots.push({ shares: consumed, purchaseDate: lot.purchaseDate ?? '' })
       if (lot.shares <= remaining) {
         remaining -= lot.shares
         await tx.stockPosition.delete({ where: { id: lot.id } })
@@ -99,7 +114,7 @@ export const POST = withStock(async ({ stockId, request }) => {
     }
 
     const trade = await tx.realizedTrade.create({
-      data: { stockId, soldShares, sellPrice, costBasis, sellDate: resolvedSellDate, realizedPL, taxRate, memo: memo || null },
+      data: { stockId, soldShares, sellPrice, costBasis, sellDate: resolvedSellDate, realizedPL, taxRate, consumedLots: consumedLots as unknown as Prisma.InputJsonValue, memo: memo || null },
     })
 
     const remainingLots = await tx.stockPosition.findMany({

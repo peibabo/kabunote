@@ -1,7 +1,7 @@
 // 確定損益（売却）計算ヘルパー
 
 import { calculateAfterTax } from '@/lib/taxCalc';
-import type { RealizedTrade, RealizedTradeResult, RealizedTradeSummary } from '@/types/realizedTrade';
+import type { ConsumedLot, RealizedTrade, RealizedTradeResult, RealizedTradeSummary } from '@/types/realizedTrade';
 
 /**
  * 売却前プレビュー・実現損益を計算する純粋関数。
@@ -20,6 +20,19 @@ export const calculateRealizedTrade = (
   const proceeds = sellPrice * soldShares;
 
   return { gross, afterTax, plPercent, proceeds };
+};
+
+/**
+ * 消し込んだロットの取得日から、保有銘柄の取得時期を文字列化する。
+ * 単一日付は "2024-03-01"、複数なら最古〜最新の期間 "2024-03-01〜2025-01-10"。
+ * 取得日が1件も無ければ空文字を返す（表示側で省略）。
+ */
+export const formatAcquisitionPeriod = (consumedLots: ConsumedLot[]): string => {
+  const dates = consumedLots.map(l => l.purchaseDate).filter(d => d.length > 0).sort();
+  if (dates.length === 0) return '';
+  const earliest = dates[0];
+  const latest = dates[dates.length - 1];
+  return earliest === latest ? earliest : `${earliest}〜${latest}`;
 };
 
 /**

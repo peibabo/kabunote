@@ -136,6 +136,7 @@ model RealizedTrade {
   sellDate    String   @map("sell_date")      // 売却日（YYYY-MM-DD, JST）
   realizedPL  Decimal  @map("realized_pl")    // 実現損益（税引前）= (sellPrice - costBasis) * soldShares
   taxRate     Decimal  @map("tax_rate")       // 売却時の加重平均税率（0=NISA）
+  consumedLots Json    @map("consumed_lots")  // 消し込んだ買いロットの内訳 [{shares, purchaseDate}]（取得日の保全・保有期間分析用）
   memo        String?                          // 売却理由メモ
   createdAt   DateTime @default(now()) @map("created_at")
 

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { calculateRealizedTrade, summarizeRealizedTrades } from '@/lib/realizedTradeCalc'
+import { calculateRealizedTrade, summarizeRealizedTrades, formatAcquisitionPeriod } from '@/lib/realizedTradeCalc'
 import type { RealizedTrade } from '@/types/realizedTrade'
 
 const createTrade = (overrides?: Partial<RealizedTrade>): RealizedTrade => ({
@@ -12,6 +12,7 @@ const createTrade = (overrides?: Partial<RealizedTrade>): RealizedTrade => ({
   sellDate: '2026-06-01',
   realizedPL: 10000,
   taxRate: 0.20315,
+  consumedLots: [{ shares: 100, purchaseDate: '2024-01-01' }],
   memo: '',
   createdAt: '2026-06-01T00:00:00.000Z',
   ...overrides,
@@ -83,5 +84,37 @@ describe('summarizeRealizedTrades', () => {
     expect(s.winCount).toBe(0)
     expect(s.lossCount).toBe(0)
     expect(s.tradeCount).toBe(1)
+  })
+})
+
+describe('formatAcquisitionPeriod', () => {
+  it('単一ロットは取得日をそのまま返す', () => {
+    expect(formatAcquisitionPeriod([{ shares: 100, purchaseDate: '2024-03-01' }])).toBe('2024-03-01')
+  })
+
+  it('同一取得日の複数ロットは単一日付として返す', () => {
+    expect(formatAcquisitionPeriod([
+      { shares: 50, purchaseDate: '2024-03-01' },
+      { shares: 50, purchaseDate: '2024-03-01' },
+    ])).toBe('2024-03-01')
+  })
+
+  it('取得日が異なる複数ロットは最古〜最新の期間を返す', () => {
+    expect(formatAcquisitionPeriod([
+      { shares: 60, purchaseDate: '2025-03-10' },
+      { shares: 40, purchaseDate: '2024-01-01' },
+    ])).toBe('2024-01-01〜2025-03-10')
+  })
+
+  it('取得日が空のロットは無視する', () => {
+    expect(formatAcquisitionPeriod([
+      { shares: 60, purchaseDate: '' },
+      { shares: 40, purchaseDate: '2024-01-01' },
+    ])).toBe('2024-01-01')
+  })
+
+  it('取得日が1件も無ければ空文字を返す', () => {
+    expect(formatAcquisitionPeriod([{ shares: 100, purchaseDate: '' }])).toBe('')
+    expect(formatAcquisitionPeriod([])).toBe('')
   })
 })

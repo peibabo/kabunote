@@ -1,5 +1,11 @@
 // 確定損益（売却記録）用の型定義
 
+/** 消し込んだ買いロットの内訳（取得日の保全・保有期間分析用） */
+export interface ConsumedLot {
+  shares: number;        // このロットから売却した株数
+  purchaseDate: string;  // 取得日（YYYY-MM-DD。未設定ロットは空文字）
+}
+
 /** 確定損益レコード（DBから取得） */
 export interface RealizedTrade {
   id: string;
@@ -11,6 +17,7 @@ export interface RealizedTrade {
   sellDate: string;      // 売却日（YYYY-MM-DD, JST）
   realizedPL: number;    // 実現損益（税引前）
   taxRate: number;       // 売却時の加重平均税率（0=NISA）
+  consumedLots: ConsumedLot[]; // 消し込んだ買いロットの内訳（古い順）
   memo?: string;         // 売却理由メモ
   createdAt: string;
 }

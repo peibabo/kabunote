@@ -4,7 +4,7 @@ import '../mocks/supabase'
 import { createRequest, getJson, createParams } from '../helpers/apiTestHelper'
 import { POST, GET } from '@/app/api/stocks/[stockId]/position/sell/route'
 
-const lot = (overrides?: Partial<{ id: string; shares: number; purchasePrice: number; taxRate: number; createdAt: Date }>) => ({
+const lot = (overrides?: Partial<{ id: string; shares: number; purchasePrice: number; purchaseDate: string; taxRate: number; createdAt: Date }>) => ({
   id: 'pos-1',
   stockId: 'stock-uuid-1',
   shares: 100,
@@ -25,6 +25,7 @@ const createdTrade = {
   sellDate: '2026-06-01',
   realizedPL: 10000,
   taxRate: 0.20315,
+  consumedLots: [{ shares: 100, purchaseDate: '2024-01-01' }],
   memo: null,
   createdAt: new Date('2026-06-01'),
 }
@@ -49,8 +50,40 @@ describe('POST /api/stocks/[stockId]/position/sell', () => {
     const json = await getJson(res)
     expect(json.success).toBe(true)
     expect(json.data.trade.realizedPL).toBe(10000)
+    expect(json.data.trade.consumedLots).toEqual([{ shares: 100, purchaseDate: '2024-01-01' }])
     expect(json.data.positions).toEqual([])
     expect(prismaMock.stockPosition.delete).toHaveBeenCalledWith({ where: { id: 'pos-1' } })
+    // 消し込んだロットの取得日が内訳として保存される
+    expect(prismaMock.realizedTrade.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ consumedLots: [{ shares: 100, purchaseDate: '2024-01-01' }] }),
+      })
+    )
+  })
+
+  it('成功: 複数ロットをまたぐ売却で取得日内訳を保全', async () => {
+    const lotA = lot({ id: 'pos-1', shares: 60, purchaseDate: '2024-01-01', createdAt: new Date('2024-01-01') })
+    const lotB = lot({ id: 'pos-2', shares: 40, purchaseDate: '2025-03-10', createdAt: new Date('2025-03-10') })
+    prismaMock.stockPosition.findMany
+      .mockResolvedValueOnce([lotA, lotB] as never) // 売却前
+      .mockResolvedValueOnce([] as never)           // 消し込み後
+    prismaMock.stockPosition.delete.mockResolvedValue(lotA as never)
+
+    const req = createRequest('POST', 'http://localhost:3000/api/stocks/stock-7203/position/sell', {
+      soldShares: 100, sellPrice: 1600, sellDate: '2026-06-01',
+    })
+    const res = await POST(req, createParams({ stockId: 'stock-7203' }))
+    expect(res.status).toBe(200)
+    expect(prismaMock.realizedTrade.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          consumedLots: [
+            { shares: 60, purchaseDate: '2024-01-01' },
+            { shares: 40, purchaseDate: '2025-03-10' },
+          ],
+        }),
+      })
+    )
   })
 
   it('成功: 一部売却でロット株数を減算', async () => {
