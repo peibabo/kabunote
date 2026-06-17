@@ -105,19 +105,18 @@ export default function RealizedSummarySection() {
           <div className="space-y-1.5">
             {yearTrades.map(t => (
               <div key={t.id} className="bg-gray-700/60 rounded px-3 py-2 text-xs flex items-center justify-between gap-2">
-                <span className="text-gray-300">
+                <span className="text-gray-300 min-w-0 truncate">
                   {t.sellDate} ・ {t.symbol} ・ {formatShares(t.soldShares)}株 @ {formatPrice(t.sellPrice)}円
                 </span>
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center gap-3 shrink-0">
                   <span className={t.realizedPL >= 0 ? 'text-green-400 font-medium' : 'text-red-400 font-medium'}>
                     {formatProfitLoss(t.realizedPL)}円
                   </span>
                   <button
                     onClick={() => handleDelete(t.id, t.stockId)}
-                    aria-label="売却記録を削除"
-                    className="cursor-pointer text-gray-500 hover:text-red-400 transition-colors"
+                    className="cursor-pointer text-red-400 hover:text-red-300 transition-colors"
                   >
-                    {'\u{1F5D1}'}
+                    削除
                   </button>
                 </div>
               </div>
