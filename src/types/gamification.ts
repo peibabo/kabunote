@@ -33,6 +33,7 @@ export type XpActionType =
   | 'TAG_ADD'
   | 'PRICE_UPDATE'
   | 'POSITION_ADD'
+  | 'POSITION_SELL'
   | 'PORTFOLIO_SNAPSHOT'
   | 'EVENT_REGISTER'
   | 'DIVIDEND_REGISTER'

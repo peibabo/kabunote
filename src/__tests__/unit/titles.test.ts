@@ -8,6 +8,8 @@ const emptyData: TitleCheckData = {
   tagCount: 0,
   distinctTagColorCount: 0,
   positionCount: 0,
+  realizedTradeCount: 0,
+  totalRealizedProfit: 0,
   dividendCount: 0,
   benefitCount: 0,
   eventCount: 0,
@@ -26,6 +28,8 @@ const maxData: TitleCheckData = {
   tagCount: 10,
   distinctTagColorCount: 8,
   positionCount: 5,
+  realizedTradeCount: 10,
+  totalRealizedProfit: 100000,
   dividendCount: 3,
   benefitCount: 3,
   eventCount: 3,
@@ -39,9 +43,9 @@ const maxData: TitleCheckData = {
 }
 
 describe('TITLE_DEFINITIONS', () => {
-  it('全28個の称号が定義されている', () => {
-    expect(TITLE_DEFINITIONS).toHaveLength(28)
-    expect(TOTAL_TITLE_COUNT).toBe(28)
+  it('全31個の称号が定義されている', () => {
+    expect(TITLE_DEFINITIONS).toHaveLength(31)
+    expect(TOTAL_TITLE_COUNT).toBe(31)
   })
 
   it('全称号にユニークなIDがある', () => {
@@ -49,12 +53,12 @@ describe('TITLE_DEFINITIONS', () => {
     expect(new Set(ids).size).toBe(ids.length)
   })
 
-  it('レアリティ分布: common 9, rare 10, epic 7, legendary 2', () => {
+  it('レアリティ分布: common 10, rare 11, epic 8, legendary 2', () => {
     const counts = { common: 0, rare: 0, epic: 0, legendary: 0 }
     for (const t of TITLE_DEFINITIONS) counts[t.rarity]++
-    expect(counts.common).toBe(9)
-    expect(counts.rare).toBe(10)
-    expect(counts.epic).toBe(7)
+    expect(counts.common).toBe(10)
+    expect(counts.rare).toBe(11)
+    expect(counts.epic).toBe(8)
     expect(counts.legendary).toBe(2)
   })
 })
@@ -115,6 +119,32 @@ describe('evaluateTitles', () => {
   it('7色タグでは「カラフルタグマスター」未獲得', () => {
     const result = evaluateTitles({ ...emptyData, distinctTagColorCount: 7 })
     expect(result.find(t => t.id === 'all_tag_colors')?.unlocked).toBe(false)
+  })
+
+  // 資産カテゴリ（売却）
+  it('売却1回で「初めての利益確定」獲得', () => {
+    const result = evaluateTitles({ ...emptyData, realizedTradeCount: 1 })
+    expect(result.find(t => t.id === 'first_sell')?.unlocked).toBe(true)
+  })
+
+  it('売却9回では「ベテラントレーダー」未獲得', () => {
+    const result = evaluateTitles({ ...emptyData, realizedTradeCount: 9 })
+    expect(result.find(t => t.id === 'trade_10')?.unlocked).toBe(false)
+  })
+
+  it('売却10回で「ベテラントレーダー」獲得', () => {
+    const result = evaluateTitles({ ...emptyData, realizedTradeCount: 10 })
+    expect(result.find(t => t.id === 'trade_10')?.unlocked).toBe(true)
+  })
+
+  it('累計実現利益10万円で「利確マスター」獲得', () => {
+    const result = evaluateTitles({ ...emptyData, totalRealizedProfit: 100000 })
+    expect(result.find(t => t.id === 'profit_taker')?.unlocked).toBe(true)
+  })
+
+  it('累計実現利益が10万円未満では「利確マスター」未獲得', () => {
+    const result = evaluateTitles({ ...emptyData, totalRealizedProfit: 99999 })
+    expect(result.find(t => t.id === 'profit_taker')?.unlocked).toBe(false)
   })
 
   // 継続カテゴリ

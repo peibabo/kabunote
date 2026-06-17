@@ -35,6 +35,8 @@ export interface TitleCheckData {
   tagCount: number
   distinctTagColorCount: number
   positionCount: number
+  realizedTradeCount: number
+  totalRealizedProfit: number
   dividendCount: number
   benefitCount: number
   eventCount: number
