@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import type { PortfolioSnapshotData, HistoryRange } from '@/types/portfolio';
 import { grantXp } from '@/lib/gamification';
 import { getTodayJST } from '@/lib/dateJst';
+import { apiPatch } from '@/lib/apiClient';
 
 export function usePortfolioHistory() {
   const [range, setRange] = useState<HistoryRange>('1M');
@@ -79,6 +80,25 @@ export function usePortfolioHistory() {
     }
   }, [range, fetchHistory]);
 
+  // 過去スナップショットの個別株価を修正（評価額・損益・純資産も自動再計算）
+  const updateSnapshotPrices = useCallback(async (
+    snapshotId: string,
+    prices: { stockId: string; currentPrice: number }[],
+  ): Promise<boolean> => {
+    try {
+      const updated = await apiPatch<PortfolioSnapshotData>(
+        `/api/portfolio/snapshot/${snapshotId}`,
+        { stockPrices: prices },
+      );
+      // レスポンスで該当スナップショットを差し替え → グラフ再描画
+      setData(prev => prev.map(s => s.id === snapshotId ? updated : s));
+      return true;
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '株価の修正に失敗しました');
+      return false;
+    }
+  }, []);
+
   return {
     data,
     range,
@@ -88,5 +108,6 @@ export function usePortfolioHistory() {
     todayRecorded,
     error,
     createSnapshot,
+    updateSnapshotPrices,
   };
 }

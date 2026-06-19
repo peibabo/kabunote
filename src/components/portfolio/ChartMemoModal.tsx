@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { playSound } from '@/lib/sound';
 import type { ChartType } from '@/types/portfolio';
-import { formatPrice } from '@/lib/positionCalc';
+import ChartSnapshotEditor, { type EditablePrice } from '@/components/portfolio/chart/ChartSnapshotEditor';
 
 interface ChartMemoModalProps {
   isOpen: boolean;
@@ -15,6 +15,9 @@ interface ChartMemoModalProps {
   dataValues?: { label: string; value: string; color?: string }[];
   onSave: (content: string) => Promise<boolean>;
   onDelete: () => Promise<boolean>;
+  /** 個別株価チャート（stocks）かつ昨日以前のとき、株価修正UIを表示 */
+  editablePrice?: EditablePrice;
+  onSavePrice?: (currentPrice: number) => Promise<boolean>;
 }
 
 const CHART_TYPE_LABELS: Record<ChartType, { label: string; icon: string }> = {
@@ -41,6 +44,8 @@ export default function ChartMemoModal({
   dataValues,
   onSave,
   onDelete,
+  editablePrice,
+  onSavePrice,
 }: ChartMemoModalProps) {
   const [content, setContent] = useState('');
   const [isSaving, setIsSaving] = useState(false);
@@ -161,6 +166,15 @@ export default function ChartMemoModal({
                 </div>
               ))}
             </div>
+          )}
+
+          {/* 株価修正（個別株価チャート・昨日以前のみ） */}
+          {editablePrice && onSavePrice && (
+            <ChartSnapshotEditor
+              editablePrice={editablePrice}
+              onSavePrice={onSavePrice}
+              disabled={isSaving || isDeleting}
+            />
           )}
 
           {/* テキストエリア */}

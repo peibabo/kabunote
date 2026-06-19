@@ -3,8 +3,10 @@
 import { useState, useCallback, useMemo } from 'react';
 import { playSound } from '@/lib/sound';
 import { formatPrice } from '@/lib/positionCalc';
+import { getTodayJST } from '@/lib/dateJst';
 import PortfolioChart from '@/components/portfolio/PortfolioChart';
 import ChartMemoModal from '@/components/portfolio/ChartMemoModal';
+import type { EditablePrice } from '@/components/portfolio/chart/ChartSnapshotEditor';
 import type { HistoryRange, ChartType, PortfolioSnapshotData, ChartMemoMap } from '@/types/portfolio';
 import { chartMemoKey } from '@/types/portfolio';
 
@@ -35,6 +37,7 @@ interface PortfolioHistoryProps {
   memoMap: ChartMemoMap;
   saveMemo: (snapshotDate: string, chartType: ChartType, symbol: string | undefined, content: string) => Promise<boolean>;
   deleteMemo: (snapshotDate: string, chartType: ChartType, symbol?: string) => Promise<boolean>;
+  updateSnapshotPrices: (snapshotId: string, prices: { stockId: string; currentPrice: number }[]) => Promise<boolean>;
 }
 
 export default function PortfolioHistory({
@@ -49,6 +52,7 @@ export default function PortfolioHistory({
   memoMap,
   saveMemo,
   deleteMemo,
+  updateSnapshotPrices,
 }: PortfolioHistoryProps) {
   const [modalTarget, setModalTarget] = useState<ModalTarget | null>(null);
 
@@ -77,6 +81,28 @@ export default function PortfolioHistory({
     if (!modalTarget) return false;
     return deleteMemo(modalTarget.snapshotDate, modalTarget.chartType, modalTarget.symbol);
   }, [modalTarget, deleteMemo]);
+
+  // 個別株価チャート かつ 昨日以前 のとき、株価修正UIの対象を算出
+  const editablePrice = useMemo<EditablePrice | undefined>(() => {
+    if (!modalTarget || modalTarget.chartType !== 'stocks' || !modalTarget.symbol) return undefined;
+    if (modalTarget.snapshotDate >= getTodayJST()) return undefined; // 当日分は対象外
+    const snap = data.find(d => d.snapshotDate === modalTarget.snapshotDate);
+    const ss = snap?.stockSnapshots.find(s => s.symbol === modalTarget.symbol);
+    if (!snap || !ss) return undefined;
+    return {
+      snapshotId: snap.id,
+      stockId: ss.stockId,
+      symbol: ss.symbol,
+      currentPrice: ss.currentPrice,
+    };
+  }, [modalTarget, data]);
+
+  const handleSavePrice = useCallback(async (currentPrice: number) => {
+    if (!editablePrice) return false;
+    return updateSnapshotPrices(editablePrice.snapshotId, [
+      { stockId: editablePrice.stockId, currentPrice },
+    ]);
+  }, [editablePrice, updateSnapshotPrices]);
 
   // モーダル表示時の既存メモ内容とデータ値を取得
   const existingContent = modalTarget
@@ -209,6 +235,8 @@ export default function PortfolioHistory({
           dataValues={modalDataValues}
           onSave={handleSave}
           onDelete={handleDelete}
+          editablePrice={editablePrice}
+          onSavePrice={handleSavePrice}
         />
       )}
     </>

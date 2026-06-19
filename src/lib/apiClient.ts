@@ -17,6 +17,14 @@ export function apiPut<T>(url: string, body: unknown): Promise<T> {
   })
 }
 
+export function apiPatch<T>(url: string, body: unknown): Promise<T> {
+  return apiFetch<T>(url, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+}
+
 export function apiPost<T>(url: string, body: unknown): Promise<T> {
   return apiFetch<T>(url, {
     method: 'POST',
