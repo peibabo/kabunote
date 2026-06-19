@@ -12,6 +12,7 @@ export interface PortfolioSnapshotData {
 }
 
 export interface StockSnapshotData {
+  stockId: string;
   symbol: string;
   currentPrice: number | null;
   shares: number;

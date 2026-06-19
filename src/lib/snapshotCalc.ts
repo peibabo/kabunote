@@ -80,6 +80,64 @@ export function buildSnapshotData(stocks: StockInput[], cashAmount: number): Sna
   };
 }
 
+// 保存済みスナップショット行（過去データ修正時の再計算用）
+export interface StoredSnapshotRow {
+  currentPrice: number | null;
+  shares: number;
+  cost: number;
+}
+
+export interface RecalcResult {
+  totalInvestment: number;
+  totalValue: number;
+  profitLoss: number;
+  netAssets: number;
+  /** 各行の再計算後の評価額（rows と同じ順序） */
+  values: number[];
+}
+
+/**
+ * 銘柄スナップショット1行の評価額を算出。
+ * buildSnapshotData() と同じロジック（保有あり: price>0 なら price×shares、なければ cost。保有なし: 0）。
+ */
+export function computeStockSnapshotValue(
+  currentPrice: number | null,
+  shares: number,
+  cost: number
+): number {
+  if (shares > 0) {
+    return currentPrice != null && currentPrice > 0 ? currentPrice * shares : cost;
+  }
+  return 0;
+}
+
+/**
+ * 保存済みスナップショットの集計値を、各行の currentPrice/shares/cost と現金から再計算する。
+ * 過去データ修正（個別株価の上書き）時に使用。現在のポジションには依存しない。
+ */
+export function recalcSnapshotAggregates(
+  rows: StoredSnapshotRow[],
+  cashAmount: number
+): RecalcResult {
+  let totalInvestment = 0;
+  let totalValue = 0;
+  const values: number[] = [];
+
+  for (const row of rows) {
+    const value = computeStockSnapshotValue(row.currentPrice, row.shares, row.cost);
+    values.push(value);
+    if (row.shares > 0) {
+      totalInvestment += row.cost;
+      totalValue += value;
+    }
+  }
+
+  const profitLoss = totalValue - totalInvestment;
+  const netAssets = totalValue + cashAmount;
+
+  return { totalInvestment, totalValue, profitLoss, netAssets, values };
+}
+
 export const RANGE_DAYS: Record<string, number> = {
   '1W': 7,
   '1M': 30,

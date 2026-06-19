@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { buildSnapshotData, RANGE_DAYS } from '@/lib/snapshotCalc'
+import { buildSnapshotData, recalcSnapshotAggregates, computeStockSnapshotValue, RANGE_DAYS } from '@/lib/snapshotCalc'
 import { createPosition } from '../helpers/mockFactories'
 
 describe('buildSnapshotData', () => {
@@ -204,6 +204,86 @@ describe('buildSnapshotData', () => {
     expect(result.stockSnapshots[0].shares).toBe(300)
     expect(result.stockSnapshots[0].cost).toBe(510000)
     expect(result.stockSnapshots[0].value).toBe(600000)
+  })
+})
+
+describe('computeStockSnapshotValue', () => {
+  it('保有あり・株価ありは price×shares', () => {
+    expect(computeStockSnapshotValue(2000, 100, 150000)).toBe(200000)
+  })
+
+  it('保有あり・株価nullは cost にフォールバック', () => {
+    expect(computeStockSnapshotValue(null, 100, 150000)).toBe(150000)
+  })
+
+  it('保有あり・株価0は cost にフォールバック', () => {
+    expect(computeStockSnapshotValue(0, 100, 150000)).toBe(150000)
+  })
+
+  it('保有なし(shares=0)は0', () => {
+    expect(computeStockSnapshotValue(2000, 0, 0)).toBe(0)
+  })
+})
+
+describe('recalcSnapshotAggregates', () => {
+  it('単一銘柄の株価修正で集計が再計算される', () => {
+    const result = recalcSnapshotAggregates(
+      [{ currentPrice: 2500, shares: 100, cost: 150000 }],
+      500000,
+    )
+    expect(result.values).toEqual([250000])
+    expect(result.totalInvestment).toBe(150000)
+    expect(result.totalValue).toBe(250000)
+    expect(result.profitLoss).toBe(100000)
+    expect(result.netAssets).toBe(750000)
+  })
+
+  it('複数銘柄の合算が正しい', () => {
+    const result = recalcSnapshotAggregates(
+      [
+        { currentPrice: 2000, shares: 100, cost: 150000 },
+        { currentPrice: 5000, shares: 200, cost: 800000 },
+      ],
+      300000,
+    )
+    expect(result.values).toEqual([200000, 1000000])
+    expect(result.totalInvestment).toBe(950000)
+    expect(result.totalValue).toBe(1200000)
+    expect(result.profitLoss).toBe(250000)
+    expect(result.netAssets).toBe(1500000)
+  })
+
+  it('株価0/null は cost にフォールバックして集計', () => {
+    const result = recalcSnapshotAggregates(
+      [{ currentPrice: 0, shares: 100, cost: 150000 }],
+      0,
+    )
+    expect(result.values).toEqual([150000])
+    expect(result.totalValue).toBe(150000)
+    expect(result.profitLoss).toBe(0)
+  })
+
+  it('保有なし(shares=0)の行は集計に寄与しない', () => {
+    const result = recalcSnapshotAggregates(
+      [
+        { currentPrice: 2000, shares: 100, cost: 150000 },
+        { currentPrice: 5000, shares: 0, cost: 0 },
+      ],
+      100000,
+    )
+    expect(result.values).toEqual([200000, 0])
+    expect(result.totalInvestment).toBe(150000)
+    expect(result.totalValue).toBe(200000)
+    expect(result.netAssets).toBe(300000)
+  })
+
+  it('空配列は現金のみ', () => {
+    const result = recalcSnapshotAggregates([], 100000)
+    expect(result.totalValue).toBe(0)
+    expect(result.totalInvestment).toBe(0)
+    expect(result.profitLoss).toBe(0)
+    expect(result.netAssets).toBe(100000)
+    expect(result.values).toEqual([])
   })
 })
 

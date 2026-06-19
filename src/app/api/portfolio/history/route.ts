@@ -40,8 +40,9 @@ export const GET = withAuth(async ({ user, request }) => {
       stockSnapshots: [],
     }
     if (detail && 'stockSnapshots' in s) {
-      const ss = s.stockSnapshots as { symbol: string; currentPrice: unknown; shares: number; value: unknown; cost: unknown }[]
+      const ss = s.stockSnapshots as { stockId: string; symbol: string; currentPrice: unknown; shares: number; value: unknown; cost: unknown }[]
       base.stockSnapshots = ss.map(snap => ({
+        stockId: snap.stockId,
         symbol: snap.symbol,
         currentPrice: snap.currentPrice != null ? Number(snap.currentPrice) : null,
         shares: snap.shares,
