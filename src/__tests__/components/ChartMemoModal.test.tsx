@@ -42,6 +42,20 @@ describe('ChartMemoModal', () => {
     expect(screen.getByText('チャートメモ', { exact: false })).toBeDefined()
   })
 
+  // 回帰: snapshotDate が文字列でなくても formatDisplayDate の split でクラッシュしない
+  it('非文字列の snapshotDate でもクラッシュせず描画される', () => {
+    expect(() =>
+      render(
+        <ChartMemoModal
+          {...baseProps}
+          chartType="stocks"
+          snapshotDate={12345 as unknown as string}
+        />
+      )
+    ).not.toThrow()
+    expect(screen.getByText('チャートメモ', { exact: false })).toBeDefined()
+  })
+
   it('editablePrice と onSavePrice があると株価修正UIが表示される', () => {
     render(
       <ChartMemoModal
