@@ -15,6 +15,7 @@ import {
   Legend,
 } from 'recharts';
 import type { PortfolioSnapshotData, ChartType, ChartMemoMap } from '@/types/portfolio';
+import { CHART_TYPE_META } from '@/types/portfolio';
 import { formatPrice } from '@/lib/positionCalc';
 import ChartTooltip from './chart/ChartTooltip';
 import CustomDot from './chart/CustomDot';
@@ -25,12 +26,10 @@ interface PortfolioChartProps {
   onDotClick?: (snapshotDate: string, chartType: ChartType, symbol?: string) => void;
 }
 
-const CHART_TABS: { key: ChartType; label: string; icon: string }[] = [
-  { key: 'value', label: '評価額', icon: '💰' },
-  { key: 'netAssets', label: '純資産', icon: '🏦' },
-  { key: 'profitLoss', label: '損益', icon: '📈' },
-  { key: 'stocks', label: '個別株価', icon: '📊' },
-];
+// タブ表示は共通メタ（CHART_TYPE_META）から導出。並び順は定義順を踏襲。
+const CHART_TABS: { key: ChartType; label: string; icon: string }[] =
+  (Object.entries(CHART_TYPE_META) as [ChartType, { label: string; icon: string }][])
+    .map(([key, meta]) => ({ key, ...meta }));
 
 // 銘柄ごとの色パレット
 const STOCK_COLORS = [

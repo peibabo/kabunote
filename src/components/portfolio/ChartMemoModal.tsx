@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { playSound } from '@/lib/sound';
 import type { ChartType } from '@/types/portfolio';
+import { CHART_TYPE_META } from '@/types/portfolio';
 import ChartSnapshotEditor, { type EditablePrice } from '@/components/portfolio/chart/ChartSnapshotEditor';
 
 interface ChartMemoModalProps {
@@ -19,13 +20,6 @@ interface ChartMemoModalProps {
   editablePrice?: EditablePrice;
   onSavePrice?: (currentPrice: number) => Promise<boolean>;
 }
-
-const CHART_TYPE_LABELS: Record<ChartType, { label: string; icon: string }> = {
-  value: { label: '評価額', icon: '💰' },
-  netAssets: { label: '純資産', icon: '🏦' },
-  profitLoss: { label: '損益', icon: '📈' },
-  stocks: { label: '個別株価', icon: '📊' },
-};
 
 const MAX_LENGTH = 50;
 
@@ -118,7 +112,7 @@ export default function ChartMemoModal({
 
   if (!isOpen) return null;
 
-  const typeInfo = CHART_TYPE_LABELS[chartType] ?? { label: 'チャート', icon: '📊' };
+  const typeInfo = CHART_TYPE_META[chartType] ?? { label: 'チャート', icon: '📊' };
 
   return (
     <>
