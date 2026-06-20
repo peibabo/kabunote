@@ -3,7 +3,7 @@
 import { useState, useCallback, useMemo } from 'react';
 import { playSound } from '@/lib/sound';
 import { formatPrice } from '@/lib/positionCalc';
-import { getTodayJST } from '@/lib/dateJst';
+import { isBeforeTodayJST } from '@/lib/dateJst';
 import PortfolioChart from '@/components/portfolio/PortfolioChart';
 import ChartMemoModal from '@/components/portfolio/ChartMemoModal';
 import type { EditablePrice } from '@/components/portfolio/chart/ChartSnapshotEditor';
@@ -85,7 +85,7 @@ export default function PortfolioHistory({
   // 個別株価チャート かつ 昨日以前 のとき、株価修正UIの対象を算出
   const editablePrice = useMemo<EditablePrice | undefined>(() => {
     if (!modalTarget || modalTarget.chartType !== 'stocks' || !modalTarget.symbol) return undefined;
-    if (modalTarget.snapshotDate >= getTodayJST()) return undefined; // 当日分は対象外
+    if (!isBeforeTodayJST(modalTarget.snapshotDate)) return undefined; // 当日分は対象外
     const snap = data.find(d => d.snapshotDate === modalTarget.snapshotDate);
     const ss = snap?.stockSnapshots.find(s => s.symbol === modalTarget.symbol);
     if (!snap || !ss) return undefined;

@@ -13,6 +13,11 @@ export function getTodayJST(): string {
   return formatDateJST(new Date())
 }
 
+/** YYYY-MM-DD が JST基準で「昨日以前」か（当日・未来は false）。過去スナップショットの編集可否判定に使用 */
+export function isBeforeTodayJST(dateStr: string): boolean {
+  return dateStr < getTodayJST()
+}
+
 /** JST基準でn日前の日付をYYYY-MM-DD形式で取得 */
 export function getJSTDateDaysAgo(daysAgo: number): string {
   const now = new Date()
