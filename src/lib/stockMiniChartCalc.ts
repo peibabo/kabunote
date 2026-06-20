@@ -50,3 +50,77 @@ export function transformChartData(
     price: item.price,
   }));
 }
+
+// 購入・売却マーカー用の型
+export interface TradeMarkerEntry {
+  date: string; // 取引日（YYYY-MM-DD）
+  shares: number; // 株数
+  price: number; // 単価（1株あたり）
+}
+
+export interface TradeMarkerCell {
+  buys: TradeMarkerEntry[];
+  sells: TradeMarkerEntry[];
+}
+
+/**
+ * 取引日を最寄りのスナップショット日にスナップする。
+ * - 完全一致があればそれを返す
+ * - 無ければ日数差が最小のスナップショット日を返す（範囲外でも最近傍に寄せる）
+ * - スナップショットが空なら null
+ */
+function snapToNearestSnapshot(date: string, snapshotDates: string[]): string | null {
+  if (snapshotDates.length === 0) return null;
+
+  const target = Date.parse(date);
+  if (Number.isNaN(target)) return null;
+
+  let nearest: string | null = null;
+  let minDiff = Infinity;
+  for (const snap of snapshotDates) {
+    if (snap === date) return snap;
+    const diff = Math.abs(Date.parse(snap) - target);
+    if (diff < minDiff) {
+      minDiff = diff;
+      nearest = snap;
+    }
+  }
+  return nearest;
+}
+
+/**
+ * 購入・売却の取引を、株価ライン上のスナップショット日に対応付けたマップを構築する。
+ * 各取引日は最寄りのスナップショット日にスナップして集約する（カテゴリ軸対応）。
+ * date が空文字の取引（取得日未設定ロット等）は除外する。
+ *
+ * @param snapshotDates チャートに描画されるスナップショット日（YYYY-MM-DD）の配列
+ * @param buys 購入エントリ
+ * @param sells 売却エントリ
+ * @returns Map<スナップショット日(YYYY-MM-DD), { buys, sells }>
+ */
+export function buildTradeMarkerMap(
+  snapshotDates: string[],
+  buys: TradeMarkerEntry[],
+  sells: TradeMarkerEntry[],
+): Map<string, TradeMarkerCell> {
+  const map = new Map<string, TradeMarkerCell>();
+
+  const assign = (entries: TradeMarkerEntry[], kind: 'buys' | 'sells') => {
+    for (const entry of entries) {
+      if (!entry.date) continue;
+      const snap = snapToNearestSnapshot(entry.date, snapshotDates);
+      if (!snap) continue;
+      let cell = map.get(snap);
+      if (!cell) {
+        cell = { buys: [], sells: [] };
+        map.set(snap, cell);
+      }
+      cell[kind].push(entry);
+    }
+  };
+
+  assign(buys, 'buys');
+  assign(sells, 'sells');
+
+  return map;
+}

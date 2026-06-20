@@ -178,6 +178,7 @@ app_users (ユーザー管理)
 | `useStockBenefit` | 株主優待情報（500msデバウンス） |
 | `useStockTag` | タグ管理（楽観的更新） |
 | `useStockPriceHistory` | 個別銘柄の株価履歴取得（期間切替・スナップショットイベント連動・updateSnapshotPrice=過去株価修正） |
+| `useTradeMarkers` | 銘柄の購入ロット・売却履歴を取得しチャートマーカー用に整形（読み取り専用・購入/売却イベント連動でライブ更新） |
 | `useStockSearch` | 銘柄検索（オートコンプリート） |
 
 ### `hooks/alert/` — アラート
@@ -304,7 +305,7 @@ app_users (ユーザー管理)
 
 ### `components/stock/` — 銘柄
 - `StockCard.tsx`: 銘柄カード（タブ制御・統合アラート・スマートナビゲーション）
-- `StockCardHeader.tsx`, `StockInput.tsx`, `SearchBar.tsx`, `StockMiniChart.tsx`（チャートから過去株価のインライン修正可）, `EarningsBadge.tsx`
+- `StockCardHeader.tsx`, `StockInput.tsx`, `SearchBar.tsx`, `StockMiniChart.tsx`（チャートから過去株価のインライン修正可・購入▲/売却▼マーカー表示）, `EarningsBadge.tsx`
 - `FloatingAddButton.tsx`, `SimplePortfolioSummary.tsx`
 
 ### `components/stock-tabs/` — 銘柄カードタブ

@@ -13,9 +13,11 @@ import {
 } from 'recharts';
 import { useStockPriceHistory } from '@/hooks/stock/useStockPriceHistory';
 import { useChartMemos } from '@/hooks/portfolio/useChartMemos';
+import { useTradeMarkers } from '@/hooks/stock/useTradeMarkers';
 import { formatPrice } from '@/lib/positionCalc';
 import { isBeforeTodayJST } from '@/lib/dateJst';
-import { calcYAxisDomain, formatDateLabel } from '@/lib/stockMiniChartCalc';
+import { calcYAxisDomain, formatDateLabel, buildTradeMarkerMap } from '@/lib/stockMiniChartCalc';
+import type { TradeMarkerCell } from '@/lib/stockMiniChartCalc';
 import { chartMemoKey } from '@/types/portfolio';
 import type { HistoryRange, ChartMemoMap } from '@/types/portfolio';
 import ChartMemoModal from '../portfolio/ChartMemoModal';
@@ -48,11 +50,12 @@ interface MiniChartDotProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   payload?: any;
   memoMap: ChartMemoMap;
+  markerMap: Map<string, TradeMarkerCell>;
   symbol: string;
   onClick: (snapshotDate: string) => void;
 }
 
-function MiniChartDot({ cx, cy, payload, memoMap, symbol, onClick }: MiniChartDotProps) {
+function MiniChartDot({ cx, cy, payload, memoMap, markerMap, symbol, onClick }: MiniChartDotProps) {
   if (cx == null || cy == null || !payload) return null;
 
   const fullDate = payload.fullDate as string;
@@ -60,6 +63,10 @@ function MiniChartDot({ cx, cy, payload, memoMap, symbol, onClick }: MiniChartDo
 
   const key = chartMemoKey(fullDate, 'stocks', symbol);
   const hasMemo = memoMap.has(key);
+
+  const cell = markerMap.get(fullDate);
+  const buyCount = cell?.buys.length ?? 0;
+  const sellCount = cell?.sells.length ?? 0;
 
   return (
     <g
@@ -74,6 +81,40 @@ function MiniChartDot({ cx, cy, payload, memoMap, symbol, onClick }: MiniChartDo
       ) : (
         <circle cx={cx} cy={cy} r={2} fill="#60a5fa" />
       )}
+
+      {/* 購入マーカー（緑▲・ラインの下） */}
+      {buyCount > 0 && (
+        <>
+          <path
+            d={`M ${cx} ${cy + 8} l 4 7 l -8 0 z`}
+            fill="#22c55e"
+            stroke="#15803d"
+            strokeWidth={0.5}
+          />
+          {buyCount > 1 && (
+            <text x={cx + 6} y={cy + 18} fill="#22c55e" fontSize={8} fontWeight="bold">
+              ×{buyCount}
+            </text>
+          )}
+        </>
+      )}
+
+      {/* 売却マーカー（赤▼・ラインの上） */}
+      {sellCount > 0 && (
+        <>
+          <path
+            d={`M ${cx} ${cy - 8} l 4 -7 l -8 0 z`}
+            fill="#ef4444"
+            stroke="#b91c1c"
+            strokeWidth={0.5}
+          />
+          {sellCount > 1 && (
+            <text x={cx + 6} y={cy - 12} fill="#ef4444" fontSize={8} fontWeight="bold">
+              ×{sellCount}
+            </text>
+          )}
+        </>
+      )}
     </g>
   );
 }
@@ -86,7 +127,14 @@ export default function StockMiniChart({
 }: StockMiniChartProps) {
   const { data, range, setRange, isLoading, error, updateSnapshotPrice } = useStockPriceHistory(stockId);
   const { memoMap, saveMemo, deleteMemo } = useChartMemos(range);
+  const { buys, sells } = useTradeMarkers(stockId);
   const [modalDate, setModalDate] = useState<string | null>(null);
+
+  // 購入・売却日を最寄りのスナップショット日に対応付けたマーカーマップ
+  const markerMap = useMemo(
+    () => buildTradeMarkerMap(data.map(d => d.date), buys, sells),
+    [data, buys, sells],
+  );
 
   const handleDotClick = useCallback((snapshotDate: string) => {
     setModalDate(snapshotDate);
@@ -183,7 +231,15 @@ export default function StockMiniChart({
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <span className="text-xs text-gray-400">📊 株価推移</span>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-400">📊 株価推移</span>
+          {markerMap.size > 0 && (
+            <span className="text-[10px] text-gray-500">
+              <span className="text-green-400">▲</span>購入{' '}
+              <span className="text-red-400">▼</span>売却
+            </span>
+          )}
+        </div>
         <div className="flex gap-1">
           {RANGE_OPTIONS.map(opt => (
             <button
@@ -225,12 +281,27 @@ export default function StockMiniChart({
                 const memo = fullDate
                   ? memoMap.get(chartMemoKey(fullDate, 'stocks', symbol))
                   : undefined;
+                const cell = fullDate ? markerMap.get(fullDate) : undefined;
                 return (
                   <div className="bg-gray-800 border border-gray-600 rounded p-2 shadow-lg text-xs">
                     <p className="text-gray-400">{fullDate}</p>
                     <p className="text-white font-medium">
                       {price != null ? `${formatPrice(price)}円` : 'データなし'}
                     </p>
+                    {cell && (cell.buys.length > 0 || cell.sells.length > 0) && (
+                      <div className="mt-1 pt-1 border-t border-gray-600 space-y-0.5">
+                        {cell.buys.map((b, i) => (
+                          <div key={`b-${i}`} className="text-green-300">
+                            ▲ 購入 {b.shares}株 @{formatPrice(b.price)}円
+                          </div>
+                        ))}
+                        {cell.sells.map((s, i) => (
+                          <div key={`s-${i}`} className="text-red-300">
+                            ▼ 売却 {s.shares}株 @{formatPrice(s.price)}円
+                          </div>
+                        ))}
+                      </div>
+                    )}
                     {memo && (
                       <div className="mt-1 pt-1 border-t border-gray-600 flex items-start gap-1">
                         <span className="text-yellow-400">📝</span>
@@ -279,7 +350,7 @@ export default function StockMiniChart({
               dataKey="price"
               stroke="#60a5fa"
               strokeWidth={2}
-              dot={<MiniChartDot memoMap={memoMap} symbol={symbol} onClick={handleDotClick} />}
+              dot={<MiniChartDot memoMap={memoMap} markerMap={markerMap} symbol={symbol} onClick={handleDotClick} />}
               activeDot={false}
               connectNulls
             />
