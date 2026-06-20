@@ -30,6 +30,7 @@ const CHART_TYPE_LABELS: Record<ChartType, { label: string; icon: string }> = {
 const MAX_LENGTH = 50;
 
 function formatDisplayDate(dateStr: string): string {
+  if (typeof dateStr !== 'string') return String(dateStr ?? '');
   const [y, m, d] = dateStr.split('-');
   return `${y}年${parseInt(m)}月${parseInt(d)}日`;
 }

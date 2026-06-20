@@ -137,7 +137,7 @@ export default function PortfolioChart({ data, memoMap: propMemoMap, onDotClick 
                 stroke="#60a5fa"
                 strokeWidth={2}
                 dot={<CustomDot chartType="profitLoss" memoMap={memoMap} onClick={handleDotClick} fill="#60a5fa" />}
-                activeDot={<CustomDot chartType="profitLoss" memoMap={memoMap} onClick={handleDotClick} fill="#60a5fa" />}
+                activeDot={false}
               />
             </LineChart>
           ) : chartType === 'stocks' ? (
@@ -163,7 +163,7 @@ export default function PortfolioChart({ data, memoMap: propMemoMap, onDotClick 
                   stroke={STOCK_COLORS[i % STOCK_COLORS.length]}
                   strokeWidth={2}
                   dot={<CustomDot chartType="stocks" symbol={symbol} memoMap={memoMap} onClick={handleDotClick} fill={STOCK_COLORS[i % STOCK_COLORS.length]} />}
-                  activeDot={<CustomDot chartType="stocks" symbol={symbol} memoMap={memoMap} onClick={handleDotClick} fill={STOCK_COLORS[i % STOCK_COLORS.length]} />}
+                  activeDot={false}
                   connectNulls
                 />
               ))}
