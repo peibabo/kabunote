@@ -38,6 +38,7 @@ export const GET = withStock(async ({ user, stockId, request }) => {
       const ss = s.stockSnapshots[0]
       if (!ss) return null
       return {
+        snapshotId: s.id,
         date: s.snapshotDate.toISOString().split('T')[0],
         price: ss.currentPrice != null ? Number(ss.currentPrice) : null,
         shares: ss.shares,

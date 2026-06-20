@@ -99,7 +99,7 @@ app_users (ユーザー管理)
 | `/api/stocks/[stockId]/tag` | GET/POST | タグ一覧・追加 |
 | `/api/stocks/[stockId]/tag/[tagId]` | DELETE | タグ削除 |
 | `/api/stocks/[stockId]/next-action-plan` | GET/PUT/DELETE | 次の一手戦略 |
-| `/api/stocks/[stockId]/price-history` | GET | 個別銘柄の株価履歴（?range=1M/3M/6M/1Y/2Y、デフォルト3M） |
+| `/api/stocks/[stockId]/price-history` | GET | 個別銘柄の株価履歴（?range=1M/3M/6M/1Y/2Y、デフォルト3M、各点に snapshotId 付与＝過去株価修正用） |
 | `/api/stocks/[stockId]/news` | GET/PUT | 銘柄ニュース取得・一括更新（最大20件、URL+コメント） |
 
 ### ポートフォリオ履歴
@@ -177,7 +177,7 @@ app_users (ユーザー管理)
 | `useStockDividend` | 配当情報（500msデバウンス） |
 | `useStockBenefit` | 株主優待情報（500msデバウンス） |
 | `useStockTag` | タグ管理（楽観的更新） |
-| `useStockPriceHistory` | 個別銘柄の株価履歴取得（期間切替・スナップショットイベント連動） |
+| `useStockPriceHistory` | 個別銘柄の株価履歴取得（期間切替・スナップショットイベント連動・updateSnapshotPrice=過去株価修正） |
 | `useStockSearch` | 銘柄検索（オートコンプリート） |
 
 ### `hooks/alert/` — アラート
@@ -304,7 +304,7 @@ app_users (ユーザー管理)
 
 ### `components/stock/` — 銘柄
 - `StockCard.tsx`: 銘柄カード（タブ制御・統合アラート・スマートナビゲーション）
-- `StockCardHeader.tsx`, `StockInput.tsx`, `SearchBar.tsx`, `StockMiniChart.tsx`, `EarningsBadge.tsx`
+- `StockCardHeader.tsx`, `StockInput.tsx`, `SearchBar.tsx`, `StockMiniChart.tsx`（チャートから過去株価のインライン修正可）, `EarningsBadge.tsx`
 - `FloatingAddButton.tsx`, `SimplePortfolioSummary.tsx`
 
 ### `components/stock-tabs/` — 銘柄カードタブ

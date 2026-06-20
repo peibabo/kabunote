@@ -50,12 +50,15 @@ describe('GET /api/stocks/[stockId]/price-history', () => {
     expect(json.success).toBe(true)
     expect(json.history).toHaveLength(2)
     expect(json.history[0]).toEqual({
+      snapshotId: 'snap-1',
       date: '2024-06-15',
       price: 2000,
       shares: 100,
       value: 200000,
       cost: 150000,
     })
+    // 株価修正に必要な snapshotId が各要素に含まれる
+    expect(json.history[1].snapshotId).toBe('snap-2')
     expect(json.history[1].price).toBe(2100)
   })
 

@@ -2,8 +2,10 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import type { HistoryRange } from '@/types/portfolio';
+import { apiPatch } from '@/lib/apiClient';
 
 export interface StockPriceHistoryItem {
+  snapshotId: string;
   date: string;
   price: number | null;
   shares: number;
@@ -46,5 +48,24 @@ export function useStockPriceHistory(stockId: string | undefined) {
     return () => window.removeEventListener('kabunote-snapshot-created', handler);
   }, [range, fetchHistory]);
 
-  return { data, range, setRange, isLoading, error };
+  // 過去スナップショットの株価を修正（評価額・損益・純資産も自動再計算）。
+  // 既存の PATCH /api/portfolio/snapshot/[id] を再利用し、成功後に履歴を再取得して反映。
+  const updateSnapshotPrice = useCallback(async (
+    snapshotId: string,
+    targetStockId: string,
+    currentPrice: number,
+  ): Promise<boolean> => {
+    try {
+      await apiPatch(`/api/portfolio/snapshot/${snapshotId}`, {
+        stockPrices: [{ stockId: targetStockId, currentPrice }],
+      });
+      await fetchHistory(range);
+      return true;
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '株価の修正に失敗しました');
+      return false;
+    }
+  }, [range, fetchHistory]);
+
+  return { data, range, setRange, isLoading, error, updateSnapshotPrice };
 }

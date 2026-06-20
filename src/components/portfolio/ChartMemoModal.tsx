@@ -117,7 +117,7 @@ export default function ChartMemoModal({
 
   if (!isOpen) return null;
 
-  const typeInfo = CHART_TYPE_LABELS[chartType];
+  const typeInfo = CHART_TYPE_LABELS[chartType] ?? { label: 'チャート', icon: '📊' };
 
   return (
     <>
