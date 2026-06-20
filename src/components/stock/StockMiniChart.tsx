@@ -14,7 +14,7 @@ import {
 import { useStockPriceHistory } from '@/hooks/stock/useStockPriceHistory';
 import { useChartMemos } from '@/hooks/portfolio/useChartMemos';
 import { formatPrice } from '@/lib/positionCalc';
-import { getTodayJST } from '@/lib/dateJst';
+import { isBeforeTodayJST } from '@/lib/dateJst';
 import { calcYAxisDomain, formatDateLabel } from '@/lib/stockMiniChartCalc';
 import { chartMemoKey } from '@/types/portfolio';
 import type { HistoryRange, ChartMemoMap } from '@/types/portfolio';
@@ -113,7 +113,7 @@ export default function StockMiniChart({
   // 昨日以前のポイントのとき、株価修正UIの対象を算出（当日分は対象外）
   const editablePrice = useMemo<EditablePrice | undefined>(() => {
     if (!modalDate || !stockId) return undefined;
-    if (modalDate >= getTodayJST()) return undefined;
+    if (!isBeforeTodayJST(modalDate)) return undefined;
     const item = data.find(d => d.date === modalDate);
     if (!item) return undefined;
     return {

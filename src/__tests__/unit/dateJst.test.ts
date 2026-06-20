@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { getTodayJST, getJSTDateDaysAgo, formatDateJST, dateStrToUTCMidnight, getJSTHour } from '@/lib/dateJst'
+import { getTodayJST, getJSTDateDaysAgo, formatDateJST, dateStrToUTCMidnight, getJSTHour, isBeforeTodayJST } from '@/lib/dateJst'
 
 describe('dateJst', () => {
   afterEach(() => {
@@ -23,6 +23,16 @@ describe('dateJst', () => {
       vi.useFakeTimers()
       vi.setSystemTime(new Date('2026-03-21T00:00:00.000Z'))
       expect(getTodayJST()).toBe('2026-03-21')
+    })
+  })
+
+  describe('isBeforeTodayJST', () => {
+    it('昨日以前は true、当日・未来は false', () => {
+      vi.useFakeTimers()
+      vi.setSystemTime(new Date('2026-03-21T16:00:00.000Z')) // JST 3/22
+      expect(isBeforeTodayJST('2026-03-21')).toBe(true)  // 昨日
+      expect(isBeforeTodayJST('2026-03-22')).toBe(false) // 当日
+      expect(isBeforeTodayJST('2026-03-23')).toBe(false) // 未来
     })
   })
 

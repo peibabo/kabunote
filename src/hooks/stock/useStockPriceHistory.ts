@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import type { HistoryRange } from '@/types/portfolio';
-import { apiPatch } from '@/lib/apiClient';
+import { patchSnapshotPrices } from '@/lib/apiClient';
 
 export interface StockPriceHistoryItem {
   snapshotId: string;
@@ -56,9 +56,7 @@ export function useStockPriceHistory(stockId: string | undefined) {
     currentPrice: number,
   ): Promise<boolean> => {
     try {
-      await apiPatch(`/api/portfolio/snapshot/${snapshotId}`, {
-        stockPrices: [{ stockId: targetStockId, currentPrice }],
-      });
+      await patchSnapshotPrices(snapshotId, [{ stockId: targetStockId, currentPrice }]);
       await fetchHistory(range);
       return true;
     } catch (e) {

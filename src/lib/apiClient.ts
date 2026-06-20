@@ -36,3 +36,20 @@ export function apiPost<T>(url: string, body: unknown): Promise<T> {
 export function apiDelete<T>(url: string): Promise<T> {
   return apiFetch<T>(url, { method: 'DELETE' })
 }
+
+/** 過去スナップショットの個別株価修正の入力 */
+export interface SnapshotStockPrice {
+  stockId: string
+  currentPrice: number
+}
+
+/**
+ * 過去スナップショットの個別株価を修正する（PATCH /api/portfolio/snapshot/[id]）。
+ * エンドポイントとリクエストボディの契約をここに集約（推移グラフ・銘柄カード双方から利用）。
+ */
+export function patchSnapshotPrices<T = unknown>(
+  snapshotId: string,
+  prices: SnapshotStockPrice[],
+): Promise<T> {
+  return apiPatch<T>(`/api/portfolio/snapshot/${snapshotId}`, { stockPrices: prices })
+}
