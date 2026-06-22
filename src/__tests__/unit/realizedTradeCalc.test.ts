@@ -58,6 +58,8 @@ describe('summarizeRealizedTrades', () => {
     expect(summarizeRealizedTrades([])).toEqual({
       totalGross: 0,
       totalAfterTax: 0,
+      totalProceeds: 0,
+      totalAfterTaxProceeds: 0,
       winCount: 0,
       lossCount: 0,
       tradeCount: 0,
@@ -77,6 +79,47 @@ describe('summarizeRealizedTrades', () => {
     expect(s.totalGross).toBe(25000) // 10000 - 5000 + 20000
     // 税引後: 10000*(1-0.20315) + (-5000) + 20000
     expect(s.totalAfterTax).toBeCloseTo(10000 * (1 - 0.20315) - 5000 + 20000, 5)
+  })
+
+  it('売却代金合計: 各レコードの 売却単価×株数 を合算（手元資金の増加額）', () => {
+    const trades = [
+      createTrade({ sellPrice: 1600, soldShares: 100 }), // 160,000
+      createTrade({ sellPrice: 2000, soldShares: 50 }),  // 100,000
+    ]
+    const s = summarizeRealizedTrades(trades)
+    expect(s.totalProceeds).toBe(260000)
+  })
+
+  it('税引後手取り: 利益にかかる税金のみ売却代金から差し引く（課税口座）', () => {
+    // 売却代金 160,000、利益 10,000 → 税金 = 10000*0.20315
+    const trades = [createTrade({ sellPrice: 1600, soldShares: 100, realizedPL: 10000, taxRate: 0.20315 })]
+    const s = summarizeRealizedTrades(trades)
+    expect(s.totalProceeds).toBe(160000)
+    expect(s.totalAfterTaxProceeds).toBeCloseTo(160000 - 10000 * 0.20315, 5)
+  })
+
+  it('NISA（税率0）: 税引後手取り＝売却代金（非課税）', () => {
+    const trades = [createTrade({ sellPrice: 1600, soldShares: 100, realizedPL: 10000, taxRate: 0 })]
+    const s = summarizeRealizedTrades(trades)
+    expect(s.totalAfterTaxProceeds).toBe(160000)
+  })
+
+  it('損失トレード: 税は引かれず税引後手取り＝売却代金', () => {
+    const trades = [createTrade({ sellPrice: 1400, soldShares: 100, realizedPL: -10000, taxRate: 0.20315 })]
+    const s = summarizeRealizedTrades(trades)
+    expect(s.totalProceeds).toBe(140000)
+    expect(s.totalAfterTaxProceeds).toBe(140000)
+  })
+
+  it('利益・損失・NISA混在の手取り合計', () => {
+    const trades = [
+      createTrade({ sellPrice: 1600, soldShares: 100, realizedPL: 10000, taxRate: 0.20315 }), // 代金160,000 税2,031.5
+      createTrade({ sellPrice: 1400, soldShares: 100, realizedPL: -10000, taxRate: 0.20315 }),// 代金140,000 税0
+      createTrade({ sellPrice: 2000, soldShares: 50, realizedPL: 20000, taxRate: 0 }),        // 代金100,000 税0(NISA)
+    ]
+    const s = summarizeRealizedTrades(trades)
+    expect(s.totalProceeds).toBe(400000)
+    expect(s.totalAfterTaxProceeds).toBeCloseTo(400000 - 10000 * 0.20315, 5)
   })
 
   it('損益0は勝ちにも負けにもカウントしない', () => {

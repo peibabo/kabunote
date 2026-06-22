@@ -47,6 +47,8 @@ export interface RealizedTradeResult {
 export interface RealizedTradeSummary {
   totalGross: number;    // 税引前実現損益合計
   totalAfterTax: number; // 税引後実現損益合計
+  totalProceeds: number; // 売却代金合計（税引前手取り）= Σ(sellPrice * soldShares)
+  totalAfterTaxProceeds: number; // 税引後手取り = 売却代金 − 利益にかかる税金（NISAは非課税）
   winCount: number;      // 利益が出たトレード数
   lossCount: number;     // 損失が出たトレード数
   tradeCount: number;    // 総トレード数

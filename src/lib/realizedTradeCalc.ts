@@ -50,17 +50,23 @@ export const formatAcquisitionPeriod = (consumedLots: ConsumedLot[]): string => 
 /**
  * 確定損益レコードの集計（銘柄別・年間・全体で共用）。
  * 税引後は各レコードごとに利益のみ課税して合算する。
+ * 売却代金（proceeds）= 売却単価 × 株数 で「売却時に手元に入った現金」を表し、
+ * 税引後手取りは売却代金から利益にかかる税金を差し引く（NISA/損失時は税0）。
  */
 export const summarizeRealizedTrades = (trades: RealizedTrade[]): RealizedTradeSummary => {
   return trades.reduce<RealizedTradeSummary>(
     (acc, t) => {
+      const proceeds = t.sellPrice * t.soldShares;
+      const tax = t.realizedPL > 0 ? t.realizedPL - calculateAfterTax(t.realizedPL, t.taxRate) : 0;
       acc.totalGross += t.realizedPL;
       acc.totalAfterTax += t.realizedPL > 0 ? calculateAfterTax(t.realizedPL, t.taxRate) : t.realizedPL;
+      acc.totalProceeds += proceeds;
+      acc.totalAfterTaxProceeds += proceeds - tax;
       if (t.realizedPL > 0) acc.winCount += 1;
       else if (t.realizedPL < 0) acc.lossCount += 1;
       acc.tradeCount += 1;
       return acc;
     },
-    { totalGross: 0, totalAfterTax: 0, winCount: 0, lossCount: 0, tradeCount: 0 }
+    { totalGross: 0, totalAfterTax: 0, totalProceeds: 0, totalAfterTaxProceeds: 0, winCount: 0, lossCount: 0, tradeCount: 0 }
   );
 };

@@ -74,7 +74,21 @@ export default function RealizedSummarySection() {
         )}
 
         {/* 集計カード */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-3">
+          <div className="bg-gray-900 rounded-lg p-3 text-center">
+            <div className="text-xs text-gray-400 mb-1">売却代金合計</div>
+            <div className="text-lg font-medium text-cyan-300">
+              {formatPrice(summary.totalProceeds)}円
+            </div>
+            <div className="text-[10px] text-gray-500 mt-0.5">手元資金の増加額</div>
+          </div>
+          <div className="bg-gray-900 rounded-lg p-3 text-center">
+            <div className="text-xs text-gray-400 mb-1">税引後手取り</div>
+            <div className="text-lg font-medium text-cyan-300">
+              {formatPrice(Math.round(summary.totalAfterTaxProceeds))}円
+            </div>
+            <div className="text-[10px] text-gray-500 mt-0.5">税金差引後の現金</div>
+          </div>
           <div className="bg-gray-900 rounded-lg p-3 text-center">
             <div className="text-xs text-gray-400 mb-1">実現損益（税引前）</div>
             <div className={`text-lg font-medium ${summary.totalGross >= 0 ? 'text-green-300' : 'text-red-300'}`}>
@@ -109,6 +123,7 @@ export default function RealizedSummarySection() {
                   {t.sellDate} ・ {t.symbol} ・ {formatShares(t.soldShares)}株 @ {formatPrice(t.sellPrice)}円
                 </span>
                 <div className="flex items-center gap-3 shrink-0">
+                  <span className="text-gray-400">代金 {formatPrice(t.sellPrice * t.soldShares)}円</span>
                   <span className={t.realizedPL >= 0 ? 'text-green-400 font-medium' : 'text-red-400 font-medium'}>
                     {formatProfitLoss(t.realizedPL)}円
                   </span>
