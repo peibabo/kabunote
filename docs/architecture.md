@@ -107,7 +107,7 @@ app_users (ユーザー管理)
 |------|---------|------|
 | `/api/portfolio/snapshot` | POST | ポートフォリオ日次スナップショット作成/更新（同日upsert） |
 | `/api/portfolio/snapshot/[id]` | PATCH | 過去スナップショットの個別株価修正（stockPrices:[{stockId,currentPrice}]）。当日分は不可（昨日以前のみ）・所有者外は404。評価額/損益/純資産を再計算 |
-| `/api/portfolio/realized` | GET | 確定損益一覧（?year=YYYY で年フィルタ・年間損益サマリー用） |
+| `/api/portfolio/realized` | GET | 確定損益一覧（?year=YYYY で年フィルタ・年間損益サマリー用。実現損益＋売却代金合計・税引後手取りを集計） |
 | `/api/portfolio/realized/[tradeId]` | DELETE | 確定損益（売却記録）の削除。レコードのみ削除し保有ポジションには触れない（株数は戻さない） |
 | `/api/portfolio/history` | GET | ポートフォリオ履歴取得（?range=1W/1M/3M/6M/1Y/2Y&detail=false で銘柄別スナップショット省略） |
 | `/api/portfolio/chart-memos` | GET | チャートメモ一覧取得（?range=1W/1M/3M/6M/1Y/2Y） |
