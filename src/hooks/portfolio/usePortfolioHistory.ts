@@ -2,12 +2,22 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import type { PortfolioSnapshotData, HistoryRange } from '@/types/portfolio';
+import { parseHistoryRange } from '@/types/portfolio';
+import { useLocalStorage } from '@/hooks/util/useLocalStorage';
+import { STORAGE_KEYS } from '@/lib/storageKeys';
 import { grantXp } from '@/lib/gamification';
 import { getTodayJST } from '@/lib/dateJst';
 import { patchSnapshotPrices } from '@/lib/apiClient';
 
 export function usePortfolioHistory() {
-  const [range, setRange] = useState<HistoryRange>('1M');
+  // 選択中期間をlocalStorageに永続化（リロード後も維持）
+  const [range, setRange, rangeLoading] = useLocalStorage<HistoryRange>(
+    STORAGE_KEYS.PORTFOLIO_HISTORY_RANGE,
+    '1M',
+    100,
+    (v) => parseHistoryRange(v, '1M'),
+    (v) => v,
+  );
   const [data, setData] = useState<PortfolioSnapshotData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
@@ -42,8 +52,10 @@ export function usePortfolioHistory() {
   }, []);
 
   useEffect(() => {
+    // localStorage読込前はフェッチしない（初期値→保存値での二重フェッチ回避）
+    if (rangeLoading) return;
     fetchHistory(range);
-  }, [range, fetchHistory]);
+  }, [range, rangeLoading, fetchHistory]);
 
   // 外部（フローティングボタン等）からの記録完了を検知
   useEffect(() => {

@@ -242,6 +242,7 @@ useEffect(() => {
 - **用途**: UI状態のみ（データは全てDB管理）
 - **グローバルキー**: `STORAGE_KEYS.SELECTED_GROUP_FILTER`, `STORAGE_KEYS.SNOOZED_ALERTS`, `STORAGE_KEYS.TIMELINE_CALENDAR_EXPANDED`
 - **銘柄固有キー**: `stockKey.activeTab(symbol)`, `stockKey.openTab(symbol)`, `stockKey.investmentTab(symbol)`, `stockKey.managementTab(symbol)`
+- **チャート期間の記憶**: 推移グラフ（`PORTFOLIO_HISTORY_RANGE`）・銘柄ミニチャート（`STOCK_MINI_CHART_RANGE`、全銘柄共通）の選択中期間を `useLocalStorage` で永続化。`parseHistoryRange()`（`src/types/portfolio.ts`）で不正値をデフォルトにフォールバックし、`rangeLoading` フラグでフェッチをゲートして初回ロード時の二重フェッチを防ぐ
 
 ---
 

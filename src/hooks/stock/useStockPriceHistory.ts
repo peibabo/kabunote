@@ -2,6 +2,9 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import type { HistoryRange } from '@/types/portfolio';
+import { parseHistoryRange } from '@/types/portfolio';
+import { useLocalStorage } from '@/hooks/util/useLocalStorage';
+import { STORAGE_KEYS } from '@/lib/storageKeys';
 import { patchSnapshotPrices } from '@/lib/apiClient';
 
 export interface StockPriceHistoryItem {
@@ -14,7 +17,14 @@ export interface StockPriceHistoryItem {
 }
 
 export function useStockPriceHistory(stockId: string | undefined) {
-  const [range, setRange] = useState<HistoryRange>('3M');
+  // 選択中期間をlocalStorageに永続化（全銘柄共通・リロード後も維持）
+  const [range, setRange, rangeLoading] = useLocalStorage<HistoryRange>(
+    STORAGE_KEYS.STOCK_MINI_CHART_RANGE,
+    '3M',
+    100,
+    (v) => parseHistoryRange(v, '3M'),
+    (v) => v,
+  );
   const [data, setData] = useState<StockPriceHistoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -36,8 +46,10 @@ export function useStockPriceHistory(stockId: string | undefined) {
   }, [stockId]);
 
   useEffect(() => {
+    // localStorage読込前はフェッチしない（初期値→保存値での二重フェッチ回避）
+    if (rangeLoading) return;
     fetchHistory(range);
-  }, [range, fetchHistory]);
+  }, [range, rangeLoading, fetchHistory]);
 
   // スナップショット記録イベントを検知して再取得
   useEffect(() => {

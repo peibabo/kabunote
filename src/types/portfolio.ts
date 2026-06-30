@@ -20,7 +20,17 @@ export interface StockSnapshotData {
   cost: number;
 }
 
-export type HistoryRange = '1W' | '1M' | '3M' | '6M' | '1Y' | '2Y';
+// 期間選択の選択肢（型・パーサー・UIの単一情報源）
+export const HISTORY_RANGES = ['1W', '1M', '3M', '6M', '1Y', '2Y'] as const;
+
+export type HistoryRange = (typeof HISTORY_RANGES)[number];
+
+/** localStorage等の文字列を有効な HistoryRange に復元する。不正値は fallback を返す */
+export function parseHistoryRange(value: string, fallback: HistoryRange): HistoryRange {
+  return (HISTORY_RANGES as readonly string[]).includes(value)
+    ? (value as HistoryRange)
+    : fallback;
+}
 
 export type ChartType = 'value' | 'netAssets' | 'profitLoss' | 'stocks';
 
