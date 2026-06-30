@@ -35,6 +35,10 @@ export const STORAGE_KEYS = {
   SCHEDULE_WIDGET_TAB: 'kabunote-schedule-widget-tab',
   /** ポートフォリオ推移ウィジェットのアコーディオン展開状態 */
   PORTFOLIO_HISTORY_EXPANDED: 'kabunote-portfolio-history-expanded',
+  /** ポートフォリオ推移ウィジェットの選択中期間 */
+  PORTFOLIO_HISTORY_RANGE: 'kabunote-portfolio-history-range',
+  /** 銘柄ミニチャートの選択中期間（全銘柄共通） */
+  STOCK_MINI_CHART_RANGE: 'kabunote-stock-mini-chart-range',
 } as const;
 
 // ─────────────────────────────────────────
