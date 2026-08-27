@@ -28,6 +28,21 @@ export const GET = withAuth(async ({ user, request }) => {
     orderBy: { snapshotDate: 'asc' },
   })
 
+  // 銘柄名マップ（StockPriceSnapshotはStockへのリレーションを持たないため別クエリで解決）
+  const stockNameMap = new Map<string, string>()
+  if (detail) {
+    const symbols = [...new Set(
+      snapshots.flatMap(s => ('stockSnapshots' in s ? (s.stockSnapshots as { symbol: string }[]).map(ss => ss.symbol) : []))
+    )]
+    if (symbols.length > 0) {
+      const stocks = await prisma.stock.findMany({
+        where: { userId: user.id, symbol: { in: symbols } },
+        select: { symbol: true, name: true },
+      })
+      stocks.forEach(st => { if (st.name) stockNameMap.set(st.symbol, st.name) })
+    }
+  }
+
   const data = snapshots.map(s => {
     const base: Record<string, unknown> = {
       id: s.id,
@@ -44,6 +59,7 @@ export const GET = withAuth(async ({ user, request }) => {
       base.stockSnapshots = ss.map(snap => ({
         stockId: snap.stockId,
         symbol: snap.symbol,
+        name: stockNameMap.get(snap.symbol) ?? null,
         currentPrice: snap.currentPrice != null ? Number(snap.currentPrice) : null,
         shares: snap.shares,
         value: Number(snap.value),

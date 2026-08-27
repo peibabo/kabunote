@@ -3,6 +3,7 @@
 import { useState, useCallback, useMemo } from 'react';
 import { playSound } from '@/lib/sound';
 import { formatPrice } from '@/lib/positionCalc';
+import { calcBaselineMap, calcRatePercent, formatRatePercent } from '@/lib/stockRateCalc';
 import { isBeforeTodayJST } from '@/lib/dateJst';
 import PortfolioChart from '@/components/portfolio/PortfolioChart';
 import ChartMemoModal from '@/components/portfolio/ChartMemoModal';
@@ -144,7 +145,15 @@ export default function PortfolioHistory({
           ? snap.stockSnapshots.find(s => s.symbol === modalTarget.symbol)
           : undefined;
         if (!ss) return undefined;
+        const rate = calcRatePercent(ss.currentPrice, calcBaselineMap(data).get(ss.symbol));
         return [
+          ...(rate != null
+            ? [{
+                label: '値上がり率',
+                value: formatRatePercent(rate),
+                color: rate >= 0 ? 'text-green-300' : 'text-red-300',
+              }]
+            : []),
           { label: '株価', value: ss.currentPrice != null ? `${formatPrice(ss.currentPrice)}円` : '-' },
           { label: '保有数', value: `${ss.shares}株` },
           { label: '評価額', value: fmt(ss.value) },

@@ -14,6 +14,8 @@ export interface PortfolioSnapshotData {
 export interface StockSnapshotData {
   stockId: string;
   symbol: string;
+  /** 銘柄名（history APIがStockマスタから付与。削除済み銘柄や旧経路の応答ではnull/undefined） */
+  name?: string | null;
   currentPrice: number | null;
   shares: number;
   value: number;
@@ -40,7 +42,7 @@ export const CHART_TYPE_META: Record<ChartType, { label: string; icon: string }>
   value: { label: '評価額', icon: '💰' },
   netAssets: { label: '純資産', icon: '🏦' },
   profitLoss: { label: '損益', icon: '📈' },
-  stocks: { label: '個別株価', icon: '📊' },
+  stocks: { label: '値上がり率', icon: '📊' },
 };
 
 // チャートメモ関連
