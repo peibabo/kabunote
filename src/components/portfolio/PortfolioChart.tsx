@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   LineChart,
   Line,
@@ -12,11 +12,12 @@ import {
   Tooltip,
   ResponsiveContainer,
   ReferenceLine,
-  Legend,
 } from 'recharts';
 import type { PortfolioSnapshotData, ChartType, ChartMemoMap } from '@/types/portfolio';
 import { CHART_TYPE_META } from '@/types/portfolio';
 import { formatPrice } from '@/lib/positionCalc';
+import { calcBaselineMap, calcRatePercent, formatStockLabel, truncateStockName } from '@/lib/stockRateCalc';
+import { loadStockData, type StockData } from '@/data/stockNames';
 import ChartTooltip from './chart/ChartTooltip';
 import CustomDot from './chart/CustomDot';
 
@@ -56,12 +57,44 @@ export default function PortfolioChart({ data, memoMap: propMemoMap, onDotClick 
   const memoMap = propMemoMap || new Map();
   const handleDotClick = onDotClick || (() => {});
 
+  // 銘柄名のCSVフォールバック（削除済み銘柄などDBで名前が引けないケース用）
+  const [csvStockMap, setCsvStockMap] = useState<Map<string, StockData> | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    loadStockData().then(map => { if (!cancelled) setCsvStockMap(map); });
+    return () => { cancelled = true; };
+  }, []);
+
   // 個別株のユニークシンボルリスト
   const allSymbols = useMemo(() => {
     const symbolSet = new Set<string>();
     data.forEach(s => s.stockSnapshots.forEach(ss => symbolSet.add(ss.symbol)));
     return Array.from(symbolSet);
   }, [data]);
+
+  // symbol → 銘柄名（スナップショット横断で最初の非null name、なければCSVフォールバック）
+  const symbolNameMap = useMemo(() => {
+    const map = new Map<string, string>();
+    data.forEach(s => s.stockSnapshots.forEach(ss => {
+      if (ss.name && !map.has(ss.symbol)) map.set(ss.symbol, ss.name);
+    }));
+    allSymbols.forEach(sym => {
+      if (!map.has(sym)) {
+        const csvName = csvStockMap?.get(sym)?.name;
+        if (csvName) map.set(sym, csvName);
+      }
+    });
+    return map;
+  }, [data, allSymbols, csvStockMap]);
+
+  // 銘柄ごとの基準価格（表示期間内の最初の有効価格）
+  const baselineMap = useMemo(() => calcBaselineMap(data), [data]);
+
+  // 値上がり率タブの描画対象（基準価格が取れない銘柄は描かない）
+  const rateSymbols = useMemo(
+    () => allSymbols.filter(sym => baselineMap.has(sym)),
+    [allSymbols, baselineMap]
+  );
 
   // グラフデータ変換
   const chartData = useMemo(() => {
@@ -75,15 +108,19 @@ export default function PortfolioChart({ data, memoMap: propMemoMap, onDotClick 
         totalInvestment: s.totalInvestment,
         cashAmount: s.cashAmount,
       };
-      // 個別株価
+      // 個別株価と値上がり率（起点比%）
       s.stockSnapshots.forEach(ss => {
         if (ss.currentPrice != null) {
           base[`price_${ss.symbol}`] = ss.currentPrice;
         }
+        const rate = calcRatePercent(ss.currentPrice, baselineMap.get(ss.symbol));
+        if (rate != null) {
+          base[`rate_${ss.symbol}`] = rate;
+        }
       });
       return base;
     });
-  }, [data]);
+  }, [data, baselineMap]);
 
   if (data.length === 0) {
     return (
@@ -145,20 +182,18 @@ export default function PortfolioChart({ data, memoMap: propMemoMap, onDotClick 
               <XAxis dataKey="date" tick={{ fill: '#9ca3af', fontSize: 11 }} />
               <YAxis
                 tick={{ fill: '#9ca3af', fontSize: 11 }}
-                tickFormatter={formatYAxisValue}
+                tickFormatter={(v: number) => `${v}%`}
               />
               <Tooltip content={
                 <ChartTooltip memoMap={memoMap} chartType={chartType} />
               } />
-              <Legend
-                wrapperStyle={{ fontSize: '11px', color: '#9ca3af' }}
-              />
-              {allSymbols.map((symbol, i) => (
+              <ReferenceLine y={0} stroke="#6b7280" strokeDasharray="3 3" />
+              {rateSymbols.map((symbol, i) => (
                 <Line
                   key={symbol}
                   type="monotone"
-                  dataKey={`price_${symbol}`}
-                  name={symbol}
+                  dataKey={`rate_${symbol}`}
+                  name={formatStockLabel(symbol, symbolNameMap.get(symbol))}
                   stroke={STOCK_COLORS[i % STOCK_COLORS.length]}
                   strokeWidth={2}
                   dot={<CustomDot chartType="stocks" symbol={symbol} memoMap={memoMap} onClick={handleDotClick} fill={STOCK_COLORS[i % STOCK_COLORS.length]} />}
@@ -257,6 +292,26 @@ export default function PortfolioChart({ data, memoMap: propMemoMap, onDotClick 
           )}
         </ResponsiveContainer>
       </div>
+
+      {/* 値上がり率タブの凡例（Recharts Legendはチャート領域を圧迫するため自前描画） */}
+      {chartType === 'stocks' && rateSymbols.length > 0 && (
+        <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2 max-h-16 overflow-y-auto text-[11px] text-gray-300">
+          {rateSymbols.map((symbol, i) => {
+            const name = symbolNameMap.get(symbol);
+            return (
+              <span key={symbol} className="flex items-center gap-1 max-w-[10rem]">
+                <span
+                  className="w-2 h-2 rounded-full shrink-0"
+                  style={{ backgroundColor: STOCK_COLORS[i % STOCK_COLORS.length] }}
+                />
+                <span className="truncate">
+                  {formatStockLabel(symbol, name ? truncateStockName(name, 6) : null)}
+                </span>
+              </span>
+            );
+          })}
+        </div>
+      )}
 
       {/* 最新データサマリー */}
       {data.length > 0 && (

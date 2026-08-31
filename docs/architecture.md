@@ -109,7 +109,7 @@ app_users (ユーザー管理)
 | `/api/portfolio/snapshot/[id]` | PATCH | 過去スナップショットの個別株価修正（stockPrices:[{stockId,currentPrice}]）。当日分は不可（昨日以前のみ）・所有者外は404。評価額/損益/純資産を再計算 |
 | `/api/portfolio/realized` | GET | 確定損益一覧（?year=YYYY で年フィルタ・年間損益サマリー用。実現損益＋売却代金合計・税引後手取りを集計） |
 | `/api/portfolio/realized/[tradeId]` | DELETE | 確定損益（売却記録）の削除。レコードのみ削除し保有ポジションには触れない（株数は戻さない） |
-| `/api/portfolio/history` | GET | ポートフォリオ履歴取得（?range=1W/1M/3M/6M/1Y/2Y&detail=false で銘柄別スナップショット省略） |
+| `/api/portfolio/history` | GET | ポートフォリオ履歴取得（?range=1W/1M/3M/6M/1Y/2Y&detail=false で銘柄別スナップショット省略）。detail時は各stockSnapshotにStockマスタから引いた銘柄名 `name`（削除済み銘柄はnull）を付与 |
 | `/api/portfolio/chart-memos` | GET | チャートメモ一覧取得（?range=1W/1M/3M/6M/1Y/2Y） |
 | `/api/portfolio/chart-memos` | PUT | チャートメモ作成/更新（snapshotDate, chartType, symbol?, content） |
 | `/api/portfolio/chart-memos` | DELETE | チャートメモ削除（?snapshotDate&chartType&symbol） |
@@ -371,6 +371,7 @@ app_users (ユーザー管理)
 | `nextActionPlanCalc.ts` | Next Action Plan分析・判定関数 |
 | `snapshotCalc.ts` | ポートフォリオスナップショット計算（buildSnapshotData, recalcSnapshotAggregates=保存済み行からの再集計, computeStockSnapshotValue, RANGE_DAYS） |
 | `stockMiniChartCalc.ts` | 個別銘柄ミニチャート計算（YAxis domain計算・日付フォーマット・データ変換） |
+| `stockRateCalc.ts` | 値上がり率チャート計算（calcBaselineMap=期間起点の基準価格, calcRatePercent, formatRatePercent, formatStockLabel, truncateStockName） |
 | `dividendBenefitCalc.ts` | 配当・優待一覧計算（データ処理・フィルタ・ソート・サマリー） |
 | `portfolioSummaryCalc.ts` | ポートフォリオサマリー計算（投資額・損益・配当・優待・現金比率） |
 | `dateFormat.ts` | 日付フォーマット共通関数（ISO形式・M/D形式） |
