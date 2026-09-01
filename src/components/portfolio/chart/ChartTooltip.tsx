@@ -25,11 +25,16 @@ export default function ChartTooltip({
 
   const fullDate = payload[0]?.payload?.fullDate as string | undefined;
 
+  // 値上がり率チャートは騰落率の高い順に表示（データ欠損の系列は末尾）
+  const displayPayload = chartType === 'stocks'
+    ? [...payload].sort((a, b) => (b.value ?? -Infinity) - (a.value ?? -Infinity))
+    : payload;
+
   // メモ収集
   const memoEntries: { label: string; content: string }[] = [];
   if (fullDate) {
     if (chartType === 'stocks') {
-      for (const p of payload) {
+      for (const p of displayPayload) {
         const sym = (p.dataKey as string).replace('rate_', '');
         const memo = memoMap.get(chartMemoKey(fullDate, chartType, sym));
         if (memo) memoEntries.push({ label: sym, content: memo.content });
@@ -43,7 +48,7 @@ export default function ChartTooltip({
   return (
     <div className="bg-gray-800 border border-gray-600 rounded-lg p-3 shadow-lg max-w-xs">
       <p className="text-xs text-gray-400 mb-2">{label}</p>
-      {payload.map((entry: { name: string; value: number; color: string; dataKey?: string; payload?: Record<string, unknown> }, i: number) => {
+      {displayPayload.map((entry: { name: string; value: number; color: string; dataKey?: string; payload?: Record<string, unknown> }, i: number) => {
         if (chartType === 'stocks') {
           // 値上がり率（起点比%）+ 実株価の併記
           const sym = (entry.dataKey as string).replace('rate_', '');
