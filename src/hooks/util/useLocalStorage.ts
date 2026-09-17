@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useDebouncedCallback } from './useDebounce';
+import { emitAppEvent, APP_EVENTS } from '@/lib/appEvents';
 
 /**
  * localStorage管理フック - 汎用版
@@ -28,9 +29,7 @@ export function useLocalStorage<T>(
         localStorage.setItem(key, valueToStore);
 
         // カスタムイベントを発火してlocalStorageの変更を他のコンポーネントに通知
-        window.dispatchEvent(new CustomEvent('localStorageChange', {
-          detail: { key, value }
-        }));
+        emitAppEvent(APP_EVENTS.LOCAL_STORAGE_CHANGE, { key, value });
       } catch (error) {
         console.error(`Failed to save to localStorage (${key}):`, error);
       }
@@ -74,8 +73,8 @@ export function useLocalStorage<T>(
       }
     };
 
-    window.addEventListener('localStorageChange', handleExternalChange);
-    return () => window.removeEventListener('localStorageChange', handleExternalChange);
+    window.addEventListener(APP_EVENTS.LOCAL_STORAGE_CHANGE, handleExternalChange);
+    return () => window.removeEventListener(APP_EVENTS.LOCAL_STORAGE_CHANGE, handleExternalChange);
   // eslint-disable-next-line react-hooks/exhaustive-deps -- parser は初期化時のみ参照。変更時の再登録は不要
   }, [key]);
 

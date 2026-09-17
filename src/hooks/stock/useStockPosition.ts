@@ -3,6 +3,7 @@ import { apiFetch, apiPost } from '@/lib/apiClient'
 import { useAsyncState } from '../util/useAsyncState'
 import { Position } from '@/types/positions'
 import { grantXp } from '@/lib/gamification'
+import { emitAppEvent, APP_EVENTS } from '@/lib/appEvents'
 import type { RealizedTrade, SellPositionInput } from '@/types/realizedTrade'
 
 interface UseStockPositionReturn {
@@ -39,9 +40,7 @@ export function useStockPosition(stockId: string, options?: UseStockPositionOpti
   useEffect(() => { if (!hasInitialData) loadFromDB() }, [loadFromDB, hasInitialData])
 
   const dispatchUpdate = useCallback((newPositions: Position[]) => {
-    window.dispatchEvent(new CustomEvent('kabunote-db-position-update', {
-      detail: { symbol, positions: newPositions }
-    }))
+    emitAppEvent(APP_EVENTS.DB_POSITION_UPDATE, { symbol, positions: newPositions })
   }, [symbol])
 
   const addPosition = useCallback(async (data: Omit<Position, 'id' | 'createdAt'>) => {
@@ -86,7 +85,7 @@ export function useStockPosition(stockId: string, options?: UseStockPositionOpti
       setPositions(updated)
       dispatchUpdate(updated)
       // 確定損益履歴ビューの再取得をトリガー
-      window.dispatchEvent(new CustomEvent('kabunote-db-realized-update', { detail: { symbol, stockId } }))
+      emitAppEvent(APP_EVENTS.DB_REALIZED_UPDATE, { symbol, stockId })
       grantXp('POSITION_SELL')
       return trade
     })

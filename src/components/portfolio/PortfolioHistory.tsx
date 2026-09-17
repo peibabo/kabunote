@@ -5,6 +5,7 @@ import { playSound } from '@/lib/sound';
 import { formatPrice } from '@/lib/positionCalc';
 import { calcBaselineMap, calcRatePercent, formatRatePercent } from '@/lib/stockRateCalc';
 import { isBeforeTodayJST } from '@/lib/dateJst';
+import { emitAppEvent, APP_EVENTS } from '@/lib/appEvents';
 import PortfolioChart from '@/components/portfolio/PortfolioChart';
 import ChartMemoModal from '@/components/portfolio/ChartMemoModal';
 import type { EditablePrice } from '@/components/portfolio/chart/ChartSnapshotEditor';
@@ -61,7 +62,7 @@ export default function PortfolioHistory({
     const success = await createSnapshot();
     if (success) {
       playSound('noteSave');
-      window.dispatchEvent(new Event('kabunote-snapshot-created'));
+      emitAppEvent(APP_EVENTS.SNAPSHOT_CREATED);
     }
   };
 

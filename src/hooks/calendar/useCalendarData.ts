@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { getCompanyNameSync } from '@/data/stockNames';
 import { StockData } from '@/hooks/stock/useStockData';
+import { useAppEvent } from '@/hooks/util/useAppEvent';
+import { APP_EVENTS } from '@/lib/appEvents';
 import {
   DividendRightsSettings,
   ShareholderRightsSettings,
@@ -85,62 +87,34 @@ export function useCalendarData(
   }, [stocks, isInitialized, calendarRelevantKey, stockDataMap]);
 
   // DB カスタムイベントリスナー
-  useEffect(() => {
-    if (!isInitialized) return;
+  const listenerOptions = { enabled: isInitialized };
 
-    const handleDbCalendarUpdate = (e: Event) => {
-      const ev = e as CustomEvent<{ type: 'event' | 'dividend' | 'benefit'; symbol: string; [key: string]: unknown }>;
-      if (!ev.detail) return;
-      const { type, symbol } = ev.detail;
-      if (type === 'event') {
-        updateStockEvent(symbol, ev.detail.eventType as string, ev.detail.eventData as StockData['events'][0] | null);
-      } else if (type === 'dividend') {
-        updateStockData(symbol, { dividend: ev.detail.dividend as StockData['dividend'] });
-      } else if (type === 'benefit') {
-        updateStockData(symbol, { benefit: ev.detail.benefit as StockData['benefit'] });
-      }
-    };
-    window.addEventListener('kabunote-db-calendar-update', handleDbCalendarUpdate);
+  useAppEvent(APP_EVENTS.DB_CALENDAR_UPDATE, (detail) => {
+    if (!detail) return;
+    if (detail.type === 'event') {
+      updateStockEvent(detail.symbol, detail.eventType, detail.eventData);
+    } else if (detail.type === 'dividend') {
+      updateStockData(detail.symbol, { dividend: detail.dividend });
+    } else if (detail.type === 'benefit') {
+      updateStockData(detail.symbol, { benefit: detail.benefit });
+    }
+  }, listenerOptions);
 
-    const handleDbTagUpdate = (e: Event) => {
-      const ev = e as CustomEvent<{ symbol: string; tags: StockData['tags'] }>;
-      if (ev.detail) updateStockData(ev.detail.symbol, { tags: ev.detail.tags });
-    };
-    window.addEventListener('kabunote-db-tag-update', handleDbTagUpdate);
+  useAppEvent(APP_EVENTS.DB_TAG_UPDATE, (detail) => {
+    if (detail) updateStockData(detail.symbol, { tags: detail.tags });
+  }, listenerOptions);
 
-    const handleDbStrategyUpdate = (e: Event) => {
-      const ev = e as CustomEvent<{ symbol: string; nextActionPlan: StockData['nextActionPlan'] }>;
-      if (ev.detail) updateStockData(ev.detail.symbol, { nextActionPlan: ev.detail.nextActionPlan });
-    };
-    window.addEventListener('kabunote-db-strategy-update', handleDbStrategyUpdate);
+  useAppEvent(APP_EVENTS.DB_STRATEGY_UPDATE, (detail) => {
+    if (detail) updateStockData(detail.symbol, { nextActionPlan: detail.nextActionPlan });
+  }, listenerOptions);
 
-    const handleDbPositionUpdate = (e: Event) => {
-      const ev = e as CustomEvent<{ symbol: string; positions: StockData['positions'] }>;
-      if (ev.detail) updateStockData(ev.detail.symbol, { positions: ev.detail.positions });
-    };
-    window.addEventListener('kabunote-db-position-update', handleDbPositionUpdate);
+  useAppEvent(APP_EVENTS.DB_POSITION_UPDATE, (detail) => {
+    if (detail) updateStockData(detail.symbol, { positions: detail.positions });
+  }, listenerOptions);
 
-    const handleDbPriceUpdate = (e: Event) => {
-      const event = e as CustomEvent<{
-        symbol: string;
-        currentPrice: number | null;
-        targetPrice: number | null;
-        stopLossPrice: number | null;
-      }>;
-      if (event.detail) {
-        updateStockPrice(event.detail.symbol, event.detail);
-      }
-    };
-    window.addEventListener('kabunote-db-price-update', handleDbPriceUpdate);
-
-    return () => {
-      window.removeEventListener('kabunote-db-calendar-update', handleDbCalendarUpdate);
-      window.removeEventListener('kabunote-db-tag-update', handleDbTagUpdate);
-      window.removeEventListener('kabunote-db-strategy-update', handleDbStrategyUpdate);
-      window.removeEventListener('kabunote-db-position-update', handleDbPositionUpdate);
-      window.removeEventListener('kabunote-db-price-update', handleDbPriceUpdate);
-    };
-  }, [isInitialized, updateStockPrice, updateStockData, updateStockEvent]);
+  useAppEvent(APP_EVENTS.DB_PRICE_UPDATE, (detail) => {
+    if (detail) updateStockPrice(detail.symbol, detail);
+  }, listenerOptions);
 
   const hasCalendarData = Object.values(stockCalendarData).some(data => {
     return data.earningsDate ||

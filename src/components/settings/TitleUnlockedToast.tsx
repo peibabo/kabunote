@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback } from 'react'
 import { playSound } from '@/lib/sound'
 import ShareButtons from '@/components/common/ShareButtons'
 import type { TitleStatus } from '@/types/titles'
+import { useAppEvent } from '@/hooks/util/useAppEvent'
+import { APP_EVENTS } from '@/lib/appEvents'
 
 const RARITY_COLORS = {
   common: 'from-gray-700 to-gray-600 border-gray-500',
@@ -18,14 +20,9 @@ export default function TitleUnlockedToast() {
   const [isVisible, setIsVisible] = useState(false)
 
   // イベントリスニング
-  useEffect(() => {
-    const handler = (e: Event) => {
-      const title = (e as CustomEvent<TitleStatus>).detail
-      setQueue(prev => [...prev, title])
-    }
-    window.addEventListener('kabunote-title-unlocked', handler)
-    return () => window.removeEventListener('kabunote-title-unlocked', handler)
-  }, [])
+  useAppEvent(APP_EVENTS.TITLE_UNLOCKED, (title) => {
+    setQueue(prev => [...prev, title])
+  })
 
   // キューから表示
   useEffect(() => {

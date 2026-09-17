@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import type { GamificationState } from '@/types/gamification'
+import { useAppEvent } from '@/hooks/util/useAppEvent'
+import { APP_EVENTS } from '@/lib/appEvents'
 
 export function useGamification() {
   const [gamification, setGamification] = useState<GamificationState | null>(null)
@@ -27,15 +29,8 @@ export function useGamification() {
   }, [fetchState])
 
   // XP獲得・レベルアップイベントをリスニングして再取得
-  useEffect(() => {
-    const handler = () => { fetchState() }
-    window.addEventListener('kabunote-xp-gained', handler)
-    window.addEventListener('kabunote-level-up', handler)
-    return () => {
-      window.removeEventListener('kabunote-xp-gained', handler)
-      window.removeEventListener('kabunote-level-up', handler)
-    }
-  }, [fetchState])
+  useAppEvent(APP_EVENTS.XP_GAINED, () => { fetchState() })
+  useAppEvent(APP_EVENTS.LEVEL_UP, () => { fetchState() })
 
   return { gamification, isLoading }
 }

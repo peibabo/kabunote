@@ -3,6 +3,7 @@ import { apiFetch } from '@/lib/apiClient'
 import { useAsyncState } from '../util/useAsyncState'
 import { useAutoSave } from '../util/useAutoSave'
 import { grantXp } from '@/lib/gamification'
+import { emitAppEvent, APP_EVENTS } from '@/lib/appEvents'
 import {
   ShareholderMeetingSettings,
   createDefaultRightsSettings
@@ -78,15 +79,13 @@ export function useStockEvent(stockId: string, options?: UseStockEventOptions): 
         if (!response.ok) throw new Error('決算日の保存に失敗しました')
         const result = await response.json()
         if (result.success) {
-          window.dispatchEvent(new CustomEvent('kabunote-db-calendar-update', {
-            detail: {
-              type: 'event' as const, symbol, eventType: 'EARNINGS',
-              eventData: {
-                id: result.data.id, eventType: 'EARNINGS', eventDate: result.data.eventDate,
-                eventMonth: null, eventDay: null, isRecurring: false, isActive: true,
-              }
+          emitAppEvent(APP_EVENTS.DB_CALENDAR_UPDATE, {
+            type: 'event', symbol, eventType: 'EARNINGS',
+            eventData: {
+              id: result.data.id, eventType: 'EARNINGS', eventDate: result.data.eventDate,
+              eventMonth: null, eventDay: null, isRecurring: false, isActive: true,
             }
-          }))
+          })
           grantXp('EVENT_REGISTER')
         }
       })
@@ -114,16 +113,14 @@ export function useStockEvent(stockId: string, options?: UseStockEventOptions): 
         if (!response.ok) throw new Error('株主総会設定の保存に失敗しました')
         const result = await response.json()
         if (result.success) {
-          window.dispatchEvent(new CustomEvent('kabunote-db-calendar-update', {
-            detail: {
-              type: 'event' as const, symbol, eventType: 'SHAREHOLDER_MEETING',
-              eventData: {
-                id: result.data.id, eventType: 'SHAREHOLDER_MEETING', eventDate: null,
-                eventMonth: result.data.eventMonth, eventDay: result.data.eventDay,
-                isRecurring: result.data.isRecurring, isActive: result.data.isActive,
-              }
+          emitAppEvent(APP_EVENTS.DB_CALENDAR_UPDATE, {
+            type: 'event', symbol, eventType: 'SHAREHOLDER_MEETING',
+            eventData: {
+              id: result.data.id, eventType: 'SHAREHOLDER_MEETING', eventDate: null,
+              eventMonth: result.data.eventMonth, eventDay: result.data.eventDay,
+              isRecurring: result.data.isRecurring, isActive: result.data.isActive,
             }
-          }))
+          })
           grantXp('EVENT_REGISTER')
         }
       })

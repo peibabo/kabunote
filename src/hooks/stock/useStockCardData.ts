@@ -18,6 +18,7 @@ import { useStockAlerts } from '@/hooks/alert/useStockAlerts';
 import { useStockNews } from '@/hooks/stock/useStockNews';
 import { useCash } from '@/hooks/auth/useCash';
 import { stockKey } from '@/lib/storageKeys';
+import { emitAppEvent, APP_EVENTS } from '@/lib/appEvents';
 
 export function useStockCardData(symbol: string, favoriteGroups: FavoriteGroup[], initialStockData?: DBStockData) {
   // 基本状態
@@ -206,9 +207,7 @@ export function useStockCardData(symbol: string, favoriteGroups: FavoriteGroup[]
         if (tabInstruction === 'dividend') {
           setTimeout(() => {
             localStorage.setItem(stockKey.managementTab(symbol), 'dividend');
-            window.dispatchEvent(new CustomEvent('localStorageChange', {
-              detail: { key: stockKey.managementTab(symbol) }
-            }));
+            emitAppEvent(APP_EVENTS.LOCAL_STORAGE_CHANGE, { key: stockKey.managementTab(symbol) });
           }, 100);
         }
       }

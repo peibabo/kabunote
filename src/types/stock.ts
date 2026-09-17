@@ -2,6 +2,8 @@
  * 銘柄データの型定義
  */
 
+import type { Position } from '@/types/positions';
+
 export interface StockData {
   id: string;
   symbol: string;
@@ -17,15 +19,8 @@ export interface StockData {
   fairPer: number | null;
   fairPbr: number | null;
   memo: string;
-  positions: Array<{
-    id: string;
-    shares: number;
-    purchasePrice: number;
-    purchaseDate: string;
-    memo: string;
-    taxRate: number;
-    createdAt: string;
-  }>;
+  // インラインで再定義せず Position を使う（useStockPosition が Position[] を流すため）
+  positions: Position[];
   events: Array<{
     id: string;
     eventType: string;
@@ -35,18 +30,20 @@ export interface StockData {
     isRecurring: boolean;
     isActive: boolean;
   }>;
+  // 配当・優待は「レコードはあるが個別項目は未入力」を許すため各項目が null になりうる
+  // （API・フォーム双方が null を返す。消費側も従来から `!= null` でガードしている）
   dividend: {
-    dividendPerShare: number;
+    dividendPerShare: number | null;
     frequency: number;
-    rightsMonth: number;
-    rightsDay: number;
+    rightsMonth: number | null;
+    rightsDay: number | null;
   } | null;
   benefit: {
-    description: string;
-    minimumShares: number;
-    estimatedValue: number;
-    rightsMonth: number;
-    rightsDay: number;
+    description: string | null;
+    minimumShares: number | null;
+    estimatedValue: number | null;
+    rightsMonth: number | null;
+    rightsDay: number | null;
   } | null;
   tags: Array<{
     id: string;

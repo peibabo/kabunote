@@ -3,6 +3,7 @@ import { apiFetch } from '@/lib/apiClient'
 import { useAsyncState } from '../util/useAsyncState'
 import { useAutoSave } from '../util/useAutoSave'
 import { grantXp } from '@/lib/gamification'
+import { emitAppEvent, APP_EVENTS } from '@/lib/appEvents'
 import { DividendRightsSettings, createDefaultRightsSettings } from '@/types/rightsDate'
 
 interface DividendState {
@@ -88,18 +89,16 @@ export function useStockDividend(stockId: string, options?: UseStockDividendOpti
           }),
         })
         if (!response.ok) throw new Error('配当情報の保存に失敗しました')
-        window.dispatchEvent(new CustomEvent('kabunote-db-calendar-update', {
-          detail: {
-            type: 'dividend' as const,
-            symbol: stockId.replace('stock-', ''),
-            dividend: {
-              dividendPerShare: val.dividendPerShare ? parseFloat(val.dividendPerShare) : null,
-              frequency: val.dividendFrequency,
-              rightsMonth: val.dividendRightsSettings.month,
-              rightsDay: val.dividendRightsSettings.day,
-            }
+        emitAppEvent(APP_EVENTS.DB_CALENDAR_UPDATE, {
+          type: 'dividend',
+          symbol: stockId.replace('stock-', ''),
+          dividend: {
+            dividendPerShare: val.dividendPerShare ? parseFloat(val.dividendPerShare) : null,
+            frequency: val.dividendFrequency,
+            rightsMonth: val.dividendRightsSettings.month,
+            rightsDay: val.dividendRightsSettings.day,
           }
-        }))
+        })
         grantXp('DIVIDEND_REGISTER')
       })
     },

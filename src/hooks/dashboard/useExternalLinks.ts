@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from '@/lib/toast';
+import { useAppEvent } from '../util/useAppEvent';
+import { emitAppEvent, APP_EVENTS } from '@/lib/appEvents';
 import { DEFAULT_EXTERNAL_LINKS, type ExternalLink } from '@/lib/defaultExternalLinks';
 
 interface UseExternalLinksResult {
@@ -11,8 +13,6 @@ interface UseExternalLinksResult {
 // Module-level cache
 let cachedLinks: ExternalLink[] | null = null;
 let fetchPromise: Promise<ExternalLink[] | null> | null = null;
-
-const LINKS_UPDATE_EVENT = 'kabunote-external-links-update';
 
 async function fetchLinksOnce(): Promise<ExternalLink[] | null> {
   if (cachedLinks) return cachedLinks;
@@ -60,14 +60,7 @@ export function useExternalLinks(): UseExternalLinksResult {
   }, []);
 
   // Listen for updates from other instances
-  useEffect(() => {
-    const handler = (e: Event) => {
-      const detail = (e as CustomEvent<ExternalLink[]>).detail;
-      setLinks(detail);
-    };
-    window.addEventListener(LINKS_UPDATE_EVENT, handler);
-    return () => window.removeEventListener(LINKS_UPDATE_EVENT, handler);
-  }, []);
+  useAppEvent(APP_EVENTS.EXTERNAL_LINKS_UPDATE, (detail) => setLinks(detail));
 
   const saveLinks = useCallback(async (newLinks: ExternalLink[]) => {
     try {
@@ -86,7 +79,7 @@ export function useExternalLinks(): UseExternalLinksResult {
       // Update cache and broadcast
       cachedLinks = savedLinks;
       setLinks(savedLinks);
-      window.dispatchEvent(new CustomEvent(LINKS_UPDATE_EVENT, { detail: savedLinks }));
+      emitAppEvent(APP_EVENTS.EXTERNAL_LINKS_UPDATE, savedLinks);
     } catch (err) {
       const msg = err instanceof Error ? err.message : '保存に失敗しました';
       toast.error(msg);
