@@ -1,12 +1,7 @@
 'use client'
 
 import { useNewsList, type NewsSource } from '@/hooks/news/useNewsList'
-
-function formatDateJP(dateStr: string): string {
-  const d = new Date(dateStr + 'T00:00:00')
-  const days = ['日', '月', '火', '水', '木', '金', '土']
-  return `${d.getMonth() + 1}/${d.getDate()}（${days[d.getDay()]}）`
-}
+import { formatMonthDayJP } from '@/lib/dateFormat'
 
 function getDomain(url: string): string {
   try {
@@ -98,7 +93,7 @@ export default function NewsListPage({ isOpen }: NewsListPageProps) {
                       </a>
                       {isDiary && 'diaryDate' in item && (
                         <span className="text-[10px] text-orange-400/70 bg-orange-400/10 px-1.5 py-0.5 rounded">
-                          {formatDateJP(item.diaryDate)}
+                          {formatMonthDayJP(item.diaryDate)}
                         </span>
                       )}
                       {isStock && 'symbol' in item && (

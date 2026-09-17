@@ -42,7 +42,7 @@ describe('ChartMemoModal', () => {
     expect(screen.getByText('チャートメモ', { exact: false })).toBeDefined()
   })
 
-  // 回帰: snapshotDate が文字列でなくても formatDisplayDate の split でクラッシュしない
+  // 回帰: snapshotDate が文字列でなくても formatDateYMDJP の split でクラッシュしない
   it('非文字列の snapshotDate でもクラッシュせず描画される', () => {
     expect(() =>
       render(

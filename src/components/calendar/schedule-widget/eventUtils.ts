@@ -35,11 +35,6 @@ export function getUrgencyStyle(days: number) {
   return { border: 'border-gray-600/40', bg: 'bg-gray-800/30', text: 'text-gray-400', glow: 'none', pulse: false };
 }
 
-export function formatDate(dateStr: string): string {
-  const date = new Date(dateStr);
-  return `${date.getMonth() + 1}/${date.getDate()}`;
-}
-
 // 日数差を計算
 export function calculateDaysUntil(dateStr: string): number {
   const eventDate = new Date(dateStr);

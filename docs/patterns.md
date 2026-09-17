@@ -246,6 +246,32 @@ useEffect(() => {
 
 ---
 
+## 日付・数値フォーマット
+
+表示用フォーマットは以下に集約する。**コンポーネント内にローカル関数を定義しないこと**（曜日配列やパース方法が分岐し、片方だけ直す事故につながるため）。
+
+### `src/lib/dateFormat.ts` — 日付文字列（YYYY-MM-DD）の表示
+
+| 関数 | 出力例 | 用途 |
+|---|---|---|
+| `formatMonthDay` | `3/8` | 一覧の日付カラム。空文字は `-` |
+| `formatDateLabel` | `3/8` | チャート軸ラベル。`Date` を経由せずTZ非依存 |
+| `formatDateYMDJP` | `2026年3月8日` | チャートメモのヘッダー |
+| `formatDateJP` | `2026年3月8日（日）` | 投資日記 |
+| `formatDateSlashJP` | `2026/3/8（日）` | チャートメモ一覧 |
+| `formatMonthDayJP` | `3/8（日）` | ニュース一覧 |
+| `getWeekdayJP` / `WEEKDAYS_JP` | `日` | 曜日ラベルの唯一の定義元 |
+
+- 曜日を扱う関数は内部で `new Date(dateStr + 'T00:00:00')`（ローカル解釈）を使う。`new Date('2026-03-08')` はUTC深夜扱いになるため直接使わない
+- `formatDateYMDJP` のみ非文字列入力のガードを持つ（Rechartsのペイロード経由でクラッシュした回帰対応）
+- `Date` → `YYYY-MM-DD` は `formatDateJST`（`src/lib/dateJst.ts`）。`investmentCalendarCalc.formatDateString` はその別名
+
+### `src/lib/chartFormat.ts` — チャート軸の数値
+
+- `formatYAxisValue`: 1000万以上は `1.0千万`、1万以上は `12万`、それ未満は整数。推移グラフ・銘柄ミニチャート共用
+
+---
+
 ## DB接続の注意点
 
 | 接続方式 | ポート | 用途 |

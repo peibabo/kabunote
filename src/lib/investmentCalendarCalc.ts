@@ -1,5 +1,7 @@
 // 投資カレンダー関連の計算ユーティリティ
 
+import { WEEKDAYS_JP } from '@/lib/dateFormat';
+
 // 営業日計算のユーティリティ（既存のものを流用）
 export const calculateBusinessDaysBefore = (date: Date, businessDays: number): Date => {
   const result = new Date(date);
@@ -29,10 +31,9 @@ export const calculateRightsLastDay = (rightsDate: string): Date | null => {
   return calculateBusinessDaysBefore(confirmationDate, 2);
 };
 
-// 曜日を取得する関数
+// 曜日を取得する関数（曜日ラベルは dateFormat に集約）
 export const getDayOfWeek = (date: Date): string => {
-  const days = ['日', '月', '火', '水', '木', '金', '土'];
-  return days[date.getDay()];
+  return WEEKDAYS_JP[date.getDay()];
 };
 
 // 日付文字列をフォーマット（JST基準）

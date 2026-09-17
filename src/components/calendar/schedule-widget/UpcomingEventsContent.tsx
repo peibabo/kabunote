@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { InvestmentEvent } from '@/types/investmentCalendar';
 import { FullScreenModal } from '@/components/layout/DashboardModals';
-import { getEventIcon, getEventLabel, getUrgencyStyle, formatDate } from './eventUtils';
+import { getEventIcon, getEventLabel, getUrgencyStyle } from './eventUtils';
+import { formatMonthDay } from '@/lib/dateFormat';
 import type { UpcomingEvent } from './useEventMap';
 
 // イベントカードの共通レンダリング
@@ -27,7 +28,7 @@ function EventCard({ event, daysUntil, onStockClick }: { event: InvestmentEvent;
           <span className="text-xs text-gray-400 shrink-0">{getEventLabel(event.type)}</span>
           <span className="text-xs text-gray-300 truncate font-medium">{event.companyName}({event.symbol})</span>
         </div>
-        <span className="text-xs text-gray-500 shrink-0 ml-2">{formatDate(event.date)}</span>
+        <span className="text-xs text-gray-500 shrink-0 ml-2">{formatMonthDay(event.date)}</span>
       </div>
     </button>
   );

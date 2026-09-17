@@ -16,7 +16,9 @@ import { useChartMemos } from '@/hooks/portfolio/useChartMemos';
 import { useTradeMarkers } from '@/hooks/stock/useTradeMarkers';
 import { formatPrice } from '@/lib/positionCalc';
 import { isBeforeTodayJST } from '@/lib/dateJst';
-import { calcYAxisDomain, formatDateLabel, buildTradeMarkerMap } from '@/lib/stockMiniChartCalc';
+import { calcYAxisDomain, buildTradeMarkerMap } from '@/lib/stockMiniChartCalc';
+import { formatDateLabel } from '@/lib/dateFormat';
+import { formatYAxisValue } from '@/lib/chartFormat';
 import type { TradeMarkerCell } from '@/lib/stockMiniChartCalc';
 import { chartMemoKey } from '@/types/portfolio';
 import type { HistoryRange, ChartMemoMap } from '@/types/portfolio';
@@ -37,11 +39,6 @@ const RANGE_OPTIONS: { key: HistoryRange; label: string }[] = [
   { key: '1Y', label: '1Y' },
   { key: '2Y', label: '2Y' },
 ];
-
-function formatYAxisValue(value: number): string {
-  if (Math.abs(value) >= 10000) return `${Math.round(value / 10000)}万`;
-  return String(Math.round(value));
-}
 
 // メモ付きカスタムドット
 interface MiniChartDotProps {

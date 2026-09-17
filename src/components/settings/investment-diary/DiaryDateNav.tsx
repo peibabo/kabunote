@@ -1,10 +1,6 @@
 'use client'
 
-function formatDateJP(dateStr: string): string {
-  const d = new Date(dateStr + 'T00:00:00')
-  const days = ['日', '月', '火', '水', '木', '金', '土']
-  return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日（${days[d.getDay()]}）`
-}
+import { formatDateJP } from '@/lib/dateFormat'
 
 function addDays(dateStr: string, n: number): string {
   const d = new Date(dateStr + 'T00:00:00')

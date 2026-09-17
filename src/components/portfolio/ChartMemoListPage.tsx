@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useChartMemoList } from '@/hooks/portfolio/useChartMemoList'
 import { playSound } from '@/lib/sound'
+import { formatDateSlashJP } from '@/lib/dateFormat'
 import type { ChartMemoFilter, ChartMemoListItem } from '@/types/portfolio'
 
 const CHART_TYPE_LABELS: Record<string, string> = {
@@ -26,12 +27,6 @@ const FILTER_TABS: { value: ChartMemoFilter; label: string }[] = [
   { value: 'profitLoss', label: '損益' },
   { value: 'stocks', label: '個別株' },
 ]
-
-function formatDateJP(dateStr: string): string {
-  const d = new Date(dateStr + 'T00:00:00')
-  const days = ['日', '月', '火', '水', '木', '金', '土']
-  return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}（${days[d.getDay()]}）`
-}
 
 interface ChartMemoListPageProps {
   isOpen: boolean
@@ -106,7 +101,7 @@ export default function ChartMemoListPage({ isOpen }: ChartMemoListPageProps) {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-sm text-gray-300">
-                      {formatDateJP(item.snapshotDate)}
+                      {formatDateSlashJP(item.snapshotDate)}
                     </span>
                     <span className={`text-[10px] px-1.5 py-0.5 rounded ${CHART_TYPE_COLORS[item.chartType] || 'text-gray-400 bg-gray-700'}`}>
                       {CHART_TYPE_LABELS[item.chartType] || item.chartType}
