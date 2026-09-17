@@ -1,8 +1,10 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import { playSound } from '@/lib/sound'
 import ShareButtons from '@/components/common/ShareButtons'
+import { useAppEvent } from '@/hooks/util/useAppEvent'
+import { APP_EVENTS } from '@/lib/appEvents'
 
 interface LevelUpDetail {
   level: number
@@ -18,19 +20,11 @@ export default function LevelUpCelebration() {
     setTimeout(() => setCelebration(null), 500)
   }, [])
 
-  useEffect(() => {
-    const handler = (e: Event) => {
-      const detail = (e as CustomEvent<LevelUpDetail>).detail
-      setCelebration(detail)
-      setIsVisible(true)
-      playSound('levelUp')
-    }
-
-    window.addEventListener('kabunote-level-up', handler)
-    return () => {
-      window.removeEventListener('kabunote-level-up', handler)
-    }
-  }, [])
+  useAppEvent(APP_EVENTS.LEVEL_UP, (detail) => {
+    setCelebration(detail)
+    setIsVisible(true)
+    playSound('levelUp')
+  })
 
   if (!celebration) return null
 

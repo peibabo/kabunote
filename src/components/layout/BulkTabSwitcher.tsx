@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { stockKey } from '@/lib/storageKeys';
+import { emitAppEvent, APP_EVENTS } from '@/lib/appEvents';
 import { playSound } from '@/lib/sound';
 
 type TabOption = {
@@ -66,8 +67,8 @@ export default function BulkTabSwitcher({ stockSymbols }: Props) {
     detectActive();
 
     const handleStorageChange = () => detectActive();
-    window.addEventListener('localStorageChange', handleStorageChange);
-    return () => window.removeEventListener('localStorageChange', handleStorageChange);
+    window.addEventListener(APP_EVENTS.LOCAL_STORAGE_CHANGE, handleStorageChange);
+    return () => window.removeEventListener(APP_EVENTS.LOCAL_STORAGE_CHANGE, handleStorageChange);
   }, [stockSymbols]);
 
   if (stockSymbols.length === 0) return null;
@@ -75,22 +76,16 @@ export default function BulkTabSwitcher({ stockSymbols }: Props) {
   const handleClick = (option: TabOption) => {
     stockSymbols.forEach(symbol => {
       localStorage.setItem(stockKey.activeTab(symbol), option.mainTab);
-      window.dispatchEvent(new CustomEvent('localStorageChange', {
-        detail: { key: stockKey.activeTab(symbol) }
-      }));
+      emitAppEvent(APP_EVENTS.LOCAL_STORAGE_CHANGE, { key: stockKey.activeTab(symbol) });
 
       if (option.investmentSubTab) {
         localStorage.setItem(stockKey.investmentTab(symbol), option.investmentSubTab);
-        window.dispatchEvent(new CustomEvent('localStorageChange', {
-          detail: { key: stockKey.investmentTab(symbol) }
-        }));
+        emitAppEvent(APP_EVENTS.LOCAL_STORAGE_CHANGE, { key: stockKey.investmentTab(symbol) });
       }
 
       if (option.managementSubTab) {
         localStorage.setItem(stockKey.managementTab(symbol), option.managementSubTab);
-        window.dispatchEvent(new CustomEvent('localStorageChange', {
-          detail: { key: stockKey.managementTab(symbol) }
-        }));
+        emitAppEvent(APP_EVENTS.LOCAL_STORAGE_CHANGE, { key: stockKey.managementTab(symbol) });
       }
     });
 

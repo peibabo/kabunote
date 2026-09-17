@@ -5,6 +5,7 @@ import { useAutoSave } from '../util/useAutoSave'
 import { NextActionPlan } from '@/types/nextActionPlan'
 import { playSound } from '@/lib/sound'
 import { grantXp } from '@/lib/gamification'
+import { emitAppEvent, APP_EVENTS } from '@/lib/appEvents'
 
 interface UseNextActionPlanReturn {
   nextActionPlan: NextActionPlan | null
@@ -66,18 +67,16 @@ export function useNextActionPlan(stockId: string, options?: UseNextActionPlanOp
         if (data) {
           setLastSaved(new Date(data.updatedAt))
           playSound('noteSave')
-          window.dispatchEvent(new CustomEvent('kabunote-db-strategy-update', {
-            detail: {
-              symbol: stockId.replace('stock-', ''),
-              nextActionPlan: {
-                actionType: data.actionType,
-                priority: data.priority,
-                targetPrice: data.targetPrice,
-                targetShares: data.targetQuantity,
-                strategyMemo: data.memo,
-              }
+          emitAppEvent(APP_EVENTS.DB_STRATEGY_UPDATE, {
+            symbol: stockId.replace('stock-', ''),
+            nextActionPlan: {
+              actionType: data.actionType,
+              priority: data.priority,
+              targetPrice: data.targetPrice,
+              targetShares: data.targetQuantity,
+              strategyMemo: data.memo,
             }
-          }))
+          })
           grantXp('NEXT_ACTION')
         }
       })
@@ -105,9 +104,9 @@ export function useNextActionPlan(stockId: string, options?: UseNextActionPlanOp
     await apiDelete(`/api/stocks/${stockId}/next-action-plan`)
     setNextActionPlan(DEFAULT_PLAN)
     setLastSaved(null)
-    window.dispatchEvent(new CustomEvent('kabunote-db-strategy-update', {
-      detail: { symbol: stockId.replace('stock-', ''), nextActionPlan: null }
-    }))
+    emitAppEvent(APP_EVENTS.DB_STRATEGY_UPDATE, {
+      symbol: stockId.replace('stock-', ''), nextActionPlan: null
+    })
   }) as Promise<void>, [stockId, withSaving])
 
   return {

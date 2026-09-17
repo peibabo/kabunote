@@ -218,18 +218,16 @@ SELECT tablename, policyname, cmd FROM pg_policies WHERE schemaname = 'public' O
 
 ## カレンダー連動パターン
 
-DB保存後にカレンダーをリアルタイム更新するカスタムイベント:
+DB保存後にカレンダーをリアルタイム更新する（詳細は後述の「アプリ内イベント」を参照）:
 
 ```typescript
-// 保存後にイベント発火（フック内で実行）
-window.dispatchEvent(new CustomEvent('kabunote-db-calendar-update'));
+// 保存後にイベント発火（フック内で実行）。detail の type で更新種別を切り替える
+emitAppEvent(APP_EVENTS.DB_CALENDAR_UPDATE, { type: 'dividend', symbol, dividend });
 
-// page.tsx で購読
-useEffect(() => {
-  const handler = () => refreshData();
-  window.addEventListener('kabunote-db-calendar-update', handler);
-  return () => window.removeEventListener('kabunote-db-calendar-update', handler);
-}, []);
+// useCalendarData で購読
+useAppEvent(APP_EVENTS.DB_CALENDAR_UPDATE, (detail) => {
+  if (detail.type === 'dividend') updateStockData(detail.symbol, { dividend: detail.dividend });
+}, { enabled: isInitialized });
 ```
 
 対象フック: `useStockEvent`, `useStockDividend`, `useStockBenefit`
@@ -243,6 +241,47 @@ useEffect(() => {
 - **グローバルキー**: `STORAGE_KEYS.SELECTED_GROUP_FILTER`, `STORAGE_KEYS.SNOOZED_ALERTS`, `STORAGE_KEYS.TIMELINE_CALENDAR_EXPANDED`
 - **銘柄固有キー**: `stockKey.activeTab(symbol)`, `stockKey.openTab(symbol)`, `stockKey.investmentTab(symbol)`, `stockKey.managementTab(symbol)`
 - **チャート期間の記憶**: 推移グラフ（`PORTFOLIO_HISTORY_RANGE`）・銘柄ミニチャート（`STOCK_MINI_CHART_RANGE`、全銘柄共通）の選択中期間を `useLocalStorage` で永続化。`parseHistoryRange()`（`src/types/portfolio.ts`）で不正値をデフォルトにフォールバックし、`rangeLoading` フラグでフェッチをゲートして初回ロード時の二重フェッチを防ぐ
+
+---
+
+## アプリ内イベント（コンポーネント間の再描画通知）
+
+DB更新をまたいだ再描画は `window` のカスタムイベントで伝える。**イベント名と detail の型は `src/lib/appEvents.ts` に集約**（`storageKeys.ts` の姉妹ファイル）。
+
+生の文字列で `dispatchEvent` すると typo がサイレントに無視される（リスナーが反応しないだけでエラーにならない）ため、必ず定数を経由すること。
+
+### 発火
+
+```ts
+import { emitAppEvent, APP_EVENTS } from '@/lib/appEvents'
+
+emitAppEvent(APP_EVENTS.DB_TAG_UPDATE, { symbol, tags })
+emitAppEvent(APP_EVENTS.SNAPSHOT_CREATED)  // detailなしのイベントは第2引数を省略
+```
+
+`emitAppEvent` はSSRガード込み。detail の型は `AppEventDetailMap` で縛られるため、送信側と受信側の食い違いがコンパイルエラーになる。
+
+### 購読
+
+```ts
+import { useAppEvent } from '@/hooks/util/useAppEvent'
+
+useAppEvent(APP_EVENTS.DB_TAG_UPDATE, (detail) => {
+  updateStockData(detail.symbol, { tags: detail.tags })
+})
+
+// 初期化前は購読しない場合
+useAppEvent(APP_EVENTS.DB_PRICE_UPDATE, handler, { enabled: isInitialized })
+```
+
+- handler は ref に保持されるため、毎レンダリングで新しい関数を渡してもリスナーは再登録されない（呼び出し側で `useCallback` 不要）
+- **リスナー専用の `useEffect` は `useAppEvent` に置き換える。** タイマーのクリーンアップや fetch ロジックと同居している `useEffect`（`usePortfolioHistory` / `useTradeMarkers`）は、そのまま `APP_EVENTS` 定数だけを使う
+
+### イベントを追加するとき
+
+1. `APP_EVENTS` に定数を追加（コメントで用途を書く）
+2. `AppEventDetailMap` に detail の型を追加（detailなしは `void`）
+3. 発火側は `emitAppEvent`、購読側は `useAppEvent`
 
 ---
 

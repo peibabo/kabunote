@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from '@/lib/toast';
+import { useAppEvent } from '../util/useAppEvent';
+import { emitAppEvent, APP_EVENTS } from '@/lib/appEvents';
 import { DEFAULT_STOCK_LINK_SETTINGS, type StockLinkSetting } from '@/lib/stockExternalLinks';
 
 interface UseStockLinkSettingsResult {
@@ -11,8 +13,6 @@ interface UseStockLinkSettingsResult {
 // Module-level cache
 let cachedSettings: StockLinkSetting[] | null = null;
 let fetchPromise: Promise<StockLinkSetting[] | null> | null = null;
-
-const SETTINGS_UPDATE_EVENT = 'kabunote-stock-link-settings-update';
 
 async function fetchSettingsOnce(): Promise<StockLinkSetting[] | null> {
   if (cachedSettings) return cachedSettings;
@@ -59,14 +59,7 @@ export function useStockLinkSettings(): UseStockLinkSettingsResult {
   }, []);
 
   // Listen for updates from other instances
-  useEffect(() => {
-    const handler = (e: Event) => {
-      const detail = (e as CustomEvent<StockLinkSetting[]>).detail;
-      setSettings(detail);
-    };
-    window.addEventListener(SETTINGS_UPDATE_EVENT, handler);
-    return () => window.removeEventListener(SETTINGS_UPDATE_EVENT, handler);
-  }, []);
+  useAppEvent(APP_EVENTS.STOCK_LINK_SETTINGS_UPDATE, (detail) => setSettings(detail));
 
   const saveSettings = useCallback(async (newSettings: StockLinkSetting[]) => {
     try {
@@ -85,7 +78,7 @@ export function useStockLinkSettings(): UseStockLinkSettingsResult {
       // Update cache and broadcast
       cachedSettings = savedSettings;
       setSettings(savedSettings);
-      window.dispatchEvent(new CustomEvent(SETTINGS_UPDATE_EVENT, { detail: savedSettings }));
+      emitAppEvent(APP_EVENTS.STOCK_LINK_SETTINGS_UPDATE, savedSettings);
     } catch (err) {
       const msg = err instanceof Error ? err.message : '保存に失敗しました';
       toast.error(msg);

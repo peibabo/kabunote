@@ -3,6 +3,7 @@ import { apiFetch } from '@/lib/apiClient'
 import { useAsyncState } from '../util/useAsyncState'
 import { useAutoSave } from '../util/useAutoSave'
 import { grantXp } from '@/lib/gamification'
+import { emitAppEvent, APP_EVENTS } from '@/lib/appEvents'
 
 interface PriceState {
   currentPrice: string
@@ -101,14 +102,12 @@ export function useStockPrice(stockId: string, options?: UseStockPriceOptions): 
           })
         })
         if (response.ok) {
-          window.dispatchEvent(new CustomEvent('kabunote-db-price-update', {
-            detail: {
-              symbol,
-              currentPrice: latest.currentPrice ? parseFloat(latest.currentPrice) : null,
-              targetPrice: latest.targetPrice ? parseFloat(latest.targetPrice) : null,
-              stopLossPrice: latest.stopLoss ? parseFloat(latest.stopLoss) : null,
-            }
-          }))
+          emitAppEvent(APP_EVENTS.DB_PRICE_UPDATE, {
+            symbol,
+            currentPrice: latest.currentPrice ? parseFloat(latest.currentPrice) : null,
+            targetPrice: latest.targetPrice ? parseFloat(latest.targetPrice) : null,
+            stopLossPrice: latest.stopLoss ? parseFloat(latest.stopLoss) : null,
+          })
           grantXp('PRICE_UPDATE')
         }
       })

@@ -3,6 +3,7 @@ import { apiFetch } from '@/lib/apiClient'
 import { useAsyncState } from '../util/useAsyncState'
 import { useAutoSave } from '../util/useAutoSave'
 import { grantXp } from '@/lib/gamification'
+import { emitAppEvent, APP_EVENTS } from '@/lib/appEvents'
 import { ShareholderRightsSettings, createDefaultRightsSettings } from '@/types/rightsDate'
 
 interface BenefitState {
@@ -95,19 +96,17 @@ export function useStockBenefit(stockId: string, options?: UseStockBenefitOption
           }),
         })
         if (!response.ok) throw new Error('優待情報の保存に失敗しました')
-        window.dispatchEvent(new CustomEvent('kabunote-db-calendar-update', {
-          detail: {
-            type: 'benefit' as const,
-            symbol: stockId.replace('stock-', ''),
-            benefit: {
-              description: val.description || null,
-              minimumShares: val.minimumShares ? parseInt(val.minimumShares) : null,
-              estimatedValue: val.estimatedValue ? parseFloat(val.estimatedValue) : null,
-              rightsMonth: val.rightsSettings.month,
-              rightsDay: val.rightsSettings.day,
-            }
+        emitAppEvent(APP_EVENTS.DB_CALENDAR_UPDATE, {
+          type: 'benefit',
+          symbol: stockId.replace('stock-', ''),
+          benefit: {
+            description: val.description || null,
+            minimumShares: val.minimumShares ? parseInt(val.minimumShares) : null,
+            estimatedValue: val.estimatedValue ? parseFloat(val.estimatedValue) : null,
+            rightsMonth: val.rightsSettings.month,
+            rightsDay: val.rightsSettings.day,
           }
-        }))
+        })
         grantXp('BENEFIT_REGISTER')
       })
     },

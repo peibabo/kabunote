@@ -6,6 +6,8 @@ import { parseHistoryRange } from '@/types/portfolio';
 import { useLocalStorage } from '@/hooks/util/useLocalStorage';
 import { STORAGE_KEYS } from '@/lib/storageKeys';
 import { patchSnapshotPrices } from '@/lib/apiClient';
+import { useAppEvent } from '@/hooks/util/useAppEvent';
+import { APP_EVENTS } from '@/lib/appEvents';
 
 export interface StockPriceHistoryItem {
   snapshotId: string;
@@ -52,13 +54,9 @@ export function useStockPriceHistory(stockId: string | undefined) {
   }, [range, rangeLoading, fetchHistory]);
 
   // スナップショット記録イベントを検知して再取得
-  useEffect(() => {
-    const handler = () => {
-      setTimeout(() => fetchHistory(range), 500);
-    };
-    window.addEventListener('kabunote-snapshot-created', handler);
-    return () => window.removeEventListener('kabunote-snapshot-created', handler);
-  }, [range, fetchHistory]);
+  useAppEvent(APP_EVENTS.SNAPSHOT_CREATED, () => {
+    setTimeout(() => fetchHistory(range), 500);
+  });
 
   // 過去スナップショットの株価を修正（評価額・損益・純資産も自動再計算）。
   // 既存の PATCH /api/portfolio/snapshot/[id] を再利用し、成功後に履歴を再取得して反映。

@@ -3,6 +3,7 @@ import { apiFetch, apiPost, apiDelete } from '@/lib/apiClient'
 import { CustomTag, TagColor } from '@/types/tags'
 import { toast } from '@/lib/toast'
 import { grantXp } from '@/lib/gamification'
+import { emitAppEvent, APP_EVENTS } from '@/lib/appEvents'
 
 interface UseStockTagReturn {
   tags: CustomTag[]
@@ -48,9 +49,7 @@ export function useStockTag(stockId: string, options?: UseStockTagOptions): UseS
         updatedTags = [...prev.filter(t => t.id !== tempId), data]
         return updatedTags
       })
-      window.dispatchEvent(new CustomEvent('kabunote-db-tag-update', {
-        detail: { symbol, tags: updatedTags }
-      }))
+      emitAppEvent(APP_EVENTS.DB_TAG_UPDATE, { symbol, tags: updatedTags })
       grantXp('TAG_ADD')
     } catch (err) {
       console.error('❌ タグ追加エラー:', err)
@@ -69,9 +68,7 @@ export function useStockTag(stockId: string, options?: UseStockTagOptions): UseS
         currentTags = prev
         return prev
       })
-      window.dispatchEvent(new CustomEvent('kabunote-db-tag-update', {
-        detail: { symbol, tags: currentTags }
-      }))
+      emitAppEvent(APP_EVENTS.DB_TAG_UPDATE, { symbol, tags: currentTags })
     } catch (err) {
       console.error('❌ タグ削除エラー:', err)
       toast.error('タグの削除がうまくいきませんでした。再度お試しください')

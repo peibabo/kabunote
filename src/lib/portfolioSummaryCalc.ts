@@ -24,7 +24,7 @@ export interface PortfolioStockData {
     rightsDay: number | null;
   } | null;
   benefit: {
-    description?: string;
+    description?: string | null;
     minimumShares: number | null;
     estimatedValue: number | null;
     rightsMonth: number | null;

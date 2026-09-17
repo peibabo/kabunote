@@ -3,6 +3,7 @@ import { apiFetch } from '@/lib/apiClient'
 import type { Position } from '@/types/positions'
 import type { RealizedTrade } from '@/types/realizedTrade'
 import type { TradeMarkerEntry } from '@/lib/stockMiniChartCalc'
+import { APP_EVENTS } from '@/lib/appEvents'
 
 interface UseTradeMarkersReturn {
   buys: TradeMarkerEntry[]
@@ -59,13 +60,13 @@ export function useTradeMarkers(stockId: string | undefined): UseTradeMarkersRet
         load()
       }
     }
-    window.addEventListener('kabunote-db-position-update', handler)
-    window.addEventListener('kabunote-db-realized-update', handler)
+    window.addEventListener(APP_EVENTS.DB_POSITION_UPDATE, handler)
+    window.addEventListener(APP_EVENTS.DB_REALIZED_UPDATE, handler)
 
     return () => {
       cancelled = true
-      window.removeEventListener('kabunote-db-position-update', handler)
-      window.removeEventListener('kabunote-db-realized-update', handler)
+      window.removeEventListener(APP_EVENTS.DB_POSITION_UPDATE, handler)
+      window.removeEventListener(APP_EVENTS.DB_REALIZED_UPDATE, handler)
     }
   }, [stockId])
 

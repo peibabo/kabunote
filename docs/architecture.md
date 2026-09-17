@@ -250,6 +250,7 @@ app_users (ユーザー管理)
 | `useAsyncState` | 非同期状態管理 |
 | `useAccordionState` | アコーディオン開閉管理（playSound統合・localStorage対応） |
 | `useTooltipState` | ツールチップ表示/非表示管理（遅延非表示・クリーンアップ） |
+| `useAppEvent` | アプリ内カスタムイベントの購読（`APP_EVENTS` と型連動・`enabled`で登録制御） |
 
 ### `hooks/other/` — その他
 | フック | 説明 |

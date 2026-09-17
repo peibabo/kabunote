@@ -1,11 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useDebouncedCallback } from '../util/useDebounce';
 import { toast } from '@/lib/toast';
+import { useAppEvent } from '../util/useAppEvent';
+import { emitAppEvent, APP_EVENTS, type CashUpdateDetail } from '@/lib/appEvents';
 
-interface CashData {
-  cashAmount: string;
-  nextActionMemo: string;
-}
+type CashData = CashUpdateDetail
 
 interface UseCashResult {
   cashAmount: string;
@@ -20,8 +19,6 @@ interface UseCashResult {
 // Module-level cache shared across all useCash() instances
 let cachedData: CashData | null = null;
 let fetchPromise: Promise<CashData | null> | null = null;
-
-const CASH_UPDATE_EVENT = 'kabunote-cash-update';
 
 async function fetchCashOnce(): Promise<CashData | null> {
   if (cachedData) return cachedData;
@@ -73,15 +70,10 @@ export function useCash(): UseCashResult {
   }, []);
 
   // Listen for updates from other instances
-  useEffect(() => {
-    const handler = (e: Event) => {
-      const detail = (e as CustomEvent<CashData>).detail;
-      setCashAmount(detail.cashAmount);
-      setNextActionMemo(detail.nextActionMemo);
-    };
-    window.addEventListener(CASH_UPDATE_EVENT, handler);
-    return () => window.removeEventListener(CASH_UPDATE_EVENT, handler);
-  }, []);
+  useAppEvent(APP_EVENTS.CASH_UPDATE, (detail) => {
+    setCashAmount(detail.cashAmount);
+    setNextActionMemo(detail.nextActionMemo);
+  });
 
   const debouncedSaveToApi = useDebouncedCallback(async (data: Partial<CashData>) => {
     try {
@@ -101,7 +93,7 @@ export function useCash(): UseCashResult {
 
   const broadcastUpdate = useCallback((newCash: string, newMemo: string) => {
     cachedData = { cashAmount: newCash, nextActionMemo: newMemo };
-    window.dispatchEvent(new CustomEvent(CASH_UPDATE_EVENT, { detail: cachedData }));
+    emitAppEvent(APP_EVENTS.CASH_UPDATE, cachedData);
   }, []);
 
   const updateCash = useCallback((newCashAmount: string) => {

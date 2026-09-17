@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { STORAGE_KEYS } from '@/lib/storageKeys'
+import { emitAppEvent, APP_EVENTS } from '@/lib/appEvents'
 
 export default function CookieConsentBanner() {
   const [consent, setConsent] = useState<string | null | undefined>(undefined)
@@ -15,7 +16,7 @@ export default function CookieConsentBanner() {
   const handleConsent = (value: 'granted' | 'denied') => {
     localStorage.setItem(STORAGE_KEYS.COOKIE_CONSENT, value)
     setConsent(value)
-    window.dispatchEvent(new Event('cookie-consent-change'))
+    emitAppEvent(APP_EVENTS.COOKIE_CONSENT_CHANGE)
   }
 
   // SSR or already responded

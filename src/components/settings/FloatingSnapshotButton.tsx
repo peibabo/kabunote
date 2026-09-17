@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { playSound } from '@/lib/sound';
 import { getJSTHour, getTodayJST } from '@/lib/dateJst';
+import { useAppEvent } from '@/hooks/util/useAppEvent';
+import { emitAppEvent, APP_EVENTS } from '@/lib/appEvents';
 
 interface FloatingSnapshotButtonProps {
   hasSnapshotReady: boolean;
@@ -53,11 +55,7 @@ export default function FloatingSnapshotButton({ hasSnapshotReady }: FloatingSna
   }, [checkTodayRecorded]);
 
   // スナップショット保存イベントを監視（アコーディオン内ボタンから保存された場合）
-  useEffect(() => {
-    const handler = () => setTodayRecorded(true);
-    window.addEventListener('kabunote-snapshot-created', handler);
-    return () => window.removeEventListener('kabunote-snapshot-created', handler);
-  }, []);
+  useAppEvent(APP_EVENTS.SNAPSHOT_CREATED, () => setTodayRecorded(true));
 
   // 上書きメニュー展開中に外側をタップしたら閉じる
   useEffect(() => {
@@ -81,7 +79,7 @@ export default function FloatingSnapshotButton({ hasSnapshotReady }: FloatingSna
       const res = await fetch('/api/portfolio/snapshot', { method: 'POST' });
       if (res.ok) {
         playSound('noteSave');
-        window.dispatchEvent(new Event('kabunote-snapshot-created'));
+        emitAppEvent(APP_EVENTS.SNAPSHOT_CREATED);
         setIsExpanded(false);
         setSuccessMessage(isOverwrite ? '更新しました！' : '記録しました！');
         setTimeout(() => {

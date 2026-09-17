@@ -8,6 +8,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { useStockCardData } from '@/hooks/stock/useStockCardData';
 import { playSound } from '@/lib/sound';
 import { stockKey } from '@/lib/storageKeys';
+import { emitAppEvent, APP_EVENTS } from '@/lib/appEvents';
 
 // Components
 import StockCardHeader from './StockCardHeader';
@@ -125,9 +126,7 @@ function StockCard({ symbol, onRemove, favoriteGroups, onFavoriteGroupsChange, i
                                  ? 'nextaction' : 'analysis';
 
             localStorage.setItem(stockKey.investmentTab(symbol), targetSubTab);
-            window.dispatchEvent(new CustomEvent('localStorageChange', {
-              detail: { key: stockKey.investmentTab(symbol) }
-            }));
+            emitAppEvent(APP_EVENTS.LOCAL_STORAGE_CHANGE, { key: stockKey.investmentTab(symbol) });
           }}
         />
 

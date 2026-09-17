@@ -5,6 +5,7 @@
  */
 
 import type { XpActionType, XpGrantResult } from '@/types/gamification'
+import { emitAppEvent, APP_EVENTS } from '@/lib/appEvents'
 
 // ─── XP 定数 ──────────────────────────────────
 
@@ -128,16 +129,15 @@ export function grantXp(actionType: XpActionType): void {
       const result = data.data
 
       if (result.xpEarned > 0) {
-        window.dispatchEvent(
-          new CustomEvent('kabunote-xp-gained', { detail: result })
-        )
+        emitAppEvent(APP_EVENTS.XP_GAINED, result)
       }
-      if (result.leveledUp) {
-        window.dispatchEvent(
-          new CustomEvent('kabunote-level-up', {
-            detail: { level: result.newLevel, levelName: result.newLevelName },
-          })
-        )
+      // newLevel / newLevelName は leveledUp が true のときAPIが必ず返すが、
+      // 型上は optional なので揃っている場合のみ発火する
+      if (result.leveledUp && result.newLevel != null && result.newLevelName != null) {
+        emitAppEvent(APP_EVENTS.LEVEL_UP, {
+          level: result.newLevel,
+          levelName: result.newLevelName,
+        })
       }
     })
     .catch(() => {

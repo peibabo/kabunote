@@ -6,6 +6,7 @@ import { parseHistoryRange } from '@/types/portfolio';
 import { useLocalStorage } from '@/hooks/util/useLocalStorage';
 import { STORAGE_KEYS } from '@/lib/storageKeys';
 import { grantXp } from '@/lib/gamification';
+import { APP_EVENTS } from '@/lib/appEvents';
 import { getTodayJST } from '@/lib/dateJst';
 import { patchSnapshotPrices } from '@/lib/apiClient';
 
@@ -64,10 +65,10 @@ export function usePortfolioHistory() {
       setTodayRecorded(true);
       timerId = setTimeout(() => fetchHistory(range), 500);
     };
-    window.addEventListener('kabunote-snapshot-created', handler);
+    window.addEventListener(APP_EVENTS.SNAPSHOT_CREATED, handler);
     return () => {
       clearTimeout(timerId);
-      window.removeEventListener('kabunote-snapshot-created', handler);
+      window.removeEventListener(APP_EVENTS.SNAPSHOT_CREATED, handler);
     };
   }, [range, fetchHistory]);
 

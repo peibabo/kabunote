@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from 'react'
 import { apiFetch } from '@/lib/apiClient'
 import { useAsyncState } from '../util/useAsyncState'
 import { deleteRealizedTrade } from '@/lib/realizedTradeActions'
+import { useAppEvent } from '../util/useAppEvent'
+import { APP_EVENTS } from '@/lib/appEvents'
 import type { RealizedTrade } from '@/types/realizedTrade'
 
 interface UsePortfolioRealizedTradesReturn {
@@ -33,11 +35,7 @@ export function usePortfolioRealizedTrades(): UsePortfolioRealizedTradesReturn {
   useEffect(() => { loadFromDB() }, [loadFromDB])
 
   // 売却・削除が発生したら再取得
-  useEffect(() => {
-    const handler = () => loadFromDB()
-    window.addEventListener('kabunote-db-realized-update', handler)
-    return () => window.removeEventListener('kabunote-db-realized-update', handler)
-  }, [loadFromDB])
+  useAppEvent(APP_EVENTS.DB_REALIZED_UPDATE, () => { loadFromDB() })
 
   const deleteTrade = useCallback(async (tradeId: string, stockId?: string) => {
     await deleteRealizedTrade(tradeId, stockId)

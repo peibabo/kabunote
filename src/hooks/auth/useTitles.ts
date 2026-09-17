@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import type { TitlesResponse, TitleStatus } from '@/types/titles'
+import { useAppEvent } from '@/hooks/util/useAppEvent'
+import { emitAppEvent, APP_EVENTS } from '@/lib/appEvents'
 
 export function useTitles() {
   const [titles, setTitles] = useState<TitlesResponse | null>(null)
@@ -24,9 +26,7 @@ export function useTitles() {
       if (newlyUnlocked.length > 0) {
         // トースト表示
         for (const title of newlyUnlocked) {
-          window.dispatchEvent(
-            new CustomEvent('kabunote-title-unlocked', { detail: title })
-          )
+          emitAppEvent(APP_EVENTS.TITLE_UNLOCKED, title)
         }
 
         // 通知済みIDをDB更新（全獲得済みIDを送信）
@@ -53,11 +53,7 @@ export function useTitles() {
   }, [fetchTitles])
 
   // XPイベント連動で再フェッチ
-  useEffect(() => {
-    const handler = () => { fetchTitles() }
-    window.addEventListener('kabunote-xp-gained', handler)
-    return () => window.removeEventListener('kabunote-xp-gained', handler)
-  }, [fetchTitles])
+  useAppEvent(APP_EVENTS.XP_GAINED, () => { fetchTitles() })
 
   return { titles, isLoading }
 }

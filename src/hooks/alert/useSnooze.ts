@@ -3,6 +3,7 @@ import { SnoozedAlert, SnoozeDuration } from '@/types/snooze';
 import { generateAlertKey } from '@/lib/snoozeCalc';
 import { AlertType } from '@/utils/alertSystem';
 import { STORAGE_KEYS } from '@/lib/storageKeys';
+import { emitAppEvent, APP_EVENTS } from '@/lib/appEvents';
 
 const STORAGE_KEY = STORAGE_KEYS.SNOOZED_ALERTS;
 
@@ -22,9 +23,7 @@ function loadSnoozedAlertsFromStorage(): SnoozedAlert[] {
     if (validAlerts.length !== alerts.length) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(validAlerts));
       // localStorageChange イベントを発火
-      window.dispatchEvent(new CustomEvent('localStorageChange', {
-        detail: { key: STORAGE_KEY }
-      }));
+      emitAppEvent(APP_EVENTS.LOCAL_STORAGE_CHANGE, { key: STORAGE_KEY });
     }
 
     return validAlerts;
@@ -50,9 +49,7 @@ export const useSnooze = () => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(alerts));
       // localStorageChange イベントを発火
-      window.dispatchEvent(new CustomEvent('localStorageChange', {
-        detail: { key: STORAGE_KEY }
-      }));
+      emitAppEvent(APP_EVENTS.LOCAL_STORAGE_CHANGE, { key: STORAGE_KEY });
     } catch (error) {
       console.error('Failed to save snoozed alerts:', error);
     }

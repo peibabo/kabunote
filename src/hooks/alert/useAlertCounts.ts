@@ -4,6 +4,9 @@ import { NextActionPlan } from '@/types/nextActionPlan';
 import { SnoozedAlert } from '@/types/snooze';
 import { getAllActiveAlerts } from '@/utils/alertSystem';
 import { calculatePositionSummary } from '@/lib/positionCalc';
+import { STORAGE_KEYS } from '@/lib/storageKeys';
+import { useAppEvent } from '@/hooks/util/useAppEvent';
+import { APP_EVENTS } from '@/lib/appEvents';
 
 export interface AlertCounts {
   total: number;
@@ -29,7 +32,7 @@ export function useAlertCounts(
     let urgentAlerts = 0;
 
     const checkSnooze = (symbol: string, alertType: string): boolean => {
-      const snoozedAlertsStr = typeof window !== 'undefined' ? localStorage.getItem('kabunote-snoozed-alerts') : null;
+      const snoozedAlertsStr = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEYS.SNOOZED_ALERTS) : null;
       if (!snoozedAlertsStr) return false;
       try {
         const snoozedAlerts = JSON.parse(snoozedAlertsStr);
@@ -87,24 +90,14 @@ export function useAlertCounts(
   }, [calculateAlertCounts]);
 
   // スヌーズ変更監視（localStorageのスヌーズ状態変更でアラートを再計算）
-  useEffect(() => {
-    if (!isInitialized) return;
-
-    const handleStorageChange = (event: CustomEvent) => {
-      const { key } = event.detail;
-      if (key === 'kabunote-snoozed-alerts') {
-        setTimeout(() => {
-          const counts = calculateAlertCounts();
-          setAlertCounts(counts);
-        }, 100);
-      }
-    };
-
-    window.addEventListener('localStorageChange', handleStorageChange as EventListener);
-    return () => {
-      window.removeEventListener('localStorageChange', handleStorageChange as EventListener);
-    };
-  }, [isInitialized, calculateAlertCounts]);
+  useAppEvent(APP_EVENTS.LOCAL_STORAGE_CHANGE, ({ key }) => {
+    if (key === STORAGE_KEYS.SNOOZED_ALERTS) {
+      setTimeout(() => {
+        const counts = calculateAlertCounts();
+        setAlertCounts(counts);
+      }, 100);
+    }
+  }, { enabled: isInitialized });
 
   return { alertCounts };
 }
