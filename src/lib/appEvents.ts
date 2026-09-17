@@ -110,19 +110,26 @@ export interface AppEventDetailMap {
 // 発火
 // ─────────────────────────────────────────
 
+/** detail を持たないイベント名 */
+export type VoidAppEventName = {
+  [K in keyof AppEventDetailMap]: AppEventDetailMap[K] extends void ? K : never;
+}[keyof AppEventDetailMap];
+
+/** detail を持つイベント名 */
+export type DetailedAppEventName = Exclude<keyof AppEventDetailMap, VoidAppEventName>;
+
 /**
  * アプリ内イベントを発火する（SSR時は何もしない）。
  * detail を持たないイベントは第2引数を省略する。
  */
-export function emitAppEvent<K extends keyof AppEventDetailMap>(
-  ...[name, detail]: AppEventDetailMap[K] extends void
-    ? [name: K]
-    : [name: K, detail: AppEventDetailMap[K]]
-): void {
+export function emitAppEvent<K extends VoidAppEventName>(name: K): void;
+export function emitAppEvent<K extends DetailedAppEventName>(
+  name: K,
+  detail: AppEventDetailMap[K]
+): void;
+export function emitAppEvent(name: string, detail?: unknown): void {
   if (typeof window === 'undefined') return;
   window.dispatchEvent(
-    detail === undefined
-      ? new Event(name as string)
-      : new CustomEvent(name as string, { detail })
+    detail === undefined ? new Event(name) : new CustomEvent(name, { detail })
   );
 }

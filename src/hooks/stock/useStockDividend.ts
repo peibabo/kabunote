@@ -58,16 +58,7 @@ export function useStockDividend(stockId: string, options?: UseStockDividendOpti
     const data = await apiFetch<{
       dividendPerShare: number | null; frequency: number; rightsMonth: number | null; rightsDay: number | null
     }>(`/api/stocks/${stockId}/dividend`)
-    if (data) {
-      const freq = (data.frequency === 2 || data.frequency === 4) ? data.frequency : 1
-      setState({
-        dividendPerShare: data.dividendPerShare != null ? String(data.dividendPerShare) : '',
-        dividendFrequency: freq as 1 | 2 | 4,
-        dividendRightsSettings: data.rightsMonth != null && data.rightsDay != null
-          ? { month: data.rightsMonth, day: data.rightsDay, isRecurring: true, isActive: true }
-          : createDefaultRightsSettings(),
-      })
-    }
+    if (data) setState(parseInitialDividend(data))
   }), [stockId, withLoading])
 
   useEffect(() => { if (!hasInitialData) loadData() }, [loadData, hasInitialData])
