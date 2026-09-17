@@ -1,5 +1,7 @@
 // StockMiniChart 用の計算ロジック
 
+import { formatDateLabel } from '@/lib/dateFormat';
+
 export interface PriceHistoryItem {
   price: number | null;
 }
@@ -30,13 +32,8 @@ export function calcYAxisDomain(
   return [Math.max(0, Math.floor(min - margin)), Math.ceil(max + margin)];
 }
 
-/**
- * 日付文字列を M/D 形式に変換する
- */
-export function formatDateLabel(dateStr: string): string {
-  const [, m, d] = dateStr.split('-');
-  return `${parseInt(m)}/${parseInt(d)}`;
-}
+// 日付文字列を M/D 形式に変換する（実体は dateFormat に集約）
+export { formatDateLabel };
 
 /**
  * チャートデータを変換する

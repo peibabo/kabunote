@@ -6,6 +6,7 @@ import { useAccordionState } from '@/hooks/util/useAccordionState'
 import { STORAGE_KEYS } from '@/lib/storageKeys'
 import { playSound } from '@/lib/sound'
 import { getTodayJST } from '@/lib/dateJst'
+import { formatDateJP } from '@/lib/dateFormat'
 import type { DiaryTextField } from '@/types/diary'
 import DiaryDateNav from './investment-diary/DiaryDateNav'
 import DiaryNewsSection from './investment-diary/DiaryNewsSection'
@@ -15,12 +16,6 @@ const TEXT_SECTIONS: { field: DiaryTextField; icon: string; title: string; place
   { field: 'reflection', icon: '🔍', title: '今日の振り返り', placeholder: '投資行動・判断の反省...' },
   { field: 'tomorrowFocus', icon: '🎯', title: '明日の注目ポイント', placeholder: '明日チェックすること...' },
 ]
-
-function formatDateJP(dateStr: string): string {
-  const d = new Date(dateStr + 'T00:00:00')
-  const days = ['日', '月', '火', '水', '木', '金', '土']
-  return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日（${days[d.getDay()]}）`
-}
 
 export default function InvestmentDiary() {
   const {

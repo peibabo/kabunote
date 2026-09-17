@@ -16,6 +16,8 @@ import {
 import type { PortfolioSnapshotData, ChartType, ChartMemoMap } from '@/types/portfolio';
 import { CHART_TYPE_META } from '@/types/portfolio';
 import { formatPrice } from '@/lib/positionCalc';
+import { formatDateLabel } from '@/lib/dateFormat';
+import { formatYAxisValue } from '@/lib/chartFormat';
 import { calcBaselineMap, calcRatePercent, formatStockLabel, truncateStockName } from '@/lib/stockRateCalc';
 import { loadStockData, type StockData } from '@/data/stockNames';
 import ChartTooltip from './chart/ChartTooltip';
@@ -39,17 +41,6 @@ const STOCK_COLORS = [
   '#38bdf8', '#c084fc', '#facc15', '#fb7185', '#2dd4bf',
   '#818cf8', '#a3e635', '#f97316', '#e11d48', '#14b8a6',
 ];
-
-function formatDateLabel(dateStr: string): string {
-  const [, m, d] = dateStr.split('-');
-  return `${parseInt(m)}/${parseInt(d)}`;
-}
-
-function formatYAxisValue(value: number): string {
-  if (Math.abs(value) >= 10000000) return `${(value / 10000000).toFixed(1)}千万`;
-  if (Math.abs(value) >= 10000) return `${Math.round(value / 10000)}万`;
-  return String(Math.round(value));
-}
 
 export default function PortfolioChart({ data, memoMap: propMemoMap, onDotClick }: PortfolioChartProps) {
   const [chartType, setChartType] = useState<ChartType>('value');

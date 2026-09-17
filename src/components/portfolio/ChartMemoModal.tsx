@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { playSound } from '@/lib/sound';
+import { formatDateYMDJP } from '@/lib/dateFormat';
 import type { ChartType } from '@/types/portfolio';
 import { CHART_TYPE_META } from '@/types/portfolio';
 import ChartSnapshotEditor, { type EditablePrice } from '@/components/portfolio/chart/ChartSnapshotEditor';
@@ -22,12 +23,6 @@ interface ChartMemoModalProps {
 }
 
 const MAX_LENGTH = 50;
-
-function formatDisplayDate(dateStr: string): string {
-  if (typeof dateStr !== 'string') return String(dateStr ?? '');
-  const [y, m, d] = dateStr.split('-');
-  return `${y}年${parseInt(m)}月${parseInt(d)}日`;
-}
 
 export default function ChartMemoModal({
   isOpen,
@@ -130,7 +125,7 @@ export default function ChartMemoModal({
               </h2>
               <div className="flex items-center gap-2 mt-1">
                 <span className="text-sm text-gray-400">
-                  {formatDisplayDate(snapshotDate)}
+                  {formatDateYMDJP(snapshotDate)}
                 </span>
                 <span className="px-2 py-0.5 bg-gray-700 rounded text-xs text-gray-300">
                   {typeInfo.label}
