@@ -172,7 +172,7 @@ app_users (ユーザー管理)
 | `useStockNews` | 銘柄ニュース管理（URL+コメント、300msデバウンス自動保存） |
 | `useStockPrice` | 株価データ（現在株価・利確目標・損切り）300msデバウンス |
 | `useStockPosition` | 複数ポジションCRUD（追加・編集・削除・売却） |
-| `useRealizedTrades` | 銘柄別の確定損益履歴取得（売却イベント連動） |
+| `useRealizedTrades` | 銘柄別の確定損益履歴取得（売却イベント連動。`useRealizedTradesBase` の薄いラッパー） |
 | `useStockEvent` | 決算日・株主総会日（500msデバウンス） |
 | `useStockDividend` | 配当情報（500msデバウンス） |
 | `useStockBenefit` | 株主優待情報（500msデバウンス） |
@@ -196,7 +196,7 @@ app_users (ユーザー管理)
 | `usePortfolioSummary` | ポートフォリオサマリー（投資額・損益・配当・優待） |
 | `usePieChartData` | 円グラフデータ生成 |
 | `usePortfolioHistory` | ポートフォリオ日次スナップショット履歴（期間切替・作成・todayRecorded・updateSnapshotPrices=過去株価修正） |
-| `usePortfolioRealizedTrades` | ポートフォリオ全体の確定損益履歴・年間集計（年フィルタ） |
+| `usePortfolioRealizedTrades` | ポートフォリオ全体の確定損益履歴・年間集計（年フィルタ。`useRealizedTradesBase` の薄いラッパー） |
 | `useChartMemos` | チャートメモ管理（memoMap・saveMemo・deleteMemo） |
 | `useChartMemoList` | チャートメモ一覧（ページネーション・フィルタ・削除） |
 
@@ -221,8 +221,8 @@ app_users (ユーザー管理)
 | `useChecklist` | デイリーチェックリスト（CRUD・チェック状態・XP連携） |
 | `useDiary` | 投資日記（自動保存・日付ナビゲーション・XP連携） |
 | `useFavoriteGroups` | お気に入りグループ（楽観的更新・差分同期） |
-| `useExternalLinks` | 外部リンク設定（モジュールキャッシュ・デフォルトフォールバック） |
-| `useStockLinkSettings` | 銘柄カード外部リンク表示設定（モジュールキャッシュ・CustomEvent同期） |
+| `useExternalLinks` | 外部リンク設定（`createCachedSettingsHook` 生成・キャッシュ共有） |
+| `useStockLinkSettings` | 銘柄カード外部リンク表示設定（`createCachedSettingsHook` 生成・キャッシュ共有） |
 
 ### `hooks/auth/` — 認証・グローバル
 | フック | 説明 |
@@ -251,6 +251,8 @@ app_users (ユーザー管理)
 | `useAccordionState` | アコーディオン開閉管理（playSound統合・localStorage対応） |
 | `useTooltipState` | ツールチップ表示/非表示管理（遅延非表示・クリーンアップ） |
 | `useAppEvent` | アプリ内カスタムイベントの購読（`APP_EVENTS` と型連動・`enabled`で登録制御） |
+| `createCachedSettingsHook` | キャッシュ共有型の設定フックを生成するファクトリ（fetch1回・保存後イベント伝播） |
+| `useRealizedTradesBase` | 確定損益履歴の取得/再取得の共通ロジック（銘柄別・全体の両方で使用） |
 
 ### `hooks/other/` — その他
 | フック | 説明 |

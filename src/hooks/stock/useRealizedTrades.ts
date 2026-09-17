@@ -1,43 +1,19 @@
-import { useState, useEffect, useCallback } from 'react'
-import { apiFetch } from '@/lib/apiClient'
-import { useAsyncState } from '../util/useAsyncState'
+import { useCallback } from 'react'
 import { deleteRealizedTrade } from '@/lib/realizedTradeActions'
-import { useAppEvent } from '../util/useAppEvent'
-import { APP_EVENTS } from '@/lib/appEvents'
-import type { RealizedTrade } from '@/types/realizedTrade'
+import { useRealizedTradesBase } from '@/hooks/util/useRealizedTradesBase'
+import type { UseRealizedTradesBaseReturn } from '@/hooks/util/useRealizedTradesBase'
 
-interface UseRealizedTradesReturn {
-  trades: RealizedTrade[]
-  isLoading: boolean
-  error: string | null
+interface UseRealizedTradesReturn extends UseRealizedTradesBaseReturn {
   deleteTrade: (tradeId: string) => Promise<void>
-  refetch: () => Promise<RealizedTrade[]>
 }
 
 /** 当該銘柄の確定損益履歴を取得するフック */
 export function useRealizedTrades(stockId: string): UseRealizedTradesReturn {
-  const [trades, setTrades] = useState<RealizedTrade[]>([])
-  const { isLoading, error, withLoading } = useAsyncState(true)
-
-  const loadFromDB = useCallback(async (): Promise<RealizedTrade[]> => {
-    const result = await withLoading(async () => {
-      const data = await apiFetch<RealizedTrade[]>(`/api/stocks/${stockId}/position/sell`)
-      setTrades(data)
-      return data
-    })
-    return result ?? []
-  }, [stockId, withLoading])
-
-  useEffect(() => { loadFromDB() }, [loadFromDB])
-
-  // 売却・削除が発生したら履歴を再取得
-  useAppEvent(APP_EVENTS.DB_REALIZED_UPDATE, (detail) => {
-    if (!detail || detail.stockId === stockId) loadFromDB()
-  })
+  const base = useRealizedTradesBase(`/api/stocks/${stockId}/position/sell`, stockId)
 
   const deleteTrade = useCallback(async (tradeId: string) => {
     await deleteRealizedTrade(tradeId, stockId)
   }, [stockId])
 
-  return { trades, isLoading, error, deleteTrade, refetch: loadFromDB }
+  return { ...base, deleteTrade }
 }

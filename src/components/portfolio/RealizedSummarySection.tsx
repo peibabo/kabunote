@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { usePortfolioRealizedTrades } from '@/hooks/portfolio/useRealizedTrades';
+import { usePortfolioRealizedTrades } from '@/hooks/portfolio/usePortfolioRealizedTrades';
 import { useAccordionState } from '@/hooks/util/useAccordionState';
 import { summarizeRealizedTrades } from '@/lib/realizedTradeCalc';
 import { formatPrice, formatProfitLoss, formatShares } from '@/lib/positionCalc';

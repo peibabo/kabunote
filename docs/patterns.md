@@ -285,6 +285,51 @@ useAppEvent(APP_EVENTS.DB_PRICE_UPDATE, handler, { enabled: isInitialized })
 
 ---
 
+## キャッシュ共有型の設定フック
+
+外部リンク設定・銘柄リンク設定のように「ユーザーごとに1件、複数コンポーネントから同時に読まれる設定」は `createCachedSettingsHook`（`src/hooks/util/createCachedSettingsHook.ts`）で生成する。
+
+```ts
+const useCachedExternalLinks = createCachedSettingsHook({
+  endpoint: '/api/external-links',
+  bodyKey: 'links',                              // PUT の body は { links: value }
+  eventName: APP_EVENTS.EXTERNAL_LINKS_UPDATE,   // detail が設定値そのものであること
+  defaultValue: DEFAULT_EXTERNAL_LINKS,          // APIが data: null を返したときの既定値
+  saveErrorMessage: '外部リンクの保存に失敗しました',
+})
+
+export function useExternalLinks() {
+  const { value, isLoading, save } = useCachedExternalLinks()
+  return { links: value, isLoading, saveLinks: save }  // ドメイン名に付け替える
+}
+```
+
+ファクトリが面倒を見る範囲:
+
+- モジュールスコープのキャッシュ + in-flight promise の共有 → **同時マウントでも fetch は1回**
+- 初期値はキャッシュ or 既定値（ちらつき防止）
+- 保存後にキャッシュ更新 → イベントで他インスタンスへ伝播
+- 取得失敗は握りつぶして既定値のまま、保存失敗は toast + 再スロー
+
+注意点:
+
+- 返り値は `value` / `isLoading` / `save` に固定。呼び出し側の薄いラッパーでドメインに合った名前に付け替える
+- **キャッシュはファクトリ呼び出しごと**に作られるため、`createCachedSettingsHook(...)` はモジュールトップレベルで1回だけ呼ぶこと（コンポーネント内で呼ぶとキャッシュが共有されない）
+- 対象APIは `{ success: true, data }` 封筒を返すこと（`apiClient` の `apiFetch` / `apiPut` を使うため）
+
+## 確定損益フックの共通ベース
+
+`useRealizedTradesBase(endpoint, stockId?)`（`src/hooks/util/useRealizedTradesBase.ts`）が取得と再取得を担う。
+
+| フック | エンドポイント | 再取得の条件 |
+|---|---|---|
+| `useRealizedTrades(stockId)` | `/api/stocks/{stockId}/position/sell` | detail が無い or `detail.stockId` が一致 |
+| `usePortfolioRealizedTrades()` | `/api/portfolio/realized` | すべての `DB_REALIZED_UPDATE` |
+
+削除操作（`deleteTrade`）は引数の形が異なるため各フック側で公開する。
+
+---
+
 ## 日付・数値フォーマット
 
 表示用フォーマットは以下に集約する。**コンポーネント内にローカル関数を定義しないこと**（曜日配列やパース方法が分岐し、片方だけ直す事故につながるため）。
