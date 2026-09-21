@@ -146,3 +146,17 @@ export const RANGE_DAYS: Record<string, number> = {
   '1Y': 365,
   '2Y': 730,
 };
+
+/**
+ * 期間文字列を日数に解決する。未知の期間は fallback を返す。
+ *
+ * `RANGE_DAYS[range] ?? fallback` と書いてはいけない。素のオブジェクトなので
+ * `?range=__proto__` や `constructor` で `Object.prototype` 等が返り、`??` に
+ * 捕まらないまま「日数が数値でない」値が通る。日付フィルタが外れて
+ * 全期間をスキャンしてしまうため、必ず自前プロパティだけを見る。
+ */
+export function resolveRangeDays(range: string, fallback: number): number {
+  return Object.prototype.hasOwnProperty.call(RANGE_DAYS, range)
+    ? RANGE_DAYS[range]
+    : fallback;
+}

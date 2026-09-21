@@ -56,6 +56,16 @@ export interface ChartMemoData {
 
 export type ChartMemoMap = Map<string, ChartMemoData>;
 
+/** 銘柄ミニチャート用の1点（ポートフォリオスナップショットから銘柄ぶんを抜き出したもの） */
+export interface StockPriceHistoryItem {
+  snapshotId: string;
+  date: string;
+  price: number | null;
+  shares: number;
+  value: number;
+  cost: number;
+}
+
 export function chartMemoKey(date: string, chartType: ChartType, symbol?: string): string {
   return `${date}|${chartType}|${symbol || ''}`;
 }

@@ -317,6 +317,60 @@ export function useExternalLinks() {
 - **キャッシュはファクトリ呼び出しごと**に作られるため、`createCachedSettingsHook(...)` はモジュールトップレベルで1回だけ呼ぶこと（コンポーネント内で呼ぶとキャッシュが共有されない）
 - 対象APIは `{ success: true, data }` 封筒を返すこと（`apiClient` の `apiFetch` / `apiPut` を使うため）
 
+## キー単位のキャッシュ共有 — `useSharedFetch`
+
+`createCachedSettingsHook` は「エンドポイント固定・値1つ」だが、**期間や銘柄でキーが変わる**取得には
+`useSharedFetch(key, fetcher)`（`src/hooks/util/useSharedFetch.ts`）を使う。
+同一キーのインスタンスは進行中の Promise を共有するため、**同時マウントでもフェッチは1回**。
+
+```ts
+const { data, isLoading, error, refetch } = useSharedFetch(
+  `chart-memos|${range}`,
+  () => apiFetch<ChartMemoData[]>(`/api/portfolio/chart-memos?range=${range}`),
+)
+```
+
+- `key` が `null` の間はフェッチしない（localStorage読込待ちなど）
+- 保存・削除後の反映は `mutateShared(key, updater)`（同一キーの全インスタンスに配られる）
+- サーバー側が変わったときは `invalidateShared(predicate)`（購読中のキーだけ再取得し、他は破棄）
+- **ログアウト時は `clearSharedFetchCache()` を呼ぶこと**。モジュールスコープのキャッシュなので、
+  同一タブで別ユーザーがログインすると前のユーザーのデータが見えてしまう（`useStockData` の `SIGNED_OUT` で配線済み）
+
+### 使うときの落とし穴
+
+**fetcher は引数の `key` だけから取得内容を決めること。**
+fetcher はエントリに保持され、`invalidateShared` の再取得では別インスタンス（既にアンマウント済みの
+場合もある）が登録したものが呼ばれる。クロージャの `range` / `stockId` を参照すると、
+**キーと中身が食い違ったデータ**がキャッシュに入る。必要な情報はキーに載せて fetcher 側で解く
+（`fetchByCacheKey` の実装例を参照）。
+
+**キーを分割して取得しているデータは、更新時に他キーも無効化すること。**
+キャッシュはセッション中に自然失効しない。チャートメモのように期間で絞って取得していると、
+1件保存しただけでも他の期間のリストが古くなる（期間を切り替えると保存したメモが出ない／
+消したメモが復活する）。`mutateShared` は現在のキーだけなので、他キーは `invalidateShared` で捨てる。
+
+**ミューテーションの失敗を取得エラーに載せないこと。**
+`error` は共有キャッシュの取得エラーなので、解除の契機は再取得しかない。
+保存失敗をここに載せると、消費側が `error` で早期 return する実装（`StockMiniChart`）では
+**アンマウントまでエラー表示から戻らない**。失敗は戻り値で伝え、入力UI側で表示する。
+
+## 銘柄別リクエストの一括化 — `priceHistoryLoader`
+
+「URLの形は同じで **ID だけ違う**リクエストがカード数ぶん飛ぶ」ケースは、キャッシュ共有では減らない。
+`src/lib/priceHistoryLoader.ts` は同一フレームで発生した要求を貯め、期間ごとに1本の
+`/api/stocks/price-history?range=X&stockIds=a,b,c` に変換する（DataLoader 方式）。
+
+- **全銘柄を先読みしない**のが要点。表示中のカードぶんだけ問い合わせるので、カードが数枚のときに転送量が増えない
+- 待ち合わせはマイクロタスクではなく `setTimeout(0)`。カードのマウントは同一フレーム内でもレンダリングが分かれることがある
+- `useSharedFetch` と組み合わせる（キャッシュは銘柄単位、HTTPは期間単位で1本）
+
+## 期間パラメータは `resolveRangeDays` で解決する
+
+`RANGE_DAYS[range] ?? fallback` と書いてはいけない。素のオブジェクトリテラルなので
+`?range=__proto__` や `constructor` で `Object.prototype` 等が返り、`??` に捕まらないまま
+「日数が数値でない」値が通る。`days > 0` が false になって**日付フィルタが外れ、全期間をスキャンする**。
+`resolveRangeDays(range, fallback)`（`src/lib/snapshotCalc.ts`）が自前プロパティだけを見て解決する。
+
 ## 確定損益フックの共通ベース
 
 `useRealizedTradesBase(endpoint, stockId?, options?)`（`src/hooks/util/useRealizedTradesBase.ts`）が取得と再取得を担う。

@@ -99,7 +99,7 @@ app_users (ユーザー管理)
 | `/api/stocks/[stockId]/tag` | GET/POST | タグ一覧・追加 |
 | `/api/stocks/[stockId]/tag/[tagId]` | DELETE | タグ削除 |
 | `/api/stocks/[stockId]/next-action-plan` | GET/PUT/DELETE | 次の一手戦略 |
-| `/api/stocks/[stockId]/price-history` | GET | 個別銘柄の株価履歴（?range=1M/3M/6M/1Y/2Y、デフォルト3M、各点に snapshotId 付与＝過去株価修正用） |
+| `/api/stocks/price-history` | GET | 複数銘柄の株価履歴を一括取得（?range=1M/3M/6M/1Y/2Y&stockIds=id1,id2、デフォルト3M、各点に snapshotId 付与＝過去株価修正用）。1回のスナップショットスキャンで全対象銘柄ぶんを返す |
 | `/api/stocks/[stockId]/news` | GET/PUT | 銘柄ニュース取得・一括更新（最大20件、URL+コメント） |
 
 ### ポートフォリオ履歴
@@ -177,7 +177,7 @@ app_users (ユーザー管理)
 | `useStockDividend` | 配当情報（500msデバウンス） |
 | `useStockBenefit` | 株主優待情報（500msデバウンス） |
 | `useStockTag` | タグ管理（楽観的更新） |
-| `useStockPriceHistory` | 個別銘柄の株価履歴取得（期間切替・スナップショットイベント連動・updateSnapshotPrice=過去株価修正） |
+| `useStockPriceHistory` | 個別銘柄の株価履歴取得（期間切替・スナップショットイベント連動・updateSnapshotPrice=過去株価修正）。`useSharedFetch` + `priceHistoryLoader` でカード横断のリクエストを1本に束ねる |
 | `useTradeMarkers` | 銘柄の購入ロット・売却履歴を取得しチャートマーカー用に整形（読み取り専用・購入/売却イベント連動でライブ更新。`initialData` で初回フェッチを省略可） |
 | `useStockSearch` | 銘柄検索（オートコンプリート） |
 
@@ -197,7 +197,7 @@ app_users (ユーザー管理)
 | `usePieChartData` | 円グラフデータ生成 |
 | `usePortfolioHistory` | ポートフォリオ日次スナップショット履歴（期間切替・作成・todayRecorded・updateSnapshotPrices=過去株価修正） |
 | `usePortfolioRealizedTrades` | ポートフォリオ全体の確定損益履歴・年間集計（年フィルタ。`useRealizedTradesBase` の薄いラッパー） |
-| `useChartMemos` | チャートメモ管理（memoMap・saveMemo・deleteMemo） |
+| `useChartMemos` | チャートメモ管理（memoMap・saveMemo・deleteMemo）。期間ごとに `useSharedFetch` でキャッシュ共有 |
 | `useChartMemoList` | チャートメモ一覧（ページネーション・フィルタ・削除） |
 
 ### `hooks/calendar/` — カレンダー
@@ -252,6 +252,7 @@ app_users (ユーザー管理)
 | `useTooltipState` | ツールチップ表示/非表示管理（遅延非表示・クリーンアップ） |
 | `useAppEvent` | アプリ内カスタムイベントの購読（`APP_EVENTS` と型連動・`enabled`で登録制御） |
 | `createCachedSettingsHook` | キャッシュ共有型の設定フックを生成するファクトリ（fetch1回・保存後イベント伝播） |
+| `useSharedFetch` | キー単位でフェッチ結果を共有（同時マウントでも1回。`mutateShared` / `invalidateShared` / `clearSharedFetchCache`） |
 | `useRealizedTradesBase` | 確定損益履歴の取得/再取得の共通ロジック（銘柄別・全体の両方で使用） |
 
 ### `hooks/other/` — その他
@@ -368,6 +369,7 @@ app_users (ユーザー管理)
 | `slack.ts` | Slack Webhook通知（フィードバック受信時） |
 | `positionCalc.ts` | ポジション計算・フォーマット関数 |
 | `realizedTradeSerialize.ts` | 確定損益レコードのDB→APIレスポンス変換（sell / portfolio / stocks-list の3ルートで共用） |
+| `priceHistoryLoader.ts` | 銘柄別の株価履歴要求を期間ごとに1本の一括リクエストへまとめるローダー |
 | `dividendCalc.ts` | 配当計算・フォーマット関数 |
 | `shareholderCalc.ts` | 株主優待計算・フォーマット関数 |
 | `investmentCalendarCalc.ts` | 営業日計算・権利付最終日・日付フォーマット |
