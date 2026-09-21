@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase-client';
 import { toast } from '@/lib/toast';
 import { apiFetch } from '@/lib/apiClient';
 import { useAppEvent } from '@/hooks/util/useAppEvent';
+import { clearSharedFetchCache } from '@/hooks/util/useSharedFetch';
 import { APP_EVENTS } from '@/lib/appEvents';
 import { useStockCrud } from '@/hooks/stock/useStockCrud';
 import type { RealizedTrade } from '@/types/realizedTrade';
@@ -186,6 +187,9 @@ export function useStockData(): UseStockDataReturn {
         if (event === 'SIGNED_OUT') {
           setStockData([]);
           setStockSymbols([]);
+          // 同一タブで別ユーザーがログインした際に前のユーザーのデータが残らないよう、
+          // モジュールスコープの共有フェッチキャッシュも破棄する
+          clearSharedFetchCache();
         }
       }
     );

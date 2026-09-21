@@ -1,21 +1,26 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import type { HistoryRange } from '@/types/portfolio';
+import { useState, useCallback } from 'react';
+import type { HistoryRange, StockPriceHistoryItem } from '@/types/portfolio';
 import { parseHistoryRange } from '@/types/portfolio';
 import { useLocalStorage } from '@/hooks/util/useLocalStorage';
 import { STORAGE_KEYS } from '@/lib/storageKeys';
 import { patchSnapshotPrices } from '@/lib/apiClient';
 import { useAppEvent } from '@/hooks/util/useAppEvent';
 import { APP_EVENTS } from '@/lib/appEvents';
+import { useSharedFetch, invalidateShared } from '@/hooks/util/useSharedFetch';
+import { loadPriceHistory } from '@/lib/priceHistoryLoader';
 
-export interface StockPriceHistoryItem {
-  snapshotId: string;
-  date: string;
-  price: number | null;
-  shares: number;
-  value: number;
-  cost: number;
+export type { StockPriceHistoryItem };
+
+/** 共有キャッシュのキー接頭辞。一括無効化の判定にも使う */
+const CACHE_PREFIX = 'stock-price-history|';
+
+const EMPTY: StockPriceHistoryItem[] = [];
+
+/** スナップショット更新後に全銘柄・全期間の株価履歴を再取得させる */
+function invalidatePriceHistory(): void {
+  invalidateShared(key => key.startsWith(CACHE_PREFIX));
 }
 
 export function useStockPriceHistory(stockId: string | undefined) {
@@ -27,53 +32,51 @@ export function useStockPriceHistory(stockId: string | undefined) {
     (v) => parseHistoryRange(v, '3M'),
     (v) => v,
   );
-  const [data, setData] = useState<StockPriceHistoryItem[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  const fetchHistory = useCallback(async (r: HistoryRange) => {
-    if (!stockId) return;
-    setIsLoading(true);
-    setError(null);
-    try {
-      const res = await fetch(`/api/stocks/${stockId}/price-history?range=${r}`);
-      if (!res.ok) throw new Error('株価履歴の取得に失敗しました');
-      const json = await res.json();
-      setData(json.history || []);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : '不明なエラー');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [stockId]);
+  // localStorage読込前はフェッチしない（初期値→保存値での二重フェッチ回避）。
+  // 取得は銘柄ごとにキャッシュしつつ、HTTPリクエストは期間単位で1本に束ねられる
+  // （`loadPriceHistory` が同一フレームの要求をまとめる）
+  const key = (!stockId || rangeLoading) ? null : `${CACHE_PREFIX}${range}|${stockId}`;
+  const { data, isLoading, error: fetchError, refetch } = useSharedFetch<StockPriceHistoryItem[]>(
+    key,
+    () => loadPriceHistory(stockId as string, range),
+  );
 
-  useEffect(() => {
-    // localStorage読込前はフェッチしない（初期値→保存値での二重フェッチ回避）
-    if (rangeLoading) return;
-    fetchHistory(range);
-  }, [range, rangeLoading, fetchHistory]);
+  // 株価修正の失敗は取得エラーと別管理（共有キャッシュのエラーは他インスタンスにも波及するため）
+  const [updateError, setUpdateError] = useState<string | null>(null);
 
-  // スナップショット記録イベントを検知して再取得
+  // スナップショット記録イベントを検知して再取得。
+  // 記録直後はDB反映が遅れることがあるため少し待つ（従来動作を踏襲）
   useAppEvent(APP_EVENTS.SNAPSHOT_CREATED, () => {
-    setTimeout(() => fetchHistory(range), 500);
+    setTimeout(() => invalidatePriceHistory(), 500);
   });
 
   // 過去スナップショットの株価を修正（評価額・損益・純資産も自動再計算）。
   // 既存の PATCH /api/portfolio/snapshot/[id] を再利用し、成功後に履歴を再取得して反映。
+  // 修正は他銘柄の評価額にも影響しうるため、当該銘柄だけでなく全キーを無効化する。
   const updateSnapshotPrice = useCallback(async (
     snapshotId: string,
     targetStockId: string,
     currentPrice: number,
   ): Promise<boolean> => {
     try {
+      setUpdateError(null);
       await patchSnapshotPrices(snapshotId, [{ stockId: targetStockId, currentPrice }]);
-      await fetchHistory(range);
+      invalidatePriceHistory();
       return true;
     } catch (e) {
-      setError(e instanceof Error ? e.message : '株価の修正に失敗しました');
+      setUpdateError(e instanceof Error ? e.message : '株価の修正に失敗しました');
       return false;
     }
-  }, [range, fetchHistory]);
+  }, []);
 
-  return { data, range, setRange, isLoading, error, updateSnapshotPrice };
+  return {
+    data: data ?? EMPTY,
+    range,
+    setRange,
+    isLoading,
+    error: updateError ?? fetchError,
+    updateSnapshotPrice,
+    refetch,
+  };
 }

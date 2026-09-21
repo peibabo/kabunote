@@ -317,6 +317,35 @@ export function useExternalLinks() {
 - **キャッシュはファクトリ呼び出しごと**に作られるため、`createCachedSettingsHook(...)` はモジュールトップレベルで1回だけ呼ぶこと（コンポーネント内で呼ぶとキャッシュが共有されない）
 - 対象APIは `{ success: true, data }` 封筒を返すこと（`apiClient` の `apiFetch` / `apiPut` を使うため）
 
+## キー単位のキャッシュ共有 — `useSharedFetch`
+
+`createCachedSettingsHook` は「エンドポイント固定・値1つ」だが、**期間や銘柄でキーが変わる**取得には
+`useSharedFetch(key, fetcher)`（`src/hooks/util/useSharedFetch.ts`）を使う。
+同一キーのインスタンスは進行中の Promise を共有するため、**同時マウントでもフェッチは1回**。
+
+```ts
+const { data, isLoading, error, refetch } = useSharedFetch(
+  `chart-memos|${range}`,
+  () => apiFetch<ChartMemoData[]>(`/api/portfolio/chart-memos?range=${range}`),
+)
+```
+
+- `key` が `null` の間はフェッチしない（localStorage読込待ちなど）
+- 保存・削除後の反映は `mutateShared(key, updater)`（同一キーの全インスタンスに配られる）
+- サーバー側が変わったときは `invalidateShared(predicate)`（購読中のキーだけ再取得し、他は破棄）
+- **ログアウト時は `clearSharedFetchCache()` を呼ぶこと**。モジュールスコープのキャッシュなので、
+  同一タブで別ユーザーがログインすると前のユーザーのデータが見えてしまう（`useStockData` の `SIGNED_OUT` で配線済み）
+
+## 銘柄別リクエストの一括化 — `priceHistoryLoader`
+
+「URLの形は同じで **ID だけ違う**リクエストがカード数ぶん飛ぶ」ケースは、キャッシュ共有では減らない。
+`src/lib/priceHistoryLoader.ts` は同一フレームで発生した要求を貯め、期間ごとに1本の
+`/api/stocks/price-history?range=X&stockIds=a,b,c` に変換する（DataLoader 方式）。
+
+- **全銘柄を先読みしない**のが要点。表示中のカードぶんだけ問い合わせるので、カードが数枚のときに転送量が増えない
+- 待ち合わせはマイクロタスクではなく `setTimeout(0)`。カードのマウントは同一フレーム内でもレンダリングが分かれることがある
+- `useSharedFetch` と組み合わせる（キャッシュは銘柄単位、HTTPは期間単位で1本）
+
 ## 確定損益フックの共通ベース
 
 `useRealizedTradesBase(endpoint, stockId?, options?)`（`src/hooks/util/useRealizedTradesBase.ts`）が取得と再取得を担う。
