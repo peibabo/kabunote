@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withAuth } from '@/lib/apiHandler'
-import { parseConsumedLots } from '@/lib/realizedTradeCalc'
+import { serializeRealizedTrade } from '@/lib/realizedTradeSerialize'
 
 // GET: ユーザーの全確定損益履歴を取得。?year=2026 で年フィルタ（sellDateの先頭4桁）
 export const GET = withAuth(async ({ user, request }) => {
@@ -23,19 +23,6 @@ export const GET = withAuth(async ({ user, request }) => {
 
   return NextResponse.json({
     success: true,
-    data: trades.map(t => ({
-      id: t.id,
-      stockId: t.stockId,
-      symbol: t.stock.symbol,
-      soldShares: t.soldShares,
-      sellPrice: Number(t.sellPrice),
-      costBasis: Number(t.costBasis),
-      sellDate: t.sellDate,
-      realizedPL: Number(t.realizedPL),
-      taxRate: Number(t.taxRate),
-      consumedLots: parseConsumedLots(t.consumedLots),
-      memo: t.memo ?? '',
-      createdAt: t.createdAt.toISOString(),
-    })),
+    data: trades.map(t => serializeRealizedTrade(t, t.stock.symbol)),
   })
 }, '確定損益一覧の取得')

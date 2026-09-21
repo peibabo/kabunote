@@ -238,6 +238,8 @@ function StockCard({ symbol, onRemove, favoriteGroups, onFavoriteGroupsChange, i
               snapshotDate={snapshotDate}
               snapshotValue={snapshotValue}
               snapshotCost={snapshotCost}
+              initialPositions={initialStockData?.positions}
+              initialRealizedTrades={initialStockData?.realizedTrades}
             />
           )}
 
@@ -251,6 +253,7 @@ function StockCard({ symbol, onRemove, favoriteGroups, onFavoriteGroupsChange, i
               onShareholderMeetingSettingsChange={updateShareholderMeetingSettings}
               positionSummary={positionSummary}
               initialPositions={initialStockData?.positions}
+              initialRealizedTrades={initialStockData?.realizedTrades}
               initialDividend={initialStockData ? (initialStockData.dividend ?? null) : undefined}
               initialBenefit={initialStockData ? (initialStockData.benefit ?? null) : undefined}
             />

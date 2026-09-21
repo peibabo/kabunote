@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { playSound } from '@/lib/sound';
 import { useStockPosition } from '@/hooks/stock/useStockPosition';
 import { Position } from '@/types/positions';
+import type { RealizedTrade } from '@/types/realizedTrade';
 import { calculatePositionSummary, formatPrice, formatShares } from '@/lib/positionCalc';
 import PositionFormFields, { PositionForm, emptyForm } from './positions/PositionFormFields';
 import PositionListItem from './positions/PositionListItem';
@@ -15,11 +16,13 @@ interface PositionsManagementProps {
   stockId: string;
   onPositionManagerOpen: () => void;
   initialPositions?: Position[];
+  initialRealizedTrades?: RealizedTrade[];
 }
 
 export default function PositionsManagement({
   stockId,
   initialPositions,
+  initialRealizedTrades,
 }: PositionsManagementProps) {
   const { positions, isLoading, isSaving, error, addPosition, updatePosition, deletePosition, sellPosition } = useStockPosition(stockId, initialPositions ? { initialData: initialPositions } : undefined);
   const [isAdding, setIsAdding] = useState(false);
@@ -228,7 +231,7 @@ export default function PositionsManagement({
           )}
 
           {/* 確定損益履歴 */}
-          <RealizedTradeHistory stockId={stockId} />
+          <RealizedTradeHistory stockId={stockId} initialTrades={initialRealizedTrades} />
         </>
       )}
     </div>

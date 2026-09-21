@@ -97,6 +97,49 @@ describe('useRealizedTradesBase', () => {
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2))
   })
 
+  // 銘柄カードを多数並べた際の N+1 API Call 対策
+  it('initialData 指定時は初回フェッチを行わず即座に確定損益を返す', async () => {
+    const fetchMock = mockFetchOk(TRADES)
+    vi.stubGlobal('fetch', fetchMock)
+
+    const { result } = renderHook(() =>
+      useRealizedTradesBase('/api/stocks/stock-7203/position/sell', 'stock-7203', { initialData: TRADES as never })
+    )
+
+    expect(result.current.isLoading).toBe(false)
+    expect(result.current.trades).toEqual(TRADES)
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('initialData が空配列でも初回フェッチを行わない', async () => {
+    const fetchMock = mockFetchOk(TRADES)
+    vi.stubGlobal('fetch', fetchMock)
+
+    const { result } = renderHook(() =>
+      useRealizedTradesBase('/api/stocks/stock-7203/position/sell', 'stock-7203', { initialData: [] })
+    )
+
+    expect(result.current.isLoading).toBe(false)
+    expect(result.current.trades).toEqual([])
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('initialData 指定時でも自分宛てのイベントでは再取得する', async () => {
+    const fetchMock = mockFetchOk(TRADES)
+    vi.stubGlobal('fetch', fetchMock)
+
+    renderHook(() =>
+      useRealizedTradesBase('/api/stocks/stock-7203/position/sell', 'stock-7203', { initialData: [] })
+    )
+    expect(fetchMock).not.toHaveBeenCalled()
+
+    await act(async () => {
+      emitAppEvent(APP_EVENTS.DB_REALIZED_UPDATE, { stockId: 'stock-7203' })
+    })
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1))
+  })
+
   it('stockId 指定時、宛先の無い detail では再取得しない', async () => {
     const fetchMock = mockFetchOk(TRADES)
     vi.stubGlobal('fetch', fetchMock)

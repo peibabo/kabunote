@@ -86,7 +86,7 @@ app_users (ユーザー管理)
 | パス | メソッド | 説明 |
 |------|---------|------|
 | `/api/stocks` | POST/DELETE | 銘柄作成（ensureUser + 重複チェック）/ 削除（カスケード） |
-| `/api/stocks/list` | GET | 全銘柄一覧（prices, events, dividend, benefit, tags, positions 込み） |
+| `/api/stocks/list` | GET | 全銘柄一覧（prices, events, dividend, benefit, tags, positions, realizedTrades 込み）。銘柄カードの個別フェッチを不要にする一括取得元 |
 | `/api/stocks/reorder` | PUT | 銘柄の表示順序変更 |
 | `/api/stocks/[stockId]/memo` | GET/PUT/DELETE | 株ノオト CRUD |
 | `/api/stocks/[stockId]/price` | GET/PUT | 株価情報（現在株価・目標・損切り） |
@@ -165,7 +165,7 @@ app_users (ユーザー管理)
 ### `hooks/stock/` — 銘柄データ
 | フック | 説明 |
 |--------|------|
-| `useStockData` | 銘柄データ一括取得（stocks/list API）、ファサード |
+| `useStockData` | 銘柄データ一括取得（stocks/list API）、ファサード。`DB_REALIZED_UPDATE` で当該銘柄の確定損益を再取得しキャッシュを同期 |
 | `useStockCrud` | 銘柄追加ロジック（楽観的更新 + DB INSERT） |
 | `useStockCardData` | 銘柄カード統合データ（10+フックのファサード） |
 | `useStockMemo` | 株ノオト（デバウンス自動保存） |
@@ -178,7 +178,7 @@ app_users (ユーザー管理)
 | `useStockBenefit` | 株主優待情報（500msデバウンス） |
 | `useStockTag` | タグ管理（楽観的更新） |
 | `useStockPriceHistory` | 個別銘柄の株価履歴取得（期間切替・スナップショットイベント連動・updateSnapshotPrice=過去株価修正） |
-| `useTradeMarkers` | 銘柄の購入ロット・売却履歴を取得しチャートマーカー用に整形（読み取り専用・購入/売却イベント連動でライブ更新） |
+| `useTradeMarkers` | 銘柄の購入ロット・売却履歴を取得しチャートマーカー用に整形（読み取り専用・購入/売却イベント連動でライブ更新。`initialData` で初回フェッチを省略可） |
 | `useStockSearch` | 銘柄検索（オートコンプリート） |
 
 ### `hooks/alert/` — アラート
@@ -367,6 +367,7 @@ app_users (ユーザー管理)
 | `sound.ts` | サウンドフィードバックエンジン（Web Audio API） |
 | `slack.ts` | Slack Webhook通知（フィードバック受信時） |
 | `positionCalc.ts` | ポジション計算・フォーマット関数 |
+| `realizedTradeSerialize.ts` | 確定損益レコードのDB→APIレスポンス変換（sell / portfolio / stocks-list の3ルートで共用） |
 | `dividendCalc.ts` | 配当計算・フォーマット関数 |
 | `shareholderCalc.ts` | 株主優待計算・フォーマット関数 |
 | `investmentCalendarCalc.ts` | 営業日計算・権利付最終日・日付フォーマット |

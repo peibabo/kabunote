@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withAuth } from '@/lib/apiHandler'
+import { serializeRealizedTrade } from '@/lib/realizedTradeSerialize'
 
 export const GET = withAuth(async ({ user }) => {
   const stocks = await prisma.stock.findMany({
@@ -16,6 +17,8 @@ export const GET = withAuth(async ({ user }) => {
       tags: { orderBy: { createdAt: 'asc' } },
       nextAction: true,
       newsItems: { orderBy: { order: 'asc' } },
+      // 銘柄カードが確定損益を個別フェッチしないよう一括で同梱する（N+1 API Call 対策）
+      realizedTrades: { orderBy: [{ sellDate: 'desc' }, { createdAt: 'desc' }] },
     }
   })
 
@@ -101,6 +104,7 @@ export const GET = withAuth(async ({ user }) => {
         url: n.url,
         comment: n.comment,
       })),
+      realizedTrades: stock.realizedTrades.map(t => serializeRealizedTrade(t, stock.symbol)),
       snapshotPrice: snapshotPriceMap.get(stock.id)?.price ?? null,
       snapshotDate: snapshotPriceMap.get(stock.id)?.date ?? null,
       snapshotValue: snapshotPriceMap.get(stock.id)?.value ?? null,

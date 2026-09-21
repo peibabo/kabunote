@@ -1,7 +1,11 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { createClient } from '@/lib/supabase-client';
 import { toast } from '@/lib/toast';
+import { apiFetch } from '@/lib/apiClient';
+import { useAppEvent } from '@/hooks/util/useAppEvent';
+import { APP_EVENTS } from '@/lib/appEvents';
 import { useStockCrud } from '@/hooks/stock/useStockCrud';
+import type { RealizedTrade } from '@/types/realizedTrade';
 
 // 後方互換: StockData を types/stock.ts から再エクスポート
 export type { StockData } from '@/types/stock';
@@ -148,6 +152,31 @@ export function useStockData(): UseStockDataReturn {
     }
     return map;
   }, [stockData]);
+
+  // 確定損益の一括キャッシュ同期。
+  //
+  // 銘柄カードは `StockData.realizedTrades` を initialData として受け取り初回フェッチを省くため、
+  // 売却・削除後にここを更新しないと、タブ切り替えでカードが再マウントした際に
+  // ページ読み込み時点の古い履歴が復活してしまう。
+  // 他イベント（positions / tags / price 等）は detail に新データが乗るため `useCalendarData` 側で
+  // 同期しているが、DB_REALIZED_UPDATE は一覧を持たないため当該銘柄のみ再取得する
+  // （1銘柄ぶんの1リクエストであり、カード数に比例しない）。
+  useAppEvent(APP_EVENTS.DB_REALIZED_UPDATE, (detail) => {
+    // detail.stockId は `stock-{symbol}` 形式（銘柄カード由来）と
+    // DBのcuid（ポートフォリオ画面由来）の両方があるため、symbol に正規化する
+    const symbol = detail?.symbol
+      ?? (detail?.stockId
+        ? (detail.stockId.startsWith('stock-')
+          ? detail.stockId.slice('stock-'.length)
+          : stockData.find(s => s.id === detail.stockId)?.symbol)
+        : undefined);
+    if (!symbol) return;
+
+    apiFetch<RealizedTrade[]>(`/api/stocks/stock-${symbol}/position/sell`)
+      .then(trades => updateStockData(symbol, { realizedTrades: trades }))
+      // 同期失敗時はカードのフック側が自前で再取得しているため、キャッシュ更新の失敗は無視する
+      .catch(() => {});
+  });
 
   // セッション切れ検知
   useEffect(() => {
