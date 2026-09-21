@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withAuth } from '@/lib/apiHandler'
-import { RANGE_DAYS } from '@/lib/snapshotCalc'
+import { resolveRangeDays } from '@/lib/snapshotCalc'
 import type { StockPriceHistoryItem } from '@/types/portfolio'
 
 /** URLが長くなりすぎないための上限（ダッシュボードの銘柄上限は20なので実質かからない） */
@@ -9,16 +9,14 @@ const MAX_STOCK_IDS = 50
 
 // GET: 複数銘柄の株価履歴をまとめて取得（?range=3M&stockIds=id1,id2）
 //
-// 銘柄別ルート（`/api/stocks/[stockId]/price-history`）を銘柄数ぶん呼ぶと、
-// 期間内の全スナップショットを読むスキャンが毎回繰り返される（N+1 API Call）。
-// ここでは1回のスキャンで全対象銘柄ぶんを返す。
-//
-// 静的セグメントは動的セグメントより優先されるため、このルートは
-// `/api/stocks/[stockId]/price-history` と衝突しない。
+// 以前は銘柄別ルート（`/api/stocks/[stockId]/price-history`）を銘柄数ぶん呼んでおり、
+// 期間内の全スナップショットを読むスキャンが毎回繰り返されていた（N+1 API Call）。
+// ここでは1回のスキャンで全対象銘柄ぶんを返し、銘柄別ルートは削除した。
+// クライアント側は `priceHistoryLoader` が同一フレームの要求をまとめてここへ送る。
 export const GET = withAuth(async ({ user, request }) => {
   const url = new URL(request.url)
   const range = url.searchParams.get('range') || '3M'
-  const days = RANGE_DAYS[range] ?? 90
+  const days = resolveRangeDays(range, 90)
 
   const requestedIds = (url.searchParams.get('stockIds') || '')
     .split(',')

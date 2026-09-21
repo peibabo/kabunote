@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withAuth } from '@/lib/apiHandler'
-import { RANGE_DAYS } from '@/lib/snapshotCalc'
+import { resolveRangeDays } from '@/lib/snapshotCalc'
 import { VALID_CHART_TYPES } from '@/types/portfolio'
 
 const MAX_CONTENT_LENGTH = 50
@@ -10,7 +10,7 @@ const MAX_CONTENT_LENGTH = 50
 export const GET = withAuth(async ({ user, request }) => {
   const url = new URL(request.url)
   const range = url.searchParams.get('range') || '1M'
-  const days = RANGE_DAYS[range] ?? 30
+  const days = resolveRangeDays(range, 30)
 
   const where: { userId: string; snapshotDate?: { gte: Date } } = {
     userId: user.id,

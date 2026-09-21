@@ -106,6 +106,41 @@ describe('useChartMemos', () => {
     expect(b.result.current.memos).toHaveLength(0)
   })
 
+  // メモは期間で絞って取得するため、他期間のキャッシュが古いままだと
+  // 期間切り替えで「保存したメモが出ない／消したメモが復活する」
+  it('保存すると他の期間のキャッシュは破棄され再取得される', async () => {
+    const otherRange = renderHook(() => useChartMemos('1Y'))
+    const current = renderHook(() => useChartMemos('1M'))
+    await waitFor(() => expect(otherRange.result.current.isLoading).toBe(false))
+    await waitFor(() => expect(current.result.current.isLoading).toBe(false))
+    expect(mockApiFetch).toHaveBeenCalledTimes(2)
+
+    await act(async () => {
+      await current.result.current.saveMemo('2026-01-01', 'stocks', '7203', '更新後')
+    })
+
+    // 1Y は購読中なので再取得が走る（1M は mutate 済みなので取得しない）
+    await waitFor(() => expect(mockApiFetch).toHaveBeenCalledTimes(3))
+    expect(mockApiFetch).toHaveBeenLastCalledWith('/api/portfolio/chart-memos?range=1Y')
+  })
+
+  it('削除しても他の期間のキャッシュは破棄される', async () => {
+    const otherRange = renderHook(() => useChartMemos('1Y'))
+    const current = renderHook(() => useChartMemos('1M'))
+    await waitFor(() => expect(otherRange.result.current.isLoading).toBe(false))
+    await waitFor(() => expect(current.result.current.isLoading).toBe(false))
+    mockApiFetch.mockClear()
+
+    await act(async () => {
+      await current.result.current.deleteMemo('2026-01-01', 'stocks', '7203')
+    })
+
+    // DELETE 1本 + 1Y の再取得
+    await waitFor(() =>
+      expect(mockApiFetch).toHaveBeenCalledWith('/api/portfolio/chart-memos?range=1Y')
+    )
+  })
+
   it('保存失敗時は false を返しキャッシュを変更しない', async () => {
     mockApiPut.mockRejectedValue(new Error('失敗'))
 

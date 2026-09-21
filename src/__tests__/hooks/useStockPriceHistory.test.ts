@@ -117,7 +117,10 @@ describe('useStockPriceHistory', () => {
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2))
   })
 
-  it('株価修正に失敗したら error を出す', async () => {
+  // 株価修正の失敗は false で伝えるだけ。ChartSnapshotEditor が自前でメッセージを出す。
+  // ここで error に載せると StockMiniChart がチャートごとエラー表示に差し替え、
+  // 解除経路が無いためカードを閉じるまで戻らなくなる
+  it('株価修正に失敗しても false を返すだけでチャートをエラーにしない', async () => {
     const fetchMock = mockBulkFetch()
     vi.stubGlobal('fetch', fetchMock)
     mockPatchSnapshotPrices.mockRejectedValue(new Error('修正に失敗しました'))
@@ -131,7 +134,8 @@ describe('useStockPriceHistory', () => {
     })
 
     expect(ok).toBe(false)
-    expect(result.current.error).toBe('修正に失敗しました')
+    expect(result.current.error).toBeNull()
+    expect(result.current.data[0].price).toBe(2500)
   })
 
   it('取得に失敗したら error を返す', async () => {

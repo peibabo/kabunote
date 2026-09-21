@@ -113,6 +113,15 @@ describe('GET /api/stocks/price-history', () => {
     expect(where.snapshotDate.gte).toBeInstanceOf(Date)
   })
 
+  // 素の RANGE_DAYS[range] だと Object.prototype が返り、日付フィルタが外れて全期間スキャンになる
+  it('range にプロトタイプのキーを渡されても日付フィルタを外さない', async () => {
+    const req = createRequest('GET', `${BASE}?range=__proto__&stockIds=stock-a`)
+    await GET(req)
+
+    const where = prismaMock.portfolioSnapshot.findMany.mock.calls[0][0].where
+    expect(where.snapshotDate.gte).toBeInstanceOf(Date)
+  })
+
   it('対象銘柄のみをinclude条件に渡す（全銘柄を読まない）', async () => {
     const req = createRequest('GET', `${BASE}?range=3M&stockIds=stock-a,stock-b`)
     await GET(req)

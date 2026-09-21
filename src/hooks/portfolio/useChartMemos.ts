@@ -4,7 +4,7 @@ import { useCallback, useMemo } from 'react';
 import { apiFetch, apiPut } from '@/lib/apiClient';
 import type { HistoryRange, ChartMemoData, ChartMemoMap, ChartType } from '@/types/portfolio';
 import { chartMemoKey } from '@/types/portfolio';
-import { useSharedFetch, mutateShared } from '@/hooks/util/useSharedFetch';
+import { useSharedFetch, mutateShared, invalidateShared } from '@/hooks/util/useSharedFetch';
 
 /**
  * 共有キャッシュのキー。
@@ -12,16 +12,34 @@ import { useSharedFetch, mutateShared } from '@/hooks/util/useSharedFetch';
  * 双方から呼ばれ、**全インスタンスが完全に同じURL**を叩いていたため、
  * 期間ごとに1回だけ取得して共有する（N+1 API Call 対策）。
  */
-const cacheKey = (range: HistoryRange) => `chart-memos|${range}`;
+const CACHE_PREFIX = 'chart-memos|';
+const cacheKey = (range: HistoryRange) => `${CACHE_PREFIX}${range}`;
+
+/**
+ * キーから期間を復元して取得する。
+ * `useSharedFetch` の fetcher はキーだけから内容が決まる必要があるため
+ * （クロージャの range を見ると、再取得時にキーと中身が食い違う）。
+ */
+function fetchByCacheKey(key: string): Promise<ChartMemoData[]> {
+  const range = key.slice(CACHE_PREFIX.length);
+  return apiFetch<ChartMemoData[]>(`/api/portfolio/chart-memos?range=${range}`);
+}
+
+/**
+ * 編集中の期間以外のキャッシュを破棄する。
+ * メモは期間で絞って取得するため、保存・削除した1件は他の期間のリストにも影響する。
+ * キャッシュはセッション中失効しないので、ここで捨てないと期間を切り替えたときに
+ * 古いリスト（保存したメモが出ない／消したメモが復活する）が使われてしまう。
+ */
+function invalidateOtherRanges(currentKey: string): void {
+  invalidateShared(key => key.startsWith(CACHE_PREFIX) && key !== currentKey);
+}
 
 const EMPTY: ChartMemoData[] = [];
 
 export function useChartMemos(range: HistoryRange) {
   const key = cacheKey(range);
-  const { data, isLoading, refetch } = useSharedFetch<ChartMemoData[]>(
-    key,
-    () => apiFetch<ChartMemoData[]>(`/api/portfolio/chart-memos?range=${range}`),
-  );
+  const { data, isLoading, refetch } = useSharedFetch<ChartMemoData[]>(key, fetchByCacheKey);
 
   const memos = data ?? EMPTY;
 
@@ -56,6 +74,7 @@ export function useChartMemos(range: HistoryRange) {
         next[index] = saved;
         return next;
       });
+      invalidateOtherRanges(cacheKey(range));
       return true;
     } catch {
       return false;
@@ -83,6 +102,7 @@ export function useChartMemos(range: HistoryRange) {
           chartMemoKey(m.snapshotDate, m.chartType as ChartType, m.symbol) !== target
         )
       );
+      invalidateOtherRanges(cacheKey(range));
       return true;
     } catch {
       return false;

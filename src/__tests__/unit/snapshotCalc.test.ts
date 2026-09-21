@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { buildSnapshotData, recalcSnapshotAggregates, computeStockSnapshotValue, RANGE_DAYS } from '@/lib/snapshotCalc'
+import { buildSnapshotData, recalcSnapshotAggregates, computeStockSnapshotValue, RANGE_DAYS, resolveRangeDays } from '@/lib/snapshotCalc'
 import { createPosition } from '../helpers/mockFactories'
 
 describe('buildSnapshotData', () => {
@@ -295,5 +295,25 @@ describe('RANGE_DAYS', () => {
     expect(RANGE_DAYS['6M']).toBe(180)
     expect(RANGE_DAYS['1Y']).toBe(365)
     expect(RANGE_DAYS['2Y']).toBe(730)
+  })
+})
+
+describe('resolveRangeDays', () => {
+  it('既知の期間は日数を返す', () => {
+    expect(resolveRangeDays('1M', 90)).toBe(30)
+    expect(resolveRangeDays('2Y', 90)).toBe(730)
+  })
+
+  it('未知の期間は fallback を返す', () => {
+    expect(resolveRangeDays('10Y', 90)).toBe(90)
+    expect(resolveRangeDays('', 30)).toBe(30)
+  })
+
+  // 素の `RANGE_DAYS[range] ?? fallback` だと Object.prototype 等が返り、
+  // `days > 0` が false になって日付フィルタが外れる（全期間スキャン）
+  it('プロトタイプのキーでも fallback を返す', () => {
+    expect(resolveRangeDays('__proto__', 90)).toBe(90)
+    expect(resolveRangeDays('constructor', 90)).toBe(90)
+    expect(resolveRangeDays('toString', 90)).toBe(90)
   })
 })

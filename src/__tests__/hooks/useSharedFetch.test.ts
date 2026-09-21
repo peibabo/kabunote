@@ -77,6 +77,35 @@ describe('useSharedFetch', () => {
     expect(result.current.data).toBeUndefined()
   })
 
+  // 失敗を「取得済み」として永久キャッシュすると、従来のマウント毎取得より退行する
+  it('失敗したキーは再マウント時に再試行する', async () => {
+    const fetcher = vi.fn()
+      .mockRejectedValueOnce(new Error('一時的な失敗'))
+      .mockResolvedValueOnce(['a'])
+
+    const first = renderHook(() => useSharedFetch('k1', fetcher))
+    await waitFor(() => expect(first.result.current.error).toBe('一時的な失敗'))
+    expect(first.result.current.isLoading).toBe(false)
+    first.unmount()
+
+    const second = renderHook(() => useSharedFetch('k1', fetcher))
+    await waitFor(() => expect(second.result.current.data).toEqual(['a']))
+
+    expect(fetcher).toHaveBeenCalledTimes(2)
+    expect(second.result.current.error).toBeNull()
+  })
+
+  it('成功したキーは再マウントしても再試行しない', async () => {
+    const fetcher = vi.fn().mockResolvedValue(['a'])
+
+    const first = renderHook(() => useSharedFetch('k1', fetcher))
+    await waitFor(() => expect(first.result.current.isLoading).toBe(false))
+    first.unmount()
+    renderHook(() => useSharedFetch('k1', fetcher))
+
+    expect(fetcher).toHaveBeenCalledTimes(1)
+  })
+
   it('mutateShared は同一キーの全インスタンスに反映される', async () => {
     const fetcher = vi.fn().mockResolvedValue(['a'])
 
@@ -122,6 +151,55 @@ describe('useSharedFetch', () => {
     expect(fetcher).toHaveBeenCalledTimes(1)
   })
 
+  it('mutateShared は未取得のキーには何もしない（fetcher無しエントリを作らない）', async () => {
+    const fetcher = vi.fn().mockResolvedValue(['fetched'])
+
+    mutateShared<string[]>('k1', () => ['injected'])
+
+    const { result } = renderHook(() => useSharedFetch<string[]>('k1', fetcher))
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
+
+    // 差し込みは無視され、通常どおり取得される
+    expect(result.current.data).toEqual(['fetched'])
+    expect(fetcher).toHaveBeenCalledTimes(1)
+  })
+
+  // 無効化前に飛んだ古いレスポンスを「最新」として確定させないこと
+  it('取得中に invalidate されたら進行中の結果を捨てて取り直す', async () => {
+    let resolveFirst: (v: string[]) => void = () => {}
+    const fetcher = vi.fn()
+      .mockImplementationOnce(() => new Promise<string[]>(res => { resolveFirst = res }))
+      .mockResolvedValueOnce(['new'])
+
+    const { result } = renderHook(() => useSharedFetch<string[]>('k1', fetcher))
+    await waitFor(() => expect(fetcher).toHaveBeenCalledTimes(1))
+
+    // 初回取得の最中に無効化 → 続いて古いレスポンスが到着する
+    await act(async () => {
+      invalidateShared(key => key === 'k1')
+      resolveFirst(['stale'])
+    })
+
+    await waitFor(() => expect(result.current.data).toEqual(['new']))
+    expect(fetcher).toHaveBeenCalledTimes(2)
+  })
+
+  // fetcher はエントリに保持され、別インスタンス経由で呼ばれるため key だけで決まる必要がある
+  it('invalidate 時の再取得には引数の key が渡る', async () => {
+    const fetcher = vi.fn().mockImplementation((key: string) => Promise.resolve([key]))
+
+    const { result } = renderHook(() => useSharedFetch<string[]>('k1', fetcher))
+    await waitFor(() => expect(result.current.data).toEqual(['k1']))
+
+    await act(async () => {
+      invalidateShared(key => key === 'k1')
+    })
+
+    await waitFor(() => expect(fetcher).toHaveBeenCalledTimes(2))
+    expect(fetcher).toHaveBeenLastCalledWith('k1')
+    expect(result.current.data).toEqual(['k1'])
+  })
+
   // ログアウト時に前のユーザーのデータが残らないこと
   it('clearSharedFetchCache 後は取得し直す', async () => {
     const fetcher = vi.fn().mockResolvedValue(['a'])
@@ -135,6 +213,21 @@ describe('useSharedFetch', () => {
     const second = renderHook(() => useSharedFetch('k1', fetcher))
     await waitFor(() => expect(second.result.current.isLoading).toBe(false))
 
+    expect(fetcher).toHaveBeenCalledTimes(2)
+  })
+
+  // 単に消すだけだと、マウントしたままのコンポーネントが読み込み中で固まる
+  it('clearSharedFetchCache はマウント中のインスタンスを読み込み中で放置しない', async () => {
+    const fetcher = vi.fn().mockResolvedValue(['a'])
+
+    const { result } = renderHook(() => useSharedFetch<string[]>('k1', fetcher))
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
+
+    await act(async () => {
+      clearSharedFetchCache()
+    })
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false))
     expect(fetcher).toHaveBeenCalledTimes(2)
   })
 })

@@ -16,10 +16,16 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 interface CacheEntry<T> {
   data?: T;
   error?: string;
-  /** 一度でも取得を試みたか（失敗後に isLoading を解除するため） */
+  /** 取得が確定したか（成功・失敗の両方。失敗後に isLoading を解除するため） */
   loaded: boolean;
   /** 進行中のリクエスト。同一キーの同時マウントはこれを共有する */
   promise?: Promise<void>;
+  /**
+   * 世代番号。`invalidateShared` で加算する。
+   * 進行中リクエストは自分の世代とズレたら結果を捨てる
+   * （無効化前に飛んだ古いレスポンスを「最新」として確定させないため）。
+   */
+  generation: number;
   /** 再取得（invalidate）用に最後に使った fetcher を保持する */
   fetcher?: (key: string) => Promise<unknown>;
   subscribers: Set<() => void>;
@@ -30,7 +36,7 @@ const cache = new Map<string, CacheEntry<unknown>>();
 function entryFor<T>(key: string): CacheEntry<T> {
   let entry = cache.get(key);
   if (!entry) {
-    entry = { loaded: false, subscribers: new Set() };
+    entry = { loaded: false, generation: 0, subscribers: new Set() };
     cache.set(key, entry);
   }
   return entry as CacheEntry<T>;
@@ -45,29 +51,58 @@ function startFetch<T>(key: string, fetcher: (key: string) => Promise<T>): Promi
   entry.fetcher = fetcher as (key: string) => Promise<unknown>;
   if (entry.promise) return entry.promise;
 
+  const generation = entry.generation;
+  const isCurrent = () => entry.generation === generation;
+
   entry.promise = (async () => {
     try {
-      entry.data = await fetcher(key);
+      const data = await fetcher(key);
+      if (!isCurrent()) return;
+      entry.data = data;
       entry.error = undefined;
     } catch (e) {
+      if (!isCurrent()) return;
       entry.error = e instanceof Error ? e.message : '取得に失敗しました';
     } finally {
-      entry.loaded = true;
-      entry.promise = undefined;
-      notify(entry);
+      // 世代がズレている＝ invalidate 済み。新しいリクエストの promise を消さないよう触らない
+      if (isCurrent()) {
+        entry.loaded = true;
+        entry.promise = undefined;
+        notify(entry);
+      }
     }
   })();
 
   return entry.promise;
 }
 
+/** 購読開始時に取得すべきか。失敗したエントリは次の購読で再試行する */
+function needsFetch(entry: CacheEntry<unknown>): boolean {
+  if (entry.promise) return false;
+  return !entry.loaded || entry.error !== undefined;
+}
+
+/** 世代を進めて進行中リクエストを無効化し、未取得状態に戻す */
+function reset(entry: CacheEntry<unknown>): void {
+  entry.generation += 1;
+  entry.data = undefined;
+  entry.error = undefined;
+  entry.loaded = false;
+  entry.promise = undefined;
+}
+
 /**
  * キャッシュ値を手元で書き換える（保存・削除後の楽観的更新）。
  * 同一キーの全インスタンスに反映される。
+ *
+ * まだ誰も取得していないキーには何もしない。取得前に値を差し込むと
+ * 「取得済みだが fetcher が無い」エントリができ、以後一切取得されなくなるため。
  */
 export function mutateShared<T>(key: string, updater: (prev: T | undefined) => T): void {
-  const entry = entryFor<T>(key);
+  const entry = cache.get(key) as CacheEntry<T> | undefined;
+  if (!entry) return;
   entry.data = updater(entry.data);
+  entry.error = undefined;
   entry.loaded = true;
   notify(entry);
 }
@@ -77,10 +112,9 @@ export function mutateShared<T>(key: string, updater: (prev: T | undefined) => T
  * 購読者がいないキーは次回マウント時に取得されるので捨てるだけでよい。
  */
 export function invalidateShared(predicate: (key: string) => boolean): void {
-  for (const [key, entry] of cache) {
+  for (const [key, entry] of [...cache]) {
     if (!predicate(key)) continue;
-    entry.data = undefined;
-    entry.loaded = false;
+    reset(entry);
     if (entry.subscribers.size > 0 && entry.fetcher) {
       void startFetch(key, entry.fetcher);
     } else {
@@ -94,14 +128,13 @@ export function invalidateShared(predicate: (key: string) => boolean): void {
  * キャッシュを完全に破棄する。
  * ログアウト時は必ず呼ぶこと（同一タブで別ユーザーがログインした際に
  * 前のユーザーのデータが残るため）。テストのリセットにも使う。
+ *
+ * 購読中のキーは `invalidateShared` と同じ扱い（破棄＋再取得）。
+ * 単に消すだけだと、マウントしたままのコンポーネントが
+ * 再取得の契機を失って永久に読み込み中のまま固まる。
  */
 export function clearSharedFetchCache(): void {
-  for (const entry of cache.values()) {
-    entry.data = undefined;
-    entry.loaded = false;
-    notify(entry);
-  }
-  cache.clear();
+  invalidateShared(() => true);
 }
 
 export interface UseSharedFetchReturn<T> {
@@ -114,9 +147,14 @@ export interface UseSharedFetchReturn<T> {
 /**
  * キー単位でフェッチ結果を共有するフック。
  *
+ * **fetcher は引数の `key` だけから取得内容を決めること。**
+ * fetcher はエントリに保持され、`invalidateShared` の再取得では
+ * 別インスタンス（既にアンマウントしている場合もある）が登録したものが呼ばれる。
+ * クロージャの変数（期間や銘柄）を参照すると、キーと中身が食い違ったデータが
+ * キャッシュに入りうる。必要な情報はすべてキーに載せて、fetcher 側で解くこと。
+ *
  * @param key キャッシュキー。null の間はフェッチしない
  * @param fetcher キーを受け取って値を返す関数。毎レンダリング新しい関数でよい
- *                （ref に退避するため識別子は依存に含めない。キーが同じなら同じ取得とみなす）
  */
 export function useSharedFetch<T>(
   key: string | null,
@@ -134,8 +172,7 @@ export function useSharedFetch<T>(
     const onChange = () => forceRender(n => n + 1);
     entry.subscribers.add(onChange);
 
-    // 未取得のときだけ開始する。進行中なら startFetch 側で Promise を共有する
-    if (!entry.loaded && !entry.promise) {
+    if (needsFetch(entry)) {
       void startFetch<T>(key, k => fetcherRef.current(k));
     } else {
       // 既にキャッシュ済み。マウント直後の値を反映させる

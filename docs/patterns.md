@@ -336,6 +336,24 @@ const { data, isLoading, error, refetch } = useSharedFetch(
 - **ログアウト時は `clearSharedFetchCache()` を呼ぶこと**。モジュールスコープのキャッシュなので、
   同一タブで別ユーザーがログインすると前のユーザーのデータが見えてしまう（`useStockData` の `SIGNED_OUT` で配線済み）
 
+### 使うときの落とし穴
+
+**fetcher は引数の `key` だけから取得内容を決めること。**
+fetcher はエントリに保持され、`invalidateShared` の再取得では別インスタンス（既にアンマウント済みの
+場合もある）が登録したものが呼ばれる。クロージャの `range` / `stockId` を参照すると、
+**キーと中身が食い違ったデータ**がキャッシュに入る。必要な情報はキーに載せて fetcher 側で解く
+（`fetchByCacheKey` の実装例を参照）。
+
+**キーを分割して取得しているデータは、更新時に他キーも無効化すること。**
+キャッシュはセッション中に自然失効しない。チャートメモのように期間で絞って取得していると、
+1件保存しただけでも他の期間のリストが古くなる（期間を切り替えると保存したメモが出ない／
+消したメモが復活する）。`mutateShared` は現在のキーだけなので、他キーは `invalidateShared` で捨てる。
+
+**ミューテーションの失敗を取得エラーに載せないこと。**
+`error` は共有キャッシュの取得エラーなので、解除の契機は再取得しかない。
+保存失敗をここに載せると、消費側が `error` で早期 return する実装（`StockMiniChart`）では
+**アンマウントまでエラー表示から戻らない**。失敗は戻り値で伝え、入力UI側で表示する。
+
 ## 銘柄別リクエストの一括化 — `priceHistoryLoader`
 
 「URLの形は同じで **ID だけ違う**リクエストがカード数ぶん飛ぶ」ケースは、キャッシュ共有では減らない。
@@ -345,6 +363,13 @@ const { data, isLoading, error, refetch } = useSharedFetch(
 - **全銘柄を先読みしない**のが要点。表示中のカードぶんだけ問い合わせるので、カードが数枚のときに転送量が増えない
 - 待ち合わせはマイクロタスクではなく `setTimeout(0)`。カードのマウントは同一フレーム内でもレンダリングが分かれることがある
 - `useSharedFetch` と組み合わせる（キャッシュは銘柄単位、HTTPは期間単位で1本）
+
+## 期間パラメータは `resolveRangeDays` で解決する
+
+`RANGE_DAYS[range] ?? fallback` と書いてはいけない。素のオブジェクトリテラルなので
+`?range=__proto__` や `constructor` で `Object.prototype` 等が返り、`??` に捕まらないまま
+「日数が数値でない」値が通る。`days > 0` が false になって**日付フィルタが外れ、全期間をスキャンする**。
+`resolveRangeDays(range, fallback)`（`src/lib/snapshotCalc.ts`）が自前プロパティだけを見て解決する。
 
 ## 確定損益フックの共通ベース
 
