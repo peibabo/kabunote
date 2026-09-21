@@ -1,6 +1,7 @@
 'use client';
 
-import { PositionSummary, ProfitLossInfo } from '@/types/positions';
+import { Position, PositionSummary, ProfitLossInfo } from '@/types/positions';
+import type { RealizedTrade } from '@/types/realizedTrade';
 import { useSoundOnChange } from '@/hooks/auth/useSoundOnChange';
 import StockMiniChart from '@/components/stock/StockMiniChart';
 import { calcPriceChange, formatPriceChange } from '@/lib/priceChangeCalc';
@@ -23,6 +24,8 @@ interface AnalysisSubTabProps {
   snapshotDate: string | null;
   snapshotValue: number | null;
   snapshotCost: number | null;
+  initialPositions?: Position[];
+  initialRealizedTrades?: RealizedTrade[];
 }
 
 export default function AnalysisSubTab({
@@ -41,6 +44,8 @@ export default function AnalysisSubTab({
   snapshotDate,
   snapshotValue,
   snapshotCost,
+  initialPositions,
+  initialRealizedTrades,
 }: AnalysisSubTabProps) {
   const progressData = calculateProgress(targetPrice, stopLoss, currentPrice);
   const riskRewardRatio = calculateRiskRewardRatio(profitLossInfo);
@@ -183,6 +188,11 @@ export default function AnalysisSubTab({
           symbol={symbol}
           targetPrice={parseFloat(targetPrice) || undefined}
           stopLossPrice={parseFloat(stopLoss) || undefined}
+          initialTradeMarkers={
+            initialPositions && initialRealizedTrades
+              ? { positions: initialPositions, trades: initialRealizedTrades }
+              : undefined
+          }
         />
       </div>
     </div>

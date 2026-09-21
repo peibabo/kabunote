@@ -319,14 +319,69 @@ export function useExternalLinks() {
 
 ## 確定損益フックの共通ベース
 
-`useRealizedTradesBase(endpoint, stockId?)`（`src/hooks/util/useRealizedTradesBase.ts`）が取得と再取得を担う。
+`useRealizedTradesBase(endpoint, stockId?, options?)`（`src/hooks/util/useRealizedTradesBase.ts`）が取得と再取得を担う。
 
 | フック | エンドポイント | 再取得の条件 |
 |---|---|---|
-| `useRealizedTrades(stockId)` | `/api/stocks/{stockId}/position/sell` | detail が無い or `detail.stockId` が一致 |
+| `useRealizedTrades(stockId, options?)` | `/api/stocks/{stockId}/position/sell` | detail が無い or `detail.stockId` が一致 |
 | `usePortfolioRealizedTrades()` | `/api/portfolio/realized` | すべての `DB_REALIZED_UPDATE` |
 
 削除操作（`deleteTrade`）は引数の形が異なるため各フック側で公開する。
+
+DB→APIレスポンスの変換は `serializeRealizedTrade`（`src/lib/realizedTradeSerialize.ts`）に集約する。
+`sell` / `portfolio/realized` / `stocks/list` の3ルートで同じ形を返す必要があるため、各ルートでインライン整形しないこと。
+
+---
+
+## 銘柄カードの一括取得（N+1 API Call 対策）
+
+ダッシュボードは表示中の全銘柄ぶん `StockCard` を同時マウントする（仮想化なし・`StockGrid`）。
+タブ状態は `kabunote-active-tab-{symbol}` として**銘柄ごとに localStorage 保存**されるため、
+複数銘柄で「管理」「投資戦略」タブを開いたままにしていると、そのタブ内のフックが銘柄数ぶん同時発火する。
+これは Sentry の **N+1 API Call**（`/api/stocks/*/...`）として検知される。
+
+**銘柄カード内のフックは、銘柄単位のエンドポイントをマウント時に叩いてはいけない。**
+`/api/stocks/list` が一括取得しているデータを `initialData` として受け取り、初回フェッチを省略する。
+
+| フック | initialData の出所 | 受け渡し経路 |
+|---|---|---|
+| `useStockPosition` | `StockData.positions` | `StockCard` → `ManagementTab` → `PositionsManagement` |
+| `useRealizedTrades` | `StockData.realizedTrades` | `StockCard` → `ManagementTab` → `PositionsManagement` → `RealizedTradeHistory` |
+| `useTradeMarkers` | `StockData.positions` + `realizedTrades` | `StockCard` → `InvestmentStrategyTab` → `AnalysisSubTab` → `StockMiniChart` |
+
+実装上の注意：
+
+- `initialData` の判定は `!== undefined` で行う（**空配列も「取得済み」として扱う**。`[]` でフェッチしてしまうと対策にならない）
+- `isLoading` の初期値は `!hasInitialData`（`true` 固定のままだと `isLoading` ガードで中身が描画されない）
+- 初回フェッチを省略しても**イベント購読は必ず登録する**。売却・削除後の再取得は `DB_REALIZED_UPDATE` / `DB_POSITION_UPDATE` に依存するため
+
+### 一括キャッシュを必ず同期させること
+
+**`initialData` を足したら、同じデータの一括キャッシュ（`useStockData` の `stockData`）も更新経路を用意する。**
+`StockCard` のタブは条件レンダリングで、タブを切り替えるたびに**アンマウント／再マウント**する。
+`initialData` は `useState` の初期値として一度だけ読まれるため、一括キャッシュが古いままだと
+「売却 → 別タブ → 戻る」で**ページ読み込み時点の古いデータが復活する**（フックが初回フェッチを省くため自力で治らない）。
+
+| イベント | 同期方法 | 場所 |
+|---|---|---|
+| `DB_POSITION_UPDATE` / `DB_TAG_UPDATE` / `DB_PRICE_UPDATE` 等 | detail に新データが乗るのでそのまま `updateStockData` | `useCalendarData` |
+| `DB_REALIZED_UPDATE` | detail が一覧を持たないため、当該銘柄のみ再取得して `updateStockData` | `useStockData` |
+
+### イベントの宛先判定は symbol を軸にする
+
+`stockId` には **`stock-{symbol}` 形式とDBのcuid が混在する**（`resolveStockId` が両方を受けるため）。
+`StockMiniChart` に渡る `stockId` は cuid なので、`detail.stockId === stockId` だけで判定すると**永久に一致しない**。
+発火元ごとに detail の形も違う（売却は `symbol` + `stock-{symbol}`、削除は `stock-{symbol}` のみ、
+ポートフォリオ由来は cuid のみ）ため、`symbol` を軸に両形式を許容すること（`useTradeMarkers` の `isForThisStock` 参照）。
+テストでも**本番と同じ cuid を使う**こと（`'stock-7203'` で書くと一致してしまい、バグを検知できない）。
+
+### 既知のトレードオフ
+
+`/api/stocks/list` の `realizedTrades` は件数無制限。カードの確定損益履歴が
+件数・合計・勝敗数をクライアント側で集計しているため、`take` で切ると**サマリーが静かに狂う**。
+初回ペイロードが問題になる規模（数千件）に達したら、サーバー側集計＋ページングに切り替えること。
+
+銘柄カードに新しい銘柄単位フェッチを足すときは、まず `/api/stocks/list` に同梱できないか検討する。
 
 ---
 

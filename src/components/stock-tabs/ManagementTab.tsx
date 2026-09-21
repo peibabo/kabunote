@@ -8,6 +8,7 @@ import DividendManagement from '@/components/stock-tabs/DividendManagement';
 import ShareholderBenefitManagement from '@/components/stock-tabs/ShareholderBenefitManagement';
 import PositionsManagement from '@/components/stock-tabs/PositionsManagement';
 import { Position } from '@/types/positions';
+import type { RealizedTrade } from '@/types/realizedTrade';
 
 interface ManagementTabProps {
   symbol: string;
@@ -18,6 +19,7 @@ interface ManagementTabProps {
   onShareholderMeetingSettingsChange: (settings: ShareholderMeetingSettings) => void;
   positionSummary: PositionSummary;
   initialPositions?: Position[];
+  initialRealizedTrades?: RealizedTrade[];
   initialDividend?: {
     dividendPerShare: number | null;
     frequency: number;
@@ -43,6 +45,7 @@ export default function ManagementTab({
   onShareholderMeetingSettingsChange,
   positionSummary,
   initialPositions,
+  initialRealizedTrades,
   initialDividend,
   initialBenefit,
 }: ManagementTabProps) {
@@ -80,6 +83,7 @@ export default function ManagementTab({
             stockId={`stock-${symbol}`}
             onPositionManagerOpen={onPositionManagerOpen}
             initialPositions={initialPositions}
+            initialRealizedTrades={initialRealizedTrades}
           />
         </div>
 

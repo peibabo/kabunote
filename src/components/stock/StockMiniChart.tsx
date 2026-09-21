@@ -22,6 +22,8 @@ import { formatYAxisValue } from '@/lib/chartFormat';
 import type { TradeMarkerCell } from '@/lib/stockMiniChartCalc';
 import { chartMemoKey } from '@/types/portfolio';
 import type { HistoryRange, ChartMemoMap } from '@/types/portfolio';
+import type { Position } from '@/types/positions';
+import type { RealizedTrade } from '@/types/realizedTrade';
 import ChartMemoModal from '../portfolio/ChartMemoModal';
 import type { EditablePrice } from '../portfolio/chart/ChartSnapshotEditor';
 
@@ -30,6 +32,8 @@ interface StockMiniChartProps {
   symbol: string;
   targetPrice?: number;
   stopLossPrice?: number;
+  /** 一括取得済みの購入ロット・売却履歴。渡すとマーカー用の個別フェッチを行わない */
+  initialTradeMarkers?: { positions: Position[]; trades: RealizedTrade[] };
 }
 
 const RANGE_OPTIONS: { key: HistoryRange; label: string }[] = [
@@ -121,10 +125,11 @@ export default function StockMiniChart({
   symbol,
   targetPrice,
   stopLossPrice,
+  initialTradeMarkers,
 }: StockMiniChartProps) {
   const { data, range, setRange, isLoading, error, updateSnapshotPrice } = useStockPriceHistory(stockId);
   const { memoMap, saveMemo, deleteMemo } = useChartMemos(range);
-  const { buys, sells } = useTradeMarkers(stockId);
+  const { buys, sells } = useTradeMarkers(stockId, symbol, initialTradeMarkers ? { initialData: initialTradeMarkers } : undefined);
   const [modalDate, setModalDate] = useState<string | null>(null);
 
   // 購入・売却日を最寄りのスナップショット日に対応付けたマーカーマップ

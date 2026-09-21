@@ -26,6 +26,19 @@ const mockStockDbData = {
     memo: 'テスト',
     createdAt: new Date('2024-03-01'),
   }],
+  realizedTrades: [{
+    id: 'trade-1',
+    stockId: 'stock-uuid-1',
+    soldShares: 50,
+    sellPrice: { toString: () => '2800' },
+    costBasis: { toString: () => '2400' },
+    sellDate: '2024-05-10',
+    realizedPL: { toString: () => '20000' },
+    taxRate: { toString: () => '0.20315' },
+    consumedLots: [{ shares: 50, purchaseDate: '2024-03-01' }],
+    memo: null,
+    createdAt: new Date('2024-05-10'),
+  }],
   events: [],
   dividend: null,
   benefit: null,
@@ -86,8 +99,30 @@ describe('GET /api/stocks/list', () => {
           prices: true,
           positions: expect.anything(),
           tags: expect.anything(),
+          realizedTrades: expect.anything(),
         }),
       })
     )
+  })
+
+  // 銘柄カードが確定損益を個別フェッチしないよう、一括取得に同梱されていること（N+1 API Call 対策）
+  it('確定損益を同梱し、Decimal・consumedLots・symbolを正規化する', async () => {
+    const req = createRequest('GET', 'http://localhost:3000/api/stocks/list')
+    const res = await GET(req)
+    const json = await getJson(res)
+    const trades = json.data[0].realizedTrades
+    expect(trades).toHaveLength(1)
+    expect(trades[0]).toMatchObject({
+      id: 'trade-1',
+      symbol: '7203',
+      soldShares: 50,
+      sellPrice: 2800,
+      costBasis: 2400,
+      realizedPL: 20000,
+      taxRate: 0.20315,
+      sellDate: '2024-05-10',
+      memo: '',
+      consumedLots: [{ shares: 50, purchaseDate: '2024-03-01' }],
+    })
   })
 })

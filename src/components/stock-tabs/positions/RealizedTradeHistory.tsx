@@ -4,13 +4,16 @@ import { useRealizedTrades } from '@/hooks/stock/useRealizedTrades';
 import { summarizeRealizedTrades, formatAcquisitionPeriod } from '@/lib/realizedTradeCalc';
 import { formatPrice, formatProfitLoss, formatShares } from '@/lib/positionCalc';
 import { playSound } from '@/lib/sound';
+import type { RealizedTrade } from '@/types/realizedTrade';
 
 interface RealizedTradeHistoryProps {
   stockId: string;
+  /** 一括取得済みの確定損益。渡すと個別フェッチを行わない */
+  initialTrades?: RealizedTrade[];
 }
 
-export default function RealizedTradeHistory({ stockId }: RealizedTradeHistoryProps) {
-  const { trades, isLoading, deleteTrade } = useRealizedTrades(stockId);
+export default function RealizedTradeHistory({ stockId, initialTrades }: RealizedTradeHistoryProps) {
+  const { trades, isLoading, deleteTrade } = useRealizedTrades(stockId, initialTrades ? { initialData: initialTrades } : undefined);
 
   if (isLoading || trades.length === 0) return null;
 

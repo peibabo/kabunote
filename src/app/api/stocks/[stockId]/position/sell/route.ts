@@ -5,34 +5,13 @@ import { withAuth, withStock } from '@/lib/apiHandler'
 import { resolveStockId } from '@/lib/resolveStockId'
 import { isValidRequiredShares, isValidRequiredPrice } from '@/lib/validation'
 import { calculatePositionSummary } from '@/lib/positionCalc'
-import { parseConsumedLots } from '@/lib/realizedTradeCalc'
+import { serializeRealizedTrade } from '@/lib/realizedTradeSerialize'
 import { getTodayJST } from '@/lib/dateJst'
 import type { Position } from '@/types/positions'
 import type { ConsumedLot } from '@/types/realizedTrade'
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
 const MAX_MEMO_LENGTH = 500
-
-// DBレコード → APIレスポンス形式
-function serializeTrade(t: {
-  id: string; stockId: string; soldShares: number; sellPrice: unknown; costBasis: unknown;
-  sellDate: string; realizedPL: unknown; taxRate: unknown; consumedLots: unknown; memo: string | null; createdAt: Date
-}, symbol: string) {
-  return {
-    id: t.id,
-    stockId: t.stockId,
-    symbol,
-    soldShares: t.soldShares,
-    sellPrice: Number(t.sellPrice),
-    costBasis: Number(t.costBasis),
-    sellDate: t.sellDate,
-    realizedPL: Number(t.realizedPL),
-    taxRate: Number(t.taxRate),
-    consumedLots: parseConsumedLots(t.consumedLots),
-    memo: t.memo ?? '',
-    createdAt: t.createdAt.toISOString(),
-  }
-}
 
 // POST: 保有ポジションを売却（確定損益を記録し、買いロットから消し込む）
 export const POST = withStock(async ({ stockId, request }) => {
@@ -129,7 +108,7 @@ export const POST = withStock(async ({ stockId, request }) => {
     success: true,
     data: {
       // symbolは銘柄コンテキスト内で既知のため空文字（横断ビューはGET側でsymbolを付与）
-      trade: serializeTrade(result.trade, ''),
+      trade: serializeRealizedTrade(result.trade, ''),
       positions: result.remainingLots.map(p => ({
         id: p.id,
         shares: p.shares,
@@ -166,6 +145,6 @@ export const GET = withAuth(async ({ user, params }) => {
 
   return NextResponse.json({
     success: true,
-    data: trades.map(t => serializeTrade(t, stock?.symbol ?? '')),
+    data: trades.map(t => serializeRealizedTrade(t, stock?.symbol ?? '')),
   })
 }, '確定損益の取得')

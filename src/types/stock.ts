@@ -3,6 +3,7 @@
  */
 
 import type { Position } from '@/types/positions';
+import type { RealizedTrade } from '@/types/realizedTrade';
 
 export interface StockData {
   id: string;
@@ -21,6 +22,8 @@ export interface StockData {
   memo: string;
   // インラインで再定義せず Position を使う（useStockPosition が Position[] を流すため）
   positions: Position[];
+  // 確定損益（売却記録）。新しい順。銘柄カードの個別フェッチを避けるため一括取得に同梱される
+  realizedTrades: RealizedTrade[];
   events: Array<{
     id: string;
     eventType: string;

@@ -1,6 +1,7 @@
 'use client';
 
-import { PositionSummary, ProfitLossInfo } from '@/types/positions';
+import { Position, PositionSummary, ProfitLossInfo } from '@/types/positions';
+import type { RealizedTrade } from '@/types/realizedTrade';
 import { NextActionPlan } from '@/types/nextActionPlan';
 import { useInvestmentTabState } from '@/hooks/tab/useInvestmentTabState';
 import AnalysisSubTab from '@/components/stock-tabs/AnalysisSubTab';
@@ -28,6 +29,8 @@ interface InvestmentStrategyTabProps {
   snapshotDate?: string | null;
   snapshotValue?: number | null;
   snapshotCost?: number | null;
+  initialPositions?: Position[];
+  initialRealizedTrades?: RealizedTrade[];
 }
 
 export default function InvestmentStrategyTab({
@@ -51,6 +54,8 @@ export default function InvestmentStrategyTab({
   snapshotDate,
   snapshotValue,
   snapshotCost,
+  initialPositions,
+  initialRealizedTrades,
 }: InvestmentStrategyTabProps) {
   const { activeTab, setActiveTab, tabs, isLoading } = useInvestmentTabState(symbol, 'analysis');
 
@@ -105,6 +110,8 @@ export default function InvestmentStrategyTab({
             snapshotDate={snapshotDate ?? null}
             snapshotValue={snapshotValue ?? null}
             snapshotCost={snapshotCost ?? null}
+            initialPositions={initialPositions}
+            initialRealizedTrades={initialRealizedTrades}
           />
         )}
 

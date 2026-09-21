@@ -30,6 +30,7 @@ export function useStockCrud({ setStockData, setStockSymbols }: UseStockCrudPara
         fairPbr: null,
         memo: '',
         positions: [],
+        realizedTrades: [],
         events: [],
         dividend: null,
         benefit: null,
