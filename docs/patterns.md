@@ -333,6 +333,8 @@ const { data, isLoading, error, refetch } = useSharedFetch(
 - `key` が `null` の間はフェッチしない（localStorage読込待ちなど）
 - 保存・削除後の反映は `mutateShared(key, updater)`（同一キーの全インスタンスに配られる）
 - サーバー側が変わったときは `invalidateShared(predicate)`（購読中のキーだけ再取得し、他は破棄）
+- 表示中の値を残したまま取り直したいときは `revalidateShared(key)`（isLoading にならない。進行中のリクエストがあれば終了後に1回だけ取り直し、連続呼び出しは1つにまとめる）
+- イベント連動の再取得は、インスタンスごとに `useAppEvent` を登録するとマウント数ぶん走る。リスナーはモジュールで1つにする（`useTitles` の `XP_GAINED` 参照）
 - **ログアウト時は `clearSharedFetchCache()` を呼ぶこと**。モジュールスコープのキャッシュなので、
   同一タブで別ユーザーがログインすると前のユーザーのデータが見えてしまう（`useStockData` の `SIGNED_OUT` で配線済み）
 

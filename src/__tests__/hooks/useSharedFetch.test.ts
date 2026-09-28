@@ -4,6 +4,7 @@ import {
   useSharedFetch,
   mutateShared,
   invalidateShared,
+  revalidateShared,
   clearSharedFetchCache,
 } from '@/hooks/util/useSharedFetch'
 
@@ -229,5 +230,58 @@ describe('useSharedFetch', () => {
 
     await waitFor(() => expect(result.current.isLoading).toBe(false))
     expect(fetcher).toHaveBeenCalledTimes(2)
+  })
+
+  describe('revalidateShared', () => {
+    it('値を残したまま取り直す（isLoading にならない）', async () => {
+      const fetcher = vi.fn().mockResolvedValueOnce(['old']).mockResolvedValueOnce(['new'])
+
+      const { result } = renderHook(() => useSharedFetch<string[]>('k1', fetcher))
+      await waitFor(() => expect(result.current.data).toEqual(['old']))
+
+      let pending!: Promise<void>
+      act(() => { pending = revalidateShared('k1') })
+      expect(result.current.isLoading).toBe(false)
+      expect(result.current.data).toEqual(['old'])
+
+      await act(async () => { await pending })
+      expect(result.current.data).toEqual(['new'])
+      expect(fetcher).toHaveBeenCalledTimes(2)
+    })
+
+    // 進行中のリクエストは呼び出し前の状態を返しうるので、終わってから1回だけ取り直す
+    it('進行中に何度呼ばれても、終了後の再取得は1回にまとめる', async () => {
+      let resolveFirst!: (v: string[]) => void
+      const fetcher = vi.fn()
+        .mockImplementationOnce(() => new Promise<string[]>(r => { resolveFirst = r }))
+        .mockResolvedValueOnce(['latest'])
+
+      const { result } = renderHook(() => useSharedFetch<string[]>('k1', fetcher))
+      expect(fetcher).toHaveBeenCalledTimes(1)
+
+      const p1 = revalidateShared('k1')
+      const p2 = revalidateShared('k1')
+      const p3 = revalidateShared('k1')
+      expect(fetcher).toHaveBeenCalledTimes(1)
+
+      await act(async () => {
+        resolveFirst(['stale'])
+        await Promise.all([p1, p2, p3])
+      })
+
+      expect(fetcher).toHaveBeenCalledTimes(2)
+      expect(result.current.data).toEqual(['latest'])
+    })
+
+    it('購読者がいないキーは取得しない', async () => {
+      const fetcher = vi.fn().mockResolvedValue(['a'])
+      const { result, unmount } = renderHook(() => useSharedFetch('k1', fetcher))
+      await waitFor(() => expect(result.current.isLoading).toBe(false))
+      unmount()
+
+      await revalidateShared('k1')
+      await revalidateShared('unknown')
+      expect(fetcher).toHaveBeenCalledTimes(1)
+    })
   })
 })

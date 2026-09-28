@@ -44,6 +44,7 @@ export const prismaMock = {
   diaryNewsItem: { ...createMockModel(), createMany: vi.fn() },
   stockNewsItem: { ...createMockModel(), createMany: vi.fn() },
   userStockLinkSetting: createMockModel(),
+  $queryRaw: vi.fn(),
   $transaction: vi.fn((arg: unknown) => {
     if (typeof arg === 'function') return arg(prismaMock)
     if (Array.isArray(arg)) return Promise.all(arg)

@@ -5,46 +5,26 @@ import { createRequest, getJson } from '../helpers/apiTestHelper'
 import { GET, PATCH } from '@/app/api/gamification/titles/route'
 
 beforeEach(() => {
-  prismaMock.stock.count.mockReset()
-  prismaMock.stockMemo.count.mockReset()
-  prismaMock.stockTag.count.mockReset()
-  prismaMock.stockTag.groupBy.mockReset()
-  prismaMock.stockPosition.count.mockReset()
-  prismaMock.realizedTrade.aggregate.mockReset()
-  prismaMock.stockDividend.count.mockReset()
-  prismaMock.stockBenefit.count.mockReset()
-  prismaMock.stockEvent.count.mockReset()
-  prismaMock.nextActionPlan.count.mockReset()
-  prismaMock.portfolioSnapshot.count.mockReset()
-  prismaMock.feedback.count.mockReset()
+  prismaMock.$queryRaw.mockReset()
   prismaMock.userGamification.findUnique.mockReset()
   prismaMock.userGamification.update.mockReset()
   prismaMock.xpActivityLog.findMany.mockReset()
 })
 
-function mockCounts(overrides: Partial<Record<string, number>> = {}, gamificationOverrides: { notifiedTitleIds?: string[] | null; level?: number; longestStreak?: number } = {}) {
-  const defaults = {
-    stock: 0, stockMemo: 0, stockTag: 0, stockPosition: 0,
-    stockDividend: 0, stockBenefit: 0, stockEvent: 0,
-    nextActionPlan: 0, portfolioSnapshot: 0, feedback: 0,
-  }
-  const counts = { ...defaults, ...overrides }
+type CountKey =
+  | 'stockCount' | 'memoCount' | 'tagCount' | 'distinctTagColorCount' | 'positionCount'
+  | 'realizedTradeCount' | 'totalRealizedProfit' | 'dividendCount' | 'benefitCount'
+  | 'eventCount' | 'nextActionCount' | 'snapshotCount' | 'feedbackCount' | 'stocksWithMemoCount'
 
-  // stock.countは2回呼ばれる（総数と、メモ付き銘柄数）
-  prismaMock.stock.count
-    .mockResolvedValueOnce(counts.stock as never)  // 総数
-    .mockResolvedValueOnce(0 as never)              // メモ付き銘柄数
-  prismaMock.stockMemo.count.mockResolvedValue(counts.stockMemo as never)
-  prismaMock.stockTag.count.mockResolvedValue(counts.stockTag as never)
-  prismaMock.stockTag.groupBy.mockResolvedValue([] as never)
-  prismaMock.stockPosition.count.mockResolvedValue(counts.stockPosition as never)
-  prismaMock.realizedTrade.aggregate.mockResolvedValue({ _count: { id: 0 }, _sum: { realizedPL: null } } as never)
-  prismaMock.stockDividend.count.mockResolvedValue(counts.stockDividend as never)
-  prismaMock.stockBenefit.count.mockResolvedValue(counts.stockBenefit as never)
-  prismaMock.stockEvent.count.mockResolvedValue(counts.stockEvent as never)
-  prismaMock.nextActionPlan.count.mockResolvedValue(counts.nextActionPlan as never)
-  prismaMock.portfolioSnapshot.count.mockResolvedValue(counts.portfolioSnapshot as never)
-  prismaMock.feedback.count.mockResolvedValue(counts.feedback as never)
+function mockCounts(overrides: Partial<Record<CountKey, number>> = {}, gamificationOverrides: { notifiedTitleIds?: string[] | null; level?: number; longestStreak?: number } = {}) {
+  const row: Record<CountKey, number> = {
+    stockCount: 0, memoCount: 0, tagCount: 0, distinctTagColorCount: 0, positionCount: 0,
+    realizedTradeCount: 0, totalRealizedProfit: 0, dividendCount: 0, benefitCount: 0,
+    eventCount: 0, nextActionCount: 0, snapshotCount: 0, feedbackCount: 0, stocksWithMemoCount: 0,
+    ...overrides,
+  }
+  // 集計はSQL1本（1行）で返る
+  prismaMock.$queryRaw.mockResolvedValue([row] as never)
   prismaMock.userGamification.findUnique.mockResolvedValue({
     level: gamificationOverrides.level ?? 1,
     longestStreak: gamificationOverrides.longestStreak ?? 0,
@@ -69,7 +49,7 @@ describe('GET /api/gamification/titles', () => {
   })
 
   it('銘柄1個で「はじめの一歩」が獲得済み', async () => {
-    mockCounts({ stock: 1 })
+    mockCounts({ stockCount: 1 })
 
     const req = createRequest('GET', 'http://localhost:3000/api/gamification/titles')
     const res = await GET(req)
@@ -82,7 +62,7 @@ describe('GET /api/gamification/titles', () => {
   })
 
   it('複数条件が同時に満たされる', async () => {
-    mockCounts({ stock: 5, stockMemo: 5, feedback: 1 }, { level: 5, longestStreak: 7 })
+    mockCounts({ stockCount: 5, memoCount: 5, feedbackCount: 1 }, { level: 5, longestStreak: 7 })
 
     const req = createRequest('GET', 'http://localhost:3000/api/gamification/titles')
     const res = await GET(req)
@@ -92,8 +72,33 @@ describe('GET /api/gamification/titles', () => {
     expect(json.data.unlockedCount).toBe(7)
   })
 
+  // KABUNOTE-WEB-V: 以前は count を約15本並列で投げていた
+  it('集計はDB往復1回のSQLで取得する', async () => {
+    mockCounts()
+
+    const req = createRequest('GET', 'http://localhost:3000/api/gamification/titles')
+    await GET(req)
+
+    expect(prismaMock.$queryRaw).toHaveBeenCalledTimes(1)
+    expect(prismaMock.stock.count).not.toHaveBeenCalled()
+  })
+
+  it('全銘柄にメモがあるときだけ「全銘柄メモ達成」を獲得する', async () => {
+    const allMemos = async () => {
+      const res = await GET(createRequest('GET', 'http://localhost:3000/api/gamification/titles'))
+      const json = await getJson(res)
+      return json.data.titles.find((t: { id: string }) => t.id === 'all_memos').unlocked
+    }
+
+    mockCounts({ stockCount: 2, memoCount: 2, stocksWithMemoCount: 2 })
+    expect(await allMemos()).toBe(true)
+
+    mockCounts({ stockCount: 2, memoCount: 1, stocksWithMemoCount: 1 })
+    expect(await allMemos()).toBe(false)
+  })
+
   it('既存ユーザーマイグレーション: notifiedTitleIdsがnullなら獲得済みを自動登録', async () => {
-    mockCounts({ stock: 1 }, { notifiedTitleIds: null })
+    mockCounts({ stockCount: 1 }, { notifiedTitleIds: null })
     prismaMock.userGamification.update.mockResolvedValue({} as never)
 
     const req = createRequest('GET', 'http://localhost:3000/api/gamification/titles')
@@ -108,7 +113,7 @@ describe('GET /api/gamification/titles', () => {
   })
 
   it('notifiedTitleIdsが既存の場合はそのまま返す', async () => {
-    mockCounts({ stock: 1 }, { notifiedTitleIds: ['first_stock'] })
+    mockCounts({ stockCount: 1 }, { notifiedTitleIds: ['first_stock'] })
 
     const req = createRequest('GET', 'http://localhost:3000/api/gamification/titles')
     const res = await GET(req)
