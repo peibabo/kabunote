@@ -259,8 +259,9 @@ xpForLevel(n) = floor(50 * (n-1) * n / 2 + 50 * (n-1))
 ### 技術構成
 
 - **オンザフライ計算**: 新テーブル不要。APIで集計→条件判定
-- **API**: `GET /api/gamification/titles` で集計データ取得+全称号判定
+- **API**: `GET /api/gamification/titles` で集計データ取得+全称号判定。集計はサブクエリを並べたSQL1本（`$queryRaw`）で取る（Prisma の count を15本並列に投げていた頃は Sentry の N+1 Query として検知されていた）
 - **獲得検知**: DB管理（`user_gamification.notified_title_ids`）で通知済みID管理 → 差分検知 → `kabunote-title-unlocked` CustomEvent発火
+- **取得の共有**: `useTitles` は `useSharedFetch` で全インスタンス共通の1回だけ取得し、差分検知・通知も fetcher 内で1回だけ行う。XP獲得時の再取得（`revalidateShared`）もリスナー1つで、マウント数に関係なく1回
 - **通知済み更新**: `PATCH /api/gamification/titles` で通知済みIDをDB更新
 - **通知**: トースト方式（画面下部にスライドイン、3秒で自動消去）
 

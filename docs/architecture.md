@@ -121,7 +121,7 @@ app_users (ユーザー管理)
 | `/api/gamification` | GET | ゲーミフィケーション状態取得（初回自動作成） |
 | `/api/gamification/xp` | POST | XP付与（日次上限・ストリーク・レベルアップ判定） |
 | `/api/gamification/activity` | GET | 直近30件のXPアクティビティログ |
-| `/api/gamification/titles` | GET | 称号コレクション状態（集計+全28称号の獲得判定） |
+| `/api/gamification/titles` | GET | 称号コレクション状態（集計SQL1本+全31称号の獲得判定） |
 
 ### チェックリスト
 | パス | メソッド | 説明 |
@@ -232,7 +232,7 @@ app_users (ユーザー管理)
 | `useSound` | サウンド設定 |
 | `useSoundOnChange` | 値変更時のサウンド再生 |
 | `useGamification` | ゲーミフィケーション状態管理（XPイベントリスニング） |
-| `useTitles` | 称号コレクション状態管理（獲得検知・トースト連動） |
+| `useTitles` | 称号コレクション状態管理（獲得検知・トースト連動）。`useSharedFetch` で全インスタンス共有、XP獲得時は `revalidateShared` で1回だけ再取得 |
 
 ### `hooks/tab/` — タブ状態
 | フック | 説明 |
@@ -252,7 +252,7 @@ app_users (ユーザー管理)
 | `useTooltipState` | ツールチップ表示/非表示管理（遅延非表示・クリーンアップ） |
 | `useAppEvent` | アプリ内カスタムイベントの購読（`APP_EVENTS` と型連動・`enabled`で登録制御） |
 | `createCachedSettingsHook` | キャッシュ共有型の設定フックを生成するファクトリ（fetch1回・保存後イベント伝播） |
-| `useSharedFetch` | キー単位でフェッチ結果を共有（同時マウントでも1回。`mutateShared` / `invalidateShared` / `clearSharedFetchCache`） |
+| `useSharedFetch` | キー単位でフェッチ結果を共有（同時マウントでも1回。`mutateShared` / `invalidateShared` / `revalidateShared` / `clearSharedFetchCache`） |
 | `useRealizedTradesBase` | 確定損益履歴の取得/再取得の共通ロジック（銘柄別・全体の両方で使用） |
 
 ### `hooks/other/` — その他

@@ -28,6 +28,8 @@ interface CacheEntry<T> {
   generation: number;
   /** 再取得（invalidate）用に最後に使った fetcher を保持する */
   fetcher?: (key: string) => Promise<unknown>;
+  /** `revalidateShared` が進行中リクエストの後ろに予約した再取得 */
+  queuedRevalidate?: Promise<void>;
   subscribers: Set<() => void>;
 }
 
@@ -122,6 +124,31 @@ export function invalidateShared(predicate: (key: string) => boolean): void {
     }
     notify(entry);
   }
+}
+
+/**
+ * 表示中の値を残したまま、購読者がいるキーを取り直す。
+ * `invalidateShared` と違って値を捨てないので、再取得中も isLoading にならない
+ * （XP獲得のたびにバッジがちらつかない）。
+ *
+ * 進行中のリクエストがある場合、それは呼び出し前に飛んだもので最新の変更を
+ * 反映していない可能性がある。終わってからもう1回だけ取り直す。
+ * 短時間に何度呼ばれても予約は1つにまとめる。
+ */
+export function revalidateShared(key: string): Promise<void> {
+  const entry = cache.get(key);
+  if (!entry?.fetcher || entry.subscribers.size === 0) return Promise.resolve();
+  if (!entry.promise) return startFetch(key, entry.fetcher);
+
+  if (!entry.queuedRevalidate) {
+    entry.queuedRevalidate = entry.promise.then(() => {
+      entry.queuedRevalidate = undefined;
+      // 待っている間に破棄・購読解除されていたら取り直さない
+      if (cache.get(key) !== entry || !entry.fetcher || entry.subscribers.size === 0) return;
+      return startFetch(key, entry.fetcher);
+    });
+  }
+  return entry.queuedRevalidate;
 }
 
 /**
