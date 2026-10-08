@@ -66,4 +66,18 @@ describe('CookieConsentBanner', () => {
     expect(handler).toHaveBeenCalledTimes(1)
     window.removeEventListener('cookie-consent-change', handler)
   })
+
+  it('localStorageへのアクセスが拒否される環境でもクラッシュせずバナーを表示・操作できる', () => {
+    const spy = vi.spyOn(window, 'localStorage', 'get').mockImplementation(() => {
+      throw new DOMException('Access is denied for this document.', 'SecurityError')
+    })
+    try {
+      render(<CookieConsentBanner />)
+      expect(screen.getByText(/Google Analyticsを使用しています/)).toBeInTheDocument()
+      fireEvent.click(screen.getByRole('button', { name: '同意する' }))
+      expect(screen.queryByText(/Google Analyticsを使用しています/)).not.toBeInTheDocument()
+    } finally {
+      spy.mockRestore()
+    }
+  })
 })

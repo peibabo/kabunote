@@ -4,6 +4,7 @@ import { generateAlertKey } from '@/lib/snoozeCalc';
 import { AlertType } from '@/utils/alertSystem';
 import { STORAGE_KEYS } from '@/lib/storageKeys';
 import { emitAppEvent, APP_EVENTS } from '@/lib/appEvents';
+import { safeGetItem, safeSetItem } from '@/lib/safeStorage';
 
 const STORAGE_KEY = STORAGE_KEYS.SNOOZED_ALERTS;
 
@@ -12,7 +13,7 @@ function loadSnoozedAlertsFromStorage(): SnoozedAlert[] {
   if (typeof window === 'undefined') return [];
 
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    const stored = safeGetItem(STORAGE_KEY);
     if (!stored) return [];
 
     const alerts = JSON.parse(stored) as SnoozedAlert[];
@@ -21,7 +22,7 @@ function loadSnoozedAlertsFromStorage(): SnoozedAlert[] {
 
     // 期限切れがあった場合は localStorage を更新
     if (validAlerts.length !== alerts.length) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(validAlerts));
+      safeSetItem(STORAGE_KEY, JSON.stringify(validAlerts));
       // localStorageChange イベントを発火
       emitAppEvent(APP_EVENTS.LOCAL_STORAGE_CHANGE, { key: STORAGE_KEY });
     }
@@ -47,7 +48,7 @@ export const useSnooze = () => {
     if (typeof window === 'undefined') return;
 
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(alerts));
+      safeSetItem(STORAGE_KEY, JSON.stringify(alerts));
       // localStorageChange イベントを発火
       emitAppEvent(APP_EVENTS.LOCAL_STORAGE_CHANGE, { key: STORAGE_KEY });
     } catch (error) {

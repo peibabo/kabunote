@@ -4,13 +4,14 @@ import { useState, useEffect } from 'react'
 import { GoogleAnalytics } from '@next/third-parties/google'
 import { STORAGE_KEYS } from '@/lib/storageKeys'
 import { APP_EVENTS } from '@/lib/appEvents'
+import { safeGetItem } from '@/lib/safeStorage'
 
 export default function GoogleAnalyticsWrapper({ gaId }: { gaId: string }) {
   const [granted, setGranted] = useState(false)
 
   useEffect(() => {
     const check = () => {
-      setGranted(localStorage.getItem(STORAGE_KEYS.COOKIE_CONSENT) === 'granted')
+      setGranted(safeGetItem(STORAGE_KEYS.COOKIE_CONSENT) === 'granted')
     }
     check()
 

@@ -362,6 +362,7 @@ app_users (ユーザー管理)
 | `prisma.ts` | Prismaクライアント設定 |
 | `resolveStockId.ts` | `stock-SYMBOL` → DB UUID 変換 |
 | `storageKeys.ts` | localStorage キー一元管理（UI状態のみ） |
+| `safeStorage.ts` | localStorage の安全なアクセサ（アクセス拒否・容量超過時も例外を投げない） |
 | `apiClient.ts` | API呼び出しヘルパー |
 | `apiHandler.ts` | APIルート共通ハンドラー |
 | `toast.ts` | トースト通知 |
