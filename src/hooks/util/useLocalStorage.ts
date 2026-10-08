@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useDebouncedCallback } from './useDebounce';
 import { emitAppEvent, APP_EVENTS } from '@/lib/appEvents';
+import { safeGetItem, safeSetItem } from '@/lib/safeStorage';
 
 /**
  * localStorage管理フック - 汎用版
@@ -26,7 +27,7 @@ export function useLocalStorage<T>(
     if (typeof window !== 'undefined') {
       try {
         const valueToStore = stringifier ? stringifier(value) : JSON.stringify(value);
-        localStorage.setItem(key, valueToStore);
+        safeSetItem(key, valueToStore);
 
         // カスタムイベントを発火してlocalStorageの変更を他のコンポーネントに通知
         emitAppEvent(APP_EVENTS.LOCAL_STORAGE_CHANGE, { key, value });
@@ -40,7 +41,7 @@ export function useLocalStorage<T>(
   useEffect(() => {
     if (typeof window !== 'undefined') {
       try {
-        const item = localStorage.getItem(key);
+        const item = safeGetItem(key);
         if (item !== null) {
           const parsedValue = parser ? parser(item) : JSON.parse(item);
           setStoredValue(parsedValue);
@@ -63,7 +64,7 @@ export function useLocalStorage<T>(
       const detail = (e as CustomEvent).detail;
       if (detail?.key !== key) return;
       try {
-        const item = localStorage.getItem(key);
+        const item = safeGetItem(key);
         if (item !== null) {
           const parsedValue = parser ? parser(item) : JSON.parse(item);
           setStoredValue(parsedValue);

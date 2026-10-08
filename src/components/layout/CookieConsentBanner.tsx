@@ -4,17 +4,18 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { STORAGE_KEYS } from '@/lib/storageKeys'
 import { emitAppEvent, APP_EVENTS } from '@/lib/appEvents'
+import { safeGetItem, safeSetItem } from '@/lib/safeStorage'
 
 export default function CookieConsentBanner() {
   const [consent, setConsent] = useState<string | null | undefined>(undefined)
 
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEYS.COOKIE_CONSENT)
+    const stored = safeGetItem(STORAGE_KEYS.COOKIE_CONSENT)
     setConsent(stored)
   }, [])
 
   const handleConsent = (value: 'granted' | 'denied') => {
-    localStorage.setItem(STORAGE_KEYS.COOKIE_CONSENT, value)
+    safeSetItem(STORAGE_KEYS.COOKIE_CONSENT, value)
     setConsent(value)
     emitAppEvent(APP_EVENTS.COOKIE_CONSENT_CHANGE)
   }

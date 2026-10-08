@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { FavoriteGroup } from '@/types/favorites'
 import { STORAGE_KEYS } from '@/lib/storageKeys'
 import { toast } from '@/lib/toast'
+import { safeGetItem, safeRemoveItem, safeSetItem } from '@/lib/safeStorage'
 
 const FILTER_STORAGE_KEY = STORAGE_KEYS.SELECTED_GROUP_FILTER
 
@@ -37,7 +38,7 @@ export function useFavoriteGroups(): UseFavoriteGroupsReturn {
 
             // 保存されているフィルター状態を復元
             if (typeof window !== 'undefined') {
-              const savedFilter = localStorage.getItem(FILTER_STORAGE_KEY)
+              const savedFilter = safeGetItem(FILTER_STORAGE_KEY)
               if (savedFilter && dbGroups.some(g => g.id === savedFilter)) {
                 setSelectedGroupFilter(savedFilter)
               }
@@ -177,7 +178,7 @@ export function useFavoriteGroups(): UseFavoriteGroupsReturn {
     setSelectedGroupFilter(prev => {
       if (prev && !newGroups.some(g => g.id === prev)) {
         if (typeof window !== 'undefined') {
-          localStorage.removeItem(FILTER_STORAGE_KEY)
+          safeRemoveItem(FILTER_STORAGE_KEY)
         }
         return null
       }
@@ -190,9 +191,9 @@ export function useFavoriteGroups(): UseFavoriteGroupsReturn {
     setSelectedGroupFilter(groupId)
     if (typeof window !== 'undefined') {
       if (groupId) {
-        localStorage.setItem(FILTER_STORAGE_KEY, groupId)
+        safeSetItem(FILTER_STORAGE_KEY, groupId)
       } else {
-        localStorage.removeItem(FILTER_STORAGE_KEY)
+        safeRemoveItem(FILTER_STORAGE_KEY)
       }
     }
   }, [])

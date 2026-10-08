@@ -6,6 +6,7 @@
  */
 
 import { STORAGE_KEYS } from './storageKeys';
+import { safeGetItem, safeSetItem } from './safeStorage';
 
 // ─── 型定義 ──────────────────────────────────
 export type SoundName =
@@ -43,9 +44,9 @@ let volume: number = 0.5;
 
 // SSR ガード付き localStorage 読み込み
 if (typeof window !== 'undefined') {
-  const storedEnabled = localStorage.getItem(STORAGE_KEYS.SOUND_ENABLED);
+  const storedEnabled = safeGetItem(STORAGE_KEYS.SOUND_ENABLED);
   if (storedEnabled !== null) enabled = storedEnabled === 'true';
-  const storedVolume = localStorage.getItem(STORAGE_KEYS.SOUND_VOLUME);
+  const storedVolume = safeGetItem(STORAGE_KEYS.SOUND_VOLUME);
   if (storedVolume !== null) volume = Number(storedVolume);
 }
 
@@ -227,7 +228,7 @@ export function playSound(name: SoundName): void {
 export function setSoundEnabled(value: boolean): void {
   enabled = value;
   if (typeof window !== 'undefined') {
-    localStorage.setItem(STORAGE_KEYS.SOUND_ENABLED, String(value));
+    safeSetItem(STORAGE_KEYS.SOUND_ENABLED, String(value));
   }
   emitChange();
 }
@@ -236,7 +237,7 @@ export function setSoundEnabled(value: boolean): void {
 export function setSoundVolume(value: number): void {
   volume = Math.max(0, Math.min(1, value));
   if (typeof window !== 'undefined') {
-    localStorage.setItem(STORAGE_KEYS.SOUND_VOLUME, String(volume));
+    safeSetItem(STORAGE_KEYS.SOUND_VOLUME, String(volume));
   }
   emitChange();
 }

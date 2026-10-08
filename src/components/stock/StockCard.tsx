@@ -17,6 +17,7 @@ import InvestmentStrategyTab from '../stock-tabs/InvestmentStrategyTab';
 import ManagementTab from '../stock-tabs/ManagementTab';
 import AlertDisplay from '../alert/AlertDisplay';
 import StockCardModals from './card/StockCardModals';
+import { safeSetItem } from '@/lib/safeStorage';
 
 interface StockCardProps {
   symbol: string;
@@ -125,7 +126,7 @@ function StockCard({ symbol, onRemove, favoriteGroups, onFavoriteGroupsChange, i
                                  primaryAlert?.type === 'insufficient-funds')
                                  ? 'nextaction' : 'analysis';
 
-            localStorage.setItem(stockKey.investmentTab(symbol), targetSubTab);
+            safeSetItem(stockKey.investmentTab(symbol), targetSubTab);
             emitAppEvent(APP_EVENTS.LOCAL_STORAGE_CHANGE, { key: stockKey.investmentTab(symbol) });
           }}
         />

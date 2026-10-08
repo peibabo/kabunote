@@ -19,6 +19,7 @@ import { useStockNews } from '@/hooks/stock/useStockNews';
 import { useCash } from '@/hooks/auth/useCash';
 import { stockKey } from '@/lib/storageKeys';
 import { emitAppEvent, APP_EVENTS } from '@/lib/appEvents';
+import { safeGetItem, safeRemoveItem, safeSetItem } from '@/lib/safeStorage';
 
 export function useStockCardData(symbol: string, favoriteGroups: FavoriteGroup[], initialStockData?: DBStockData) {
   // 基本状態
@@ -197,16 +198,16 @@ export function useStockCardData(symbol: string, favoriteGroups: FavoriteGroup[]
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    const tabInstruction = localStorage.getItem(stockKey.openTab(symbol));
+    const tabInstruction = safeGetItem(stockKey.openTab(symbol));
     if (tabInstruction) {
-      localStorage.removeItem(stockKey.openTab(symbol));
+      safeRemoveItem(stockKey.openTab(symbol));
 
       if (tabInstruction === 'dividend' || tabInstruction === 'management') {
         setActiveTab('management');
 
         if (tabInstruction === 'dividend') {
           setTimeout(() => {
-            localStorage.setItem(stockKey.managementTab(symbol), 'dividend');
+            safeSetItem(stockKey.managementTab(symbol), 'dividend');
             emitAppEvent(APP_EVENTS.LOCAL_STORAGE_CHANGE, { key: stockKey.managementTab(symbol) });
           }, 100);
         }

@@ -13,6 +13,7 @@ import MonthlyDividendChart from './MonthlyDividendChart';
 import DividendYieldRanking from './DividendYieldRanking';
 import { useEventMap, useUpcomingEvents } from './schedule-widget/useEventMap';
 import UpcomingEventsContent from './schedule-widget/UpcomingEventsContent';
+import { safeGetItem, safeSetItem } from '@/lib/safeStorage';
 
 type TabId = 'events' | 'timeline' | 'calendar' | 'dividend';
 
@@ -70,7 +71,7 @@ export default function InvestmentScheduleWidget({
 
   const [activeTab, setActiveTab] = useState<TabId>(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem(STORAGE_KEYS.SCHEDULE_WIDGET_TAB);
+      const saved = safeGetItem(STORAGE_KEYS.SCHEDULE_WIDGET_TAB);
       if (saved && availableTabs.some(t => t.id === saved)) return saved as TabId;
     }
     return availableTabs[0]?.id ?? 'events';
@@ -87,7 +88,7 @@ export default function InvestmentScheduleWidget({
   const handleTabChange = (tabId: TabId) => {
     playSound('toggle');
     setActiveTab(tabId);
-    localStorage.setItem(STORAGE_KEYS.SCHEDULE_WIDGET_TAB, tabId);
+    safeSetItem(STORAGE_KEYS.SCHEDULE_WIDGET_TAB, tabId);
   };
 
   return (

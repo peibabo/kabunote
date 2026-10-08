@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { stockKey } from '@/lib/storageKeys';
 import { emitAppEvent, APP_EVENTS } from '@/lib/appEvents';
 import { playSound } from '@/lib/sound';
+import { safeGetItem, safeSetItem } from '@/lib/safeStorage';
 
 type TabOption = {
   label: string;
@@ -36,14 +37,14 @@ export default function BulkTabSwitcher({ stockSymbols }: Props) {
 
     const detectActive = () => {
       const firstSymbol = stockSymbols[0];
-      const firstMainTab = localStorage.getItem(stockKey.activeTab(firstSymbol)) || 'basic';
-      const firstInvTab = localStorage.getItem(stockKey.investmentTab(firstSymbol)) || 'analysis';
-      const firstMgmtTab = localStorage.getItem(stockKey.managementTab(firstSymbol)) || 'positions';
+      const firstMainTab = safeGetItem(stockKey.activeTab(firstSymbol)) || 'basic';
+      const firstInvTab = safeGetItem(stockKey.investmentTab(firstSymbol)) || 'analysis';
+      const firstMgmtTab = safeGetItem(stockKey.managementTab(firstSymbol)) || 'positions';
 
       const allSame = stockSymbols.every(symbol => {
-        const mt = localStorage.getItem(stockKey.activeTab(symbol)) || 'basic';
-        const it = localStorage.getItem(stockKey.investmentTab(symbol)) || 'analysis';
-        const mgt = localStorage.getItem(stockKey.managementTab(symbol)) || 'positions';
+        const mt = safeGetItem(stockKey.activeTab(symbol)) || 'basic';
+        const it = safeGetItem(stockKey.investmentTab(symbol)) || 'analysis';
+        const mgt = safeGetItem(stockKey.managementTab(symbol)) || 'positions';
         return mt === firstMainTab && it === firstInvTab && mgt === firstMgmtTab;
       });
 
@@ -75,16 +76,16 @@ export default function BulkTabSwitcher({ stockSymbols }: Props) {
 
   const handleClick = (option: TabOption) => {
     stockSymbols.forEach(symbol => {
-      localStorage.setItem(stockKey.activeTab(symbol), option.mainTab);
+      safeSetItem(stockKey.activeTab(symbol), option.mainTab);
       emitAppEvent(APP_EVENTS.LOCAL_STORAGE_CHANGE, { key: stockKey.activeTab(symbol) });
 
       if (option.investmentSubTab) {
-        localStorage.setItem(stockKey.investmentTab(symbol), option.investmentSubTab);
+        safeSetItem(stockKey.investmentTab(symbol), option.investmentSubTab);
         emitAppEvent(APP_EVENTS.LOCAL_STORAGE_CHANGE, { key: stockKey.investmentTab(symbol) });
       }
 
       if (option.managementSubTab) {
-        localStorage.setItem(stockKey.managementTab(symbol), option.managementSubTab);
+        safeSetItem(stockKey.managementTab(symbol), option.managementSubTab);
         emitAppEvent(APP_EVENTS.LOCAL_STORAGE_CHANGE, { key: stockKey.managementTab(symbol) });
       }
     });

@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { Position } from '@/types/positions';
 import { calculatePositionSummary, formatPrice, formatShares } from '@/lib/positionCalc';
 import { calculateAfterTax, calculateWeightedTaxRate } from '@/lib/taxCalc';
+import { safeGetItem } from '@/lib/safeStorage';
 
 interface StockData {
   id: string;
@@ -53,7 +54,7 @@ export default function SimplePortfolioSummary({ portfolioData }: SimplePortfoli
 
       let currentPriceNum = stock.currentPrice ?? 0;
       if (!currentPriceNum && typeof window !== 'undefined') {
-        const localPrice = localStorage.getItem(`kabunote-current-price-${stock.symbol}`) || '';
+        const localPrice = safeGetItem(`kabunote-current-price-${stock.symbol}`) || '';
         currentPriceNum = parseFloat(localPrice) || 0;
       }
 

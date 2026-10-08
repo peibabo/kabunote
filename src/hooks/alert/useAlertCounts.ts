@@ -7,6 +7,7 @@ import { calculatePositionSummary } from '@/lib/positionCalc';
 import { STORAGE_KEYS } from '@/lib/storageKeys';
 import { useAppEvent } from '@/hooks/util/useAppEvent';
 import { APP_EVENTS } from '@/lib/appEvents';
+import { safeGetItem } from '@/lib/safeStorage';
 
 export interface AlertCounts {
   total: number;
@@ -32,7 +33,7 @@ export function useAlertCounts(
     let urgentAlerts = 0;
 
     const checkSnooze = (symbol: string, alertType: string): boolean => {
-      const snoozedAlertsStr = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEYS.SNOOZED_ALERTS) : null;
+      const snoozedAlertsStr = typeof window !== 'undefined' ? safeGetItem(STORAGE_KEYS.SNOOZED_ALERTS) : null;
       if (!snoozedAlertsStr) return false;
       try {
         const snoozedAlerts = JSON.parse(snoozedAlertsStr);

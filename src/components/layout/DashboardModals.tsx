@@ -21,6 +21,7 @@ import { AlertCounts } from '@/hooks/alert/useAlertCounts';
 import { StockData } from '@/hooks/stock/useStockData';
 import { CalendarDataMap } from '@/hooks/calendar/useCalendarData';
 import { DividendBenefitStockData } from '@/hooks/dividend/useDividendBenefitData';
+import { safeSetItem } from '@/lib/safeStorage';
 
 interface FullScreenModalProps {
   isOpen: boolean;
@@ -184,7 +185,7 @@ export default function DashboardModals({
           onStockClick={(symbol) => {
             modals.setIsDividendBenefitListOpen(false);
             if (typeof window !== 'undefined') {
-              localStorage.setItem(`kabunote-open-tab-${symbol}`, 'dividend');
+              safeSetItem(`kabunote-open-tab-${symbol}`, 'dividend');
             }
             onStockClick(symbol);
           }}

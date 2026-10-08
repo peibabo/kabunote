@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { playSound } from '@/lib/sound';
+import { safeGetItem, safeSetItem } from '@/lib/safeStorage';
 
 interface UseAccordionStateOptions {
   /** localStorageに保存するキー。省略時はlocalStorage保存なし */
@@ -25,7 +26,7 @@ export function useAccordionState({
   // マウント後にlocalStorageの値を適用（hydrationミスマッチ回避）
   useEffect(() => {
     if (storageKey) {
-      const saved = localStorage.getItem(storageKey);
+      const saved = safeGetItem(storageKey);
       if (saved !== null) {
         setIsExpanded(saved === 'true');
       }
@@ -37,7 +38,7 @@ export function useAccordionState({
     playSound(next ? 'accordionOpen' : 'accordionClose');
     setIsExpanded(next);
     if (storageKey) {
-      localStorage.setItem(storageKey, String(next));
+      safeSetItem(storageKey, String(next));
     }
   };
 
