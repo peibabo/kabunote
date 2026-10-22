@@ -22,7 +22,7 @@ npm run test:unit    # P0: 純粋関数ユニットテスト
 npm run test:api     # P1: APIルート統合テスト
 npm run test:hooks   # P2: カスタムフックテスト
 npm run test:components  # P3: コンポーネント描画テスト
-npm run update:stocks    # JPXデータからstocks.csv更新
+npm run update:stocks    # JPXデータからstocks.csv更新（topix500列＝呼値判定用）
 ```
 
 ## 環境分離（dev/prod）

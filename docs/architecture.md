@@ -315,6 +315,7 @@ app_users (ユーザー管理)
 ### `components/stock-tabs/` — 銘柄カードタブ
 - `BasicTab.tsx`, `InvestmentStrategyTab.tsx`, `ManagementTab.tsx`
 - `AnalysisSubTab.tsx`, `NextActionSubTab.tsx`
+- `analysis/PriceStepperInput.tsx`: 呼値単位で −/＋ できる価格入力（損切ライン・現在の株価・利確目標。矢印キー対応・スマホでもボタン表示）
 - `PositionsManagement.tsx`, `EventManagement.tsx`, `DividendManagement.tsx`, `ShareholderBenefitManagement.tsx`
 
 ### `components/portfolio/` — ポートフォリオ
@@ -382,6 +383,7 @@ app_users (ユーザー管理)
 | `dividendBenefitCalc.ts` | 配当・優待一覧計算（データ処理・フィルタ・ソート・サマリー） |
 | `portfolioSummaryCalc.ts` | ポートフォリオサマリー計算（投資額・損益・配当・優待・現金比率） |
 | `dateFormat.ts` | 日付フォーマット共通関数（ISO形式・M/D形式） |
+| `tickSize.ts` | JPX呼値の単位（getTickSize / stepPriceUp / stepPriceDown。TOPIX500構成銘柄とそれ以外で別テーブル、0.1円刻みは整数換算で誤差回避） |
 
 ## ユーティリティ（src/utils/）
 
