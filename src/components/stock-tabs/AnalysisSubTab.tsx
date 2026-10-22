@@ -58,9 +58,8 @@ export default function AnalysisSubTab({
   return (
     <div className="space-y-4">
       {/* 投資規律設定 */}
-      {/* 価格入力の列数は画面幅ではなくカード幅で決める（狭いカードで3列にすると入力欄が潰れる） */}
-      <div className="space-y-3 @container">
-        <div className="grid grid-cols-1 @xl:grid-cols-3 gap-3">
+      <div className="space-y-3">
+        <div className="grid grid-cols-3 gap-2 sm:gap-3">
           <PriceStepperInput
             id={`stop-loss-${symbol}`}
             label={<>{'\u{1F53B}'} 損切ライン</>}

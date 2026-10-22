@@ -20,7 +20,7 @@ const formatTick = (tick: number) => tick.toLocaleString();
 
 /**
  * 呼値単位で上下できる価格入力欄
- * スマホでは number input のスピンボタンが出ないため、自前の −/＋ ボタンを置く
+ * スマホでは number input のスピンボタンが出ないため、自前の ▲▼ ボタンを置く
  */
 export default function PriceStepperInput({
   id,
@@ -56,53 +56,49 @@ export default function PriceStepperInput({
   };
 
   const buttonClass =
-    'shrink-0 w-9 bg-gray-700 border border-gray-600 text-gray-300 hover:bg-gray-600 hover:text-white active:bg-gray-500 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors';
+    'flex-1 flex items-center justify-center text-[9px] leading-none text-gray-300 hover:bg-gray-600 hover:text-white active:bg-gray-500 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors';
+  const tickLabel = base != null ? `呼値 ${formatTick(tick)}円` : undefined;
 
   return (
-    <div className="space-y-1">
-      <div className="flex items-baseline justify-between">
-        <label htmlFor={id} className={labelClassName}>
-          {label}
-        </label>
-        {base != null && (
-          <span className="text-[10px] text-gray-500">呼値 {formatTick(tick)}円</span>
-        )}
-      </div>
-      <div className="flex">
-        <button
-          type="button"
-          onClick={() => step('down')}
+    <div className="space-y-1 min-w-0">
+      <label htmlFor={id} className={`block truncate ${labelClassName}`}>
+        {label}
+      </label>
+      {/* 3列でも数値が潰れないよう、▲▼は入力欄の右端に縦積みで置く */}
+      <div className="flex" title={tickLabel}>
+        <input
+          id={id}
+          type="number"
+          inputMode="decimal"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          onKeyDown={handleKeyDown}
           onBlur={onBlur}
-          disabled={base == null}
-          aria-label="1呼値下げる"
-          className={`${buttonClass} rounded-l-lg border-r-0`}
-        >
-          −
-        </button>
-        <div className="relative flex-1 min-w-0">
-          <input
-            id={id}
-            type="number"
-            inputMode="decimal"
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            onKeyDown={handleKeyDown}
+          placeholder="0"
+          className={`flex-1 min-w-0 px-2 py-2 bg-gray-700 border border-gray-600 rounded-l-lg text-white text-right placeholder-gray-400 focus:outline-none text-base md:text-sm [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${focusClassName}`}
+        />
+        <div className="shrink-0 w-7 flex flex-col bg-gray-700 border border-l-0 border-gray-600 rounded-r-lg overflow-hidden divide-y divide-gray-600">
+          <button
+            type="button"
+            onClick={() => step('up')}
             onBlur={onBlur}
-            placeholder="0"
-            className={`w-full px-2 py-2 bg-gray-700 border border-gray-600 text-white text-center placeholder-gray-400 focus:outline-none text-base md:text-sm pr-7 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${focusClassName}`}
-          />
-          <span className="absolute right-2 top-2 text-xs text-gray-400 pointer-events-none">円</span>
+            disabled={base == null}
+            aria-label="1呼値上げる"
+            className={buttonClass}
+          >
+            ▲
+          </button>
+          <button
+            type="button"
+            onClick={() => step('down')}
+            onBlur={onBlur}
+            disabled={base == null}
+            aria-label="1呼値下げる"
+            className={buttonClass}
+          >
+            ▼
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={() => step('up')}
-          onBlur={onBlur}
-          disabled={base == null}
-          aria-label="1呼値上げる"
-          className={`${buttonClass} rounded-r-lg border-l-0`}
-        >
-          ＋
-        </button>
       </div>
     </div>
   );
