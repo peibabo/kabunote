@@ -1,6 +1,7 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, afterEach } from 'vitest'
+import { act } from 'react'
 import { render, screen, fireEvent } from '@testing-library/react'
-import PriceStepperInput from '@/components/stock-tabs/analysis/PriceStepperInput'
+import PriceStepperInput, { HOLD_DELAY_MS } from '@/components/stock-tabs/analysis/PriceStepperInput'
 
 const renderInput = (props: Partial<Parameters<typeof PriceStepperInput>[0]> = {}) => {
   const onChange = vi.fn()
@@ -53,5 +54,53 @@ describe('PriceStepperInput', () => {
     renderInput({ value: '' })
     expect(screen.getByRole('button', { name: '1呼値上げる' })).toBeDisabled()
     expect(screen.getByRole('button', { name: '1呼値下げる' })).toBeDisabled()
+  })
+
+  describe('長押し', () => {
+    afterEach(() => { vi.useRealTimers() })
+
+    it('押した瞬間に1回、待ち時間後から連続して呼値単位で進む', () => {
+      vi.useFakeTimers()
+      const { onChange } = renderInput({ value: '6000' })
+      const button = screen.getByRole('button', { name: '1呼値上げる' })
+
+      fireEvent.pointerDown(button)
+      expect(onChange).toHaveBeenLastCalledWith('6010')
+
+      act(() => { vi.advanceTimersByTime(HOLD_DELAY_MS) })
+      expect(onChange).toHaveBeenLastCalledWith('6020')
+
+      act(() => { vi.advanceTimersByTime(150) })
+      expect(onChange).toHaveBeenLastCalledWith('6030')
+    })
+
+    it('離すとリピートが止まり、保存（onBlur）を呼ぶ', () => {
+      vi.useFakeTimers()
+      const onBlur = vi.fn()
+      const { onChange } = renderInput({ value: '1000', onBlur })
+      const button = screen.getByRole('button', { name: '1呼値下げる' })
+
+      fireEvent.pointerDown(button)
+      act(() => { vi.advanceTimersByTime(HOLD_DELAY_MS) })
+      fireEvent.pointerUp(button)
+      const calls = onChange.mock.calls.length
+
+      act(() => { vi.advanceTimersByTime(2000) })
+      expect(onChange).toHaveBeenCalledTimes(calls)
+      expect(onChange).toHaveBeenLastCalledWith('998')
+      expect(onBlur).toHaveBeenCalledTimes(1)
+    })
+
+    it('押し続けるほどリピートが速くなる', () => {
+      vi.useFakeTimers()
+      const { onChange } = renderInput({ value: '100' })
+      fireEvent.pointerDown(screen.getByRole('button', { name: '1呼値上げる' }))
+
+      act(() => { vi.advanceTimersByTime(HOLD_DELAY_MS + 150 * 5) })
+      const afterSlow = onChange.mock.calls.length
+      act(() => { vi.advanceTimersByTime(800) })
+      // 80ms間隔なら800msで10回進む（150ms間隔のままなら5回）
+      expect(onChange.mock.calls.length - afterSlow).toBeGreaterThanOrEqual(10)
+    })
   })
 })
