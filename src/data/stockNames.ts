@@ -4,6 +4,8 @@ export interface StockData {
   name: string;
   sector: string;
   market: string;
+  /** TOPIX500構成銘柄か（呼値の単位判定に使用） */
+  isTopix500: boolean;
 }
 
 // CSVデータをキャッシュする変数
@@ -53,7 +55,8 @@ export const loadStockData = async (): Promise<Map<string, StockData>> => {
           code: values[0].trim(),
           name: values[1].trim(),
           sector: values[3].trim(),
-          market: values[2].trim()
+          market: values[2].trim(),
+          isTopix500: values[4]?.trim() === '1',
         };
         stockMap.set(values[0].trim(), stockData);
       }
@@ -108,6 +111,10 @@ export const getSectorSync = (code: string): string | null => {
   if (!stockDataCache) return null;
   const stock = stockDataCache.get(code);
   return stock?.sector || null;
+};
+
+export const isTopix500Sync = (code: string): boolean => {
+  return stockDataCache?.get(code)?.isTopix500 ?? false;
 };
 
 // 日本語をローマ字に変換するマッピング（簡易版）

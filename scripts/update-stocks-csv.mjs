@@ -10,6 +10,9 @@ const JPX_URL =
   'https://www.jpx.co.jp/markets/statistics-equities/misc/tvdivq0000001vg2-att/data_j.xlsx';
 const OUTPUT_PATH = join(__dirname, '..', 'public', 'data', 'stocks.csv');
 
+// 規模コード: 1=TOPIX Core30, 2=TOPIX Large70, 4=TOPIX Mid400（合わせて TOPIX500）
+const TOPIX500_SCALE_CODES = new Set(['1', '2', '4']);
+
 async function main() {
   console.log('Downloading JPX data...');
   const res = await fetch(JPX_URL);
@@ -35,15 +38,17 @@ async function main() {
     const sectorRaw = String(row[3] ?? '').trim();
     const sector = sectorRaw.replace(/（.*?）/g, '').trim();
     const market = String(row[5] ?? '-').trim() || '-';
+    // 呼値の単位判定に使用
+    const topix500 = TOPIX500_SCALE_CODES.has(String(row[8] ?? '').trim()) ? '1' : '0';
 
-    stocks.push({ code, name, sector, market });
+    stocks.push({ code, name, sector, market, topix500 });
   }
 
   // Sort by code (same order as existing CSV)
   stocks.sort((a, b) => a.code.localeCompare(b.code));
 
   // Build CSV
-  const header = 'code,name,sector,market';
+  const header = 'code,name,sector,market,topix500';
   const lines = stocks.map((s) => {
     // Escape fields containing commas or quotes
     const escapeCsv = (val) => {
@@ -52,7 +57,7 @@ async function main() {
       }
       return val;
     };
-    return [s.code, s.name, s.sector, s.market].map(escapeCsv).join(',');
+    return [s.code, s.name, s.sector, s.market, s.topix500].map(escapeCsv).join(',');
   });
   const csv = [header, ...lines].join('\n') + '\n';
 
