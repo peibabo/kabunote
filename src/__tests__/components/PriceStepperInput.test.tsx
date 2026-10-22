@@ -38,9 +38,9 @@ describe('PriceStepperInput', () => {
     expect(onChange).toHaveBeenCalledWith('4005')
   })
 
-  it('現在値に応じた呼値を表示する', () => {
+  it('現在値に応じた呼値をツールチップに表示する', () => {
     renderInput({ value: '6000' })
-    expect(screen.getByText('呼値 10円')).toBeInTheDocument()
+    expect(screen.getByTitle('呼値 10円')).toBeInTheDocument()
   })
 
   it('未入力時は起点価格をそのまま入れる', () => {

@@ -59,7 +59,7 @@ export default function AnalysisSubTab({
     <div className="space-y-4">
       {/* 投資規律設定 */}
       <div className="space-y-3">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-3 gap-2 sm:gap-3">
           <PriceStepperInput
             id={`stop-loss-${symbol}`}
             label={<>{'\u{1F53B}'} 損切ライン</>}

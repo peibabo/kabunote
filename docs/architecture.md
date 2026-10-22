@@ -315,7 +315,7 @@ app_users (ユーザー管理)
 ### `components/stock-tabs/` — 銘柄カードタブ
 - `BasicTab.tsx`, `InvestmentStrategyTab.tsx`, `ManagementTab.tsx`
 - `AnalysisSubTab.tsx`, `NextActionSubTab.tsx`
-- `analysis/PriceStepperInput.tsx`: 呼値単位で −/＋ できる価格入力（損切ライン・現在の株価・利確目標。矢印キー対応・スマホでもボタン表示）
+- `analysis/PriceStepperInput.tsx`: 呼値単位で ▲▼ できる価格入力（損切ライン・現在の株価・利確目標。矢印キー対応・スマホでもボタン表示）
 - `PositionsManagement.tsx`, `EventManagement.tsx`, `DividendManagement.tsx`, `ShareholderBenefitManagement.tsx`
 
 ### `components/portfolio/` — ポートフォリオ
