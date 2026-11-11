@@ -39,6 +39,8 @@ export const STORAGE_KEYS = {
   PORTFOLIO_HISTORY_RANGE: 'kabunote-portfolio-history-range',
   /** 銘柄ミニチャートの選択中期間（全銘柄共通） */
   STOCK_MINI_CHART_RANGE: 'kabunote-stock-mini-chart-range',
+  /** 「はじめの一歩」ガイドを閉じたか（'1' で非表示） */
+  FIRST_STEPS_DISMISSED: 'kabunote-first-steps-dismissed',
 } as const;
 
 // ─────────────────────────────────────────

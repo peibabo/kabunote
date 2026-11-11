@@ -72,6 +72,35 @@ describe('useStockMemo', () => {
     expect(result.current.memo).toBe('')
   })
 
+  it('保存成功時に DB_MEMO_UPDATE を発火する（ダッシュボードのガイド進捗に反映）', async () => {
+    const listener = vi.fn()
+    window.addEventListener('kabunote-db-memo-update', listener)
+    const { result } = renderHook(() =>
+      useStockMemo('stock-7203', { initialData: '' })
+    )
+
+    act(() => { result.current.updateMemo('気になった理由') })
+
+    await waitFor(() => { expect(listener).toHaveBeenCalled() })
+    const event = listener.mock.calls[0][0] as CustomEvent
+    expect(event.detail).toEqual({ symbol: '7203', memo: '気になった理由' })
+    window.removeEventListener('kabunote-db-memo-update', listener)
+  })
+
+  it('deleteMemo時に空メモで DB_MEMO_UPDATE を発火する', async () => {
+    const listener = vi.fn()
+    window.addEventListener('kabunote-db-memo-update', listener)
+    const { result } = renderHook(() =>
+      useStockMemo('stock-7203', { initialData: 'メモ内容' })
+    )
+
+    await act(async () => { await result.current.deleteMemo() })
+
+    const event = listener.mock.calls.at(-1)?.[0] as CustomEvent
+    expect(event.detail).toEqual({ symbol: '7203', memo: '' })
+    window.removeEventListener('kabunote-db-memo-update', listener)
+  })
+
   it('APIエラー時にerrorが設定される', async () => {
     mockApiFetch.mockRejectedValue(new Error('Network error'))
 
