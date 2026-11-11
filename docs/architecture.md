@@ -310,6 +310,10 @@ app_users (ユーザー管理)
 - `DashboardHeader.tsx`, `DashboardModals.tsx`, `SlideOutMenu.tsx`, `HamburgerMenuButton.tsx`
 - `BulkTabSwitcher.tsx`, `ToastContainer.tsx`, `CookieConsentBanner.tsx`, `GoogleAnalyticsWrapper.tsx`
 
+### `components/dashboard/` — ダッシュボード
+- `StockGrid.tsx`, `EmptyState.tsx`, `FavoriteGroupFilter.tsx`
+- `FirstStepsGuide.tsx`: 「はじめの一歩」ガイド（銘柄追加→メモ→保有/決算日登録→2銘柄目の4ステップ。各ステップのボタンで該当カードのタブを開いてスクロール。全完了または✕で非表示）
+
 ### `components/stock/` — 銘柄
 - `StockCard.tsx`: 銘柄カード（タブ制御・統合アラート・スマートナビゲーション）
 - `StockCardHeader.tsx`, `StockInput.tsx`, `SearchBar.tsx`, `StockMiniChart.tsx`（チャートから過去株価のインライン修正可・購入▲/売却▼マーカー表示）, `EarningsBadge.tsx`
@@ -386,6 +390,7 @@ app_users (ユーザー管理)
 | `dividendBenefitCalc.ts` | 配当・優待一覧計算（データ処理・フィルタ・ソート・サマリー） |
 | `portfolioSummaryCalc.ts` | ポートフォリオサマリー計算（投資額・損益・配当・優待・現金比率） |
 | `dateFormat.ts` | 日付フォーマット共通関数（ISO形式・M/D形式） |
+| `firstStepsCalc.ts` | 「はじめの一歩」ガイドの進捗計算（calcFirstSteps。保有ステップは決算日などの予定登録でも達成扱い） |
 | `onboardingEvents.ts` | オンボーディング計測（trackOnboardingEvent=fire-and-forget送信, isValidOnboardingEvent） |
 | `tickSize.ts` | JPX呼値の単位（getTickSize / stepPriceUp / stepPriceDown。TOPIX500構成銘柄とそれ以外で別テーブル、0.1円刻みは整数換算で誤差回避） |
 

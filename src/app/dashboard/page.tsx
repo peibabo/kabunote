@@ -20,7 +20,7 @@ import ExternalLinksArea from '@/components/settings/ExternalLinksArea';
 import FavoriteGroupFilter from '@/components/dashboard/FavoriteGroupFilter';
 import StockGrid from '@/components/dashboard/StockGrid';
 import EmptyState from '@/components/dashboard/EmptyState';
-import NextStepHints from '@/components/dashboard/NextStepHints';
+import FirstStepsGuide from '@/components/dashboard/FirstStepsGuide';
 import { loadStockData } from '@/data/stockNames';
 import { initSoundEngine } from '@/lib/sound';
 import { useStockData } from '@/hooks/stock/useStockData';
@@ -105,7 +105,10 @@ export default function Home() {
     initializeApp();
   }, []);
 
-  const shouldShowHints = stockSymbols.length > 0 && (!hasPortfolioData || !hasCalendarData);
+  // 表示順（stockSymbols 順）の銘柄データ。「はじめの一歩」ガイドの案内先決定に使う
+  const orderedStocks = stockSymbols
+    .map(symbol => stockDataMap.get(symbol))
+    .filter((s): s is NonNullable<typeof s> => s !== undefined);
 
   return (
     <div className="min-h-screen bg-gray-900" onClick={() => initSoundEngine()}>
@@ -122,6 +125,14 @@ export default function Home() {
           </div>
         ) : (
         <>
+        {/* 銘柄を追加した直後の「次にやること」を一番上で案内する */}
+        <FirstStepsGuide
+          stocks={orderedStocks}
+          hasCalendarData={hasCalendarData}
+          onStockClick={handleStockClick}
+          onOpenAddStock={() => setForceOpenAdd(true)}
+        />
+
         <div className="mb-4">
           <ExternalLinksArea />
         </div>
@@ -151,13 +162,6 @@ export default function Home() {
             stockCalendarData={stockCalendarData}
             dividendBenefitData={dividendBenefitData}
             onStockClick={handleStockClick}
-          />
-        )}
-
-        {shouldShowHints && (
-          <NextStepHints
-            hasPortfolioData={hasPortfolioData}
-            hasCalendarData={hasCalendarData}
           />
         )}
 

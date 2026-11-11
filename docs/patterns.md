@@ -421,7 +421,7 @@ DB→APIレスポンスの変換は `serializeRealizedTrade`（`src/lib/realized
 
 | イベント | 同期方法 | 場所 |
 |---|---|---|
-| `DB_POSITION_UPDATE` / `DB_TAG_UPDATE` / `DB_PRICE_UPDATE` 等 | detail に新データが乗るのでそのまま `updateStockData` | `useCalendarData` |
+| `DB_POSITION_UPDATE` / `DB_TAG_UPDATE` / `DB_PRICE_UPDATE` / `DB_MEMO_UPDATE` 等 | detail に新データが乗るのでそのまま `updateStockData` | `useCalendarData` |
 | `DB_REALIZED_UPDATE` | detail が一覧を持たないため、当該銘柄のみ再取得して `updateStockData` | `useStockData` |
 
 ### イベントの宛先判定は symbol を軸にする
