@@ -32,7 +32,7 @@ npm run update:stocks    # JPXデータからstocks.csv更新（topix500列＝�
 - 開発DB初期化: `scripts/setup-dev-db.sql` をSQL Editorで実行
 
 ## ドキュメント構成
-- `docs/architecture.md` - DB設計（27テーブル）・API仕様・フック・型定義・コンポーネント構成
+- `docs/architecture.md` - DB設計（28テーブル）・API仕様・フック・型定義・コンポーネント構成
 - `docs/patterns.md` - 実装パターン集（resolveStockId・DBフック・APIルート・RLS等）
 - `docs/changelog.md` - Phase完了履歴（マイルストーンアーカイブ）
 - `docs/gamification.md` - ゲーミフィケーション仕様（レベル・XP・ストリーク・UI・技術構成）

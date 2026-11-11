@@ -1,6 +1,11 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import OnboardingWizard from '@/components/onboarding/OnboardingWizard'
+import { trackOnboardingEvent } from '@/lib/onboardingEvents'
+
+vi.mock('@/lib/onboardingEvents', () => ({
+  trackOnboardingEvent: vi.fn(),
+}))
 
 const defaultProps = {
   onComplete: vi.fn(),
@@ -82,5 +87,50 @@ describe('OnboardingWizard', () => {
     const { container } = render(<OnboardingWizard {...defaultProps} />)
     const dots = container.querySelectorAll('.rounded-full.w-2\\.5')
     expect(dots.length).toBe(3)
+  })
+
+  describe('ステップ計測', () => {
+    beforeEach(() => {
+      vi.mocked(trackOnboardingEvent).mockClear()
+    })
+
+    it('表示時に shown を1回だけ記録', () => {
+      const { rerender } = render(<OnboardingWizard {...defaultProps} />)
+      rerender(<OnboardingWizard {...defaultProps} />)
+      expect(vi.mocked(trackOnboardingEvent).mock.calls.filter(c => c[0] === 'shown')).toEqual([['shown', 0]])
+    })
+
+    it('次へ・戻るで step_view を記録', () => {
+      render(<OnboardingWizard {...defaultProps} />)
+      fireEvent.click(screen.getByText('次へ'))
+      fireEvent.click(screen.getByText('次へ'))
+      fireEvent.click(screen.getByText('戻る'))
+      expect(trackOnboardingEvent).toHaveBeenCalledWith('step_view', 1)
+      expect(trackOnboardingEvent).toHaveBeenCalledWith('step_view', 2)
+      expect(vi.mocked(trackOnboardingEvent).mock.calls.at(-1)).toEqual(['step_view', 1])
+    })
+
+    it('「さっそく始める」で get_started を記録', () => {
+      render(<OnboardingWizard {...defaultProps} />)
+      fireEvent.click(screen.getByText('次へ'))
+      fireEvent.click(screen.getByText('次へ'))
+      fireEvent.click(screen.getByText('さっそく始める'))
+      expect(trackOnboardingEvent).toHaveBeenCalledWith('get_started', 2)
+    })
+
+    it('「あとで始める」で later を記録', () => {
+      render(<OnboardingWizard {...defaultProps} />)
+      fireEvent.click(screen.getByText('次へ'))
+      fireEvent.click(screen.getByText('次へ'))
+      fireEvent.click(screen.getByText('あとで始める'))
+      expect(trackOnboardingEvent).toHaveBeenCalledWith('later', 2)
+    })
+
+    it('✕ で閉じると、そのときのステップ付きで close を記録', () => {
+      render(<OnboardingWizard {...defaultProps} />)
+      fireEvent.click(screen.getByText('次へ'))
+      fireEvent.click(screen.getByLabelText('閉じる'))
+      expect(trackOnboardingEvent).toHaveBeenCalledWith('close', 1)
+    })
   })
 })

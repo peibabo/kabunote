@@ -1,5 +1,16 @@
 # Kabunote - プロジェクトマイルストーン
 
+## オンボーディングのステップ計測（2026年11月11日）
+**ウィザードのどこで離脱しているか、「さっそく始める／あとで／✕」のどれで閉じたかを記録**
+
+### 実施内容
+- `onboarding_events` テーブルを追加（`scripts/create-onboarding-events-table.sql`。集計クエリ例つき）
+- `POST /api/onboarding/events`: event（shown / step_view / get_started / later / close）と step を検証して記録
+- `OnboardingWizard`: 表示時・ステップ移動時・各閉じ方で `trackOnboardingEvent` を送信（keepalive・失敗は無視）
+- 従来の `onboarding_completed` は完了とスキップを区別できず、「未」なのに銘柄登録済みのユーザーの原因も追えなかった。`shown` の有無でウィザードが表示されたか自体も確認できる
+
+---
+
 ## 「はじめの一歩」ガイド（2026年11月11日）
 **銘柄を1つ追加しただけで離脱するユーザーが多い（外部ユーザー15人中10人が銘柄1件のみ・12人が初日のみ）ため、追加直後に次の行動へ案内**
 

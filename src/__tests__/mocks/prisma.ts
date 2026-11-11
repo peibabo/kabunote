@@ -32,6 +32,7 @@ export const prismaMock = {
   stockFavoriteGroup: createMockModel(),
   snoozedAlert: createMockModel(),
   feedback: createMockModel(),
+  onboardingEvent: createMockModel(),
   userExternalLink: { ...createMockModel(), createMany: vi.fn() },
   chartMemo: createMockModel(),
   portfolioSnapshot: createMockModel(),
