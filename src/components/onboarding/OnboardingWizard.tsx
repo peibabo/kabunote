@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { trackOnboardingEvent } from '@/lib/onboardingEvents';
 import WelcomeStep from './WelcomeStep';
 import QuickStartStep from './QuickStartStep';
 import GetStartedStep from './GetStartedStep';
@@ -15,27 +16,43 @@ interface OnboardingWizardProps {
 export default function OnboardingWizard({ onComplete, onClose }: OnboardingWizardProps) {
   const [currentStep, setCurrentStep] = useState(0);
 
+  // 表示されたことを1回だけ記録（StrictMode の二重実行でも重複させない）
+  const hasTrackedShown = useRef(false);
+  useEffect(() => {
+    if (hasTrackedShown.current) return;
+    hasTrackedShown.current = true;
+    trackOnboardingEvent('shown', 0);
+  }, []);
+
+  const goToStep = (step: number) => {
+    setCurrentStep(step);
+    trackOnboardingEvent('step_view', step);
+  };
+
   const handleNext = () => {
     if (currentStep < TOTAL_STEPS - 1) {
-      setCurrentStep(currentStep + 1);
+      goToStep(currentStep + 1);
     }
   };
 
   const handlePrev = () => {
     if (currentStep > 0) {
-      setCurrentStep(currentStep - 1);
+      goToStep(currentStep - 1);
     }
   };
 
   const handleGetStarted = () => {
+    trackOnboardingEvent('get_started', currentStep);
     onComplete();
   };
 
   const handleLater = () => {
+    trackOnboardingEvent('later', currentStep);
     onClose();
   };
 
   const handleSkip = () => {
+    trackOnboardingEvent('close', currentStep);
     onClose();
   };
 

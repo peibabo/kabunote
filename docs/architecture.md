@@ -1,6 +1,6 @@
 # Kabunote - アーキテクチャリファレンス
 
-## データベーススキーマ（27テーブル）
+## データベーススキーマ（28テーブル）
 
 ```
 app_users (ユーザー管理)
@@ -27,6 +27,8 @@ app_users (ユーザー管理)
   │     id, user_id, stock_symbol, alert_type(ENUM), snooze_until
   ├── feedbacks (フィードバック・目安箱)
   │     id, user_id, category(ENUM), content, created_at
+  ├── onboarding_events (オンボーディング計測)
+  │     event(shown/step_view/get_started/later/close), step(0始まり)  @@index([userId, createdAt])
   ├── user_external_links (外部リンク設定)
   │     id, user_id, url, label, icon, gradient, order
   ├── portfolio_snapshots (ポートフォリオ日次スナップショット)
@@ -79,6 +81,7 @@ app_users (ユーザー管理)
 | `/api/auth/sync-user` | POST | Supabase認証後のユーザー同期 |
 | `/api/cash` | GET/PUT | 投資余力現金・Next Actionメモの取得・更新 |
 | `/api/onboarding` | GET/POST | オンボーディング完了状態の取得・更新 |
+| `/api/onboarding/events` | POST | オンボーディングのステップ通過・完了/スキップの記録（計測用） |
 | `/api/external-links` | GET/PUT | 外部リンク設定の取得・一括更新（最大8個） |
 | `/api/stock-link-settings` | GET/PUT | 銘柄カード外部リンクの表示/非表示・順番設定 |
 
@@ -383,6 +386,7 @@ app_users (ユーザー管理)
 | `dividendBenefitCalc.ts` | 配当・優待一覧計算（データ処理・フィルタ・ソート・サマリー） |
 | `portfolioSummaryCalc.ts` | ポートフォリオサマリー計算（投資額・損益・配当・優待・現金比率） |
 | `dateFormat.ts` | 日付フォーマット共通関数（ISO形式・M/D形式） |
+| `onboardingEvents.ts` | オンボーディング計測（trackOnboardingEvent=fire-and-forget送信, isValidOnboardingEvent） |
 | `tickSize.ts` | JPX呼値の単位（getTickSize / stepPriceUp / stepPriceDown。TOPIX500構成銘柄とそれ以外で別テーブル、0.1円刻みは整数換算で誤差回避） |
 
 ## ユーティリティ（src/utils/）

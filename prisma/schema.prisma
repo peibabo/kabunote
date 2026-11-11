@@ -34,6 +34,7 @@ model User {
   chartMemos         ChartMemo[]
   gamification       UserGamification?
   xpActivityLogs     XpActivityLog[]
+  onboardingEvents   OnboardingEvent[]
   checklists         UserChecklist[]
   checklistChecks    ChecklistCheck[]
   diaries            InvestmentDiary[]
@@ -552,4 +553,18 @@ model UserStockLinkSetting {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("user_stock_link_settings")
+}
+
+// オンボーディング計測（ウィザードのどこで離脱したかを集計するためのイベントログ）
+model OnboardingEvent {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  event     String   // shown / step_view / get_started / later / close
+  step      Int      // 0始まりのステップ番号（イベント発生時に表示していたステップ）
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("onboarding_events")
 }
