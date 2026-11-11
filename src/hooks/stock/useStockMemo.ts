@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { apiFetch, apiPut, apiDelete } from '@/lib/apiClient'
 import { playSound } from '@/lib/sound'
 import { grantXp } from '@/lib/gamification'
+import { emitAppEvent, APP_EVENTS } from '@/lib/appEvents'
 import { useAsyncState } from '../util/useAsyncState'
 import { useAutoSave } from '../util/useAutoSave'
 
@@ -23,6 +24,7 @@ interface UseStockMemoOptions {
 export function useStockMemo(stockId: string, options?: UseStockMemoOptions): UseStockMemoReturn {
   const hasInitialData = options?.initialData !== undefined
   const [memo, setMemo] = useState(options?.initialData ?? '')
+  const symbol = stockId.replace('stock-', '')
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const { isLoading, isSaving, error, withLoading, withSaving } = useAsyncState(!hasInitialData)
 
@@ -45,6 +47,7 @@ export function useStockMemo(stockId: string, options?: UseStockMemoOptions): Us
           setLastSaved(new Date(data.updatedAt))
           playSound('noteSave')
           grantXp('MEMO_SAVE')
+          emitAppEvent(APP_EVENTS.DB_MEMO_UPDATE, { symbol, memo: val })
         }
       })
     },
@@ -59,7 +62,8 @@ export function useStockMemo(stockId: string, options?: UseStockMemoOptions): Us
     await apiDelete(`/api/stocks/${stockId}/memo`)
     setMemo('')
     setLastSaved(null)
-  }) as Promise<void>, [stockId, withSaving])
+    emitAppEvent(APP_EVENTS.DB_MEMO_UPDATE, { symbol, memo: '' })
+  }) as Promise<void>, [stockId, symbol, withSaving])
 
   return { memo, isLoading, isSaving, error, lastSaved, updateMemo, saveMemo: () => Promise.resolve(), deleteMemo }
 }

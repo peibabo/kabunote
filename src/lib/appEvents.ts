@@ -24,6 +24,8 @@ export const APP_EVENTS = {
   DB_TAG_UPDATE: 'kabunote-db-tag-update',
   /** 次の一手（Next Action Plan）の保存／削除 */
   DB_STRATEGY_UPDATE: 'kabunote-db-strategy-update',
+  /** 銘柄メモの保存／削除 */
+  DB_MEMO_UPDATE: 'kabunote-db-memo-update',
   /** 保有ポジションの追加／更新／削除／売却 */
   DB_POSITION_UPDATE: 'kabunote-db-position-update',
   /** 現在値・利確目標・損切ラインの更新 */
@@ -83,6 +85,7 @@ export interface AppEventDetailMap {
   [APP_EVENTS.DB_CALENDAR_UPDATE]: CalendarUpdateDetail;
   [APP_EVENTS.DB_TAG_UPDATE]: { symbol: string; tags: StockData['tags'] };
   [APP_EVENTS.DB_STRATEGY_UPDATE]: { symbol: string; nextActionPlan: StockData['nextActionPlan'] };
+  [APP_EVENTS.DB_MEMO_UPDATE]: { symbol: string; memo: string };
   [APP_EVENTS.DB_POSITION_UPDATE]: { symbol: string; positions: StockData['positions'] };
   [APP_EVENTS.DB_PRICE_UPDATE]: {
     symbol: string;

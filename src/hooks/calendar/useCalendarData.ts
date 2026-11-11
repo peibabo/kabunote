@@ -108,6 +108,10 @@ export function useCalendarData(
     if (detail) updateStockData(detail.symbol, { nextActionPlan: detail.nextActionPlan });
   }, listenerOptions);
 
+  useAppEvent(APP_EVENTS.DB_MEMO_UPDATE, (detail) => {
+    if (detail) updateStockData(detail.symbol, { memo: detail.memo });
+  }, listenerOptions);
+
   useAppEvent(APP_EVENTS.DB_POSITION_UPDATE, (detail) => {
     if (detail) updateStockData(detail.symbol, { positions: detail.positions });
   }, listenerOptions);
