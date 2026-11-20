@@ -66,11 +66,38 @@ describe('ChartMemoModal', () => {
         onSavePrice={vi.fn().mockResolvedValue(true)}
       />
     )
-    expect(screen.getByText('この日の株価を修正', { exact: false })).toBeDefined()
+    expect(screen.getByText('の株価を修正', { exact: false })).toBeDefined()
+  })
+
+  it('銘柄名があると、見出しと株価修正UIに「コード 銘柄名」を表示する（どの株か分かるように）', () => {
+    render(
+      <ChartMemoModal
+        {...baseProps}
+        chartType="stocks"
+        symbol="7203"
+        stockName="トヨタ自動車"
+        editablePrice={{ snapshotId: 'snap-1', stockId: 'stock-1', symbol: '7203', name: 'トヨタ自動車', currentPrice: 2000 }}
+        onSavePrice={vi.fn().mockResolvedValue(true)}
+      />
+    )
+    expect(screen.getAllByText('7203 トヨタ自動車')).toHaveLength(2)
+  })
+
+  it('銘柄名が分からなければコードだけ表示する', () => {
+    render(
+      <ChartMemoModal
+        {...baseProps}
+        chartType="stocks"
+        symbol="7203"
+        editablePrice={{ snapshotId: 'snap-1', stockId: 'stock-1', symbol: '7203', name: null, currentPrice: 2000 }}
+        onSavePrice={vi.fn().mockResolvedValue(true)}
+      />
+    )
+    expect(screen.getAllByText('7203')).toHaveLength(2)
   })
 
   it('editablePrice が無ければ株価修正UIは表示されない', () => {
     render(<ChartMemoModal {...baseProps} chartType="stocks" symbol="7203" />)
-    expect(screen.queryByText('この日の株価を修正', { exact: false })).toBeNull()
+    expect(screen.queryByText('の株価を修正', { exact: false })).toBeNull()
   })
 })
