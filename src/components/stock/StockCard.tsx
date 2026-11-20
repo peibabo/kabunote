@@ -18,6 +18,7 @@ import ManagementTab from '../stock-tabs/ManagementTab';
 import AlertDisplay from '../alert/AlertDisplay';
 import StockCardModals from './card/StockCardModals';
 import { safeSetItem } from '@/lib/safeStorage';
+import PriceInputNudge, { shouldShowPriceNudge } from './PriceInputNudge';
 
 interface StockCardProps {
   symbol: string;
@@ -130,6 +131,11 @@ function StockCard({ symbol, onRemove, favoriteGroups, onFavoriteGroupsChange, i
             emitAppEvent(APP_EVENTS.LOCAL_STORAGE_CHANGE, { key: stockKey.investmentTab(symbol) });
           }}
         />
+
+        {/* 保有しているのに株価が未入力 → 入力を促す（株価は自動更新されない） */}
+        {shouldShowPriceNudge(positionSummary.totalShares, currentPrice, activeTab) && (
+          <PriceInputNudge symbol={symbol} />
+        )}
 
         {/* チャート確認ボタン */}
         <div className="mb-2">

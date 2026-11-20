@@ -55,4 +55,6 @@ export const stockKey = {
   investmentTab: (symbol: string) => `kabunote-investment-tab-${symbol}`,
   /** 管理タブのサブタブ状態 */
   managementTab: (symbol: string) => `kabunote-management-tab-${symbol}`,
+  /** 「株価が未入力」バナーを閉じたか（'1' で非表示） */
+  priceNudgeDismissed: (symbol: string) => `kabunote-price-nudge-dismissed-${symbol}`,
 } as const;

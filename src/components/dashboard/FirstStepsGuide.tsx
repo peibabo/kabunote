@@ -2,16 +2,27 @@
 
 import { useState } from 'react';
 import { calcFirstSteps, type FirstStepId } from '@/lib/firstStepsCalc';
-import { STORAGE_KEYS, stockKey } from '@/lib/storageKeys';
+import { STORAGE_KEYS } from '@/lib/storageKeys';
 import { safeGetItem, safeSetItem } from '@/lib/safeStorage';
 import { emitAppEvent, APP_EVENTS } from '@/lib/appEvents';
 import { playSound } from '@/lib/sound';
+import { grantXp } from '@/lib/gamification';
+import {
+  switchCardTab,
+  switchToPriceInput,
+  focusPriceInput,
+  CARD_TAB_SWITCH_DELAY_MS,
+  type CardManagementTab,
+} from '@/lib/stockCardNav';
+import { useAppEvent } from '@/hooks/util/useAppEvent';
 import type { StockData } from '@/types/stock';
 
 interface FirstStepsGuideProps {
   /** 表示順（stockSymbols 順）に並べた銘柄データ */
-  stocks: Pick<StockData, 'symbol' | 'name' | 'memo' | 'positions'>[];
+  stocks: Pick<StockData, 'symbol' | 'name' | 'memo' | 'positions' | 'currentPrice'>[];
   hasCalendarData: boolean;
+  /** ポートフォリオの記録（スナップショット）が過去に1件以上あるか */
+  hasSnapshot: boolean;
   /** 銘柄カードへスクロールしてハイライトする */
   onStockClick: (symbol: string) => void;
   /** 銘柄追加ダイアログを開く */
@@ -34,6 +45,12 @@ const STEP_LABELS: Record<FirstStepId, { icon: string; title: string; descriptio
     title: '保有株を登録（未保有なら決算日）',
     description: '損益や投資カレンダーが自動で表示されます',
   },
+  'record-price': {
+    icon: '📸',
+    title: '今日の株価を入れて記録',
+    description:
+      '株価は自動では更新されません。保有株の今日の株価を入れて「記録」すると、その日の評価額が残ります（同じ日に押し直すと上書き）。毎日続けると資産推移グラフが伸びていきます',
+  },
   'add-second-stock': {
     icon: '🔍',
     title: '気になる銘柄をもう1つ追加',
@@ -41,34 +58,59 @@ const STEP_LABELS: Record<FirstStepId, { icon: string; title: string; descriptio
   },
 };
 
-/** 銘柄カードのタブを外部から切り替える（BulkTabSwitcher と同じ仕組み） */
-function switchCardTab(symbol: string, mainTab: 'basic' | 'management', managementSubTab?: 'positions' | 'events') {
-  safeSetItem(stockKey.activeTab(symbol), mainTab);
-  emitAppEvent(APP_EVENTS.LOCAL_STORAGE_CHANGE, { key: stockKey.activeTab(symbol) });
-  if (managementSubTab) {
-    safeSetItem(stockKey.managementTab(symbol), managementSubTab);
-    emitAppEvent(APP_EVENTS.LOCAL_STORAGE_CHANGE, { key: stockKey.managementTab(symbol) });
-  }
-}
-
 export default function FirstStepsGuide({
   stocks,
   hasCalendarData,
+  hasSnapshot,
   onStockClick,
   onOpenAddStock,
 }: FirstStepsGuideProps) {
   const [isDismissed, setIsDismissed] = useState(
     () => safeGetItem(STORAGE_KEYS.FIRST_STEPS_DISMISSED) === '1'
   );
+  // 一覧データ（hasSnapshot）は再取得されないため、このセッションでの記録はイベントで反映する
+  const [recordedInSession, setRecordedInSession] = useState(false);
+  // 記録した直後だけ「明日も記録しよう」を出す（全ステップ完了でガイドが消える場合も含む）
+  const [justRecorded, setJustRecorded] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordError, setRecordError] = useState<string | null>(null);
 
-  const progress = calcFirstSteps(stocks, hasCalendarData);
+  useAppEvent(APP_EVENTS.SNAPSHOT_CREATED, () => setRecordedInSession(true));
 
-  if (isDismissed || progress.isAllDone || !progress.targetSymbol) return null;
+  const progress = calcFirstSteps(stocks, hasCalendarData, hasSnapshot || recordedInSession);
+
+  if (isDismissed || !progress.targetSymbol) return null;
+
+  if (progress.isAllDone) {
+    if (!justRecorded) return null;
+    return (
+      <section
+        aria-label="はじめの一歩"
+        role="status"
+        className="relative bg-gray-800 border border-green-700/60 rounded-lg p-4 mb-4"
+      >
+        <button
+          onClick={() => setJustRecorded(false)}
+          className="cursor-pointer absolute top-2 right-2 w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-white hover:bg-gray-700 transition-colors"
+          aria-label="閉じる"
+          title="閉じる"
+        >
+          ✕
+        </button>
+        <p className="pr-8 text-sm text-white font-medium">✅ 今日の記録ができました！</p>
+        <p className="pr-8 text-xs text-gray-400 mt-1">
+          明日も株価を入れて記録すると、ポートフォリオ推移グラフに線が伸びていきます。
+        </p>
+      </section>
+    );
+  }
 
   const target = progress.targetSymbol;
+  // 他のステップを終えた既存ユーザーに記録ステップだけ再表示される場合は、導入ではなく毎日の使い方として案内する
+  const onlyRecordLeft = progress.steps.every(s => s.done || s.id === 'record-price');
   const targetName = stocks.find(s => s.symbol === target)?.name || target;
 
-  const goToCard = (mainTab: 'basic' | 'management', subTab?: 'positions' | 'events') => {
+  const goToCard = (mainTab: 'basic' | 'management', subTab?: CardManagementTab) => {
     playSound('toggle');
     switchCardTab(target, mainTab, subTab);
     // タブ切り替えの描画を待ってからスクロール
@@ -78,7 +120,37 @@ export default function FirstStepsGuide({
         const memoInput = document.getElementById(`memo-${target}`);
         memoInput?.focus({ preventScroll: true });
       }
-    }, 150);
+    }, CARD_TAB_SWITCH_DELAY_MS);
+  };
+
+  const goToPriceInput = (symbol: string) => {
+    playSound('toggle');
+    switchToPriceInput(symbol);
+    setTimeout(() => {
+      onStockClick(symbol);
+      focusPriceInput(symbol, { preventScroll: true });
+    }, CARD_TAB_SWITCH_DELAY_MS);
+  };
+
+  const handleRecord = async () => {
+    setIsRecording(true);
+    setRecordError(null);
+    try {
+      const res = await fetch('/api/portfolio/snapshot', { method: 'POST' });
+      if (!res.ok) {
+        const json = await res.json().catch(() => null);
+        throw new Error(json?.message || '記録に失敗しました');
+      }
+      playSound('noteSave');
+      grantXp('PORTFOLIO_SNAPSHOT');
+      setJustRecorded(true);
+      setRecordedInSession(true);
+      emitAppEvent(APP_EVENTS.SNAPSHOT_CREATED);
+    } catch (e) {
+      setRecordError(e instanceof Error ? e.message : '記録に失敗しました');
+    } finally {
+      setIsRecording(false);
+    }
   };
 
   const handleDismiss = () => {
@@ -109,6 +181,34 @@ export default function FirstStepsGuide({
             </button>
           </div>
         );
+      case 'record-price': {
+        // 未入力の保有銘柄があればそこへ。全て入力済みでも古い株価のまま記録しないよう「更新」導線を残す
+        const missingSymbol = progress.priceInputSymbol;
+        const priceSymbol = missingSymbol ?? progress.heldSymbol;
+        const priceName = priceSymbol ? stocks.find(s => s.symbol === priceSymbol)?.name || priceSymbol : '';
+        return (
+          <div className="flex flex-wrap gap-2">
+            {priceSymbol && (
+              <button
+                className={missingSymbol ? primary : secondary}
+                onClick={() => goToPriceInput(priceSymbol)}
+                title={`${priceName} の現在の株価を${missingSymbol ? '入力' : '更新'}`}
+              >
+                {missingSymbol ? '株価を入力' : '株価を更新'}
+              </button>
+            )}
+            {progress.canRecord && (
+              <button
+                className={`${missingSymbol ? secondary : primary} disabled:opacity-50 disabled:cursor-not-allowed`}
+                onClick={handleRecord}
+                disabled={isRecording}
+              >
+                {isRecording ? '記録中...' : '📸 今日の記録をする'}
+              </button>
+            )}
+          </div>
+        );
+      }
       case 'add-second-stock':
         return (
           <button
@@ -144,9 +244,15 @@ export default function FirstStepsGuide({
 
       <div className="pr-8">
         <h3 className="text-base font-semibold text-white">🚀 はじめの一歩</h3>
-        <p className="text-xs text-gray-400 mt-1">
-          まずは <span className="text-blue-300 font-medium">{targetName}</span> で、カブノオトの使い方を試してみましょう
-        </p>
+        {onlyRecordLeft ? (
+          <p className="text-xs text-gray-400 mt-1">
+            あと1つ！カブノオトは <span className="text-blue-300 font-medium">毎日株価を入れて記録する</span> と、資産の推移が見えてきます
+          </p>
+        ) : (
+          <p className="text-xs text-gray-400 mt-1">
+            まずは <span className="text-blue-300 font-medium">{targetName}</span> で、カブノオトの使い方を試してみましょう
+          </p>
+        )}
       </div>
 
       <div className="flex items-center gap-3 mt-3">
@@ -163,6 +269,12 @@ export default function FirstStepsGuide({
           {progress.completedCount} / {progress.totalCount} 完了
         </span>
       </div>
+
+      {justRecorded && (
+        <p className="mt-3 text-xs text-green-400" role="status">
+          ✅ 今日の記録ができました！明日も株価を入れて記録すると、推移グラフに線が伸びていきます。
+        </p>
+      )}
 
       <ol className="mt-3 space-y-2">
         {progress.steps.map(step => {
@@ -192,6 +304,9 @@ export default function FirstStepsGuide({
                     <span className="sr-only">{step.done ? '（完了）' : '（未完了）'}</span>
                   </p>
                   {!step.done && <p className="text-xs text-gray-400 mt-0.5">{label.description}</p>}
+                  {!step.done && step.id === 'record-price' && recordError && (
+                    <p className="text-xs text-red-400 mt-0.5" role="alert">{recordError}</p>
+                  )}
                 </div>
               </div>
               {!step.done && <div className="pl-7 sm:pl-0">{renderAction(step.id)}</div>}

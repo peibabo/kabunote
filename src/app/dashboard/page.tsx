@@ -129,6 +129,7 @@ export default function Home() {
         <FirstStepsGuide
           stocks={orderedStocks}
           hasCalendarData={hasCalendarData}
+          hasSnapshot={portfolioSnapshot != null}
           onStockClick={handleStockClick}
           onOpenAddStock={() => setForceOpenAdd(true)}
         />
