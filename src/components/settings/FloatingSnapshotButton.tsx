@@ -5,6 +5,7 @@ import { playSound } from '@/lib/sound';
 import { getJSTHour, getTodayJST } from '@/lib/dateJst';
 import { useAppEvent } from '@/hooks/util/useAppEvent';
 import { emitAppEvent, APP_EVENTS } from '@/lib/appEvents';
+import { grantXp } from '@/lib/gamification';
 
 interface FloatingSnapshotButtonProps {
   hasSnapshotReady: boolean;
@@ -79,6 +80,8 @@ export default function FloatingSnapshotButton({ hasSnapshotReady }: FloatingSna
       const res = await fetch('/api/portfolio/snapshot', { method: 'POST' });
       if (res.ok) {
         playSound('noteSave');
+        // 推移ウィジェットの「本日の終値を確定」と同じくXPを付与（API側で1日1回に制限）
+        grantXp('PORTFOLIO_SNAPSHOT');
         emitAppEvent(APP_EVENTS.SNAPSHOT_CREATED);
         setIsExpanded(false);
         setSuccessMessage(isOverwrite ? '更新しました！' : '記録しました！');

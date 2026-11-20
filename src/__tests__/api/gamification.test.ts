@@ -138,6 +138,20 @@ describe('POST /api/gamification/xp', () => {
     expect(json.data.xpEarned).toBe(0)
   })
 
+  it('日次1回制限: PORTFOLIO_SNAPSHOTは同日の上書き記録でXPを重複付与しない', async () => {
+    prismaMock.userGamification.upsert.mockResolvedValue(mockGamification as never)
+    prismaMock.xpActivityLog.findFirst.mockResolvedValue({ id: 'existing' } as never)
+
+    const req = createRequest('POST', 'http://localhost:3000/api/gamification/xp', {
+      actionType: 'PORTFOLIO_SNAPSHOT',
+    })
+    const res = await POST(req)
+    const json = await getJson(res)
+
+    expect(json.success).toBe(true)
+    expect(json.data.xpEarned).toBe(0)
+  })
+
   it('レベルアップ時はleveledUp=true', async () => {
     // Lv2に到達する直前（99XP）から+15XPでLv2到達
     prismaMock.userGamification.upsert.mockResolvedValue({
