@@ -305,6 +305,25 @@ export default function PortfolioChart({ data, memoMap: propMemoMap, onDotClick 
         </div>
       )}
 
+      {/* 過去の株価修正の案内（修正できるのは「値上がり率」タブの昨日以前の点のみ） */}
+      <p className="mt-2 text-[11px] text-gray-500 leading-relaxed" data-testid="past-price-edit-hint">
+        {chartType === 'stocks' ? (
+          <>💡 昨日以前の点をクリックすると、その日の株価を修正できます（メモも残せます）</>
+        ) : (
+          <>
+            💡 点をクリックするとメモを残せます。記録した日の株価を後から直すには
+            <button
+              type="button"
+              onClick={() => setChartType('stocks')}
+              className="mx-0.5 text-blue-400 hover:text-blue-300 underline underline-offset-2 cursor-pointer"
+            >
+              {CHART_TYPE_META.stocks.icon} {CHART_TYPE_META.stocks.label}
+            </button>
+            タブの点をクリック
+          </>
+        )}
+      </p>
+
       {/* 最新データサマリー */}
       {data.length > 0 && (
         <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">

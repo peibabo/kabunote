@@ -84,6 +84,7 @@ const SECTIONS: HelpSection[] = [
             <p><span className="text-white">日次スナップショット:</span> 毎日のポートフォリオ状態を記録し、推移を追跡できます。</p>
             <p><span className="text-white">推移グラフ:</span> 評価額推移・純資産推移・損益推移・値上がり率推移の4種類のグラフで表示します。値上がり率は表示期間の起点を0%とした各銘柄の騰落率です。期間は1W〜2Yで切替可能です。</p>
             <p><span className="text-white">チャートメモ:</span> グラフ上のデータポイントにメモを付与して、その時点の判断や分析を記録できます。</p>
+            <p><span className="text-white">過去の株価修正:</span> 「値上がり率」グラフ、または銘柄カードの株価推移チャートで昨日以前の点をクリックすると、記録済みの日の株価を修正できます。評価額・損益・純資産も自動で再計算されます。</p>
             <p className="text-white font-medium mb-1 mt-3">その他のダッシュボード</p>
             <p><span className="text-white">戦略一覧:</span> 全銘柄の投資戦略を一覧表示し、統計情報を確認できます。</p>
             <p><span className="text-white">ポジション一覧:</span> 保有銘柄の損益分析やNISA/特定口座ポジション別の税率管理ができます。</p>
@@ -296,8 +297,15 @@ const SECTIONS: HelpSection[] = [
         id: 'faq-stock-price',
         title: '株価は自動で更新されますか？',
         type: 'faq',
-        keywords: '株価 自動 更新 手動 一括 前日終値',
-        content: <p className="px-4 pb-4 text-gray-300">株価は手動で入力・更新できます。また、メニューの「株価一括更新」から前日終値を一括取得することも可能です。リアルタイムの自動更新には対応していません。</p>,
+        keywords: '株価 自動 更新 手動 入力 記録 毎日',
+        content: <p className="px-4 pb-4 text-gray-300">株価は自動では更新されません。銘柄カードの「分析」タブで現在の株価を入力してください。入力後に「本日の終値を確定」で記録すると、その日の評価額がポートフォリオ推移グラフに残ります（同じ日は押し直すと上書き）。</p>,
+      },
+      {
+        id: 'faq-missed-snapshot',
+        title: '株価の記録を忘れた日や、記録した株価を直したいときは？',
+        type: 'faq',
+        keywords: '記録 忘れ 過去 株価 修正 スナップショット 推移 抜け',
+        content: <p className="px-4 pb-4 text-gray-300">記録済みの日の株価は、「値上がり率」グラフまたは銘柄カードの株価推移チャートで、その日の点をクリックすると修正できます。記録していない日を後から追加することは現在できないため、その日はグラフ上で抜けとなります（翌日以降の記録はそのまま続けられます）。</p>,
       },
       {
         id: 'faq-level-xp',
