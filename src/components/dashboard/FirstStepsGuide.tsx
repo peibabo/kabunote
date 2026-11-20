@@ -99,7 +99,7 @@ export default function FirstStepsGuide({
         </button>
         <p className="pr-8 text-sm text-white font-medium">✅ 今日の記録ができました！</p>
         <p className="pr-8 text-xs text-gray-400 mt-1">
-          明日も株価を入れて記録すると、ポートフォリオ推移グラフに線が伸びていきます。
+          明日も株価を入れて記録すると、ポートフォリオ推移グラフに線が伸びていきます。記録し忘れた日も、推移グラフから後で追加できます。
         </p>
       </section>
     );
@@ -272,7 +272,7 @@ export default function FirstStepsGuide({
 
       {justRecorded && (
         <p className="mt-3 text-xs text-green-400" role="status">
-          ✅ 今日の記録ができました！明日も株価を入れて記録すると、推移グラフに線が伸びていきます。
+          ✅ 今日の記録ができました！明日も株価を入れて記録すると、推移グラフに線が伸びていきます。記録し忘れた日も後で追加できます。
         </p>
       )}
 

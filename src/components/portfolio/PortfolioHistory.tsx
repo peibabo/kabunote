@@ -8,6 +8,8 @@ import { isBeforeTodayJST } from '@/lib/dateJst';
 import { emitAppEvent, APP_EVENTS } from '@/lib/appEvents';
 import PortfolioChart from '@/components/portfolio/PortfolioChart';
 import ChartMemoModal from '@/components/portfolio/ChartMemoModal';
+import BackfillSnapshotModal from '@/components/portfolio/BackfillSnapshotModal';
+import { formatMonthDayJP } from '@/lib/dateFormat';
 import type { EditablePrice } from '@/components/portfolio/chart/ChartSnapshotEditor';
 import type { HistoryRange, ChartType, PortfolioSnapshotData, ChartMemoMap } from '@/types/portfolio';
 import { chartMemoKey } from '@/types/portfolio';
@@ -40,6 +42,11 @@ interface PortfolioHistoryProps {
   saveMemo: (snapshotDate: string, chartType: ChartType, symbol: string | undefined, content: string) => Promise<boolean>;
   deleteMemo: (snapshotDate: string, chartType: ChartType, symbol?: string) => Promise<boolean>;
   updateSnapshotPrices: (snapshotId: string, prices: { stockId: string; currentPrice: number }[]) => Promise<boolean>;
+  /** 直近で記録していない営業日（新しい順） */
+  missingDates?: string[];
+  refreshMissingDates?: () => void;
+  /** 失敗時はサーバーの理由を持つ Error を投げる */
+  backfillSnapshot?: (date: string, prices: { stockId: string; currentPrice: number }[], cashAmount: number) => Promise<void>;
 }
 
 export default function PortfolioHistory({
@@ -55,8 +62,12 @@ export default function PortfolioHistory({
   saveMemo,
   deleteMemo,
   updateSnapshotPrices,
+  missingDates = [],
+  refreshMissingDates,
+  backfillSnapshot,
 }: PortfolioHistoryProps) {
   const [modalTarget, setModalTarget] = useState<ModalTarget | null>(null);
+  const [isBackfillOpen, setIsBackfillOpen] = useState(false);
 
   const handleSnapshot = async () => {
     const success = await createSnapshot();
@@ -212,6 +223,21 @@ export default function PortfolioHistory({
           </div>
         </div>
 
+        {/* 記録し忘れた日の案内（後から追加できる） */}
+        {backfillSnapshot && missingDates.length > 0 && (
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2 px-3 py-2 bg-yellow-900/20 border border-yellow-700/40 rounded-lg">
+            <p className="text-xs text-yellow-200">
+              記録していない営業日が {missingDates.length} 日あります（直近: {formatMonthDayJP(missingDates[0])}）
+            </p>
+            <button
+              onClick={() => setIsBackfillOpen(true)}
+              className="cursor-pointer px-3 py-1 rounded text-xs font-medium bg-yellow-700/60 text-yellow-50 hover:bg-yellow-600/70 transition-colors"
+            >
+              追加する
+            </button>
+          </div>
+        )}
+
         {/* エラー表示 */}
         {error && (
           <div className="mb-3 px-3 py-2 bg-red-900 bg-opacity-30 border border-red-700 rounded-lg text-sm text-red-300">
@@ -232,6 +258,15 @@ export default function PortfolioHistory({
           />
         )}
       </div>
+
+      {isBackfillOpen && backfillSnapshot && missingDates.length > 0 && (
+        <BackfillSnapshotModal
+          missingDates={missingDates}
+          onClose={() => setIsBackfillOpen(false)}
+          onSave={backfillSnapshot}
+          onStale={refreshMissingDates}
+        />
+      )}
 
       {/* チャートメモモーダル */}
       {modalTarget && (

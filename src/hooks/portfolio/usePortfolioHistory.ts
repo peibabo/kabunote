@@ -8,7 +8,7 @@ import { STORAGE_KEYS } from '@/lib/storageKeys';
 import { grantXp } from '@/lib/gamification';
 import { APP_EVENTS } from '@/lib/appEvents';
 import { getTodayJST } from '@/lib/dateJst';
-import { patchSnapshotPrices } from '@/lib/apiClient';
+import { patchSnapshotPrices, postBackfillSnapshot, getMissingSnapshotDates } from '@/lib/apiClient';
 
 export function usePortfolioHistory() {
   // 選択中期間をlocalStorageに永続化（リロード後も維持）
@@ -24,7 +24,21 @@ export function usePortfolioHistory() {
   const [isCreating, setIsCreating] = useState(false);
   const [todayRecorded, setTodayRecorded] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // 直近で記録していない営業日（新しい順）。取得に失敗しても推移グラフ自体は使えるよう、エラーは出さない
+  const [missingDates, setMissingDates] = useState<string[]>([]);
   const isInitialLoad = useRef(true);
+
+  const fetchMissingDates = useCallback(async () => {
+    try {
+      setMissingDates(await getMissingSnapshotDates());
+    } catch {
+      // 未記録日の案内は補助的な機能なので、失敗時は表示しないだけにする
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchMissingDates();
+  }, [fetchMissingDates]);
 
   const fetchHistory = useCallback(async (r: HistoryRange) => {
     if (isInitialLoad.current) {
@@ -63,14 +77,17 @@ export function usePortfolioHistory() {
     let timerId: ReturnType<typeof setTimeout>;
     const handler = () => {
       setTodayRecorded(true);
-      timerId = setTimeout(() => fetchHistory(range), 500);
+      timerId = setTimeout(() => {
+        fetchHistory(range);
+        fetchMissingDates();
+      }, 500);
     };
     window.addEventListener(APP_EVENTS.SNAPSHOT_CREATED, handler);
     return () => {
       clearTimeout(timerId);
       window.removeEventListener(APP_EVENTS.SNAPSHOT_CREATED, handler);
     };
-  }, [range, fetchHistory]);
+  }, [range, fetchHistory, fetchMissingDates]);
 
   const createSnapshot = useCallback(async () => {
     setIsCreating(true);
@@ -109,6 +126,25 @@ export function usePortfolioHistory() {
     }
   }, []);
 
+  // 記録し忘れた日を後から追加する。
+  // XP は付けず、SNAPSHOT_CREATED も発火しない（発火すると「本日の記録済み」と誤判定される）
+  // 失敗時はサーバーの理由をそのまま投げ、モーダル内に表示させる（推移カードの error には載せない）。
+  // 別タブで記録済みになった等で一覧が古い可能性があるため、未記録日を取り直す
+  const backfillSnapshot = useCallback(async (
+    date: string,
+    prices: { stockId: string; currentPrice: number }[],
+    cashAmount: number,
+  ): Promise<void> => {
+    try {
+      await postBackfillSnapshot<PortfolioSnapshotData>(date, prices, cashAmount);
+    } catch (e) {
+      fetchMissingDates();
+      throw e instanceof Error ? e : new Error('記録の追加に失敗しました');
+    }
+    setMissingDates(prev => prev.filter(d => d !== date));
+    await fetchHistory(range);
+  }, [range, fetchHistory, fetchMissingDates]);
+
   return {
     data,
     range,
@@ -119,5 +155,8 @@ export function usePortfolioHistory() {
     error,
     createSnapshot,
     updateSnapshotPrices,
+    missingDates,
+    refreshMissingDates: fetchMissingDates,
+    backfillSnapshot,
   };
 }

@@ -14,7 +14,7 @@ export default function PortfolioHistoryWidget() {
   });
 
   const historyState = usePortfolioHistory();
-  const { data, range, todayRecorded, isLoading } = historyState;
+  const { data, range, todayRecorded, isLoading, missingDates } = historyState;
   const chartMemosState = useChartMemos(range);
 
   // ミニスパークライン用データ（直近30件）
@@ -59,6 +59,16 @@ export default function PortfolioHistoryWidget() {
                 未記録
               </span>
             )
+          )}
+
+          {/* 記録し忘れた営業日（開くと後から追加できる） */}
+          {!isLoading && missingDates.length > 0 && (
+            <span
+              className="text-xs px-1.5 py-0.5 rounded bg-gray-700/60 text-gray-300 border border-gray-600/50"
+              title="記録していない営業日があります。開いて「追加する」から後で記録できます"
+            >
+              抜け{missingDates.length}日
+            </span>
           )}
 
           {/* ミニスパークライン（折りたたみ時 & データあり） */}
