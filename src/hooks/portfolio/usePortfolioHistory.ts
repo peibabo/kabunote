@@ -128,21 +128,22 @@ export function usePortfolioHistory() {
 
   // 記録し忘れた日を後から追加する。
   // XP は付けず、SNAPSHOT_CREATED も発火しない（発火すると「本日の記録済み」と誤判定される）
+  // 失敗時はサーバーの理由をそのまま投げ、モーダル内に表示させる（推移カードの error には載せない）。
+  // 別タブで記録済みになった等で一覧が古い可能性があるため、未記録日を取り直す
   const backfillSnapshot = useCallback(async (
     date: string,
     prices: { stockId: string; currentPrice: number }[],
     cashAmount: number,
-  ): Promise<boolean> => {
+  ): Promise<void> => {
     try {
       await postBackfillSnapshot<PortfolioSnapshotData>(date, prices, cashAmount);
-      setMissingDates(prev => prev.filter(d => d !== date));
-      await fetchHistory(range);
-      return true;
     } catch (e) {
-      setError(e instanceof Error ? e.message : '記録の追加に失敗しました');
-      return false;
+      fetchMissingDates();
+      throw e instanceof Error ? e : new Error('記録の追加に失敗しました');
     }
-  }, [range, fetchHistory]);
+    setMissingDates(prev => prev.filter(d => d !== date));
+    await fetchHistory(range);
+  }, [range, fetchHistory, fetchMissingDates]);
 
   return {
     data,
@@ -155,6 +156,7 @@ export function usePortfolioHistory() {
     createSnapshot,
     updateSnapshotPrices,
     missingDates,
+    refreshMissingDates: fetchMissingDates,
     backfillSnapshot,
   };
 }

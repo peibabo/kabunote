@@ -109,8 +109,8 @@ app_users (ユーザー管理)
 | パス | メソッド | 説明 |
 |------|---------|------|
 | `/api/portfolio/snapshot` | POST | ポートフォリオ日次スナップショット作成/更新（同日upsert） |
-| `/api/portfolio/snapshot/backfill` | GET/POST | 記録し忘れた日の後追加。GET `?date=` で保有・株価・現金の初期値（保有は今のポジション＋その日より後に売却したロットを `consumedLots`・`costBasis` で足し戻して再現。株価は直前→直後の記録→今の株価、現金は直前の記録→今の現金）。POST `{date, stockPrices, cashAmount}` で作成（保有はサーバー側で再計算）。今日以降・2年より前・東証休業日は400、記録済みは409、その日に保有なしは400。XPは付与しない |
-| `/api/portfolio/snapshot/missing` | GET | 直近30日のうち初回記録日以降で、記録していない東証営業日（今日を除く・新しい順）`{missingDates}` |
+| `/api/portfolio/snapshot/backfill` | GET/POST | 記録し忘れた日の後追加。GET `?date=` で保有・株価・現金の初期値（保有は今のポジション＋その日より後に売却したロットを `consumedLots`・`costBasis` で足し戻して再現。株価は直前→直後の記録→今の株価、現金は直前の記録→今の現金）。POST `{date, stockPrices, cashAmount}` で作成（保有はサーバー側で再計算）。今日以降・2年より前・東証休業日は400、記録済みは409、その日に保有なしは400。株価が決まらない銘柄（入力なし・前後の記録も今の株価もない）があれば400（株価なしで保存しない）。現金は0以上1000億円未満。XPは付与しない |
+| `/api/portfolio/snapshot/missing` | GET | 直近30日のうち初回記録日以降で、記録していない東証営業日（今日を除く・新しい順）`{missingDates}`。何も保有していなかった日は後から追加できないため除く |
 | `/api/portfolio/snapshot/[id]` | PATCH | 過去スナップショットの個別株価修正（stockPrices:[{stockId,currentPrice}]）。当日分は不可（昨日以前のみ）・所有者外は404。評価額/損益/純資産を再計算 |
 | `/api/portfolio/realized` | GET | 確定損益一覧（?year=YYYY で年フィルタ・年間損益サマリー用。実現損益＋売却代金合計・税引後手取りを集計） |
 | `/api/portfolio/realized/[tradeId]` | DELETE | 確定損益（売却記録）の削除。レコードのみ削除し保有ポジションには触れない（株数は戻さない） |

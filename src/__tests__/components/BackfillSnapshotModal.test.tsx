@@ -34,7 +34,7 @@ describe('BackfillSnapshotModal', () => {
   })
 
   it('保存すると入力値で onSave を呼び、閉じる', async () => {
-    const onSave = vi.fn().mockResolvedValue(true)
+    const onSave = vi.fn().mockResolvedValue(undefined)
     const onClose = vi.fn()
     render(<BackfillSnapshotModal missingDates={['2026-11-18']} onClose={onClose} onSave={onSave} />)
     const input = await screen.findByDisplayValue('2500')
@@ -57,12 +57,39 @@ describe('BackfillSnapshotModal', () => {
     await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining('date=2026-11-16'), undefined))
   })
 
-  it('取得エラーはメッセージを表示する', async () => {
+  it('取得エラーはメッセージを表示し、未記録日を取り直す', async () => {
     global.fetch = vi.fn(async () => ({
       ok: false,
       json: async () => ({ message: 'この日はすでに記録されています' }),
     } as Response)) as unknown as typeof fetch
-    render(<BackfillSnapshotModal missingDates={['2026-11-18']} onClose={vi.fn()} onSave={vi.fn()} />)
+    const onStale = vi.fn()
+    render(<BackfillSnapshotModal missingDates={['2026-11-18']} onClose={vi.fn()} onSave={vi.fn()} onStale={onStale} />)
     expect(await screen.findByText('この日はすでに記録されています')).toBeDefined()
+    expect(onStale).toHaveBeenCalled()
+  })
+
+  it('保存に失敗したらサーバーの理由をモーダル内に表示し、閉じない', async () => {
+    const onSave = vi.fn().mockRejectedValue(new Error('この日はすでに記録されています'))
+    const onClose = vi.fn()
+    render(<BackfillSnapshotModal missingDates={['2026-11-18']} onClose={onClose} onSave={onSave} />)
+    await screen.findByDisplayValue('2500')
+    fireEvent.click(screen.getByText('この日の記録を追加'))
+    expect(await screen.findByText('この日はすでに記録されています')).toBeDefined()
+    expect(onClose).not.toHaveBeenCalled()
+  })
+
+  it('選んでいた日が一覧から外れたら、残りの最新の日に切り替えて理由を出す', async () => {
+    const { rerender } = render(<BackfillSnapshotModal missingDates={['2026-11-18', '2026-11-16']} onClose={vi.fn()} onSave={vi.fn()} />)
+    await screen.findByDisplayValue('2500')
+    rerender(<BackfillSnapshotModal missingDates={['2026-11-16']} onClose={vi.fn()} onSave={vi.fn()} />)
+    expect(await screen.findByText(/2026\/11\/18（水） は追加できないため一覧から外しました/)).toBeDefined()
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining('date=2026-11-16'), undefined))
+  })
+
+  it('現金が上限を超えると保存できない', async () => {
+    render(<BackfillSnapshotModal missingDates={['2026-11-18']} onClose={vi.fn()} onSave={vi.fn()} />)
+    await screen.findByDisplayValue('2500')
+    fireEvent.change(screen.getByLabelText('現金'), { target: { value: '100000000000' } })
+    expect((screen.getByText('この日の記録を追加') as HTMLButtonElement).disabled).toBe(true)
   })
 })

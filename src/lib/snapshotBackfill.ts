@@ -14,6 +14,32 @@ export interface BackfillTradeInput {
   consumedLots: ConsumedLot[];
 }
 
+/** DB の銘柄行（Decimal は Number() で数値化できるもの）から計算用の入力へ変換する */
+export interface BackfillStockRow {
+  positions: { id: string; shares: number; purchasePrice: unknown; purchaseDate: string | null; taxRate: unknown; createdAt: Date }[];
+  realizedTrades: { id: string; sellDate: string; costBasis: unknown; taxRate: unknown; consumedLots: unknown }[];
+}
+
+export function toBackfillInputs(stock: BackfillStockRow): { positions: Position[]; trades: BackfillTradeInput[] } {
+  return {
+    positions: stock.positions.map(p => ({
+      id: p.id,
+      shares: p.shares,
+      purchasePrice: Number(p.purchasePrice),
+      purchaseDate: p.purchaseDate ?? '',
+      taxRate: Number(p.taxRate),
+      createdAt: p.createdAt.toISOString(),
+    })),
+    trades: stock.realizedTrades.map(t => ({
+      id: t.id,
+      sellDate: t.sellDate,
+      costBasis: Number(t.costBasis),
+      taxRate: Number(t.taxRate),
+      consumedLots: (Array.isArray(t.consumedLots) ? t.consumedLots : []) as ConsumedLot[],
+    })),
+  };
+}
+
 /** 後追加できる最も古い日（スナップショットの保持期間と揃える） */
 export const BACKFILL_MAX_DAYS = 730;
 /** 未記録日として知らせる期間（日数） */
@@ -37,7 +63,8 @@ function effectiveAcquiredDate(p: Position): string {
  *
  * - 今のポジションのうち、取得日がその日以前のもの
  * - ＋ その日より後に売却したロット（consumedLots）のうち、取得日がその日以前のもの
- *   （取得日が空のロットは、いつ買ったか分からないため保有していた扱いにする）
+ *   （取得日が空のロットは、いつ買ったか分からないため保有していた扱いにする。
+ *    売却時に登録日が保存されないため、まだ持っているロットのように登録日で代用できない）
  *
  * 売却したロットの元の取得単価は残っていないため、売却時点の加重平均（costBasis）で近似する。
  */
@@ -69,6 +96,16 @@ export function reconstructPositionsAt(
   }
 
   return [...held, ...restored];
+}
+
+/** その日の終わりに1株でも保有していたか（全銘柄のどれか） */
+export function hasHoldingsAt(
+  date: string,
+  stocks: { positions: Position[]; trades: BackfillTradeInput[] }[],
+): boolean {
+  return stocks.some(s =>
+    reconstructPositionsAt(date, s.positions, s.trades).reduce((sum, p) => sum + p.shares, 0) > 0,
+  );
 }
 
 /**

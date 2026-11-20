@@ -155,6 +155,32 @@ describe('POST /api/portfolio/snapshot/backfill', () => {
     expect(res.status).toBe(400)
   })
 
+  it('400: 現金が上限（1000億円）を超える', async () => {
+    const res = await POST(createRequest('POST', BASE, { date: '2026-11-16', cashAmount: 1e20 }))
+    expect(res.status).toBe(400)
+    expect(prismaMock.portfolioSnapshot.create).not.toHaveBeenCalled()
+  })
+
+  it('400: 株価が決まらない銘柄がある（入力なし・前後の記録も今の株価もない）', async () => {
+    mockNeighbors(null, null)
+    prismaMock.stock.findMany.mockResolvedValue([stockRow({ prices: [] })] as never)
+    const res = await POST(createRequest('POST', BASE, { date: '2026-11-16', stockPrices: [] }))
+    const json = await getJson(res)
+    expect(res.status).toBe(400)
+    expect(json.message).toContain('7203')
+    expect(prismaMock.portfolioSnapshot.create).not.toHaveBeenCalled()
+  })
+
+  it('株価の初期値がなくても、入力すれば作成できる', async () => {
+    mockNeighbors(null, null)
+    prismaMock.stock.findMany.mockResolvedValue([stockRow({ prices: [] })] as never)
+    const res = await POST(createRequest('POST', BASE, {
+      date: '2026-11-16',
+      stockPrices: [{ stockId: 'stock-1', currentPrice: 2400 }],
+    }))
+    expect(res.status).toBe(200)
+  })
+
   it('400: その日に保有していない銘柄の株価', async () => {
     const res = await POST(createRequest('POST', BASE, {
       date: '2026-11-16',
@@ -171,6 +197,8 @@ describe('POST /api/portfolio/snapshot/backfill', () => {
 })
 
 describe('GET /api/portfolio/snapshot/missing', () => {
+  const MISSING_URL = 'http://localhost:3000/api/portfolio/snapshot/missing'
+
   it('初回記録日以降の未記録の営業日を新しい順で返す', async () => {
     prismaMock.portfolioSnapshot.findFirst.mockResolvedValue({ snapshotDate: new Date('2026-11-13T00:00:00Z') } as never)
     prismaMock.portfolioSnapshot.findMany.mockResolvedValue([
@@ -180,6 +208,20 @@ describe('GET /api/portfolio/snapshot/missing', () => {
     ] as never)
     const json = await getJson(await GET_MISSING(createRequest('GET', 'http://localhost:3000/api/portfolio/snapshot/missing')))
     expect(json.data.missingDates).toEqual(['2026-11-19', '2026-11-18', '2026-11-16'])
+  })
+
+  it('何も保有していなかった日は含めない（後から追加できないため）', async () => {
+    prismaMock.portfolioSnapshot.findFirst.mockResolvedValue({ snapshotDate: new Date('2026-11-13T00:00:00Z') } as never)
+    prismaMock.portfolioSnapshot.findMany.mockResolvedValue([
+      { snapshotDate: new Date('2026-11-13T00:00:00Z') },
+    ] as never)
+    // 11/16〜11/17 は保有なし、11/18 に買い直した
+    prismaMock.stock.findMany.mockResolvedValue([stockRow({
+      positions: [{ id: 'pos-1', shares: 100, purchasePrice: '2000', purchaseDate: '2026-11-18', taxRate: '0.20315', createdAt: new Date('2026-11-18T00:00:00Z') }],
+      realizedTrades: [],
+    })] as never)
+    const json = await getJson(await GET_MISSING(createRequest('GET', MISSING_URL)))
+    expect(json.data.missingDates).toEqual(['2026-11-19', '2026-11-18'])
   })
 
   it('記録が1件もなければ空', async () => {

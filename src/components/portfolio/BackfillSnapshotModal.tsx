@@ -5,35 +5,36 @@ import { playSound } from '@/lib/sound';
 import { formatDateSlashJP } from '@/lib/dateFormat';
 import { formatShares } from '@/lib/positionCalc';
 import { getBackfillPreview, type BackfillPreview } from '@/lib/apiClient';
+import { isValidRequiredPrice, isValidCashAmount } from '@/lib/validation';
 
 interface BackfillSnapshotModalProps {
   /** 記録していない営業日（新しい順）。先頭を初期選択にする */
   missingDates: string[];
   onClose: () => void;
+  /** 失敗時はサーバーの理由を持つ Error を投げる */
   onSave: (
     date: string,
     prices: { stockId: string; currentPrice: number }[],
     cashAmount: number,
-  ) => Promise<boolean>;
+  ) => Promise<void>;
+  /** 初期値の取得に失敗したとき（別タブで記録済みになった等）に未記録日を取り直す */
+  onStale?: () => void;
 }
 
-const MAX_PRICE = 99_999_999;
-
+// 入力チェックはサーバー（backfill API）と同じ validation.ts の関数を使う
 function isValidPrice(value: string): boolean {
-  const n = parseFloat(value);
-  return value.trim().length > 0 && Number.isFinite(n) && n > 0 && n <= MAX_PRICE;
+  return value.trim().length > 0 && isValidRequiredPrice(parseFloat(value));
 }
 
 function isValidCash(value: string): boolean {
-  const n = parseFloat(value);
-  return value.trim().length > 0 && Number.isFinite(n) && n >= 0;
+  return value.trim().length > 0 && isValidCashAmount(value);
 }
 
 /**
  * 記録し忘れた日のスナップショットを後から追加するモーダル。
  * 保有株数はサーバーが売却履歴から再現する。株価と現金は直前の記録の値が初期値で、ここで修正できる。
  */
-export default function BackfillSnapshotModal({ missingDates, onClose, onSave }: BackfillSnapshotModalProps) {
+export default function BackfillSnapshotModal({ missingDates, onClose, onSave, onStale }: BackfillSnapshotModalProps) {
   const [date, setDate] = useState(missingDates[0] ?? '');
   const [preview, setPreview] = useState<BackfillPreview | null>(null);
   const [prices, setPrices] = useState<Record<string, string>>({});
@@ -41,6 +42,17 @@ export default function BackfillSnapshotModal({ missingDates, onClose, onSave }:
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
+  // 選んでいた日が一覧から外れたときの説明（理由つき）
+  const [notice, setNotice] = useState('');
+
+  // 未記録日を取り直した結果、選んでいた日が一覧から消えたら、残っている最新の日に切り替える
+  useEffect(() => {
+    if (!date || missingDates.includes(date)) return;
+    setNotice(`${formatDateSlashJP(date)} は追加できないため一覧から外しました${error ? `（${error}）` : ''}`);
+    setDate(missingDates[0] ?? '');
+    // date/error は切り替えの瞬間の値だけ使えばよい
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [missingDates]);
 
   useEffect(() => {
     document.body.style.overflow = 'hidden';
@@ -63,7 +75,9 @@ export default function BackfillSnapshotModal({ missingDates, onClose, onSave }:
         setCash(String(p.suggestedCash));
       })
       .catch(e => {
-        if (!cancelled) setError(e instanceof Error ? e.message : '読み込みに失敗しました');
+        if (cancelled) return;
+        setError(e instanceof Error ? e.message : '読み込みに失敗しました');
+        onStale?.();
       })
       .finally(() => {
         if (!cancelled) setIsLoading(false);
@@ -71,6 +85,8 @@ export default function BackfillSnapshotModal({ missingDates, onClose, onSave }:
     return () => {
       cancelled = true;
     };
+    // onStale は親の再レンダーで変わりうるが、日付が変わったときだけ取り直せばよい
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [date]);
 
   const canSave = preview != null
@@ -88,19 +104,15 @@ export default function BackfillSnapshotModal({ missingDates, onClose, onSave }:
     setIsSaving(true);
     setError('');
     try {
-      const success = await onSave(
+      await onSave(
         preview.date,
         preview.stocks.map(s => ({ stockId: s.stockId, currentPrice: parseFloat(prices[s.stockId]) })),
         parseFloat(cash),
       );
-      if (success) {
-        playSound('noteSave');
-        onClose();
-      } else {
-        setError('記録の追加に失敗しました');
-      }
-    } catch {
-      setError('記録の追加に失敗しました');
+      playSound('noteSave');
+      onClose();
+    } catch (e) {
+      setError(e instanceof Error && e.message ? e.message : '記録の追加に失敗しました');
     } finally {
       setIsSaving(false);
     }
@@ -195,6 +207,10 @@ export default function BackfillSnapshotModal({ missingDates, onClose, onSave }:
                 <span className="text-gray-400 text-sm ml-1">円</span>
               </div>
             </>
+          )}
+
+          {notice && (
+            <p className="mb-3 text-xs text-yellow-200" role="status">{notice}</p>
           )}
 
           {error && (

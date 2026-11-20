@@ -4,6 +4,8 @@ import {
   reconstructPositionsAt,
   findMissingBusinessDays,
   validateBackfillDate,
+  hasHoldingsAt,
+  toBackfillInputs,
   type BackfillTradeInput,
 } from '@/lib/snapshotBackfill'
 import type { Position } from '@/types/positions'
@@ -146,5 +148,32 @@ describe('validateBackfillDate', () => {
   it('休業日は不可', () => {
     expect(validateBackfillDate('2026-11-15', today)).toBe('holiday') // 日曜
     expect(validateBackfillDate('2026-11-03', today)).toBe('holiday') // 文化の日
+  })
+})
+
+describe('hasHoldingsAt', () => {
+  it('どれか1銘柄でも株を持っていれば true', () => {
+    const stocks = [
+      { positions: [], trades: [] },
+      { positions: [pos({ purchaseDate: '2026-11-10' })], trades: [] },
+    ]
+    expect(hasHoldingsAt('2026-11-10', stocks)).toBe(true)
+    expect(hasHoldingsAt('2026-11-09', stocks)).toBe(false)
+  })
+
+  it('売却済みの株も、売却前の日なら保有あり', () => {
+    expect(hasHoldingsAt('2026-11-10', [{ positions: [], trades: [trade({})] }])).toBe(true)
+    expect(hasHoldingsAt('2026-11-18', [{ positions: [], trades: [trade({})] }])).toBe(false)
+  })
+})
+
+describe('toBackfillInputs', () => {
+  it('Decimal 相当の値を数値にし、consumedLots が配列でなければ空にする', () => {
+    const result = toBackfillInputs({
+      positions: [{ id: 'p1', shares: 10, purchasePrice: '1500.5', purchaseDate: null, taxRate: '0', createdAt: new Date('2026-11-01T00:00:00Z') }],
+      realizedTrades: [{ id: 't1', sellDate: '2026-11-18', costBasis: '1200', taxRate: '0.20315', consumedLots: null }],
+    })
+    expect(result.positions[0]).toMatchObject({ purchasePrice: 1500.5, purchaseDate: '', taxRate: 0, createdAt: '2026-11-01T00:00:00.000Z' })
+    expect(result.trades[0]).toMatchObject({ costBasis: 1200, taxRate: 0.20315, consumedLots: [] })
   })
 })

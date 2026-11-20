@@ -44,7 +44,9 @@ interface PortfolioHistoryProps {
   updateSnapshotPrices: (snapshotId: string, prices: { stockId: string; currentPrice: number }[]) => Promise<boolean>;
   /** 直近で記録していない営業日（新しい順） */
   missingDates?: string[];
-  backfillSnapshot?: (date: string, prices: { stockId: string; currentPrice: number }[], cashAmount: number) => Promise<boolean>;
+  refreshMissingDates?: () => void;
+  /** 失敗時はサーバーの理由を持つ Error を投げる */
+  backfillSnapshot?: (date: string, prices: { stockId: string; currentPrice: number }[], cashAmount: number) => Promise<void>;
 }
 
 export default function PortfolioHistory({
@@ -61,6 +63,7 @@ export default function PortfolioHistory({
   deleteMemo,
   updateSnapshotPrices,
   missingDates = [],
+  refreshMissingDates,
   backfillSnapshot,
 }: PortfolioHistoryProps) {
   const [modalTarget, setModalTarget] = useState<ModalTarget | null>(null);
@@ -261,6 +264,7 @@ export default function PortfolioHistory({
           missingDates={missingDates}
           onClose={() => setIsBackfillOpen(false)}
           onSave={backfillSnapshot}
+          onStale={refreshMissingDates}
         />
       )}
 

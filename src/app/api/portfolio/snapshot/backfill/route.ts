@@ -4,13 +4,13 @@ import { withAuth } from '@/lib/apiHandler'
 import { buildSnapshotData } from '@/lib/snapshotCalc'
 import {
   reconstructPositionsAt,
+  toBackfillInputs,
   validateBackfillDate,
   BACKFILL_DATE_ERROR_MESSAGES,
 } from '@/lib/snapshotBackfill'
 import { getTodayJST, dateStrToUTCMidnight } from '@/lib/dateJst'
-import { isValidRequiredPrice } from '@/lib/validation'
+import { isValidRequiredPrice, isValidCashAmount } from '@/lib/validation'
 import type { Position } from '@/types/positions'
-import type { ConsumedLot } from '@/types/realizedTrade'
 
 // 記録し忘れた日のスナップショットを後から追加する。
 // - 保有は「今のポジション＋その日より後に売却したロット」から再現する（クライアントの株数は信用しない）
@@ -60,7 +60,9 @@ async function loadBackfillContext(userId: string, date: unknown): Promise<Conte
       include: {
         prices: true,
         positions: true,
+        // その日以前の売却は保有の再現に使わない（reconstructPositionsAt も読み飛ばす）
         realizedTrades: {
+          where: { sellDate: { gt: dateStr } },
           select: { id: true, sellDate: true, costBasis: true, taxRate: true, consumedLots: true },
         },
       },
@@ -87,21 +89,7 @@ async function loadBackfillContext(userId: string, date: unknown): Promise<Conte
   const result: BackfillStock[] = []
 
   for (const stock of stocks) {
-    const positions: Position[] = stock.positions.map(p => ({
-      id: p.id,
-      shares: p.shares,
-      purchasePrice: Number(p.purchasePrice),
-      purchaseDate: p.purchaseDate ?? '',
-      taxRate: Number(p.taxRate),
-      createdAt: p.createdAt.toISOString(),
-    }))
-    const trades = stock.realizedTrades.map(t => ({
-      id: t.id,
-      sellDate: t.sellDate,
-      costBasis: Number(t.costBasis),
-      taxRate: Number(t.taxRate),
-      consumedLots: (Array.isArray(t.consumedLots) ? t.consumedLots : []) as unknown as ConsumedLot[],
-    }))
+    const { positions, trades } = toBackfillInputs(stock)
     const heldPositions = reconstructPositionsAt(dateStr, positions, trades)
     // 見るだけの銘柄（その日に保有なし）は過去の株価が分からないため含めない
     const built = buildSnapshotData(
@@ -162,8 +150,8 @@ export const POST = withAuth(async ({ user, request }) => {
     }
     priceMap.set(item.stockId, item.currentPrice as number)
   }
-  if (cashAmount !== undefined && (typeof cashAmount !== 'number' || !Number.isFinite(cashAmount) || cashAmount < 0)) {
-    return badRequest('現金は0以上の数値である必要があります')
+  if (cashAmount !== undefined && (typeof cashAmount !== 'number' || !isValidCashAmount(String(cashAmount)))) {
+    return badRequest('現金は0以上1000億円未満の数値である必要があります')
   }
 
   const ctx = await loadBackfillContext(user.id, date)
@@ -176,16 +164,21 @@ export const POST = withAuth(async ({ user, request }) => {
     }
   }
 
+  // 株価が決まらない銘柄（入力なし・前後の記録も今の株価もない）があれば保存しない。
+  // 株価なしで保存すると評価額＝原価（損益ゼロ）になり、本物の記録と区別できなくなるため
+  const stockInputs = ctx.stocks.map(s => ({
+    id: s.stockId,
+    symbol: s.symbol,
+    currentPrice: priceMap.get(s.stockId) ?? s.suggestedPrice,
+    positions: ctx.positionsByStock.get(s.stockId) ?? [],
+  }))
+  const missingPrice = stockInputs.find(s => s.currentPrice == null)
+  if (missingPrice) {
+    return badRequest(`${missingPrice.symbol} のその日の株価を入力してください`)
+  }
+
   const cash = typeof cashAmount === 'number' ? cashAmount : ctx.suggestedCash
-  const snapshotData = buildSnapshotData(
-    ctx.stocks.map(s => ({
-      id: s.stockId,
-      symbol: s.symbol,
-      currentPrice: priceMap.get(s.stockId) ?? s.suggestedPrice,
-      positions: ctx.positionsByStock.get(s.stockId) ?? [],
-    })),
-    cash,
-  )
+  const snapshotData = buildSnapshotData(stockInputs, cash)
   const snapshotDate = dateStrToUTCMidnight(ctx.date)
 
   let snapshot
