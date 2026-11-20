@@ -55,7 +55,7 @@ xpForLevel(n) = floor(50 * (n-1) * n / 2 + 50 * (n-1))
 | 株価更新 | 5 | `PRICE_UPDATE` | - |
 | ポジション追加 | 15 | `POSITION_ADD` | - |
 | ポジション売却 | 15 | `POSITION_SELL` | - |
-| ポートフォリオ記録 | 20 | `PORTFOLIO_SNAPSHOT` | - |
+| ポートフォリオ記録 | 20 | `PORTFOLIO_SNAPSHOT` | 1日1回 |
 | 決算日登録 | 10 | `EVENT_REGISTER` | - |
 | 配当情報登録 | 10 | `DIVIDEND_REGISTER` | - |
 | 優待情報登録 | 10 | `BENEFIT_REGISTER` | - |
@@ -65,7 +65,7 @@ xpForLevel(n) = floor(50 * (n-1) * n / 2 + 50 * (n-1))
 | 投資日記保存 | 15 | `DIARY_SAVE` | 1日1回 |
 
 - **日次XP上限: 100 XP**（これ以上は翌日に持ち越し）
-- ログイン・メモ保存・チェックリスト全完了・投資日記保存は**1日1回のみ**XP付与（API側で当日同一action_typeをチェック）
+- ログイン・メモ保存・ポートフォリオ記録・チェックリスト全完了・投資日記保存は**1日1回のみ**XP付与（API側で当日同一action_typeをチェック）
 
 ---
 

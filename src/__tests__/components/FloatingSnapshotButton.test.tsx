@@ -4,6 +4,8 @@ import FloatingSnapshotButton from '@/components/settings/FloatingSnapshotButton
 import { getJSTHour } from '@/lib/dateJst'
 
 vi.mock('@/lib/sound', () => ({ playSound: vi.fn() }))
+const { grantXpMock } = vi.hoisted(() => ({ grantXpMock: vi.fn() }))
+vi.mock('@/lib/gamification', () => ({ grantXp: grantXpMock }))
 vi.mock('@/lib/dateJst', () => ({
   getJSTHour: vi.fn(() => 16),
   getTodayJST: vi.fn(() => '2026-08-27'),
@@ -103,6 +105,7 @@ describe('FloatingSnapshotButton', () => {
         expect(fetchMock).toHaveBeenCalledWith('/api/portfolio/snapshot', { method: 'POST' })
       })
       expect(await screen.findByText('記録しました！')).toBeInTheDocument()
+      expect(grantXpMock).toHaveBeenCalledWith('PORTFOLIO_SNAPSHOT')
     })
   })
 })

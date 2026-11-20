@@ -10,7 +10,8 @@ import { getTodayJST, formatDateJST, dateStrToUTCMidnight } from '@/lib/dateJst'
 import type { XpActionType } from '@/types/gamification'
 
 /** 日次1回制限のアクション */
-const DAILY_ONCE_ACTIONS: XpActionType[] = ['LOGIN', 'MEMO_SAVE', 'CHECKLIST_COMPLETE', 'DIARY_SAVE']
+// PORTFOLIO_SNAPSHOT は同日上書きできるため、押し直しでXPが重複しないよう1日1回に制限
+const DAILY_ONCE_ACTIONS: XpActionType[] = ['LOGIN', 'MEMO_SAVE', 'CHECKLIST_COMPLETE', 'DIARY_SAVE', 'PORTFOLIO_SNAPSHOT']
 
 export const POST = withAuth(async ({ user, request }) => {
   const { actionType } = await request.json() as { actionType: string }
