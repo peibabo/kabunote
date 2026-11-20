@@ -5,6 +5,7 @@ import { playSound } from '@/lib/sound';
 import { formatDateYMDJP } from '@/lib/dateFormat';
 import type { ChartType } from '@/types/portfolio';
 import { CHART_TYPE_META } from '@/types/portfolio';
+import { formatStockLabel } from '@/lib/stockRateCalc';
 import ChartSnapshotEditor, { type EditablePrice } from '@/components/portfolio/chart/ChartSnapshotEditor';
 
 interface ChartMemoModalProps {
@@ -13,6 +14,8 @@ interface ChartMemoModalProps {
   snapshotDate: string;
   chartType: ChartType;
   symbol?: string;
+  /** 銘柄名。渡すと見出しに「7203 トヨタ自動車」のように表示する */
+  stockName?: string | null;
   existingContent: string;
   dataValues?: { label: string; value: string; color?: string }[];
   onSave: (content: string) => Promise<boolean>;
@@ -30,6 +33,7 @@ export default function ChartMemoModal({
   snapshotDate,
   chartType,
   symbol,
+  stockName,
   existingContent,
   dataValues,
   onSave,
@@ -131,8 +135,8 @@ export default function ChartMemoModal({
                   {typeInfo.label}
                 </span>
                 {symbol && (
-                  <span className="px-2 py-0.5 bg-blue-900 bg-opacity-50 rounded text-xs text-blue-300">
-                    {symbol}
+                  <span className="px-2 py-0.5 bg-blue-900 bg-opacity-50 rounded text-xs text-blue-300 truncate max-w-[12rem]">
+                    {formatStockLabel(symbol, stockName)}
                   </span>
                 )}
               </div>

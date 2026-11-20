@@ -2,11 +2,14 @@
 
 import { useState } from 'react';
 import { playSound } from '@/lib/sound';
+import { formatStockLabel } from '@/lib/stockRateCalc';
 
 export interface EditablePrice {
   snapshotId: string;
   stockId: string;
   symbol: string;
+  /** 銘柄名（削除済み銘柄などで分からなければ null） */
+  name?: string | null;
   currentPrice: number | null;
 }
 
@@ -54,7 +57,9 @@ export default function ChartSnapshotEditor({ editablePrice, onSavePrice, disabl
   return (
     <div className="mb-4 bg-gray-900 rounded-lg p-3 border border-blue-900/50">
       <div className="flex items-center justify-between mb-2">
-        <span className="text-sm text-blue-300 font-medium">📝 この日の株価を修正</span>
+        <span className="text-sm text-blue-300 font-medium">
+          📝 <span className="text-white">{formatStockLabel(editablePrice.symbol, editablePrice.name)}</span> の株価を修正
+        </span>
       </div>
       <div className="flex items-center gap-2">
         <div className="flex-1 flex items-center bg-gray-700 border border-gray-600 rounded-lg px-3 focus-within:border-blue-500">

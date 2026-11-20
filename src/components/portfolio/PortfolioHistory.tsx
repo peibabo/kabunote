@@ -95,6 +95,17 @@ export default function PortfolioHistory({
     return deleteMemo(modalTarget.snapshotDate, modalTarget.chartType, modalTarget.symbol);
   }, [modalTarget, deleteMemo]);
 
+  // クリックした銘柄の名前（その日の記録に名前がなければ、他の日の記録から探す）
+  const modalStockName = useMemo<string | null>(() => {
+    const symbol = modalTarget?.symbol;
+    if (!symbol) return null;
+    for (const snap of data) {
+      const name = snap.stockSnapshots.find(s => s.symbol === symbol && s.name)?.name;
+      if (name) return name;
+    }
+    return null;
+  }, [modalTarget, data]);
+
   // 個別株価チャート かつ 昨日以前 のとき、株価修正UIの対象を算出
   const editablePrice = useMemo<EditablePrice | undefined>(() => {
     if (!modalTarget || modalTarget.chartType !== 'stocks' || !modalTarget.symbol) return undefined;
@@ -106,9 +117,10 @@ export default function PortfolioHistory({
       snapshotId: snap.id,
       stockId: ss.stockId,
       symbol: ss.symbol,
+      name: modalStockName,
       currentPrice: ss.currentPrice,
     };
-  }, [modalTarget, data]);
+  }, [modalTarget, data, modalStockName]);
 
   const handleSavePrice = useCallback(async (currentPrice: number) => {
     if (!editablePrice) return false;
@@ -276,6 +288,7 @@ export default function PortfolioHistory({
           snapshotDate={modalTarget.snapshotDate}
           chartType={modalTarget.chartType}
           symbol={modalTarget.symbol}
+          stockName={modalStockName}
           existingContent={existingContent}
           dataValues={modalDataValues}
           onSave={handleSave}
