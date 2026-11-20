@@ -96,6 +96,15 @@ export default function PortfolioHistoryWidget() {
         </div>
       </button>
 
+      {/* まだ1件も記録がない: 折りたたみ中（展開時はグラフ側の空状態で説明）でも「手動で毎日記録する」使い方が分かるようにする */}
+      {!isLoading && !isExpanded && data.length === 0 && (
+        <p className="px-3 pb-3 -mt-1 text-xs text-gray-400 leading-relaxed">
+          💡 株価は自動では更新されません。銘柄カードの「分析」タブで今日の株価を入れ、ここを開いて
+          <span className="text-gray-200">「📸 本日の終値を確定」</span>
+          を押すと、その日の評価額が記録され資産推移グラフが描かれます（同じ日は押し直すと上書き）。
+        </p>
+      )}
+
       {/* アコーディオンコンテンツ */}
       <div className={`overflow-hidden transition-all duration-300 ease-in-out ${
         isExpanded
