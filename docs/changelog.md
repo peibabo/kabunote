@@ -1,5 +1,14 @@
 # Kabunote - プロジェクトマイルストーン
 
+## オンボーディング計測の外部キー違反を修正（2026年11月21日）
+**初回ログイン直後、`app_users` の作成（`/api/auth/sync-user`）より先にオンボーディングウィザードの `shown` イベントが送られ、`onboarding_events_user_id_fkey` 違反で記録が失敗していたため**
+
+### 実施内容
+- `POST /api/onboarding/events`: 記録の前に `app_users` を upsert（`stocks` / `resolveStockId` と同じ外部キー制約対策）
+- テスト: upsert が `onboardingEvent.create` より先に呼ばれることを確認
+
+---
+
 ## 株価修正ポップアップに銘柄名を表示（2026年11月20日）
 **「値上がり率」グラフから株価を直すとき、ポップアップにどの銘柄か書かれておらず分かりづらかったため**
 
