@@ -10,8 +10,6 @@ const URL = 'http://localhost:3000/api/onboarding/events'
 beforeEach(() => {
   prismaMock.onboardingEvent.create.mockReset()
   prismaMock.onboardingEvent.create.mockResolvedValue({} as never)
-  prismaMock.user.upsert.mockReset()
-  prismaMock.user.upsert.mockResolvedValue({} as never)
   resetRateLimitStore()
 })
 
@@ -24,15 +22,6 @@ describe('POST /api/onboarding/events', () => {
     expect(prismaMock.onboardingEvent.create).toHaveBeenCalledWith({
       data: { userId: 'test-user-id-123', event: 'step_view', step: 1 },
     })
-  })
-
-  it('記録前に app_users を upsert する（sync-user 前でも外部キー違反にならない）', async () => {
-    await POST(createRequest('POST', URL, { event: 'shown', step: 0 }))
-    expect(prismaMock.user.upsert).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { id: 'test-user-id-123' }, update: {} })
-    )
-    expect(prismaMock.user.upsert.mock.invocationCallOrder[0])
-      .toBeLessThan(prismaMock.onboardingEvent.create.mock.invocationCallOrder[0])
   })
 
   it.each([

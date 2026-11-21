@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 import { withAuth } from '@/lib/apiHandler'
 import { prisma } from '@/lib/prisma'
 import { AUTH_LIMIT } from '@/lib/rateLimit'
+import { forgetAppUser } from '@/lib/ensureAppUser'
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -14,6 +15,7 @@ export const DELETE = withAuth(async ({ user }) => {
   await prisma.user.delete({
     where: { id: user.id },
   })
+  forgetAppUser(user.id)
 
   // Supabase Auth: ユーザー削除（失敗しても致命的ではない）
   try {

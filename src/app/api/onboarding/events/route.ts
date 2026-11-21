@@ -15,18 +15,6 @@ export const POST = withAuth(async ({ user, request }) => {
     )
   }
 
-  // 初回ログイン直後はウィザード表示が sync-user より先に走り、
-  // app_users が未作成のことがある（外部キー制約対策）
-  await prisma.user.upsert({
-    where: { id: user.id },
-    update: {},
-    create: {
-      id: user.id,
-      email: user.email || `temp_${user.id}@example.com`,
-      authProvider: 'unknown',
-    },
-  })
-
   await prisma.onboardingEvent.create({
     data: { userId: user.id, event, step },
   })

@@ -1,11 +1,13 @@
 # Kabunote - プロジェクトマイルストーン
 
-## オンボーディング計測の外部キー違反を修正（2026年11月21日）
-**初回ログイン直後、`app_users` の作成（`/api/auth/sync-user`）より先にオンボーディングウィザードの `shown` イベントが送られ、`onboarding_events_user_id_fkey` 違反で記録が失敗していたため**
+## 初回ログイン直後の外部キー違反を修正（2026年11月21日）
+**初回ログイン直後、`app_users` の作成（`/api/auth/sync-user`）より先にウィジェットの書き込みが届き、`onboarding_events_user_id_fkey`・`user_checklists_user_id_fkey` 違反で失敗していたため**
 
 ### 実施内容
-- `POST /api/onboarding/events`: 記録の前に `app_users` を upsert（`stocks` / `resolveStockId` と同じ外部キー制約対策）
-- テスト: upsert が `onboardingEvent.create` より先に呼ばれることを確認
+- `src/lib/ensureAppUser.ts` を追加し、`withAuth`（＝全APIルート）でハンドラーの前に `app_users` の行を保証（`createMany` + `skipDuplicates` で既存の値は変えない）
+- 一度確認したユーザーIDはインスタンス内でキャッシュして、毎回のDBアクセスを避ける。アカウント削除時はキャッシュから外す
+- 対象はオンボーディング計測・チェックリストのプリセット作成だけでなく、ゲーミフィケーション・日記・外部リンク設定など、ユーザーに紐づく書き込みすべて
+- `docs/patterns.md` に「app_users の存在保証」を追記
 
 ---
 
