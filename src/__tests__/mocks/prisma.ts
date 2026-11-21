@@ -16,7 +16,7 @@ const createMockModel = () => ({
 })
 
 export const prismaMock = {
-  user: createMockModel(),
+  user: { ...createMockModel(), createMany: vi.fn() },
   stock: createMockModel(),
   stockMemo: createMockModel(),
   stockPrice: createMockModel(),

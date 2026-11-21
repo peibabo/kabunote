@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { User } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase-server'
 import { resolveStockId } from '@/lib/resolveStockId'
+import { ensureAppUser } from '@/lib/ensureAppUser'
 import { checkRateLimit, rateLimitHeaders } from '@/lib/rateLimit'
 import type { RateLimitConfig } from '@/lib/rateLimit'
 
@@ -60,6 +61,9 @@ export function withAuth(handler: AuthHandler, errorLabel: string, options?: Aut
           { status: 429, headers: { ...headers, 'Retry-After': String(result.resetInSeconds) } }
         )
       }
+
+      // sync-user より先に書き込みAPIが届いても外部キー違反にならないように
+      await ensureAppUser(auth.user)
 
       const params = context?.params ? await context.params : {}
       const response = await handler({ user: auth.user, request, params })

@@ -4,9 +4,13 @@ import { mockUser, mockSupabaseClient } from '../mocks/supabase'
 import { createRequest, createParams } from '../helpers/apiTestHelper'
 import { withAuth, withStock } from '@/lib/apiHandler'
 import { resetRateLimitStore } from '@/lib/rateLimit'
+import { resetEnsuredAppUsers } from '@/lib/ensureAppUser'
 
 beforeEach(() => {
   resetRateLimitStore()
+  resetEnsuredAppUsers()
+  prismaMock.user.createMany.mockReset()
+  prismaMock.user.createMany.mockResolvedValue({ count: 0 } as never)
 })
 
 describe('withAuth', () => {
@@ -22,6 +26,21 @@ describe('withAuth', () => {
     expect(handler).toHaveBeenCalledWith(
       expect.objectContaining({ user: mockUser })
     )
+  })
+
+  it('ハンドラーより先に app_users を保証する（sync-user 前の書き込みで外部キー違反にしない）', async () => {
+    const handler = vi.fn().mockResolvedValue(new Response('{}', { status: 200 }))
+    const wrapped = withAuth(handler, 'テスト')
+
+    await wrapped(createRequest('POST', 'http://localhost:3000/api/test'))
+    expect(prismaMock.user.createMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: [expect.objectContaining({ id: mockUser.id, email: mockUser.email })],
+        skipDuplicates: true,
+      })
+    )
+    expect(prismaMock.user.createMany.mock.invocationCallOrder[0])
+      .toBeLessThan(handler.mock.invocationCallOrder[0])
   })
 
   it('401: 未認証', async () => {

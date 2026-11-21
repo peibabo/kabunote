@@ -109,6 +109,17 @@ export async function GET(
 
 ---
 
+## app_users の存在保証（外部キー制約対策）
+
+`withAuth()` / `withStock()` はハンドラーを呼ぶ前に `ensureAppUser()`（`src/lib/ensureAppUser.ts`）で `app_users` の行を保証する。
+
+- 初回ログイン直後は、クライアントの `/api/auth/sync-user` より先にウィジェットの書き込みAPI（チェックリスト初期化・オンボーディング計測など）が届くことがあり、そのままだと `*_user_id_fkey` 違反になる
+- `createMany({ skipDuplicates: true })`（`INSERT ... ON CONFLICT DO NOTHING`）なので既存ユーザーの値は変えない。名前・アイコンは従来どおり sync-user が更新する
+- 一度確認したユーザーIDはインスタンス内でキャッシュし、以降はDBに問い合わせない。アカウント削除時は `forgetAppUser()` でキャッシュから外す
+- そのため新しいAPIルートで個別に `prisma.user.upsert` を書く必要はない
+
+---
+
 ## APIレート制限パターン
 
 全APIルートは `withAuth()` / `withStock()` 経由でインメモリのスライディングウィンドウ方式レート制限が自動適用される。
